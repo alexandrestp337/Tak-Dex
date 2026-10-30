@@ -159,3 +159,20 @@ body:not(.light){background-size:100% 100%,auto 100dvh!important;background-posi
 html{background:#080a0e}
 body:not(.light){background-image:none!important;background-color:transparent!important}
 body:not(.light)::after{content:"";display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(4,6,9,.20),rgba(4,6,9,.20)),url('./takdex-background.webp');background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;background-color:#080a0e}
+
+/* V16 additional tools */
+.tool-card{background:var(--card);border:1px solid var(--edge);border-radius:15px;padding:14px;margin:12px 0;display:grid;gap:12px}
+.tool-card label{display:grid;gap:6px;min-width:0}
+.tool-card input,.tool-card select,.plan-slot input{width:100%;max-width:100%;min-width:0}
+.tool-link{display:block;text-align:left;padding:17px;background:var(--surface);border:1px solid var(--edge);color:var(--text);font-weight:750}
+.theme-card{margin-top:22px}
+.planner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;margin-bottom:18px}
+.plan-slot{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:11px;display:grid;gap:9px}
+.plan-slot label{display:grid;gap:4px;font-size:.8rem;color:var(--muted)}
+.learn-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between;padding:10px 2px;border-bottom:1px solid var(--edge);font-size:.83rem}
+.learn-row small{color:var(--muted)}
+.evo-line{padding:9px 2px;border-bottom:1px solid var(--edge)}
+.tm-result{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+.planner-result{margin:12px 0}
+body.light{background:#f9f7f7!important}
+body.light::after{content:"";display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,.22)),url('./takdex-background-light.webp');background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;background-color:#f9f7f7}

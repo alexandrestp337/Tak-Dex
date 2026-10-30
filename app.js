@@ -261,7 +261,7 @@ $('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=fa
 // V9 navigation: four real tabs, with the existing battle/team logic retained.
 (function(){
  const tabs=['teamsTab','battleTab','dexTab','moreTab'];
- const pages=['teamsPage','battlePage','dexPage','morePage'];
+ const pages=['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage'];
  const oldTeam=$('teamsTab').onclick,oldBattle=$('battleTab').onclick;
  function activate(index){
   pages.forEach((id,i)=>$(id).hidden=i!==index);
@@ -271,17 +271,88 @@ $('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=fa
  $('teamsTab').onclick=()=>{oldTeam?.();activate(0)};
  $('battleTab').onclick=()=>{oldBattle?.();activate(1)};
  $('dexTab').onclick=()=>activate(2);
- $('moreTab').onclick=()=>activate(3);
+ $('moreTab').onclick=()=>activate(3);window.takActivate=activate;
  $('moreTheme').onclick=toggleTheme;
- $('dexSearch').onclick=async()=>{
-  const name=$('dexInput').value.trim().toLowerCase().replace(/\s+/g,'-');
-  if(!name)return;
-  $('dexResult').textContent='Searching…';
-  try{
-   const p=await api('pokemon/'+encodeURIComponent(name));
-   const art=p.sprites?.other?.['official-artwork']?.front_default||p.sprites?.front_default||'';
-   $('dexResult').innerHTML=`<div class="card dex-entry"><img src="${safe(art)}" alt=""><div><h3>${safe(pretty(p.name))}</h3><p>#${p.id}</p><div class="pills">${p.types.map(t=>pill(t.type.name)).join('')}</div></div></div>`;
-  }catch{$('dexResult').textContent='Pokémon not found, or an internet connection is required.'}
- };
  $('dexInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('dexSearch').click()});
 })();
+
+
+// V16 tools: separate 6v6 planning, Pokédex learnsets/evolutions, TM/HM compatibility.
+const gameOptions=games.map(g=>`<option value="${safe(g)}">${safe(g)}</option>`).join('');
+['dexGame','planGame','tmGame'].forEach(id=>{ $(id).innerHTML=gameOptions; $(id).value=current?.game||'Emerald'; });
+function teamOptions(){return '<option value="">Select team…</option>'+teams.map(t=>`<option value="${safe(t.id)}">${safe(t.name)} (${safe(t.game)})</option>`).join('')}
+function refreshTeamMenus(){['dexTeam','planTeam','tmTeam'].forEach(id=>{const value=$(id).value;$(id).innerHTML=teamOptions();$(id).value=teams.some(t=>t.id===value)?value:current?.id||''});refreshDexMembers()}
+function selectedTeam(id){return teams.find(t=>t.id===$(id).value)}
+function refreshDexMembers(){const t=selectedTeam('dexTeam');$('dexTeamPoke').innerHTML='<option value="">Choose Pokémon…</option>'+(t?.pokemon||[]).filter(Boolean).map(p=>`<option value="${p.id}">${safe(p.name)}</option>`).join('');if(t)$('dexGame').value=t.game}
+$('dexTeam').onchange=refreshDexMembers;
+$('dexTeamPoke').onchange=()=>{if($('dexTeamPoke').value)$('dexInput').value=$('dexTeamPoke').selectedOptions[0].textContent};
+$('dexSearch').onclick=async()=>{
+ const name=$('dexTeamPoke').value||$('dexInput').value.trim().toLowerCase().replace(/\s+/g,'-');if(!name)return;
+ const game=$('dexGame').value,version=vg[game],result=$('dexResult');result.textContent='Loading Pokémon, evolution chain and level-up moves…';
+ try{
+  const pokemon=await api('pokemon/'+encodeURIComponent(name));
+  const species=await api('pokemon-species/'+pokemon.species.name);
+  const chain=await api(species.evolution_chain.url.replace('https://pokeapi.co/api/v2/',''));
+  const evo=[];function walk(node,depth){const conditions=node.evolution_details.map(d=>[d.min_level?'Lv '+d.min_level:'',d.item?.name||'',d.trigger?.name==='trade'?'Trade':'',d.min_happiness?'Friendship':'',d.time_of_day||'',d.held_item?.name||'',d.known_move?.name||'',d.location?.name||''].filter(Boolean).join(' · ')).filter(Boolean);evo.push({name:node.species.name,depth,conditions});node.evolves_to.forEach(n=>walk(n,depth+1))}walk(chain.chain,0);
+  const moves=pokemon.moves.flatMap(m=>m.version_group_details.filter(v=>v.version_group.name===version&&v.move_learn_method.name==='level-up').map(v=>({name:m.move.name,level:v.level_learned_at}))).sort((a,b)=>a.level-b.level||a.name.localeCompare(b.name));
+  const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
+  const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
+  const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
+  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${pokemon.types.map(t=>pill(t.type.name)).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<strong>${safe(pretty(e.name))}</strong>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div>`;
+ }catch(e){result.textContent='Could not load data. Check your connection or Pokémon name.'}
+};
+$('dexGame').onchange=()=>{$('dexTeam').value='';$('dexTeamPoke').innerHTML='';};
+function openTool(page,nav){['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage'].forEach(id=>$(id).hidden=id!==page);['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===nav));window.scrollTo(0,0)}
+$('openPlanner').onclick=()=>{refreshTeamMenus();openTool('plannerPage',3);syncPlanner()};
+$('openTM').onclick=()=>{refreshTeamMenus();openTool('tmPage',3);syncTM()};
+$('backPlanner').onclick=$('backTM').onclick=()=>window.takActivate(3);
+// Verified Emerald League data (standard game, NOT ROM hacks). Five or six Pokémon per trainer.
+const emeraldLeague={
+ Sidney:[['mightyena',46,'roar','double-edge','sand-attack','crunch'],['shiftry',48,'torment','double-team','swagger','extrasensory'],['cacturne',46,'leech-seed','feint-attack','needle-arm','cotton-spore'],['crawdaunt',48,'surf','swords-dance','strength','facade'],['absol',49,'aerial-ace','rock-slide','swords-dance','slash']],
+ Phoebe:[['dusclops',48,'shadow-punch','confuse-ray','curse','protect'],['banette',49,'shadow-ball','grudge','will-o-wisp','feint-attack'],['sableye',50,'shadow-ball','double-team','night-shade','feint-attack'],['banette',49,'shadow-ball','psychic','thunderbolt','facade'],['dusclops',51,'shadow-ball','ice-beam','rock-slide','earthquake']],
+ Glacia:[['sealeo',50,'encore','body-slam','hail','ice-ball'],['glalie',50,'light-screen','crunch','icy-wind','ice-beam'],['sealeo',52,'attract','double-edge','hail','blizzard'],['glalie',52,'shadow-ball','explosion','hail','ice-beam'],['walrein',53,'surf','body-slam','ice-beam','sheer-cold']],
+ Drake:[['shelgon',52,'rock-tomb','dragon-claw','protect','double-edge'],['altaria',54,'double-edge','dragon-breath','dragon-dance','aerial-ace'],['kingdra',53,'smokescreen','dragon-dance','surf','body-slam'],['flygon',53,'flamethrower','crunch','dragon-breath','earthquake'],['salamence',55,'flamethrower','dragon-claw','rock-slide','crunch']],
+ Wallace:[['wailord',57,'rain-dance','water-spout','double-edge','blizzard'],['tentacruel',55,'toxic','hydro-pump','sludge-bomb','ice-beam'],['ludicolo',56,'giga-drain','surf','leech-seed','double-team'],['whiscash',56,'earthquake','surf','amnesia','hyper-beam'],['gyarados',56,'dragon-dance','earthquake','hyper-beam','surf'],['milotic',58,'recover','surf','ice-beam','toxic']]
+};
+let plannerOpp=[],plannerOwn=[];
+function plannerRosterAvailable(){return $('planGame').value==='Emerald'}
+function syncPlanner(){const game=$('planGame').value,known=plannerRosterAvailable(),custom=$('planMode').value==='custom';$('eliteOptions').hidden=custom;
+ $('planTrainer').innerHTML=(known?Object.keys(emeraldLeague):[]).map(n=>`<option>${n}</option>`).join('');
+ $('eliteNote').textContent=known?'Emerald Elite Four and Champion use the same teams on subsequent challenges.':'Verified automatic trainer rosters for this game are not bundled yet. Choose Custom to enter a team without guessing.';
+ $('planVersion').disabled=!known;$('planVersion').querySelector('[value="v2"]').textContent=known?'Repeat challenge (same roster)':'Rematch / second challenge';
+ if(!known&&!custom){$('planMode').value='custom';$('eliteOptions').hidden=true}
+ loadPlannerRoster();importPlannerTeam();}
+function importPlannerTeam(){const t=selectedTeam('planTeam');plannerOwn=(t?.pokemon||[]).filter(Boolean).map(p=>({name:p.name.toLowerCase().replace(/\s+/g,'-'),level:50,moves:p.moves.map(m=>m.name.toLowerCase().replace(/\s+/g,'-'))}));renderPlannerSlots('planOwn',plannerOwn,true)}
+function loadPlannerRoster(){if($('planMode').value==='elite'&&plannerRosterAvailable()){plannerOpp=(emeraldLeague[$('planTrainer').value]||emeraldLeague.Sidney).map(([name,level,...moves])=>({name,level,moves}))}else{plannerOpp=Array.from({length:6},()=>({name:'',level:50,moves:[]}))}renderPlannerSlots('planOpp',plannerOpp,false)}
+function renderPlannerSlots(id,entries,own){$(id).innerHTML=Array.from({length:6},(_,i)=>{const e=entries[i]||{name:'',level:50,moves:[]};return `<div class="plan-slot"><b>#${i+1}</b><label>Pokémon<input data-plan="${own?'own':'opp'}" data-i="${i}" data-field="name" value="${safe(e.name)}" placeholder="Pokémon"></label><label>Lv<input type="number" min="1" max="100" data-plan="${own?'own':'opp'}" data-i="${i}" data-field="level" value="${Number(e.level)||50}"></label><label>Moves (comma-separated)<input data-plan="${own?'own':'opp'}" data-i="${i}" data-field="moves" value="${safe((e.moves||[]).join(', '))}" placeholder="Move 1, Move 2…"></label></div>`}).join('')}
+function plannerEdit(e){const x=e.target;if(!x.dataset.plan)return;const arr=x.dataset.plan==='own'?plannerOwn:plannerOpp,i=+x.dataset.i;while(arr.length<=i)arr.push({name:'',level:50,moves:[]});const field=x.dataset.field;arr[i][field]=field==='moves'?x.value.split(',').map(s=>s.trim().toLowerCase().replace(/\s+/g,'-')).filter(Boolean).slice(0,4):field==='level'?Math.max(1,Math.min(100,Number(x.value)||50)):x.value.trim().toLowerCase().replace(/\s+/g,'-')}
+$('planOwn').addEventListener('input',plannerEdit);$('planOpp').addEventListener('input',plannerEdit);
+$('planGame').onchange=syncPlanner;$('planMode').onchange=syncPlanner;$('planTrainer').onchange=loadPlannerRoster;$('planVersion').onchange=loadPlannerRoster;$('planTeam').onchange=()=>{const t=selectedTeam('planTeam');if(t){$('planGame').value=t.game;syncPlanner()}else importPlannerTeam()};
+async function loadPlannerPokemon(e,gen){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen)}}catch{return {name:pretty(n),power:null}}}));return {name:pretty(p.name),types:p.types.map(t=>t.type.name),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),level:e.level,moves}}
+function estimateDamage(a,d,m,gen){if(!m||!Number.isFinite(m.power)||m.power<=0||m.damageClass==='status'||VARIABLE_MOVES.has(m.name))return null;const eff=matchup(m.type,d.types,gen);if(eff===null||eff===0)return 0;const category=m.damageClass==='special'?'special':'physical';const attack=a.baseStats?.[category==='special'?'special-attack':'attack']||70,defense=d.baseStats?.[category==='special'?'special-defense':'defense']||70;
+ const l=Math.max(1,Math.min(100,a.level||50)),al=Math.max(1,Math.min(100,d.level||50));const atk=Math.floor((2*attack+31)*l/100)+5,def=Math.floor((2*defense+31)*al/100)+5;const stab=a.types.includes(m.type)?1.5:1;return Math.max(1,Math.floor((Math.floor((2*l/5+2)*m.power*atk/Math.max(1,def)/50)+2)*eff*stab*(Number.isFinite(m.accuracy)?m.accuracy/100:1)))}
+$('planAnalyze').onclick=async()=>{const result=$('planResults');result.textContent='Loading Pokémon and move data…';const gen=gameGeneration($('planGame').value);try{const own=await Promise.all(plannerOwn.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen))),opp=await Promise.all(plannerOpp.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen)));if(!own.length||!opp.length){result.textContent='Enter at least one Pokémon on each side.';return}
+ const rows=own.map(a=>{const matches=opp.map(d=>{const attacks=a.moves.map(m=>({m,value:estimateDamage(a,d,m,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);const threats=d.moves.map(m=>estimateDamage(d,a,m,gen)).filter(v=>v!==null);return {d,best:attacks[0],incoming:Math.max(0,...threats),score:attacks[0]?.value||0}});return {a,matches,score:matches.reduce((s,m)=>s+(m.score/(m.incoming+25)),0)}}).sort((a,b)=>b.score-a.score);
+ result.innerHTML=`<p class="analysis-disclaimer">Estimated relative damage using levels, base stats, move power, accuracy, STAB and type chart. NOT actual HP damage: IVs/EVs, natures, abilities, held items, weather, boosts and move effects are not modeled. Moves without fixed base power are excluded. Do not treat estimates as guaranteed KOs.</p>${rows.map((r,i)=>`<article class="card planner-result"><h3>${i+1}. ${safe(r.a.name)} · Lv ${r.a.level}</h3>${r.matches.map(x=>`<div class="learn-row"><b>vs ${safe(x.d.name)} Lv ${x.d.level}</b><span>${x.best?safe(x.best.m.name):'No fixed-power move'}</span><small>Attack index ${x.best?.value??'—'} · incoming ${x.incoming}</small></div>`).join('')}</article>`).join('')}`;
+ }catch(e){result.textContent='Could not load battle data. Check Pokémon and move names and your connection.'}};
+// TM/HM compatibility uses exact version-group machine data, not species move presence alone.
+let machineEntries=[];
+const emeraldMachines=`focus-punch dragon-claw water-pulse calm-mind roar toxic hail bulk-up bullet-seed hidden-power sunny-day taunt ice-beam blizzard hyper-beam protect rain-dance giga-drain safeguard frustration solar-beam iron-tail thunderbolt thunder earthquake return dig psychic shadow-ball brick-break double-team reflect shock-wave flamethrower sludge-bomb sandstorm fire-blast rock-tomb aerial-ace torment facade secret-power rest attract thief steel-wing skill-swap snatch overheat`.split(' ');
+const emeraldHMs=`cut fly surf strength flash rock-smash waterfall dive`.split(' ');
+async function syncTM(){const game=$('tmGame').value;const result=$('tmResults');
+ if(game==='Emerald'||game==='Ruby'||game==='Sapphire'||game==='FireRed'||game==='LeafGreen'){
+  const hms=(game==='FireRed'||game==='LeafGreen')?emeraldHMs.slice(0,7):emeraldHMs;
+  machineEntries=[...emeraldMachines.map((move,i)=>({item:'tm'+String(i+1).padStart(2,'0'),move})),...hms.map((move,i)=>({item:'hm'+String(i+1).padStart(2,'0'),move}))];
+  $('tmMove').innerHTML=machineEntries.map((m,i)=>`<option value="${i}">${safe(m.item.toUpperCase())} — ${safe(pretty(m.move))}</option>`).join('');result.textContent='Select a machine and check compatibility.';return;
+ }
+ result.textContent='Loading game-specific machines… This may take time on the first lookup.';
+ try{const list=await api('machine?limit=2000');const found=[];
+  // Bounded batches avoid overwhelming mobile browsers and PokéAPI.
+  for(let i=0;i<list.results.length;i+=20){const batch=await Promise.all(list.results.slice(i,i+20).map(async r=>{try{const m=await api(r.url.replace('https://pokeapi.co/api/v2/',''));return m.version_group.name===vg[game]?{item:m.item.name,move:m.move.name}:null}catch{return null}}));found.push(...batch.filter(Boolean));if(i%100===0)result.textContent=`Checking machine data… ${Math.min(i+20,list.results.length)} / ${list.results.length}`;}
+  machineEntries=found.sort((a,b)=>a.item.localeCompare(b.item,undefined,{numeric:true}));$('tmMove').innerHTML=machineEntries.map((m,i)=>`<option value="${i}">${safe(m.item.toUpperCase())} — ${safe(pretty(m.move))}</option>`).join('');result.textContent=machineEntries.length?'Select a machine and check compatibility.':'No machine data found for this game.';
+ }catch{result.textContent='Could not load machine data. First lookup needs internet.'}}
+$('tmGame').onchange=syncTM;$('tmTeam').onchange=()=>{const t=selectedTeam('tmTeam');if(t){$('tmGame').value=t.game;syncTM()}};
+$('tmCheck').onclick=async()=>{const item=machineEntries[Number($('tmMove').value)],t=selectedTeam('tmTeam'),individual=$('tmPokemon').value.trim().toLowerCase().replace(/\s+/g,'-');if(!item)return;const names=individual?[individual]:(t?.pokemon||[]).filter(Boolean).map(p=>p.name.toLowerCase().replace(/\s+/g,'-'));if(!names.length){$('tmResults').textContent='Select a team or enter a Pokémon.';return}const result=$('tmResults');result.textContent='Checking exact game compatibility…';const checks=await Promise.all(names.map(async name=>{try{const p=await api('pokemon/'+encodeURIComponent(name));const yes=p.moves.some(m=>m.move.name===item.move&&m.version_group_details.some(v=>v.version_group.name===vg[$('tmGame').value]&&v.move_learn_method.name==='machine'));return {name:pretty(p.name),yes}}catch{return {name:pretty(name),error:true}}}));result.innerHTML=`<h3>${safe(item.item.toUpperCase())} · ${safe(pretty(item.move))}</h3>${checks.map(x=>`<div class="card tm-result"><strong>${safe(x.name)}</strong><b class="${x.yes?'good':'bad'}">${x.error?'Unknown':x.yes?'✓ Compatible':'✕ Cannot learn'}</b></div>`).join('')}`};
+refreshTeamMenus();
+// refresh after team creation/edit without changing existing behavior
+const previousShowTeams=showTeams;showTeams=function(){previousShowTeams();refreshTeamMenus()};

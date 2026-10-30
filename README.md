@@ -1,12 +1,11 @@
-# Tak-Dex V15
+# Tak-Dex V16
 
-## Changes
-- Wallpaper now uses a fixed viewport-sized `background-size: cover` layer with preserved aspect ratio; removes the exposed right border without stretching. Small cropping is possible depending on phone proportions.
-- Better battle ranking: base Attack/Special Attack and opponent base Defense/Special Defense used as a *lightly weighted relative estimate*, along with power, accuracy, type multiplier, STAB and defensive weaknesses.
-- Status, unknown-power, fixed/variable-power moves are not eligible for Best Move; double-battle power scoring also excludes these.
-- Old teams receive base stat metadata in the background when opened.
-- Corrects historical Gen 1 Ghost/Psychic immunity and excludes unavailable types.
+New: Separate 6v6 planner with imported teams, editable levels/moves, custom opponents, and a verified **Emerald** Elite Four/Champion roster (first/repeat same roster). Other games do not auto-fill unverified trainer rosters; use Custom. The planner estimates relative damage with levels and base stats, but is **not a complete battle simulator**.
 
-**Not actual damage**: no Pokémon levels, EVs, IVs, natures, abilities, held items, real opponent attacks or most special effects. Conditional moves are excluded rather than guessed. No complete offline database yet.
+Pokédex: game-specific level-up learnsets and evolution-chain requirements, team dropdown.
+TM/HM: exact game-specific machine list and team/individual compatibility from PokéAPI.
+More: 6v6, TM/HM, Theme last. Light-mode background derived from the approved wallpaper.
 
-Upload all 7 files to the existing GitHub Pages repo. Existing local team storage is preserved.
+Normal Single and Double battle tools remain level-free and unchanged. First-time data lookup needs internet. Upload all 8 files to the existing repository. Existing teams remain in localStorage.
+
+**Limitations**: Elite Four auto-fill only for verified Pokémon Emerald (standard game). The planner uses base stats and levels but omits IVs/EVs/natures, abilities, weather, items, AI, special effects, and real damage rolls. No complete offline database yet.
