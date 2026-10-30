@@ -1,9 +1,1 @@
-{
-  "name": "Pok\u00e9Tact",
-  "short_name": "Pok\u00e9Tact",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#101522",
-  "theme_color": "#111827",
-  "icons": []
-}
+{"name":"PokéTact","short_name":"PokéTact","start_url":"./","display":"standalone","theme_color":"#101522","background_color":"#101522","icons":[]}
