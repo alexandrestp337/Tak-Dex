@@ -58,3 +58,33 @@ body.light .rank-card{background:linear-gradient(145deg,#fff,#f5f2f2)}
 .moveRow .moveType{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:5px}
 .subheading{font-size:.86rem;letter-spacing:.07em;color:var(--muted);margin:22px 0 10px}
 @media(max-width:480px){.rank-risk{font-size:.61rem}.recommendation-head .identity img{width:64px;height:64px}.recommended-move{margin-left:0}.move-detail-row .movechip{max-width:48%}}
+
+/* V8: fixed bottom navigation, cropped portraits, distressed Poké Ball */
+body{padding-bottom:calc(116px + env(safe-area-inset-bottom,0px));overflow-x:hidden}
+.main-tabs{position:fixed;z-index:100;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:min(calc(100% - 24px),640px);margin:0;display:grid;grid-template-columns:1fr 1fr;border:1px solid #4a3439;border-radius:19px;background:linear-gradient(155deg,#26272c,#101116);padding:6px;gap:5px;box-shadow:0 -8px 36px #000a,0 8px 24px #0007;backdrop-filter:blur(14px)}
+.main-tabs button{min-height:58px;border-radius:13px!important;display:flex;justify-content:center;align-items:center;gap:9px;font-size:.94rem;letter-spacing:.055em;box-shadow:none}
+.main-tabs button.selected{background:linear-gradient(135deg,#ef4350,#a91d2b);box-shadow:0 3px 13px #e8324544,inset 0 1px #ffffff38}
+body.light .main-tabs{background:linear-gradient(135deg,#fff,#f0e5e7);border-color:#cbb8bd}
+.rank-card{overflow:hidden}
+.recommendation-head{align-items:stretch;min-height:114px;gap:7px}
+.ranking-medal{align-self:center}
+.rank-identity{flex:1;gap:4px!important;min-width:0;align-items:center}
+.rank-portrait{width:112px;height:118px;flex:0 0 112px;position:relative;overflow:hidden;align-self:stretch;mask-image:linear-gradient(to right,black 76%,transparent 100%)}
+.recommendation-head .rank-portrait img{position:absolute;width:160px!important;height:160px!important;max-width:none;object-fit:contain;left:-23px;top:-12px;filter:drop-shadow(0 4px 8px #0008)}
+.rank-info{min-width:0;flex:1;position:relative;z-index:1}
+.rank-info strong{font-size:1.08rem;line-height:1.1}
+.rank-info .pills{margin-top:9px}
+.rank-risk{align-self:center;flex:0 0 72px}
+.full-pokemon{display:flex;align-items:center;justify-content:center;min-height:175px;margin:10px 0;background:radial-gradient(ellipse at center,#e3324521,transparent 65%);border-radius:13px}
+.full-pokemon img{height:190px;width:min(100%,250px);object-fit:contain;filter:drop-shadow(0 8px 12px #0008)}
+/* Distressed Poké Ball watermark: split arcs and rough scratched edges */
+body::before{top:12px;right:-110px;width:min(82vw,470px);opacity:.18;transform:rotate(-24deg);background:
+radial-gradient(circle at center,#111318 0 10%,#c9c9c9 10% 14%,#0b0c0f 14% 17%,transparent 17%),
+linear-gradient(13deg,transparent 0 43%,#0a0b0e 43% 56%,transparent 56%),
+linear-gradient(104deg,transparent 0 18%,#0b0c0f 18% 19.5%,transparent 19.5% 77%,#090a0d 77% 79%,transparent 79%),
+repeating-linear-gradient(113deg,transparent 0 23px,#0b0d11 24px 25px,transparent 26px 57px),
+linear-gradient(#e53b4c 0 50%,#d3d5d9 50% 100%);
+box-shadow:inset 0 0 0 12px #090a0c,inset 0 0 0 22px #f5f5f5,0 0 45px #e3334330;
+clip-path:polygon(2% 20%,9% 15%,14% 5%,29% 3%,36% 0,45% 4%,53% 1%,63% 5%,71% 4%,85% 15%,91% 24%,96% 38%,100% 48%,95% 56%,99% 67%,92% 75%,91% 87%,80% 90%,73% 97%,61% 96%,52% 100%,44% 95%,32% 98%,25% 92%,12% 90%,7% 80%,2% 69%,5% 58%,0 47%,5% 38%,0 30%)}
+@media(max-width:460px){.rank-portrait{width:88px;flex-basis:88px;height:110px}.recommendation-head .rank-portrait img{width:143px!important;height:143px!important;left:-27px;top:-7px}.rank-risk{flex-basis:62px;font-size:.59rem}.rank-info strong{font-size:1rem}.ranking-medal{min-width:30px;padding:6px}}
+@media(max-width:355px){.rank-portrait{width:70px;flex-basis:70px}.rank-risk{flex-basis:53px}.recommendation-head .rank-portrait img{left:-38px}}
