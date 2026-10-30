@@ -280,3 +280,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #dexResult .evo-description{display:flex;flex-direction:column;gap:3px;min-width:0}
 #dexResult .evo-description small{font-size:.8em;opacity:.85}
 @media(max-width:420px){#dexResult .evo-art{width:60px;height:60px;flex-basis:60px}}
+
+/* V25: evolution types stay visually grouped under the correct form */
+.evo-types{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.evo-line .evo-description{min-width:0;flex:1}

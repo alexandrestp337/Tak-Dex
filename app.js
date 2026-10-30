@@ -313,11 +313,17 @@ $('dexSearch').onclick=async()=>{
   const species=await api('pokemon-species/'+pokemon.species.name);
   const chain=await api(species.evolution_chain.url.replace('https://pokeapi.co/api/v2/',''));
   const evo=[];function walk(node,depth){const conditions=node.evolution_details.map(d=>[d.min_level?'Lv '+d.min_level:'',d.item?.name||'',d.trigger?.name==='trade'?'Trade':'',d.min_happiness?'Friendship':'',d.time_of_day||'',d.held_item?.name||'',d.known_move?.name||'',d.location?.name||''].filter(Boolean).join(' · ')).filter(Boolean);evo.push({name:node.species.name,id:Number(node.species.url.match(/\/(\d+)\/$/)?.[1]||0),depth,conditions});node.evolves_to.forEach(n=>walk(n,depth+1))}walk(chain.chain,0);
+  // V25: resolve each evolution form independently: typing can change on evolution.
+  // A failed lookup leaves a neutral label instead of inventing a type.
+  await Promise.all(evo.map(async e=>{
+   try{const form=await api('pokemon/'+e.id);e.types=form.types.map(t=>t.type.name)}
+   catch{e.types=[]}
+  }));
   const moves=pokemon.moves.flatMap(m=>m.version_group_details.filter(v=>v.version_group.name===version&&v.move_learn_method.name==='level-up').map(v=>({name:m.move.name,level:v.level_learned_at}))).sort((a,b)=>a.level-b.level||a.name.localeCompare(b.name));
   const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
   const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
   const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
-  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${pokemon.types.map(t=>pill(t.type.name)).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="${safe(pretty(e.name))}" onerror="this.style.visibility='hidden'"> <span class="evo-description"><strong>${safe(pretty(e.name))}</strong>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div>`;
+  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${pokemon.types.map(t=>pill(t.type.name)).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="${safe(pretty(e.name))}" onerror="this.style.visibility='hidden'"> <span class="evo-description"><strong>${safe(pretty(e.name))}</strong><div class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</div>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div>`;
  }catch(e){result.textContent='Could not load data. Check your connection or Pokémon name.'}
 };
 $('dexGame').onchange=()=>{$('dexTeam').value='';$('dexTeamPoke').innerHTML='';};
@@ -436,7 +442,9 @@ for(const id of ['foeInput','foeInput2']){
    const errors=[];let done=0;
    for(const id of pokemon){
     try{const species=await offlineFetch('pokemon-species/'+id);all.add('pokemon-species/'+id);
-      const chainPath=species.evolution_chain?.url?.replace('https://pokeapi.co/api/v2/','');if(chainPath)all.add(chainPath);
+      const chainPath=species.evolution_chain?.url?.replace('https://pokeapi.co/api/v2/','');if(chainPath){all.add(chainPath);
+       try{const chain=await offlineFetch(chainPath);const walk=n=>{const evoId=Number(n.species?.url?.match(/\/(\d+)\/$/)?.[1]||0);if(evoId){all.add('pokemon/'+evoId);all.add('pokemon-species/'+evoId)}(n.evolves_to||[]).forEach(walk)};walk(chain.chain)}catch(e){errors.push('evolution chain '+id)}
+      }
     }catch(e){errors.push('species '+id)}
    }
    for(const path of all){
