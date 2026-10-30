@@ -419,41 +419,53 @@ for(const id of ['foeInput','foeInput2']){
  update();
 }
 
-// V20: optional downloadable team + opponent offline pack, with durable CacheStorage.
+// V26: resumable complete PokéAPI data download. No full-offline claim until verified.
 (function(){
- const btn=document.getElementById('offlineDownload'),status=document.getElementById('offlineStatus');
- const key='takdex-offline-pack-v20';
- const setStatus=()=>{
-  let record=null;try{record=JSON.parse(localStorage.getItem(key)||'null')}catch{}
-  status.textContent=record?.complete?'🟢 Offline pack available · '+record.count+' records · '+new Date(record.date).toLocaleDateString():'⚪ Offline pack not downloaded';
-  btn.textContent=record?.complete?'Update offline data':'Download offline data';
+ const btn=document.getElementById('offlineDownload'), status=document.getElementById('offlineStatus');
+ const key='takdex-offline-full-v26';
+ const origin='https://pokeapi.co/api/v2/';
+ const art='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+ let busy=false;
+ const progress=()=>{let p=null;try{p=JSON.parse(localStorage.getItem(key)||'null')}catch{}
+  status.textContent=p?.complete?'🟢 Full offline database downloaded · '+new Date(p.date).toLocaleDateString():p?.done?'🟠 Partial database · '+p.done+' / '+p.total+' files. Tap to resume.':'⚪ Full offline database not downloaded';
+  btn.textContent=p?.complete?'Update offline database':p?.done?'Resume offline download':'Download offline database';
+ };
+ const cached=async(url)=>!!(await (await caches.open(OFFLINE_CACHE)).match(url));
+ const download=async(url,force=false)=>{
+  const cache=await caches.open(url.startsWith(origin)?OFFLINE_CACHE:'takdex-artwork-v26');
+  if(!force&&await cache.match(url))return;
+  let err;for(let i=0;i<3;i++)try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);await cache.put(url,r.clone());return}catch(e){err=e}
+  throw err;
+ };
+ const getList=async(path)=>{
+  const url=origin+path;
+  let res=await (await caches.open(OFFLINE_CACHE)).match(url);
+  if(!res){await download(url);res=await (await caches.open(OFFLINE_CACHE)).match(url)}
+  return (await res.json()).results||[];
  };
  btn.addEventListener('click',async()=>{
-  if(!('caches' in window)){status.textContent='Offline storage is unavailable in this browser.';return}
-  btn.disabled=true;status.textContent='Preparing offline pack…';
+  if(busy)return;
+  if(!('caches' in window)){status.textContent='Offline storage unsupported';return}
+  busy=true;btn.disabled=true;
   try{
-   const all=new Set(['pokemon?limit=2000','move?limit=1000']);
-   const pokemon=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).map(p=>String(p.id))));
-   const moves=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).flatMap(p=>(p.moves||[]).map(m=>m.name.toLowerCase().replace(/\s+/g,'-')))));
-   // Include built-in Elite Four opponent rosters when present.
-   try{if(typeof EMERALD_LEAGUE!=='undefined'){Object.values(EMERALD_LEAGUE).forEach(group=>{const entries=Array.isArray(group)?group:Object.values(group);entries.flat(Infinity).forEach(p=>{if(p?.name)pokemon.add(String(p.name).toLowerCase().replace(/\s+/g,'-'));if(p?.pokemon)pokemon.add(String(p.pokemon).toLowerCase().replace(/\s+/g,'-'));(p?.moves||[]).forEach(m=>moves.add(String(m).toLowerCase().replace(/\s+/g,'-')))});})}}catch{}
-   pokemon.forEach(id=>all.add('pokemon/'+id));moves.forEach(m=>all.add('move/'+m));
-   // Pokémon species and evolution chains enable offline Pokédex evolution browsing.
-   const errors=[];let done=0;
-   for(const id of pokemon){
-    try{const species=await offlineFetch('pokemon-species/'+id);all.add('pokemon-species/'+id);
-      const chainPath=species.evolution_chain?.url?.replace('https://pokeapi.co/api/v2/','');if(chainPath){all.add(chainPath);
-       try{const chain=await offlineFetch(chainPath);const walk=n=>{const evoId=Number(n.species?.url?.match(/\/(\d+)\/$/)?.[1]||0);if(evoId){all.add('pokemon/'+evoId);all.add('pokemon-species/'+evoId)}(n.evolves_to||[]).forEach(walk)};walk(chain.chain)}catch(e){errors.push('evolution chain '+id)}
-      }
-    }catch(e){errors.push('species '+id)}
-   }
-   for(const path of all){
-    try{await offlineFetch(path)}catch(e){errors.push(path)}
-    done++;status.textContent='Downloading '+done+' / '+all.size+' records…';
-   }
-   if(errors.length){status.textContent='⚠ Partial download: '+errors.length+' records failed. Retry to complete.';return}
-   localStorage.setItem(key,JSON.stringify({complete:true,count:all.size,date:new Date().toISOString()}));setStatus();
-  }catch(e){status.textContent='⚠ Download incomplete. Check connection and free storage.'}
-  finally{btn.disabled=false}
- });setStatus();
+   status.textContent='Getting complete Pokémon, move, species and machine lists…';
+   const lists=['pokemon?limit=2000','move?limit=2000','pokemon-species?limit=2000','evolution-chain?limit=1000','machine?limit=3000'];
+   const results=await Promise.all(lists.map(getList));
+   const paths=new Set(lists);
+   results.forEach((list,i)=>list.forEach(item=>{const path=item.url.replace(origin,'');if(path!==item.url)paths.add(path)}));
+   // Explicitly include machine details for every supported game/version group.
+   const urls=[...paths].map(p=>origin+p);
+   // Artwork is a separate cache, and is served by the service worker while offline.
+   for(const item of results[0]){const id=item.url.match(/\/(\d+)\/$/)?.[1];if(id)urls.push(art+id+'.png')}
+   let done=0,failed=0;const failures=[];let next=0;
+   const update=()=>{status.textContent=`Downloading ${done} / ${urls.length} · ${failed} failed`;if(done%30===0)localStorage.setItem(key,JSON.stringify({complete:false,done,total:urls.length,date:new Date().toISOString()}))};
+   const worker=async()=>{while(next<urls.length){const url=urls[next++];try{await download(url)}catch(e){failed++;failures.push(url)}done++;if(done%5===0||done===urls.length)update()}};
+   await Promise.all(Array.from({length:5},worker));
+   const complete=failed===0;
+   localStorage.setItem(key,JSON.stringify({complete,done,total:urls.length,failed,date:new Date().toISOString()}));
+   if(complete){progress()}else{status.textContent=`🟠 ${done-failed} / ${urls.length} cached · ${failed} failed. Tap to retry.`;btn.textContent='Retry incomplete download'}
+  }catch(e){status.textContent='⚠ Download paused: '+(e?.message||'network/storage error')+' · retry when online';progress()}
+  finally{busy=false;btn.disabled=false}
+ });
+ progress();
 })();
