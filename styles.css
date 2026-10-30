@@ -243,3 +243,33 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
     height:110px!important;
   }
 }
+
+/* V23: full, uncropped battle portraits, matching Team-tab artwork.
+   No masking, fading, zoom, offsets or shadows. Both themes. */
+.rank-portrait {
+  -webkit-mask-image:none!important; mask-image:none!important;
+  width:clamp(76px,21vw,116px)!important;
+  flex:0 0 clamp(76px,21vw,116px)!important;
+  height:116px!important; max-width:none!important;
+  display:flex;align-items:center;justify-content:center;
+  overflow:visible!important;align-self:center;
+}
+.recommendation-head .rank-portrait img {
+  position:static!important; display:block!important;
+  width:100%!important;height:100%!important;max-width:100%!important;
+  object-fit:contain!important;object-position:center!important;
+  left:auto!important;top:auto!important;transform:none!important;
+  filter:none!important;opacity:1!important;
+}
+.rank-identity{gap:8px!important;flex:1 1 auto;min-width:0;}
+.rank-info{min-width:0;flex:1 1 auto;}
+.rank-info strong{overflow-wrap:anywhere;}
+@media(max-width:460px){
+ .recommendation-head{gap:5px!important;}
+ .rank-portrait{width:clamp(70px,20vw,96px)!important;flex-basis:clamp(70px,20vw,96px)!important;height:100px!important;}
+ .rank-risk{flex:0 1 62px;min-width:0;}
+}
+@media(max-width:355px){
+ .rank-portrait{width:68px!important;flex-basis:68px!important;height:88px!important;}
+ .rank-risk{flex-basis:48px;}
+}
