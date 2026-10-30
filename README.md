@@ -1,1 +1,1 @@
-Tak-Dex V10: only changes requested: removes expanded full Pokémon image, removes header theme toggle (theme remains in More), and updates background Poké Ball to an oversized, dark segmented reference-inspired design. No other features changed. Replace six files.
+Tak-Dex V11: Replaces only the dark-theme background with the approved cinematic Poké Ball image. Existing features, layout, and navigation unchanged. Upload all seven files including takdex-background.webp. Light theme unchanged.

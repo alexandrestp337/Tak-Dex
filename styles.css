@@ -135,3 +135,8 @@ conic-gradient(from 5deg at 50% 50%,#a82231 0 48deg,#0a0b0e 48deg 58deg,#711c29 
 filter:drop-shadow(0 12px 24px #000a)}
 body.light::before{opacity:.16}
 @media(max-width:500px){body::before{top:-85px;right:-135px;width:410px;max-width:none}}
+
+/* V11: approved cinematic Poké Ball background image, replacing CSS recreation. */
+body:not(.light){background-color:#090c10;background-image:url('./takdex-background.webp');background-repeat:no-repeat;background-position:right top;background-size:max(100%, 900px) auto;background-attachment:fixed}
+body::before,body.light::before{display:none!important;content:none!important}
+@media(min-width:900px){body:not(.light){background-size:cover}}
