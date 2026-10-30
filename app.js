@@ -168,7 +168,7 @@ function moveGenerationData(data,gen){
   const changeGen=generationFromName(change.version_group?.name);
   if(changeGen>gen){
    if(Object.hasOwn(change,'power'))power=change.power;
-   if(Object.hasOwn(change,'accuracy'))accuracy=change.accuracy;
+   if(Object.hasOwn(change,'accuracy') && Number.isFinite(change.accuracy))accuracy=change.accuracy; // null past value must not overwrite known numeric accuracy
    if(change.type)type=change.type.name;
   }
  }
@@ -186,10 +186,11 @@ function generationFromName(name){
  const i=order.indexOf(key);return i<0?9:i+1;
 }
 // Relative expected move strength, not a damage calculator. Base stats provide only an approximate ratio.
+const ALWAYS_HIT_MOVES=new Set(['Swift','Aerial Ace','Shock Wave','Magical Leaf','Feint Attack','Faint Attack','Shadow Punch','Aura Sphere','Magnet Bomb','Disarming Voice','Smart Strike','Flower Trick']);
 const VARIABLE_MOVES=new Set(['Magnitude','Present','Hidden Power','Return','Frustration','Flail','Reversal','Low Kick','Grass Knot','Gyro Ball','Electro Ball','Heavy Slam','Heat Crash','Eruption','Water Spout','Facade','Brine','Payback','Avalanche','Revenge','Assurance','Acrobatics','Hex','Venoshock','Stored Power','Punishment','Fling','Natural Gift','Trump Card','Rollout','Ice Ball','Fury Cutter','Triple Kick','Triple Axel','Beat Up','Seismic Toss','Night Shade','Dragon Rage','Sonic Boom','Super Fang','Endeavor','Psywave','Counter','Mirror Coat','Metal Burst','Bide','Final Gambit','OHKO','Guillotine','Horn Drill','Fissure','Sheer Cold']);
 function expectedPower(m,attacker,target,gen){
  const eff=matchup(m.type,target.types,gen);
- if(eff===null||eff===0||m.damageClass==='status'||!Number.isFinite(m.power)||m.power<=0||(m.accuracy===undefined)||VARIABLE_MOVES.has(m.name))return null;
+ if(eff===null||eff===0||m.damageClass==='status'||!Number.isFinite(m.power)||m.power<=0||(!Number.isFinite(m.accuracy)&&!(m.accuracy===null&&ALWAYS_HIT_MOVES.has(m.name)))||VARIABLE_MOVES.has(m.name))return null;
  const stab=attacker.types.includes(m.type)?1.5:1;
  const atkKey=m.damageClass==='special'?'special-attack':'attack';
  const defKey=m.damageClass==='special'?'special-defense':'defense';
@@ -199,12 +200,12 @@ function expectedPower(m,attacker,target,gen){
  return m.power*stab*eff*((m.accuracy===null?100:m.accuracy)/100)*statFactor;
 }
 function effectivePowerLabel(m){if(m.powerIndex===null||m.powerIndex===undefined)return 'Estimated score —';return 'Attack score '+Math.round(m.powerIndex)}
-function moveStats(m){return `<span class="move-stats">PWR ${Number.isFinite(m.power)?m.power:'—'} · ACC ${Number.isFinite(m.accuracy)?m.accuracy+'%':m.accuracy===null?'Always hits':'Data missing'}</span>`}
+function moveStats(m){return `<span class="move-stats">PWR ${Number.isFinite(m.power)?m.power:'—'} · ACC ${Number.isFinite(m.accuracy)?m.accuracy+'%':m.accuracy===null&&ALWAYS_HIT_MOVES.has(m.name)?'Always hits':'Data missing'}</span>`}
 async function enrichMove(m,gen){
- if(m.metaGeneration===gen&&m.power!==undefined&&m.accuracy!==undefined)return m;
+ if(m.metaGeneration===gen&&m.power!==undefined&&Number.isFinite(m.accuracy))return m;
  try{
   const data=await api('move/'+String(m.name).toLowerCase().replace(/\s+/g,'-'));
-  return {...m,...moveGenerationData(data,gen),target:data.target?.name,priority:data.priority||0,metaGeneration:gen};
+  const historical=moveGenerationData(data,gen);return {...m,...historical,target:data.target?.name,priority:data.priority||0,metaGeneration:gen};
  }catch{return m}
 }
 async function enrichTeamMoves(){
@@ -215,7 +216,7 @@ async function enrichTeamMoves(){
   if(!p.baseStats){try{const info=await api('pokemon/'+p.id);p.baseStats=Object.fromEntries(info.stats.map(s=>[s.stat.name,s.base_stat]));updated=true}catch{}}
   for(let i=0;i<p.moves.length;i++){
    const m=p.moves[i];
-   if(m.metaGeneration!==gen||m.accuracy===undefined){
+   if(m.metaGeneration!==gen||!Number.isFinite(m.accuracy)){
     const next=await enrichMove(m,gen);
     if(next!==m){p.moves[i]=next;updated=true}
    }
@@ -246,14 +247,14 @@ function moveValue(move,attacker,target,gen,ally){
  if(mult===null)return null;
  if(move.damageClass==='status'||move.power===0)return null;
  const stab=attacker.types.includes(move.type)?1.5:1;
- if(!Number.isFinite(move.power)||move.power<=0||!Number.isFinite(move.accuracy)||VARIABLE_MOVES.has(move.name))return null;
+ if(!Number.isFinite(move.power)||move.power<=0||(!Number.isFinite(move.accuracy)&&!(move.accuracy===null&&ALWAYS_HIT_MOVES.has(move.name)))||VARIABLE_MOVES.has(move.name))return null;
  const power=move.power;
  const spread=spreadTargets.has(move.target);
  const penalty=spread&&gen>=4?.75:1;
  const a=attacker.baseStats?.[move.damageClass==='special'?'special-attack':'attack'];
  const d=target.baseStats?.[move.damageClass==='special'?'special-defense':'defense'];
  const statFactor=Number.isFinite(a)&&Number.isFinite(d)?Math.sqrt((a+30)/(d+30)):1;
- const value=mult*stab*(power/60)*penalty*(move.accuracy/100)*statFactor;
+ const value=mult*stab*(power/60)*penalty*((move.accuracy===null?100:move.accuracy)/100)*statFactor;
  const allyRisk=ally&&allyHitTargets.has(move.target)?matchup(move.type,ally.types,gen):0;
  return {move,value,mult,spread,allyRisk,priority:move.priority||0};
 }

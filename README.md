@@ -1,1 +1,1 @@
-Tak-Dex V32: corrected battle ranking for missing accuracy; attack score shown per move; 6v6 displays approximate HP damage ranges. Offline coverage remains subject to successful data download.
+Tak-Dex V33: fixes numeric move accuracy being overwritten by null historical records. Thunderbolt is 100% accuracy, not always-hit. Re-enriches saved moves with missing accuracy. Unknown accuracy is marked Data missing rather than Always hits. Preserves saved teams and offline cache.
