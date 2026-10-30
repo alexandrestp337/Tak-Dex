@@ -1,6 +1,5 @@
-# PokéTact V5
-- Evolution buttons hide once species is confirmed to have no available evolution for the selected game; while checking, the button is disabled.
-- Double battle now ranks pairs, proposes attacks and targets, recognizes common spread move targets and potential friendly-fire, balances type-based offense and incoming STAB risk, and uses base Speed as a minor tie-breaker.
-- Existing saved moves from earlier versions do not have power/target metadata. Re-select those moves in the editor for more informative pair recommendations.
-- This is a heuristic, not a turn simulator or damage calculator. It cannot predict opponent moves, Protect, switching, abilities, items, actual turn order, or accurate damage. Move targets and evolution conditions are not exhaustively modeled.
-- First lookups still require internet; full offline database remains future work.
+# Tak-Dex V6 — visual refresh
+
+Renames PokéTact to Tak-Dex and adds charcoal/red styling, a faded Poké Ball background, and a restrained gold highlight for the top recommendation. Existing team, move, evolution, and battle logic remains unchanged.
+
+Upload the six files to the existing GitHub Pages repository root. Keeping the same URL preserves locally saved teams. The full offline database is not included yet; initial lookups still require internet. Rankings remain heuristic.
