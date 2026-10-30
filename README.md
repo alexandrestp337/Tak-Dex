@@ -1,1 +1,1 @@
-Tak-Dex V19: light wallpaper with black grunge contours and optional saved-team offline cache. This is NOT a complete offline Pokémon database or APK. Upload all 8 files. Existing browser teams remain in localStorage.
+Tak-Dex V20: Approved light wallpaper image #2 (879 × 1789), optional CacheStorage-based offline pack for saved-team Pokémon, moves, names and evolution chains. This is NOT a full offline database; uncached Pokémon and game-specific machine lists still need internet. No APK included. Upload all eight files to GitHub. Existing teams remain in localStorage.\n

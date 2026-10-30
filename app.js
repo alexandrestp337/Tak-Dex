@@ -4,7 +4,26 @@ const colors={normal:'#A8A77A',fire:'#EE8130',water:'#6390F0',electric:'#F7D02C'
 const chart={normal:{rock:.5,ghost:0,steel:.5},fire:{fire:.5,water:.5,grass:2,ice:2,bug:2,rock:.5,dragon:.5,steel:2},water:{fire:2,water:.5,grass:.5,ground:2,rock:2,dragon:.5},electric:{water:2,electric:.5,grass:.5,ground:0,flying:2,dragon:.5},grass:{fire:.5,water:2,grass:.5,poison:.5,ground:2,flying:.5,bug:.5,rock:2,dragon:.5,steel:.5},ice:{fire:.5,water:.5,grass:2,ice:.5,ground:2,flying:2,dragon:2,steel:.5},fighting:{normal:2,ice:2,rock:2,dark:2,steel:2,poison:.5,flying:.5,psychic:.5,bug:.5,ghost:0,fairy:.5},poison:{grass:2,poison:.5,ground:.5,rock:.5,ghost:.5,steel:0,fairy:2},ground:{fire:2,electric:2,grass:.5,poison:2,flying:0,bug:.5,rock:2,steel:2},flying:{electric:.5,grass:2,fighting:2,bug:2,rock:.5,steel:.5},psychic:{fighting:2,poison:2,psychic:.5,dark:0,steel:.5},bug:{fire:.5,grass:2,fighting:.5,poison:.5,flying:.5,psychic:2,ghost:.5,dark:2,steel:.5,fairy:.5},rock:{fire:2,ice:2,fighting:.5,ground:.5,flying:2,bug:2,steel:.5},ghost:{normal:0,psychic:2,ghost:2,dark:.5},dragon:{dragon:2,steel:.5,fairy:0},dark:{fighting:.5,psychic:2,ghost:2,dark:.5,fairy:.5},steel:{fire:.5,water:.5,electric:.5,ice:2,rock:2,steel:.5,fairy:2},fairy:{fire:.5,fighting:2,poison:.5,dragon:2,dark:2,steel:.5}};
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pretty=s=>s.split('-').map(w=>w[0]?.toUpperCase()+w.slice(1)).join(' ');const pill=t=>`<span class="pill" style="--c:${colors[t]||'#777'}">${pretty(t)}</span>`;const chip=m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`;
 let teams=JSON.parse(localStorage.getItem('poketact-teams')||'[]'),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const save=()=>localStorage.setItem('poketact-teams',JSON.stringify(teams));
-async function api(path){const key='pt-v2:'+path;try{const cached=localStorage.getItem(key);if(cached)return JSON.parse(cached)}catch{}const res=await fetch('https://pokeapi.co/api/v2/'+path);if(!res.ok)throw Error('Pokédex request failed');const data=await res.json();try{localStorage.setItem(key,JSON.stringify(data))}catch{}return data}
+// CacheStorage is larger than localStorage and survives network outages for downloaded records.
+const OFFLINE_CACHE='takdex-pokeapi-records-v1';
+async function api(path){
+ const key='pt-v2:'+path,url='https://pokeapi.co/api/v2/'+path;
+ try{const cached=localStorage.getItem(key);if(cached)return JSON.parse(cached)}catch{}
+ try{if('caches' in window){const hit=await (await caches.open(OFFLINE_CACHE)).match(url);if(hit)return await hit.json()}}catch{}
+ const res=await fetch(url);if(!res.ok)throw Error('Pokédex request failed');
+ const data=await res.clone().json();
+ try{if('caches' in window)await (await caches.open(OFFLINE_CACHE)).put(url,res.clone())}catch{}
+ try{localStorage.setItem(key,JSON.stringify(data))}catch{}
+ return data;
+}
+// Force refresh during an explicit offline pack download, even for previously cached entries.
+async function offlineFetch(path){
+ const url='https://pokeapi.co/api/v2/'+path;
+ const response=await fetch(url,{cache:'reload'});if(!response.ok)throw Error('Download failed: '+path);
+ if(!('caches' in window))throw Error('Offline storage unavailable');
+ await (await caches.open(OFFLINE_CACHE)).put(url,response.clone());
+ return await response.json();
+}
 async function listNames(){if(!names){names=(await api('pokemon?limit=2000')).results.map(x=>x.name)}return names}
 function search(input,results,choose){let token=0;input.addEventListener('input',async()=>{const mine=++token,q=input.value.trim().toLowerCase().replace(/\s+/g,'-');results.hidden=true;if(q.length<2)return;results.innerHTML='<p class="note">Searching…</p>';results.hidden=false;try{const found=(await listNames()).filter(n=>n.includes(q)).slice(0,12);if(mine!==token)return;results.innerHTML=found.map(n=>`<button type="button" data-value="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No matches</p>'}catch{results.innerHTML='<p class="error">Internet needed for first lookup.</p>'}});results.addEventListener('click',e=>{const b=e.target.closest('[data-value]');if(b){results.hidden=true;input.value=pretty(b.dataset.value);choose(b.dataset.value)}})}
 function showTeams(){$('teams').innerHTML=teams.length?teams.map(t=>`<article class="card"><strong>${safe(t.name)}</strong><p>${safe(t.game)} · ${t.pokemon.filter(Boolean).length}/6 Pokémon</p><button data-open="${safe(t.id)}">Open</button> <button data-delete="${safe(t.id)}">Delete</button></article>`).join(''):'<p>No teams yet.</p>'}
@@ -394,21 +413,39 @@ for(const id of ['foeInput','foeInput2']){
  update();
 }
 
-// V19: optional, explicitly scoped saved-team offline cache. Does not claim full Pokédex coverage.
+// V20: optional downloadable team + opponent offline pack, with durable CacheStorage.
 (function(){
- const btn=document.getElementById('offlineDownload'), status=document.getElementById('offlineStatus');
- const key='takdex-offline-team-pack-v1';
- function refresh(){const stamp=localStorage.getItem(key);status.textContent=stamp?'🟢 Saved-team data cached · '+new Date(stamp).toLocaleDateString():'⚪ Saved-team offline data not downloaded';}
+ const btn=document.getElementById('offlineDownload'),status=document.getElementById('offlineStatus');
+ const key='takdex-offline-pack-v20';
+ const setStatus=()=>{
+  let record=null;try{record=JSON.parse(localStorage.getItem(key)||'null')}catch{}
+  status.textContent=record?.complete?'🟢 Offline pack available · '+record.count+' records · '+new Date(record.date).toLocaleDateString():'⚪ Offline pack not downloaded';
+  btn.textContent=record?.complete?'Update offline data':'Download offline data';
+ };
  btn.addEventListener('click',async()=>{
-  btn.disabled=true;status.textContent='Downloading saved-team Pokémon and moves…';
+  if(!('caches' in window)){status.textContent='Offline storage is unavailable in this browser.';return}
+  btn.disabled=true;status.textContent='Preparing offline pack…';
   try{
-   await api('pokemon?limit=2000');
-   const ids=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).map(p=>p.id)));
+   const all=new Set(['pokemon?limit=2000','move?limit=1000']);
+   const pokemon=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).map(p=>String(p.id))));
    const moves=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).flatMap(p=>(p.moves||[]).map(m=>m.name.toLowerCase().replace(/\s+/g,'-')))));
-   let done=0;const tasks=[...ids].map(id=>'pokemon/'+id).concat([...moves].map(m=>'move/'+m));
-   for(const path of tasks){await api(path);done++;status.textContent='Caching '+done+' / '+tasks.length+' records…'}
-   localStorage.setItem(key,new Date().toISOString());refresh();
-  }catch(e){status.textContent='Download incomplete. Internet or storage may be unavailable.'}
+   // Include built-in Elite Four opponent rosters when present.
+   try{if(typeof EMERALD_LEAGUE!=='undefined'){Object.values(EMERALD_LEAGUE).forEach(group=>{const entries=Array.isArray(group)?group:Object.values(group);entries.flat(Infinity).forEach(p=>{if(p?.name)pokemon.add(String(p.name).toLowerCase().replace(/\s+/g,'-'));if(p?.pokemon)pokemon.add(String(p.pokemon).toLowerCase().replace(/\s+/g,'-'));(p?.moves||[]).forEach(m=>moves.add(String(m).toLowerCase().replace(/\s+/g,'-')))});})}}catch{}
+   pokemon.forEach(id=>all.add('pokemon/'+id));moves.forEach(m=>all.add('move/'+m));
+   // Pokémon species and evolution chains enable offline Pokédex evolution browsing.
+   const errors=[];let done=0;
+   for(const id of pokemon){
+    try{const species=await offlineFetch('pokemon-species/'+id);all.add('pokemon-species/'+id);
+      const chainPath=species.evolution_chain?.url?.replace('https://pokeapi.co/api/v2/','');if(chainPath)all.add(chainPath);
+    }catch(e){errors.push('species '+id)}
+   }
+   for(const path of all){
+    try{await offlineFetch(path)}catch(e){errors.push(path)}
+    done++;status.textContent='Downloading '+done+' / '+all.size+' records…';
+   }
+   if(errors.length){status.textContent='⚠ Partial download: '+errors.length+' records failed. Retry to complete.';return}
+   localStorage.setItem(key,JSON.stringify({complete:true,count:all.size,date:new Date().toISOString()}));setStatus();
+  }catch(e){status.textContent='⚠ Download incomplete. Check connection and free storage.'}
   finally{btn.disabled=false}
- });refresh();
+ });setStatus();
 })();
