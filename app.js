@@ -381,3 +381,15 @@ $('tmCheck').onclick=async()=>{const item=machineEntries[Number($('tmMove').valu
 refreshTeamMenus();
 // refresh after team creation/edit without changing existing behavior
 const previousShowTeams=showTeams;showTeams=function(){previousShowTeams();refreshTeamMenus()};
+
+// V18: select existing opponent text on focus; clear in one tap without deleting character-by-character.
+for(const id of ['foeInput','foeInput2']){
+ const field=$(id),clear=document.querySelector(`[data-clear-opponent="${id}"]`);
+ const update=()=>{clear.hidden=!field.value};
+ field.addEventListener('focus',()=>{if(field.value)field.select();update()});
+ field.addEventListener('click',()=>{if(field.value)field.select()});
+ field.addEventListener('input',update);
+ clear.addEventListener('pointerdown',e=>e.preventDefault());
+ clear.addEventListener('click',()=>{field.value='';field.dispatchEvent(new Event('input',{bubbles:true}));$(id==='foeInput'?'foePreview':'foePreview2').innerHTML='';if(id==='foeInput')foe=null;else foe2=null;showBattle();field.focus();update()});
+ update();
+}

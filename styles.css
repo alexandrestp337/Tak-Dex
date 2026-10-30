@@ -191,3 +191,12 @@ body.light::after{content:"";display:block;position:fixed;inset:0;z-index:-1;poi
 .planner-opponent .rank-card{margin:10px 0}
 .planner-opponent .expand-details h4{margin:12px 0 5px}
 @media(max-width:390px){.planner-opponent-art{width:55px;height:55px;flex-basis:55px}.planner-opponent-heading{gap:6px}.planner-opponent-number{padding:9px}}
+
+/* V18: identical wallpaper geometry in both themes, light palette is recolored. */
+body.light{background:transparent!important;background-color:transparent!important}
+body.light::after{background-image:linear-gradient(rgba(255,255,255,.04),rgba(255,255,255,.04)),url('./takdex-background-light.webp');background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;background-color:#f6f3f3}
+/* Clear control for quick battle opponent replacement. */
+.battle-search{position:relative}
+.battle-search input{padding-right:45px!important}
+.battle-clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:30px;height:30px;min-width:30px;padding:0;border:1px solid var(--edge);border-radius:50%;background:var(--surface);color:var(--text);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2}
+.battle-clear[hidden]{display:none!important}
