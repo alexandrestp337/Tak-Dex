@@ -124,3 +124,14 @@ body.light .main-tabs button.selected{color:#c5263b!important}
 .dex-entry{display:flex;gap:14px;align-items:center}
 .dex-entry img{width:110px;max-width:40%;object-fit:contain}
 @media(max-width:390px){body{padding-left:9px;padding-right:9px}.rank-card{padding:10px 8px}.recommendation-head{gap:4px}.ranking-medal{min-width:28px}.rank-portrait{flex-basis:67px;width:67px}.rank-info strong{font-size:.91rem}.rank-risk{flex-basis:50px;font-size:.55rem}.rank-info .pill{font-size:.61rem;padding:4px 5px}}
+
+/* V10: reference-inspired background only. Oversized dark fractured Poké Ball at top right. */
+body{background:radial-gradient(ellipse 85% 42% at 91% -8%,#40151c 0%,#1d1016 38%,transparent 80%),#0b0d11}
+body.light{background:radial-gradient(ellipse 85% 42% at 91% -8%,#f4d9dd 0%,transparent 78%),var(--bg)}
+body::before{top:-140px;right:-145px;width:min(105vw,590px);max-width:none;aspect-ratio:1;border-radius:50%;opacity:.45;transform:rotate(-20deg);clip-path:none;box-shadow:inset 0 0 0 9px #06070a,inset 0 0 42px #050607,0 0 60px #8d172b29;background:
+radial-gradient(circle at 50% 50%,#24252a 0 8%,#090a0e 8.5% 12%,#545055 12.5% 15%,#090b0e 15.5% 17%,transparent 17.5%),
+linear-gradient(0deg,transparent 0 45%,#07080b 45% 55%,transparent 55%),
+conic-gradient(from 5deg at 50% 50%,#a82231 0 48deg,#0a0b0e 48deg 58deg,#711c29 58deg 96deg,#0a0b0e 96deg 103deg,#a32838 103deg 180deg,#313137 180deg 222deg,#0a0b0e 222deg 233deg,#46434a 233deg 282deg,#0a0b0e 282deg 292deg,#37333b 292deg 360deg);
+filter:drop-shadow(0 12px 24px #000a)}
+body.light::before{opacity:.16}
+@media(max-width:500px){body::before{top:-85px;right:-135px;width:410px;max-width:none}}

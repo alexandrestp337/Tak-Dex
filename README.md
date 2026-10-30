@@ -1,1 +1,1 @@
-Tak-Dex V9: Four-item always-visible bottom dock (Team, Battle, Pokédex, More), narrow-screen layout fixes, basic Pokémon search and theme control. All existing team/battle functions retained. Replace all six files. The complete offline database is not yet included.
+Tak-Dex V10: only changes requested: removes expanded full Pokémon image, removes header theme toggle (theme remains in More), and updates background Poké Ball to an oversized, dark segmented reference-inspired design. No other features changed. Replace six files.
