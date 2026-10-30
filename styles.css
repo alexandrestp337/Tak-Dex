@@ -301,3 +301,8 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 /* V31: navigation indicator touches the top border of the fixed bar. */
 .main-tabs{padding-top:7px!important}
 .main-tabs button.selected::before{top:-8px!important;height:3px!important}
+
+/* V35 team controls */
+#teams article.card{position:relative;padding-bottom:38px}
+.delete-team-link{position:absolute;right:12px;bottom:9px;background:none!important;border:0!important;box-shadow:none!important;color:#ef6464!important;font-size:12px!important;font-weight:400!important;padding:3px 4px!important;min-height:0!important;width:auto!important}
+.delete-team-link:hover{text-decoration:underline}
