@@ -1,7 +1,3 @@
-# PokéTact V3 — balanced battle rankings
+PokéTact V4
 
-Adds ranked recommendations based on the best available move type effectiveness including STAB, balanced against the worst potential incoming STAB-type matchup. Includes generation-specific type chart adjustments for Gen 2–5 Steel resisting Dark/Ghost and selected Gen 1 differences.
-
-**Limitations:** These are heuristics, not damage predictions. Opponent actual moves, abilities, held items, move power, levels, stats and forms are not considered. Gen 1/2 rules are incomplete. Requires internet on first PokéAPI lookup; not a fully offline database.
-
-Upload all six files to the root of your existing GitHub Pages repository, replacing the previous versions. Team data remains in localStorage on the same origin.
+Adds Evolve buttons to saved Pokémon and a Single / Double battle toggle. Evolve uses PokéAPI evolution-chain data and asks for confirmation, retains all four moves and team slot. It displays some evolution conditions but does NOT verify them, and game availability filtering is approximate. Double mode ranks individual Pokémon against both opposing Pokémon, not optimal pairs or spread-move effects. The first lookup still requires internet. This is NOT a complete offline database or a full damage calculator. Existing teams remain in browser localStorage.

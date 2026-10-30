@@ -3,23 +3,70 @@ const vg={'Red':'red-blue','Blue':'red-blue','Yellow':'yellow','Gold':'gold-silv
 const colors={normal:'#A8A77A',fire:'#EE8130',water:'#6390F0',electric:'#F7D02C',grass:'#7AC74C',ice:'#96D9D6',fighting:'#C22E28',poison:'#A33EA1',ground:'#E2BF65',flying:'#A98FF3',psychic:'#F95587',bug:'#A6B91A',rock:'#B6A136',ghost:'#735797',dragon:'#6F35FC',dark:'#705746',steel:'#B7B7CE',fairy:'#D685AD'};
 const chart={normal:{rock:.5,ghost:0,steel:.5},fire:{fire:.5,water:.5,grass:2,ice:2,bug:2,rock:.5,dragon:.5,steel:2},water:{fire:2,water:.5,grass:.5,ground:2,rock:2,dragon:.5},electric:{water:2,electric:.5,grass:.5,ground:0,flying:2,dragon:.5},grass:{fire:.5,water:2,grass:.5,poison:.5,ground:2,flying:.5,bug:.5,rock:2,dragon:.5,steel:.5},ice:{fire:.5,water:.5,grass:2,ice:.5,ground:2,flying:2,dragon:2,steel:.5},fighting:{normal:2,ice:2,rock:2,dark:2,steel:2,poison:.5,flying:.5,psychic:.5,bug:.5,ghost:0,fairy:.5},poison:{grass:2,poison:.5,ground:.5,rock:.5,ghost:.5,steel:0,fairy:2},ground:{fire:2,electric:2,grass:.5,poison:2,flying:0,bug:.5,rock:2,steel:2},flying:{electric:.5,grass:2,fighting:2,bug:2,rock:.5,steel:.5},psychic:{fighting:2,poison:2,psychic:.5,dark:0,steel:.5},bug:{fire:.5,grass:2,fighting:.5,poison:.5,flying:.5,psychic:2,ghost:.5,dark:2,steel:.5,fairy:.5},rock:{fire:2,ice:2,fighting:.5,ground:.5,flying:2,bug:2,steel:.5},ghost:{normal:0,psychic:2,ghost:2,dark:.5},dragon:{dragon:2,steel:.5,fairy:0},dark:{fighting:.5,psychic:2,ghost:2,dark:.5,fairy:.5},steel:{fire:.5,water:.5,electric:.5,ice:2,rock:2,steel:.5,fairy:2},fairy:{fire:.5,fighting:2,poison:.5,dragon:2,dark:2,steel:.5}};
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pretty=s=>s.split('-').map(w=>w[0]?.toUpperCase()+w.slice(1)).join(' ');const pill=t=>`<span class="pill" style="--c:${colors[t]||'#777'}">${pretty(t)}</span>`;const chip=m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`;
-let teams=JSON.parse(localStorage.getItem('poketact-teams')||'[]'),current=null,slotIndex=0,chosen=null,foe=null,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const save=()=>localStorage.setItem('poketact-teams',JSON.stringify(teams));
+let teams=JSON.parse(localStorage.getItem('poketact-teams')||'[]'),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const save=()=>localStorage.setItem('poketact-teams',JSON.stringify(teams));
 async function api(path){const key='pt-v2:'+path;try{const cached=localStorage.getItem(key);if(cached)return JSON.parse(cached)}catch{}const res=await fetch('https://pokeapi.co/api/v2/'+path);if(!res.ok)throw Error('Pokédex request failed');const data=await res.json();try{localStorage.setItem(key,JSON.stringify(data))}catch{}return data}
 async function listNames(){if(!names){names=(await api('pokemon?limit=2000')).results.map(x=>x.name)}return names}
 function search(input,results,choose){let token=0;input.addEventListener('input',async()=>{const mine=++token,q=input.value.trim().toLowerCase().replace(/\s+/g,'-');results.hidden=true;if(q.length<2)return;results.innerHTML='<p class="note">Searching…</p>';results.hidden=false;try{const found=(await listNames()).filter(n=>n.includes(q)).slice(0,12);if(mine!==token)return;results.innerHTML=found.map(n=>`<button type="button" data-value="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No matches</p>'}catch{results.innerHTML='<p class="error">Internet needed for first lookup.</p>'}});results.addEventListener('click',e=>{const b=e.target.closest('[data-value]');if(b){results.hidden=true;input.value=pretty(b.dataset.value);choose(b.dataset.value)}})}
 function showTeams(){$('teams').innerHTML=teams.length?teams.map(t=>`<article class="card"><strong>${safe(t.name)}</strong><p>${safe(t.game)} · ${t.pokemon.filter(Boolean).length}/6 Pokémon</p><button data-open="${safe(t.id)}">Open</button> <button data-delete="${safe(t.id)}">Delete</button></article>`).join(''):'<p>No teams yet.</p>'}
 $('teams').onclick=e=>{const open=e.target.closest('[data-open]'),del=e.target.closest('[data-delete]');if(open)openTeam(open.dataset.open);if(del&&confirm('Delete team?')){teams=teams.filter(t=>t.id!==del.dataset.delete);save();showTeams();$('editor').hidden=true}};
 function openTeam(id){current=teams.find(t=>t.id===id);$('editor').hidden=false;$('editorTitle').textContent=current.name;$('editorGame').textContent=current.game;showSlots()}
-function showSlots(){$('slots').innerHTML=Array.from({length:6},(_,i)=>{const p=current.pokemon[i];return `<article class="slot">${p?`<div class="identity"><img src="${safe(p.image)}" alt=""><div><strong>${safe(p.name)}</strong><div class="pills">${p.types.map(pill).join('')}</div></div></div><div>${p.moves.map(chip).join('')}</div>`:`<strong>Empty slot ${i+1}</strong><p>Add a Pokémon</p>`}<button data-slot="${i}">${p?'Edit':'＋ Add'}</button></article>`}).join('')};$('slots').onclick=e=>{const b=e.target.closest('[data-slot]');if(b)editSlot(Number(b.dataset.slot))};
+function showSlots(){$('slots').innerHTML=Array.from({length:6},(_,i)=>{const p=current.pokemon[i];return `<article class="slot">${p?`<div class="identity"><img src="${safe(p.image)}" alt=""><div><strong>${safe(p.name)}</strong><div class="pills">${p.types.map(pill).join('')}</div></div></div><div>${p.moves.map(chip).join('')}</div>`:`<strong>Empty slot ${i+1}</strong><p>Add a Pokémon</p>`}<button data-slot="${i}">${p?'Edit':'＋ Add'}</button>${p?` <button data-evolve="${i}">↑ Evolve</button>`:''}</article>`}).join('')};$('slots').onclick=e=>{const b=e.target.closest('[data-slot]');if(b)editSlot(Number(b.dataset.slot));const ev=e.target.closest('[data-evolve]');if(ev)evolveSlot(Number(ev.dataset.evolve))};
 function clearForm(){chosen=null;validMoves=[];selectedMoves=[null,null,null,null];$('pokeInput').value='';$('pokePreview').innerHTML='';$('moveNote').textContent='Select a Pokémon to load its moves.';$('error').hidden=true;$('savePoke').disabled=true;drawMoves()}
-function editSlot(i){slotIndex=i;clearForm();$('pokeHeading').textContent=current.pokemon[i]?'Edit Pokémon':'Add Pokémon';$('removePoke').hidden=!current.pokemon[i];$('pokeDialog').showModal();const p=current.pokemon[i];if(p){$('pokeInput').value=p.name;loadPokemon(p.id,p.moves)}}
+function editSlot(i){slotIndex=i;clearForm();$('pokeHeading').textContent=current.pokemon[i]?'Edit Pokémon':'Add Pokémon';$('removePoke').hidden=!current.pokemon[i];$('evolvePoke').hidden=!current.pokemon[i];$('pokeDialog').showModal();const p=current.pokemon[i];if(p){$('pokeInput').value=p.name;loadPokemon(p.id,p.moves)}}
 async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=p.types.sort((a,b)=>a.slot-b.slot).map(t=>t.type.name);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
 function drawMoves(){$('moveFields').innerHTML=Array.from({length:4},(_,i)=>`<div class="moveRow"><b>${i+1}</b><div><div class="search"><input data-move-input="${i}" autocomplete="off" placeholder="Search attack ${i+1}" value="${safe(selectedMoves[i]?.name||'')}"><div class="suggestions" data-results="${i}" hidden></div></div><div class="moveType" data-type="${i}">${selectedMoves[i]?.type?pill(selectedMoves[i].type):''}</div></div><button type="button" class="clear" data-clear="${i}">×</button></div>`).join('')}
 $('moveFields').addEventListener('input',e=>{const i=e.target.dataset.moveInput;if(i===undefined)return;selectedMoves[+i]=null;const results=document.querySelector(`[data-results="${i}"]`),q=e.target.value.toLowerCase();document.querySelector(`[data-type="${i}"]`).innerHTML='';results.hidden=!q;results.innerHTML=validMoves.filter(n=>n.includes(q.replace(/\s+/g,'-'))).slice(0,12).map(n=>`<button type="button" data-pick="${i}" data-name="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No matching move for this game</p>'});
 $('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.target.closest('[data-pick]');if(c){const i=+c.dataset.clear;selectedMoves[i]=null;drawMoves()}if(b){const i=+b.dataset.pick,n=b.dataset.name;document.querySelector(`[data-results="${i}"]`).hidden=true;try{const m=await api('move/'+n);selectedMoves[i]={name:pretty(n),type:m.type.name};drawMoves()}catch{$('error').hidden=false;$('error').textContent='Could not load move type.'}}};
-$('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen)return;current.pokemon[slotIndex]={...chosen,moves:selectedMoves.filter(Boolean)};save();showSlots();showTeams();$('pokeDialog').close()};$('removePoke').onclick=()=>{current.pokemon[slotIndex]=null;save();showSlots();showTeams();$('pokeDialog').close()};$('cancelPoke').onclick=()=>$('pokeDialog').close();
+$('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen)return;current.pokemon[slotIndex]={...chosen,moves:selectedMoves.filter(Boolean)};save();showSlots();showTeams();$('pokeDialog').close()};$('evolvePoke').onclick=()=>evolveSlot(slotIndex);$('removePoke').onclick=()=>{current.pokemon[slotIndex]=null;save();showSlots();showTeams();$('pokeDialog').close()};$('cancelPoke').onclick=()=>$('pokeDialog').close();
 $('game').innerHTML=games.map(g=>`<option>${g}</option>`).join('');$('game').value='Emerald';$('addTeam').onclick=()=>$('newDialog').showModal();$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();const t={id:String(Date.now())+Math.random().toString(36).slice(2),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id)};$('closeTeam').onclick=()=>$('editor').hidden=true;
 search($('pokeInput'),$('pokeResults'),n=>loadPokemon(n));search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={name:pretty(p.name),types:p.types.map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default};$('foePreview').innerHTML=`<div class="identity"><img src="${safe(foe.image)}"><div><strong>${safe(foe.name)}</strong><div class="pills">${foe.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
+
+let evolveBusy=false;
+async function evolveSlot(i){
+ if(evolveBusy)return;
+ const old=current?.pokemon[i];if(!old)return;
+ evolveBusy=true;
+ try{
+  const species=await api('pokemon-species/'+old.id);
+  const chain=await api(species.evolution_chain.url.replace('https://pokeapi.co/api/v2/',''));
+  const options=[];
+  function walk(node){if(node.species.name===species.name){for(const e of node.evolves_to)options.push(e)}else for(const e of node.evolves_to)walk(e)}
+  walk(chain.chain);
+  if(!options.length){alert(old.name+' has no further evolution.');return}
+  const choices=[];
+  for(const option of options){
+   const candidate=await api('pokemon/'+option.species.name);
+   const group=vg[current.game];
+   const hasMoves=candidate.moves.some(m=>m.version_group_details.some(v=>v.version_group.name===group));
+   if(hasMoves)choices.push({candidate,details:option.evolution_details});
+  }
+  if(!choices.length){alert('No evolution data found for this Pokémon in '+current.game+'.');return}
+  let chosenOption=choices[0];
+  if(choices.length>1){
+   const names=choices.map((c,n)=>`${n+1}. ${pretty(c.candidate.name)}`).join('\n');
+   const answer=prompt('Choose an evolution:\n'+names,'1');
+   if(answer===null)return;
+   chosenOption=choices[Number(answer)-1];if(!chosenOption){alert('Invalid selection');return}
+  }
+  const detail=chosenOption.details?.[0];
+  const hints=[];
+  if(detail?.min_level)hints.push('Level '+detail.min_level+'+');
+  if(detail?.item)hints.push('Use '+pretty(detail.item.name));
+  if(detail?.held_item)hints.push('Hold '+pretty(detail.held_item.name));
+  if(detail?.trigger?.name==='trade')hints.push('Trade required');
+  if(detail?.min_happiness)hints.push('Friendship requirement');
+  const note=hints.length?hints.join(', '):'Evolution conditions may apply';
+  if(!confirm(`Evolve ${old.name} into ${pretty(chosenOption.candidate.name)}?\n${note}\n\nPokéTact does not verify that conditions are met. Existing moves will stay unchanged.`))return;
+  const p=chosenOption.candidate;
+  current.pokemon[i]={id:p.id,name:pretty(p.name),types:p.types.sort((a,b)=>a.slot-b.slot).map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'',moves:old.moves};
+  save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close();
+ }catch(e){alert('Could not check evolution. Internet may be needed.')}finally{evolveBusy=false}
+}
+search($('foeInput2'),$('foeResults2'),async n=>{
+ try{const p=await api('pokemon/'+n);foe2={name:pretty(p.name),types:p.types.map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default};$('foePreview2').innerHTML=`<div class="identity"><img src="${safe(foe2.image)}" alt=""><div><strong>${safe(foe2.name)}</strong><div class="pills">${foe2.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load second opponent.'}
+});
+$('singleMode').onclick=()=>{doubleMode=false;$('secondFoe').hidden=true;$('singleMode').classList.add('selected');$('doubleMode').classList.remove('selected');showBattle()};
+$('doubleMode').onclick=()=>{doubleMode=true;$('secondFoe').hidden=false;$('doubleMode').classList.add('selected');$('singleMode').classList.remove('selected');showBattle()};
 function gameGeneration(game){
  const i=games.indexOf(game);
  if(i<=2)return 1;if(i<=5)return 2;if(i<=10)return 3;
@@ -62,15 +109,16 @@ function analyze(p,opponent,gen){
 function showBattle(){
  if(!current){$('matchups').innerHTML='<p>Open a team first.</p>';return}
  if(!foe){$('matchups').innerHTML='<p>Select an opponent above.</p>';return}
- const gen=gameGeneration(current.game);
- const ranked=current.pokemon.filter(Boolean).map(p=>analyze(p,foe,gen)).sort((a,b)=>b.score-a.score);
- const warning=gen<=2?'<p class="error">Early-generation battle mechanics are not fully modeled. Rankings are preliminary.</p>':'';
- const caveat='<p class="note">Ranked using your saved moves (type effectiveness + STAB) and the opponent’s possible STAB types. Incoming attacks are hypothetical, not confirmed moves. No levels, move power, abilities, immunities from abilities, items, or actual damage calculations are included. This is a matchup recommendation, not a damage prediction.</p>';
- $('matchups').innerHTML=warning+caveat+(ranked.length?ranked.map((r,i)=>{
-  const risk=r.worst>=4?'High risk (4× weakness)':r.worst>=2?'Weak to opponent STAB':r.worst<1?'Resists opponent STAB':'Neutral defensive matchup';
-  const summary=r.best?`${safe(r.best.name)}: ${effectText(r.best.total)} with STAB included`:'No offensive moves selected';
-  return `<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${i+1}</span><div class="identity"><img src="${safe(r.p.image||'')}" alt=""><div><strong>${safe(r.p.name)}</strong><div class="pills">${r.p.types.map(pill).join('')}</div></div></div></div><div class="rank-summary"><strong>${summary}</strong><span class="${r.worst>=2?'bad':r.worst<1?'good':''}">${risk}</span></div><p class="note">Potential incoming STAB: ${r.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</p>${r.offense.map(m=>`<div class="effect">${chip(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.effectiveness)} type · ${effectText(m.total)} incl. STAB</b></div>`).join('')||'<p>No moves saved</p>'}</article>`
- }).join(''):'<p>No Pokémon on this team yet.</p>');
+ if(doubleMode&&!foe2){$('matchups').innerHTML='<p>Select the second opponent to compare both threats.</p>';return}
+ const gen=gameGeneration(current.game),opponents=doubleMode?[foe,foe2]:[foe];
+ const ranked=current.pokemon.filter(Boolean).map(p=>{
+  const reports=opponents.map(o=>analyze(p,o,gen));
+  const score=reports.reduce((s,r)=>s+r.score,0)/reports.length;
+  return {p,reports,score,worst:Math.max(...reports.map(r=>r.worst))};
+ }).sort((a,b)=>b.score-a.score);
+ const caveat=doubleMode?'Double mode compares each Pokémon against both opponents and ranks individual team members. It does NOT yet calculate the best two-Pokémon pair, spread moves, ally protection, or turn order.':'Type-based ranking only; opponent moves are unknown.';
+ $('matchups').innerHTML=`<p class="note">${caveat} STAB and type effectiveness are included; move power, stats, abilities, held items and actual damage are not.</p>`+
+ ranked.map((r,i)=>`<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${i+1}</span><div class="identity"><img src="${safe(r.p.image||'')}" alt=""><div><strong>${safe(r.p.name)}</strong><div class="pills">${r.p.types.map(pill).join('')}</div></div></div></div>${r.reports.map((rep,k)=>`<div class="opponent-report"><h4>vs ${safe(opponents[k].name)}</h4><div class="rank-summary"><strong>${rep.best?`${safe(rep.best.name)} · ${effectText(rep.best.total)} incl. STAB`:'No moves selected'}</strong><span class="${rep.worst>=2?'bad':rep.worst<1?'good':''}">Worst incoming STAB: ${effectText(rep.worst)}</span></div><p class="note">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</p>${rep.offense.map(m=>`<div class="effect">${chip(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.effectiveness)} type · ${effectText(m.total)} incl. STAB</b></div>`).join('')}</div>`).join('')}</article>`).join('');
 }
 $('teamsTab').onclick=()=>{$('teamsPage').hidden=false;$('battlePage').hidden=true;$('teamsTab').classList.add('selected');$('battleTab').classList.remove('selected')};
 $('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=false;$('battleTab').classList.add('selected');$('teamsTab').classList.remove('selected');showBattle()};$('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('poketact-light',document.body.classList.contains('light'))};if(localStorage.getItem('poketact-light')==='true')document.body.classList.add('light');showTeams();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
