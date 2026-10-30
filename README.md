@@ -1,1 +1,1 @@
-Tak-Dex V36: Team card Open, Edit, Export buttons grouped together. Delete remains small red text at bottom right. Upload all files to GitHub Pages.
+Tak-Dex V37: unified TM/HM searchable combobox. Tap arrow to browse all, or type to filter by move or machine number. All existing team data stays in localStorage.

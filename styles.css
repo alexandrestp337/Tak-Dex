@@ -308,3 +308,6 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 .delete-team-link:hover{text-decoration:underline}
 
 .team-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.team-actions button{padding:9px 12px;font-size:.86rem}
+
+/* V37: combined searchable TM/HM selector */
+.tm-combo{position:relative}.tm-combo input{padding-right:52px}.tm-combo-arrow{position:absolute;right:2px;top:7px;bottom:2px;width:44px;padding:0;border-radius:0 8px 8px 0;background:transparent;color:var(--text);font-size:1.3rem;border-left:1px solid var(--edge)}.tm-combo .suggestions{top:100%;max-height:230px}.tm-combo .suggestions button:focus{background:var(--bg);outline:1px solid var(--accent)}

@@ -460,22 +460,40 @@ $('planAnalyze').onclick=async()=>{const result=$('planResults');result.textCont
 // TM/HM compatibility uses exact version-group machine data, not species move presence alone.
 let machineEntries=[];
 function machineLabel(m){return m.item.toUpperCase()+' — '+pretty(m.move)}
+function setMachineResults(open){
+ $('tmMoveResults').hidden=!open;
+ $('tmMoveSearch').setAttribute('aria-expanded',String(open));
+ $('tmMoveBrowse').setAttribute('aria-expanded',String(open));
+}
+function machineMatches(q){
+ const compact=q.toLowerCase().replace(/[\s-]/g,'');
+ return machineEntries.map((m,i)=>({...m,i})).filter(m=>!compact||m.item.includes(compact)||m.move.replace(/-/g,'').includes(compact)||pretty(m.move).toLowerCase().replace(/\s+/g,'').includes(compact)||(/^\d+$/.test(compact)&&String(Number(m.item.replace(/\D/g,'')))===String(Number(compact))));
+}
+function showMachineResults(q='',all=false){
+ const results=$('tmMoveResults');const found=machineMatches(q).slice(0,all?machineEntries.length:25);
+ results.innerHTML=found.map(m=>`<button type="button" data-machine="${m.i}">${safe(machineLabel(m))}</button>`).join('')||'<p class="note">No matching TM/HM</p>';
+ setMachineResults(true);
+}
 function renderMachineOptions(){
  const select=$('tmMove');select.innerHTML=machineEntries.map((m,i)=>`<option value="${i}">${safe(machineLabel(m))}</option>`).join('');
  const chosen=machineEntries[Number(select.value)];$('tmMoveSearch').value=chosen?machineLabel(chosen):'';
- $('tmMoveResults').hidden=true;
+ setMachineResults(false);
 }
-function chooseMachine(i){if(!machineEntries[i])return;$('tmMove').value=String(i);$('tmMoveSearch').value=machineLabel(machineEntries[i]);$('tmMoveResults').hidden=true}
-$('tmMove').addEventListener('change',()=>chooseMachine(Number($('tmMove').value)));
-$('tmMoveSearch').addEventListener('focus',e=>{e.target.select()});
-$('tmMoveSearch').addEventListener('input',()=>{
- const q=$('tmMoveSearch').value.trim().toLowerCase().replace(/\s+/g,'');const results=$('tmMoveResults');
- if(!q){results.hidden=true;return}
- const found=machineEntries.map((m,i)=>({...m,i})).filter(m=>m.item.includes(q)||m.move.replace(/-/g,'').includes(q)||pretty(m.move).toLowerCase().replace(/\s+/g,'').includes(q)||(/^\d+$/.test(q)&&String(Number(m.item.replace(/\D/g,'')))===String(Number(q)))).slice(0,15);
- results.innerHTML=found.map(m=>`<button type="button" data-machine="${m.i}">${safe(machineLabel(m))}</button>`).join('')||'<p class="note">No matching TM/HM</p>';results.hidden=false;
+function chooseMachine(i){if(!machineEntries[i])return;$('tmMove').value=String(i);$('tmMoveSearch').value=machineLabel(machineEntries[i]);setMachineResults(false)}
+$('tmMoveSearch').addEventListener('focus',e=>e.target.select());
+$('tmMoveSearch').addEventListener('input',()=>showMachineResults($('tmMoveSearch').value));
+$('tmMoveBrowse').addEventListener('click',()=>{
+ if(!$('tmMoveResults').hidden){setMachineResults(false);return}
+ showMachineResults('',true);
 });
 $('tmMoveResults').addEventListener('click',e=>{const b=e.target.closest('[data-machine]');if(b)chooseMachine(Number(b.dataset.machine))});
-$('tmMoveSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){const b=$('tmMoveResults').querySelector('[data-machine]');if(!$('tmMoveResults').hidden&&b){e.preventDefault();chooseMachine(Number(b.dataset.machine))}}});
+$('tmMoveSearch').addEventListener('keydown',e=>{
+ if(e.key==='Escape')setMachineResults(false);
+ if(e.key==='ArrowDown'){if($('tmMoveResults').hidden)showMachineResults('',true);$('tmMoveResults').querySelector('[data-machine]')?.focus();e.preventDefault()}
+ if(e.key==='Enter'){const b=$('tmMoveResults').querySelector('[data-machine]');if(!$('tmMoveResults').hidden&&b){e.preventDefault();chooseMachine(Number(b.dataset.machine))}}
+});
+$('tmMoveResults').addEventListener('keydown',e=>{if(e.key==='Escape'){setMachineResults(false);$('tmMoveSearch').focus()}});
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('.tm-combo'))setMachineResults(false)});
 search($('tmPokemon'),$('tmPokemonResults'),()=>{});
 $('tmPokemon').addEventListener('focus',e=>{e.target.select()});
 const emeraldMachines=`focus-punch dragon-claw water-pulse calm-mind roar toxic hail bulk-up bullet-seed hidden-power sunny-day taunt ice-beam blizzard hyper-beam protect rain-dance giga-drain safeguard frustration solar-beam iron-tail thunderbolt thunder earthquake return dig psychic shadow-ball brick-break double-team reflect shock-wave flamethrower sludge-bomb sandstorm fire-blast rock-tomb aerial-ace torment facade secret-power rest attract thief steel-wing skill-swap snatch overheat`.split(' ');
