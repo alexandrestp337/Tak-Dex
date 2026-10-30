@@ -1,8 +1,7 @@
-# PokéTact v2 prototype
-Upload the six files to the ROOT of the existing GitHub Pages repository (replace existing versions). The ZIP itself should not be uploaded.
+# PokéTact V3 — balanced battle rankings
 
-Features: searchable Pokémon selection, official artwork, four individually searchable moves, colour-coded types, saved teams, no levels, basic opponent effectiveness overview.
+Adds ranked recommendations based on the best available move type effectiveness including STAB, balanced against the worst potential incoming STAB-type matchup. Includes generation-specific type chart adjustments for Gen 2–5 Steel resisting Dark/Ghost and selected Gen 1 differences.
 
-Data: PokéAPI. Internet required for first lookup; cached records may work offline afterward. This is not yet a complete offline database.
+**Limitations:** These are heuristics, not damage predictions. Opponent actual moves, abilities, held items, move power, levels, stats and forms are not considered. Gen 1/2 rules are incomplete. Requires internet on first PokéAPI lookup; not a fully offline database.
 
-Limitations: Modern type chart only; Gen 1–5 matchup calculations are NOT authoritative. No full damage calculator or reliable evolution function yet. Game-specific move availability is based on PokéAPI version-group listings; move acquisition method is not yet differentiated. LocalStorage persistence depends on browser storage not being cleared.
+Upload all six files to the root of your existing GitHub Pages repository, replacing the previous versions. Team data remains in localStorage on the same origin.

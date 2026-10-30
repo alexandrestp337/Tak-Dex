@@ -20,5 +20,57 @@ $('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.t
 $('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen)return;current.pokemon[slotIndex]={...chosen,moves:selectedMoves.filter(Boolean)};save();showSlots();showTeams();$('pokeDialog').close()};$('removePoke').onclick=()=>{current.pokemon[slotIndex]=null;save();showSlots();showTeams();$('pokeDialog').close()};$('cancelPoke').onclick=()=>$('pokeDialog').close();
 $('game').innerHTML=games.map(g=>`<option>${g}</option>`).join('');$('game').value='Emerald';$('addTeam').onclick=()=>$('newDialog').showModal();$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();const t={id:String(Date.now())+Math.random().toString(36).slice(2),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id)};$('closeTeam').onclick=()=>$('editor').hidden=true;
 search($('pokeInput'),$('pokeResults'),n=>loadPokemon(n));search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={name:pretty(p.name),types:p.types.map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default};$('foePreview').innerHTML=`<div class="identity"><img src="${safe(foe.image)}"><div><strong>${safe(foe.name)}</strong><div class="pills">${foe.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
-function mult(attack,defenders){return defenders.reduce((v,d)=>v*(chart[attack]?.[d]??1),1)}function showBattle(){if(!current){$('matchups').innerHTML='<p>Open a team first.</p>';return}if(!foe){$('matchups').innerHTML='<p>Select an opponent above.</p>';return}const gen=games.indexOf(current.game)<=10?3:games.indexOf(current.game)<=14?4:games.indexOf(current.game)<=18?5:6;const warning=gen<6?'<p class="error">Prototype limitation: Gen 1–5 type rules are not fully implemented yet; verify results before relying on them.</p>':'';$('matchups').innerHTML=warning+current.pokemon.filter(Boolean).map(p=>`<article class="card"><div class="identity"><img src="${safe(p.image)}"><strong>${safe(p.name)}</strong></div>${p.moves.map(m=>{const v=mult(m.type,foe.types);return `<div class="effect">${chip(m)}<b class="${v>1?'good':v<1?'bad':''}">${v}× ${v>1?'Super effective':v===0?'No effect':v<1?'Not very effective':'Normal'}</b></div>`}).join('')||'<p>No moves saved</p>'}</article>`).join('')};
-$('teamsTab').onclick=()=>{$('teamsPage').hidden=false;$('battlePage').hidden=true;$('teamsTab').classList.add('selected');$('battleTab').classList.remove('selected')};$('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=false;$('battleTab').classList.add('selected');$('teamsTab').classList.remove('selected');showBattle()};$('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('poketact-light',document.body.classList.contains('light'))};if(localStorage.getItem('poketact-light')==='true')document.body.classList.add('light');showTeams();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+function gameGeneration(game){
+ const i=games.indexOf(game);
+ if(i<=2)return 1;if(i<=5)return 2;if(i<=10)return 3;
+ if(i<=15)return 4;if(i<=19)return 5;if(i<=23)return 6;
+ if(i<=27)return 7;if(i<=31)return 8;return 9;
+}
+function matchup(attack,defenders,gen){
+ if(!attack)return 1;
+ if(gen<6&&(attack==='fairy'||defenders.includes('fairy')))return null;
+ let result=defenders.reduce((v,d)=>v*(chart[attack]?.[d]??1),1);
+ // Steel resisted Ghost and Dark in Generations 2–5.
+ if(gen>=2&&gen<=5&&defenders.includes('steel')&&(attack==='ghost'||attack==='dark'))result*=.5;
+ // Generation 1: Ghost was ineffective against Psychic, and Bug/Poison interactions differed.
+ if(gen===1){
+  if(attack==='ghost'&&defenders.includes('psychic'))result*=0;
+  if(attack==='bug'&&defenders.includes('poison'))result*=2;
+  if(attack==='poison'&&defenders.includes('bug'))result*=2;
+  if(attack==='ice'&&defenders.includes('fire'))result*=2;
+ }
+ return result;
+}
+function effectText(x){return x===0?'Immune':x===.25?'¼×':x===.5?'½×':x===1?'1×':x===2?'2×':x===4?'4×':`${x}×`}
+function analyze(p,opponent,gen){
+ const offense=(p.moves||[]).map(m=>{
+  const effectiveness=matchup(m.type,opponent.types,gen);
+  const stab=p.types.includes(m.type)?1.5:1;
+  return {...m,effectiveness,stab,total:effectiveness===null?null:effectiveness*stab};
+ }).filter(m=>m.total!==null);
+ const best=offense.reduce((a,b)=>!a||b.total>a.total?b:a,null);
+ const threats=opponent.types.map(t=>({type:t,multiplier:matchup(t,p.types,gen)}));
+ const worst=Math.max(...threats.map(t=>t.multiplier??1),1/4);
+ const bestOffense=best?.total??0;
+ // Transparent heuristic: offensive advantage balanced against worst possible STAB-type threat.
+ // 4x incoming weakness outweighs modest offensive improvements.
+ const attackScore=bestOffense>0?Math.log2(bestOffense): -3;
+ const defensePenalty=worst>=4?3.2:worst>=2?1.6:worst===1?0:worst===.5?-0.8:-1.2;
+ const score=attackScore-defensePenalty;
+ return {p,offense,best,threats,worst,score};
+}
+function showBattle(){
+ if(!current){$('matchups').innerHTML='<p>Open a team first.</p>';return}
+ if(!foe){$('matchups').innerHTML='<p>Select an opponent above.</p>';return}
+ const gen=gameGeneration(current.game);
+ const ranked=current.pokemon.filter(Boolean).map(p=>analyze(p,foe,gen)).sort((a,b)=>b.score-a.score);
+ const warning=gen<=2?'<p class="error">Early-generation battle mechanics are not fully modeled. Rankings are preliminary.</p>':'';
+ const caveat='<p class="note">Ranked using your saved moves (type effectiveness + STAB) and the opponent’s possible STAB types. Incoming attacks are hypothetical, not confirmed moves. No levels, move power, abilities, immunities from abilities, items, or actual damage calculations are included. This is a matchup recommendation, not a damage prediction.</p>';
+ $('matchups').innerHTML=warning+caveat+(ranked.length?ranked.map((r,i)=>{
+  const risk=r.worst>=4?'High risk (4× weakness)':r.worst>=2?'Weak to opponent STAB':r.worst<1?'Resists opponent STAB':'Neutral defensive matchup';
+  const summary=r.best?`${safe(r.best.name)}: ${effectText(r.best.total)} with STAB included`:'No offensive moves selected';
+  return `<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${i+1}</span><div class="identity"><img src="${safe(r.p.image||'')}" alt=""><div><strong>${safe(r.p.name)}</strong><div class="pills">${r.p.types.map(pill).join('')}</div></div></div></div><div class="rank-summary"><strong>${summary}</strong><span class="${r.worst>=2?'bad':r.worst<1?'good':''}">${risk}</span></div><p class="note">Potential incoming STAB: ${r.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</p>${r.offense.map(m=>`<div class="effect">${chip(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.effectiveness)} type · ${effectText(m.total)} incl. STAB</b></div>`).join('')||'<p>No moves saved</p>'}</article>`
+ }).join(''):'<p>No Pokémon on this team yet.</p>');
+}
+$('teamsTab').onclick=()=>{$('teamsPage').hidden=false;$('battlePage').hidden=true;$('teamsTab').classList.add('selected');$('battleTab').classList.remove('selected')};
+$('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=false;$('battleTab').classList.add('selected');$('teamsTab').classList.remove('selected');showBattle()};$('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('poketact-light',document.body.classList.contains('light'))};if(localStorage.getItem('poketact-light')==='true')document.body.classList.add('light');showTeams();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
