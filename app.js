@@ -393,3 +393,22 @@ for(const id of ['foeInput','foeInput2']){
  clear.addEventListener('click',()=>{field.value='';field.dispatchEvent(new Event('input',{bubbles:true}));$(id==='foeInput'?'foePreview':'foePreview2').innerHTML='';if(id==='foeInput')foe=null;else foe2=null;showBattle();field.focus();update()});
  update();
 }
+
+// V19: optional, explicitly scoped saved-team offline cache. Does not claim full Pokédex coverage.
+(function(){
+ const btn=document.getElementById('offlineDownload'), status=document.getElementById('offlineStatus');
+ const key='takdex-offline-team-pack-v1';
+ function refresh(){const stamp=localStorage.getItem(key);status.textContent=stamp?'🟢 Saved-team data cached · '+new Date(stamp).toLocaleDateString():'⚪ Saved-team offline data not downloaded';}
+ btn.addEventListener('click',async()=>{
+  btn.disabled=true;status.textContent='Downloading saved-team Pokémon and moves…';
+  try{
+   await api('pokemon?limit=2000');
+   const ids=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).map(p=>p.id)));
+   const moves=new Set(teams.flatMap(t=>(t.pokemon||[]).filter(Boolean).flatMap(p=>(p.moves||[]).map(m=>m.name.toLowerCase().replace(/\s+/g,'-')))));
+   let done=0;const tasks=[...ids].map(id=>'pokemon/'+id).concat([...moves].map(m=>'move/'+m));
+   for(const path of tasks){await api(path);done++;status.textContent='Caching '+done+' / '+tasks.length+' records…'}
+   localStorage.setItem(key,new Date().toISOString());refresh();
+  }catch(e){status.textContent='Download incomplete. Internet or storage may be unavailable.'}
+  finally{btn.disabled=false}
+ });refresh();
+})();
