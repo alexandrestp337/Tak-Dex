@@ -1,1 +1,5 @@
-Tak-Dex V33: fixes numeric move accuracy being overwritten by null historical records. Thunderbolt is 100% accuracy, not always-hit. Re-enriches saved moves with missing accuracy. Unknown accuracy is marked Data missing rather than Always hits. Preserves saved teams and offline cache.
+Tak-Dex V34 — TM/HM search improvements
+
+Upload the files in this ZIP to the root of the existing GitHub Pages repository, replacing matching files. Do not upload the enclosing folder.
+
+TM/HM page: Pokémon autocomplete, searchable TM/HM by name or number, tap/Enter selection, select-on-focus, existing browse dropdown retained. Saved teams remain in browser storage.

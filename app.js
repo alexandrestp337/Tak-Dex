@@ -452,19 +452,38 @@ $('planAnalyze').onclick=async()=>{const result=$('planResults');result.textCont
 };
 // TM/HM compatibility uses exact version-group machine data, not species move presence alone.
 let machineEntries=[];
+function machineLabel(m){return m.item.toUpperCase()+' — '+pretty(m.move)}
+function renderMachineOptions(){
+ const select=$('tmMove');select.innerHTML=machineEntries.map((m,i)=>`<option value="${i}">${safe(machineLabel(m))}</option>`).join('');
+ const chosen=machineEntries[Number(select.value)];$('tmMoveSearch').value=chosen?machineLabel(chosen):'';
+ $('tmMoveResults').hidden=true;
+}
+function chooseMachine(i){if(!machineEntries[i])return;$('tmMove').value=String(i);$('tmMoveSearch').value=machineLabel(machineEntries[i]);$('tmMoveResults').hidden=true}
+$('tmMove').addEventListener('change',()=>chooseMachine(Number($('tmMove').value)));
+$('tmMoveSearch').addEventListener('focus',e=>{e.target.select()});
+$('tmMoveSearch').addEventListener('input',()=>{
+ const q=$('tmMoveSearch').value.trim().toLowerCase().replace(/\s+/g,'');const results=$('tmMoveResults');
+ if(!q){results.hidden=true;return}
+ const found=machineEntries.map((m,i)=>({...m,i})).filter(m=>m.item.includes(q)||m.move.replace(/-/g,'').includes(q)||pretty(m.move).toLowerCase().replace(/\s+/g,'').includes(q)||(/^\d+$/.test(q)&&String(Number(m.item.replace(/\D/g,'')))===String(Number(q)))).slice(0,15);
+ results.innerHTML=found.map(m=>`<button type="button" data-machine="${m.i}">${safe(machineLabel(m))}</button>`).join('')||'<p class="note">No matching TM/HM</p>';results.hidden=false;
+});
+$('tmMoveResults').addEventListener('click',e=>{const b=e.target.closest('[data-machine]');if(b)chooseMachine(Number(b.dataset.machine))});
+$('tmMoveSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){const b=$('tmMoveResults').querySelector('[data-machine]');if(!$('tmMoveResults').hidden&&b){e.preventDefault();chooseMachine(Number(b.dataset.machine))}}});
+search($('tmPokemon'),$('tmPokemonResults'),()=>{});
+$('tmPokemon').addEventListener('focus',e=>{e.target.select()});
 const emeraldMachines=`focus-punch dragon-claw water-pulse calm-mind roar toxic hail bulk-up bullet-seed hidden-power sunny-day taunt ice-beam blizzard hyper-beam protect rain-dance giga-drain safeguard frustration solar-beam iron-tail thunderbolt thunder earthquake return dig psychic shadow-ball brick-break double-team reflect shock-wave flamethrower sludge-bomb sandstorm fire-blast rock-tomb aerial-ace torment facade secret-power rest attract thief steel-wing skill-swap snatch overheat`.split(' ');
 const emeraldHMs=`cut fly surf strength flash rock-smash waterfall dive`.split(' ');
 async function syncTM(){const game=$('tmGame').value;const result=$('tmResults');
  if(game==='Emerald'||game==='Ruby'||game==='Sapphire'||game==='FireRed'||game==='LeafGreen'){
   const hms=(game==='FireRed'||game==='LeafGreen')?emeraldHMs.slice(0,7):emeraldHMs;
   machineEntries=[...emeraldMachines.map((move,i)=>({item:'tm'+String(i+1).padStart(2,'0'),move})),...hms.map((move,i)=>({item:'hm'+String(i+1).padStart(2,'0'),move}))];
-  $('tmMove').innerHTML=machineEntries.map((m,i)=>`<option value="${i}">${safe(m.item.toUpperCase())} — ${safe(pretty(m.move))}</option>`).join('');result.textContent='Select a machine and check compatibility.';return;
+  renderMachineOptions();result.textContent='Select a machine and check compatibility.';return;
  }
  result.textContent='Loading game-specific machines… This may take time on the first lookup.';
  try{const list=await api('machine?limit=2000');const found=[];
   // Bounded batches avoid overwhelming mobile browsers and PokéAPI.
   for(let i=0;i<list.results.length;i+=20){const batch=await Promise.all(list.results.slice(i,i+20).map(async r=>{try{const m=await api(r.url.replace('https://pokeapi.co/api/v2/',''));return m.version_group.name===vg[game]?{item:m.item.name,move:m.move.name}:null}catch{return null}}));found.push(...batch.filter(Boolean));if(i%100===0)result.textContent=`Checking machine data… ${Math.min(i+20,list.results.length)} / ${list.results.length}`;}
-  machineEntries=found.sort((a,b)=>a.item.localeCompare(b.item,undefined,{numeric:true}));$('tmMove').innerHTML=machineEntries.map((m,i)=>`<option value="${i}">${safe(m.item.toUpperCase())} — ${safe(pretty(m.move))}</option>`).join('');result.textContent=machineEntries.length?'Select a machine and check compatibility.':'No machine data found for this game.';
+  machineEntries=found.sort((a,b)=>a.item.localeCompare(b.item,undefined,{numeric:true}));renderMachineOptions();result.textContent=machineEntries.length?'Select a machine and check compatibility.':'No machine data found for this game.';
  }catch{result.textContent='Could not load machine data. First lookup needs internet.'}}
 $('tmGame').onchange=syncTM;$('tmTeam').onchange=()=>{const t=selectedTeam('tmTeam');if(t){$('tmGame').value=t.game;syncTM()}};
 $('tmCheck').onclick=async()=>{const item=machineEntries[Number($('tmMove').value)],t=selectedTeam('tmTeam'),individual=$('tmPokemon').value.trim().toLowerCase().replace(/\s+/g,'-');if(!item)return;const names=individual?[individual]:(t?.pokemon||[]).filter(Boolean).map(p=>p.name.toLowerCase().replace(/\s+/g,'-'));if(!names.length){$('tmResults').textContent='Select a team or enter a Pokémon.';return}const result=$('tmResults');result.textContent='Checking exact game compatibility…';const checks=await Promise.all(names.map(async name=>{try{const p=await api('pokemon/'+encodeURIComponent(name));const yes=p.moves.some(m=>m.move.name===item.move&&m.version_group_details.some(v=>v.version_group.name===vg[$('tmGame').value]&&v.move_learn_method.name==='machine'));return {name:pretty(p.name),yes}}catch{return {name:pretty(name),error:true}}}));result.innerHTML=`<h3>${safe(item.item.toUpperCase())} · ${safe(pretty(item.move))}</h3>${checks.map(x=>`<div class="card tm-result"><strong>${safe(x.name)}</strong><b class="${x.yes?'good':'bad'}">${x.error?'Unknown':x.yes?'✓ Compatible':'✕ Cannot learn'}</b></div>`).join('')}`};
