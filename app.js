@@ -252,3 +252,31 @@ function showBattle(){
 }
 $('teamsTab').onclick=()=>{$('teamsPage').hidden=false;$('battlePage').hidden=true;$('teamsTab').classList.add('selected');$('battleTab').classList.remove('selected')};
 $('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=false;$('battleTab').classList.add('selected');$('teamsTab').classList.remove('selected');showBattle();enrichTeamMoves()};$('theme').onclick=()=>{document.body.classList.toggle('light');localStorage.setItem('poketact-light',document.body.classList.contains('light'))};if(localStorage.getItem('poketact-light')==='true')document.body.classList.add('light');showTeams();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+
+// V9 navigation: four real tabs, with the existing battle/team logic retained.
+(function(){
+ const tabs=['teamsTab','battleTab','dexTab','moreTab'];
+ const pages=['teamsPage','battlePage','dexPage','morePage'];
+ const oldTeam=$('teamsTab').onclick,oldBattle=$('battleTab').onclick;
+ function activate(index){
+  pages.forEach((id,i)=>$(id).hidden=i!==index);
+  tabs.forEach((id,i)=>{$(id).classList.toggle('selected',i===index);$(id).setAttribute('aria-current',i===index?'page':'false')});
+  window.scrollTo({top:0,behavior:'instant'});
+ }
+ $('teamsTab').onclick=()=>{oldTeam?.();activate(0)};
+ $('battleTab').onclick=()=>{oldBattle?.();activate(1)};
+ $('dexTab').onclick=()=>activate(2);
+ $('moreTab').onclick=()=>activate(3);
+ $('moreTheme').onclick=()=>{$('theme').click()};
+ $('dexSearch').onclick=async()=>{
+  const name=$('dexInput').value.trim().toLowerCase().replace(/\s+/g,'-');
+  if(!name)return;
+  $('dexResult').textContent='Searching…';
+  try{
+   const p=await api('pokemon/'+encodeURIComponent(name));
+   const art=p.sprites?.other?.['official-artwork']?.front_default||p.sprites?.front_default||'';
+   $('dexResult').innerHTML=`<div class="card dex-entry"><img src="${safe(art)}" alt=""><div><h3>${safe(pretty(p.name))}</h3><p>#${p.id}</p><div class="pills">${p.types.map(t=>pill(t.type.name)).join('')}</div></div></div>`;
+  }catch{$('dexResult').textContent='Pokémon not found, or an internet connection is required.'}
+ };
+ $('dexInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('dexSearch').click()});
+})();
