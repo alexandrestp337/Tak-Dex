@@ -148,3 +148,8 @@ body:not(.light){background-color:#080a0e;background-image:linear-gradient(rgba(
 /* V13: fit the complete portrait wallpaper to the visible phone viewport instead of cropping it to the long document. */
 body:not(.light){background-image:linear-gradient(rgba(4,6,9,.20),rgba(4,6,9,.20)),url("./takdex-background.webp");background-color:#080a0e;background-repeat:no-repeat;background-position:center top;background-size:100% 100dvh;background-attachment:fixed}
 @media(max-width:899px){body:not(.light){background-size:100% 100dvh;background-position:center top}}
+
+/* V14: preserve wallpaper aspect ratio; fill viewport height without distortion.
+   Gradient layer fills viewport; photo layer is auto-width and 100dvh tall. */
+body:not(.light){background-size:100% 100%,auto 100dvh!important;background-position:center top,center top!important}
+@media(max-width:899px){body:not(.light){background-size:100% 100%,auto 100dvh!important;background-position:center top,center top!important}}

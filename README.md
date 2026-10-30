@@ -1,1 +1,1 @@
-Tak-Dex V13: wallpaper sizing only. Fits the approved background to the visible viewport instead of cropping it based on full document height. No other app logic or UI changes. Upload all 7 files to the existing GitHub Pages repository.
+Tak-Dex V14: background aspect ratio fix only. The wallpaper retains its natural proportions, with its height fitted to the phone viewport and a full-viewport dark overlay. Upload all 7 files to your existing GitHub Pages repository. Saved teams are not cleared.
