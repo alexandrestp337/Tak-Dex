@@ -5,3 +5,5 @@ V27: offline name-to-ID lookup correction for Pokémon, moves and species. Previ
 V28: Pokédex autocomplete dropdown matching Battle, clear button, and saved-team selector conflict fix.
 
 V29: Fixed tab highlight positioning and updated header with approved Tactical Radar logo.
+
+V30: approved transparent unified header wordmark; centered across light and dark themes.
