@@ -1,1 +1,1 @@
-Tak-Dex V31: fixes historical Pokémon types (e.g. Emerald Gardevoir is Psychic-only) across team, battle and Pokédex, and aligns the navigation indicator with the top edge. Existing saved teams are corrected on opening.
+Tak-Dex V32: corrected battle ranking for missing accuracy; attack score shown per move; 6v6 displays approximate HP damage ranges. Offline coverage remains subject to successful data download.
