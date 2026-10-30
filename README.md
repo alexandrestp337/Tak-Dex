@@ -1,1 +1,1 @@
-Tak-Dex V35: small red delete-team link; team JSON export/import; edit team name/game; optional nickname visible only in Pokémon edit form. Existing saved teams remain in localStorage. Upload all web files to GitHub Pages.
+Tak-Dex V36: Team card Open, Edit, Export buttons grouped together. Delete remains small red text at bottom right. Upload all files to GitHub Pages.
