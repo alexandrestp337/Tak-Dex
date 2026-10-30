@@ -273,3 +273,10 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
  .rank-portrait{width:68px!important;flex-basis:68px!important;height:88px!important;}
  .rank-risk{flex-basis:48px;}
 }
+
+/* V24: evolution artwork beside each evolutionary stage */
+#dexResult .evo-line{display:flex;align-items:center;gap:10px;min-height:78px;flex-wrap:nowrap}
+#dexResult .evo-art{width:72px;height:72px;object-fit:contain;flex:0 0 72px;filter:none!important;mask-image:none!important;-webkit-mask-image:none!important}
+#dexResult .evo-description{display:flex;flex-direction:column;gap:3px;min-width:0}
+#dexResult .evo-description small{font-size:.8em;opacity:.85}
+@media(max-width:420px){#dexResult .evo-art{width:60px;height:60px;flex-basis:60px}}
