@@ -23,3 +23,38 @@ button{background:linear-gradient(135deg,#e33c4b,#bf2232);color:white;border:1px
 .rank-card:first-of-type{border-color:var(--gold);box-shadow:0 0 0 1px #f0be4233,0 0 18px #f0be4229}.rank-card:first-of-type .rank-number{background:linear-gradient(145deg,#e9bd45,#926a1c);color:#fff}.rank-number{background:#303a46;color:#e4e8f0;border:1px solid #5a6270;border-radius:10px;min-width:40px;text-align:center}.rank-card{padding:12px}.rank-header{gap:9px}.rank-summary{border-top:1px solid var(--edge);padding-top:10px}.rank-summary strong{color:var(--text)}.good{color:#5be99b}.bad{color:#f07878}.zero{color:#ff7b7b}
 .mode-switch{background:#12151a;border:1px solid var(--edge);border-radius:12px;overflow:hidden;gap:0}.mode-switch button{flex:1;border:0;border-radius:0;background:transparent;color:#b5b5bb;box-shadow:none}.mode-switch button.selected{background:linear-gradient(135deg,#d72b3a,#ad1d2c);color:white}.movechip,.pill{border-radius:7px}.pair-action{border:1px solid var(--edge);border-radius:10px}dialog{box-shadow:0 25px 80px #000a}input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}.suggestions{box-shadow:0 12px 35px #0008}footer{opacity:.8}
 @media(max-width:450px){.brand-ball{width:40px;height:40px;border-width:3px}.brand-ball span{width:16px;height:16px}.brand{gap:8px}.brand p{font-size:.5rem;letter-spacing:.06em}#theme{padding:9px 7px}.main-tabs button{font-size:.85rem}.rank-header .identity img{width:68px;height:68px}}
+
+/* V7 closer to original TAK-DEX concept: stacked recommendation cards and gold #1 */
+#battlePage{position:relative}
+#battlePage>.section-label:first-child{padding:8px 4px}
+#battlePage>p{max-width:640px}
+#matchups{margin-top:12px}
+.analysis-disclaimer{color:var(--muted);font-size:.76rem;line-height:1.45;padding:9px 12px;border-left:2px solid var(--accent);background:color-mix(in srgb,var(--card) 75%,transparent);border-radius:7px}
+.rank-card{padding:12px 13px;margin:10px 0;background:linear-gradient(145deg,#181b21,#101217);border:1px solid #343842}
+body.light .rank-card{background:linear-gradient(145deg,#fff,#f5f2f2)}
+.rank-card.rank-winner{border:1.5px solid #f1c342;box-shadow:0 0 0 1px #c88b2525,0 0 18px #efba3a40}
+.recommendation-head{display:flex;gap:10px;align-items:center;min-width:0}
+.ranking-medal{display:grid;place-items:center;min-width:35px;height:38px;border-radius:9px;background:#303742;border:1px solid #49505b;color:#e6e8ed;font-size:1.15rem;font-weight:900}
+.rank-winner .ranking-medal{background:linear-gradient(145deg,#e8bd43,#86601b);border-color:#ffd866;color:white;font-size:1.5rem}
+.recommendation-head .identity{flex:1;min-width:0}
+.recommendation-head .identity img{width:75px;height:75px;object-fit:contain}
+.recommendation-head .identity strong{font-size:1.12rem}
+.rank-risk{font-size:.69rem;font-weight:900;max-width:78px;text-align:right;letter-spacing:.02em}
+.recommended-move{margin:8px 0 0 45px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;border-top:1px solid #ffffff16;padding:10px 0 6px}
+.recommended-move small{font-size:.69rem;font-weight:900;color:#aeb3be;letter-spacing:.06em}
+.recommended-move strong{font-size:.98rem;color:var(--text)}
+.recommended-move>span{font-size:.75rem;color:#72e4a0}
+.move-stats{font-size:.73rem;color:var(--muted);font-weight:650}
+.expand-details{margin-top:8px;border-top:1px solid var(--edge)}
+.expand-details summary{list-style:none;cursor:pointer;padding:10px 2px 2px;font-size:.8rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.expand-details summary::-webkit-details-marker{display:none}
+.expand-details[open] summary{color:var(--accent);margin-bottom:8px}
+.matchup-details{padding:8px 0;border-top:1px solid var(--edge)}
+.matchup-details h4{font-size:.77rem;color:var(--muted);letter-spacing:.08em;margin:3px 0 8px}
+.threat-row{font-size:.76rem;color:var(--muted);margin-bottom:10px}
+.move-detail-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff10}
+.move-detail-numbers{display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
+.move-detail-numbers b{font-size:.79rem}
+.moveRow .moveType{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:5px}
+.subheading{font-size:.86rem;letter-spacing:.07em;color:var(--muted);margin:22px 0 10px}
+@media(max-width:480px){.rank-risk{font-size:.61rem}.recommendation-head .identity img{width:64px;height:64px}.recommended-move{margin-left:0}.move-detail-row .movechip{max-width:48%}}
