@@ -153,3 +153,9 @@ body:not(.light){background-image:linear-gradient(rgba(4,6,9,.20),rgba(4,6,9,.20
    Gradient layer fills viewport; photo layer is auto-width and 100dvh tall. */
 body:not(.light){background-size:100% 100%,auto 100dvh!important;background-position:center top,center top!important}
 @media(max-width:899px){body:not(.light){background-size:100% 100%,auto 100dvh!important;background-position:center top,center top!important}}
+
+/* V15: keep wallpaper round and remove right-edge gap. A fixed, viewport-sized layer
+   uses cover independently of document height. No stretching. */
+html{background:#080a0e}
+body:not(.light){background-image:none!important;background-color:transparent!important}
+body:not(.light)::after{content:"";display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(4,6,9,.20),rgba(4,6,9,.20)),url('./takdex-background.webp');background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;background-color:#080a0e}
