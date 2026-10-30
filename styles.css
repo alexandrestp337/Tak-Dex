@@ -176,3 +176,18 @@ body:not(.light)::after{content:"";display:block;position:fixed;inset:0;z-index:
 .planner-result{margin:12px 0}
 body.light{background:#f9f7f7!important}
 body.light::after{content:"";display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,.22)),url('./takdex-background-light.webp');background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;background-color:#f9f7f7}
+
+/* V17 · Six successive opponent matchups with original Battle ranking cards */
+.planner-opponent{margin:20px 0 32px;border-top:1px solid var(--edge);padding-top:14px}
+.planner-opponent-heading{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.planner-opponent-number{background:linear-gradient(140deg,#d82439,#8e1225);color:#fff;border-radius:11px;padding:12px;font-weight:900;font-size:1.15rem}
+.planner-opponent-art{width:70px;height:70px;flex:0 0 70px;overflow:hidden}
+.planner-opponent-art img{width:100%;height:100%;object-fit:contain}
+.planner-opponent-heading small{font-weight:800;letter-spacing:.08em;color:var(--muted);font-size:.67rem}
+.planner-opponent-heading h3{margin:3px 0;font-size:1.2rem}
+.planner-opponent-heading h3 span{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.planner-opponent-moves{line-height:2.1;margin-bottom:14px;font-size:.77rem}
+.planner-opponent-moves .movechip{display:inline-block;margin:2px}
+.planner-opponent .rank-card{margin:10px 0}
+.planner-opponent .expand-details h4{margin:12px 0 5px}
+@media(max-width:390px){.planner-opponent-art{width:55px;height:55px;flex-basis:55px}.planner-opponent-heading{gap:6px}.planner-opponent-number{padding:9px}}

@@ -318,7 +318,7 @@ let plannerOpp=[],plannerOwn=[];
 function plannerRosterAvailable(){return $('planGame').value==='Emerald'}
 function syncPlanner(){const game=$('planGame').value,known=plannerRosterAvailable(),custom=$('planMode').value==='custom';$('eliteOptions').hidden=custom;
  $('planTrainer').innerHTML=(known?Object.keys(emeraldLeague):[]).map(n=>`<option>${n}</option>`).join('');
- $('eliteNote').textContent=known?'Emerald Elite Four and Champion use the same teams on subsequent challenges.':'Verified automatic trainer rosters for this game are not bundled yet. Choose Custom to enter a team without guessing.';
+ $('eliteNote').textContent=known?'Emerald Elite Four and Champion use the same teams on subsequent challenges.':'This game does not yet have a verified automatic League roster bundled. Choose Custom to enter opponents without guessing.';
  $('planVersion').disabled=!known;$('planVersion').querySelector('[value="v2"]').textContent=known?'Repeat challenge (same roster)':'Rematch / second challenge';
  if(!known&&!custom){$('planMode').value='custom';$('eliteOptions').hidden=true}
  loadPlannerRoster();importPlannerTeam();}
@@ -328,13 +328,38 @@ function renderPlannerSlots(id,entries,own){$(id).innerHTML=Array.from({length:6
 function plannerEdit(e){const x=e.target;if(!x.dataset.plan)return;const arr=x.dataset.plan==='own'?plannerOwn:plannerOpp,i=+x.dataset.i;while(arr.length<=i)arr.push({name:'',level:50,moves:[]});const field=x.dataset.field;arr[i][field]=field==='moves'?x.value.split(',').map(s=>s.trim().toLowerCase().replace(/\s+/g,'-')).filter(Boolean).slice(0,4):field==='level'?Math.max(1,Math.min(100,Number(x.value)||50)):x.value.trim().toLowerCase().replace(/\s+/g,'-')}
 $('planOwn').addEventListener('input',plannerEdit);$('planOpp').addEventListener('input',plannerEdit);
 $('planGame').onchange=syncPlanner;$('planMode').onchange=syncPlanner;$('planTrainer').onchange=loadPlannerRoster;$('planVersion').onchange=loadPlannerRoster;$('planTeam').onchange=()=>{const t=selectedTeam('planTeam');if(t){$('planGame').value=t.game;syncPlanner()}else importPlannerTeam()};
-async function loadPlannerPokemon(e,gen){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen)}}catch{return {name:pretty(n),power:null}}}));return {name:pretty(p.name),types:p.types.map(t=>t.type.name),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),level:e.level,moves}}
+async function loadPlannerPokemon(e,gen){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen)}}catch{return {name:pretty(n),power:null}}}));return {id:p.id,name:pretty(p.name),types:p.types.map(t=>t.type.name),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),level:e.level,moves}}
 function estimateDamage(a,d,m,gen){if(!m||!Number.isFinite(m.power)||m.power<=0||m.damageClass==='status'||VARIABLE_MOVES.has(m.name))return null;const eff=matchup(m.type,d.types,gen);if(eff===null||eff===0)return 0;const category=m.damageClass==='special'?'special':'physical';const attack=a.baseStats?.[category==='special'?'special-attack':'attack']||70,defense=d.baseStats?.[category==='special'?'special-defense':'defense']||70;
  const l=Math.max(1,Math.min(100,a.level||50)),al=Math.max(1,Math.min(100,d.level||50));const atk=Math.floor((2*attack+31)*l/100)+5,def=Math.floor((2*defense+31)*al/100)+5;const stab=a.types.includes(m.type)?1.5:1;return Math.max(1,Math.floor((Math.floor((2*l/5+2)*m.power*atk/Math.max(1,def)/50)+2)*eff*stab*(Number.isFinite(m.accuracy)?m.accuracy/100:1)))}
-$('planAnalyze').onclick=async()=>{const result=$('planResults');result.textContent='Loading Pokémon and move data…';const gen=gameGeneration($('planGame').value);try{const own=await Promise.all(plannerOwn.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen))),opp=await Promise.all(plannerOpp.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen)));if(!own.length||!opp.length){result.textContent='Enter at least one Pokémon on each side.';return}
- const rows=own.map(a=>{const matches=opp.map(d=>{const attacks=a.moves.map(m=>({m,value:estimateDamage(a,d,m,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);const threats=d.moves.map(m=>estimateDamage(d,a,m,gen)).filter(v=>v!==null);return {d,best:attacks[0],incoming:Math.max(0,...threats),score:attacks[0]?.value||0}});return {a,matches,score:matches.reduce((s,m)=>s+(m.score/(m.incoming+25)),0)}}).sort((a,b)=>b.score-a.score);
- result.innerHTML=`<p class="analysis-disclaimer">Estimated relative damage using levels, base stats, move power, accuracy, STAB and type chart. NOT actual HP damage: IVs/EVs, natures, abilities, held items, weather, boosts and move effects are not modeled. Moves without fixed base power are excluded. Do not treat estimates as guaranteed KOs.</p>${rows.map((r,i)=>`<article class="card planner-result"><h3>${i+1}. ${safe(r.a.name)} · Lv ${r.a.level}</h3>${r.matches.map(x=>`<div class="learn-row"><b>vs ${safe(x.d.name)} Lv ${x.d.level}</b><span>${x.best?safe(x.best.m.name):'No fixed-power move'}</span><small>Attack index ${x.best?.value??'—'} · incoming ${x.incoming}</small></div>`).join('')}</article>`).join('')}`;
- }catch(e){result.textContent='Could not load battle data. Check Pokémon and move names and your connection.'}};
+// V17: rank YOUR whole team independently against EACH opposing Pokémon, in battle order.
+function plannerPortrait(p){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`}
+function renderPlannerBattle(own,opp,gen){
+ const disclaimer='<p class="analysis-disclaimer">Attack index is a relative estimate, not guaranteed HP damage. Levels and base stats are included; IVs/EVs, natures, abilities, items, weather, stat boosts and special move mechanics are not. Opponents appear in their saved order.</p>';
+ return disclaimer+opp.map((d,oi)=>{
+  const ranks=own.map(a=>{
+   const attacks=a.moves.map(m=>({m,value:estimateDamage(a,d,m,gen),effectiveness:matchup(m.type,d.types,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
+   const incoming=d.moves.map(m=>({m,value:estimateDamage(d,a,m,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
+   const worst=incoming[0]?.value??null;
+   const best=attacks[0]||null;
+   return {a,attacks,incoming,worst,best,score:(best?.value??0)/(Math.max(0,worst??0)+25)};
+  }).sort((a,b)=>b.score-a.score);
+  return `<section class="planner-opponent"><div class="planner-opponent-heading"><div class="planner-opponent-number">${oi+1}</div><div class="planner-opponent-art"><img src="${safe(plannerPortrait(d))}" alt=""></div><div><small>OPPONENT ${oi+1} OF ${opp.length}</small><h3>${safe(d.name)} <span>Lv ${d.level}</span></h3><div class="pills">${d.types.map(pill).join('')}</div></div></div><div class="planner-opponent-moves"><b>Opponent moves:</b> ${d.moves.length?d.moves.map(m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`).join(' '):'<span class="note">Unknown — defensive risk cannot be evaluated</span>'}</div><h4 class="section-label">▥ YOUR TEAM · BEST MATCHUPS</h4>${ranks.map((r,i)=>{
+    const b=r.best;
+    const headline=b?`<div class="recommended-move"><small>⚔ BEST MOVE VS ${safe(d.name).toUpperCase()}</small><strong>${safe(b.m.name)}</strong><span>${moveStats(b.m)} · ${effectText(b.effectiveness)} type · ${r.a.types.includes(b.m.type)?'STAB':'No STAB'} · Attack index ${b.value}</span></div>`:'<div class="recommended-move"><small>BEST MOVE</small><strong>No fixed-power attacks saved</strong></div>';
+    const risk=r.worst===null?'Unknown':r.worst>=b?.value?'High risk':'Compare moves';
+    const detail=r.attacks.length?r.attacks.map(x=>`<div class="learn-row"><b>${safe(x.m.name)}</b>${pill(x.m.type)}<span>${effectText(x.effectiveness)} · index ${x.value}</span></div>`).join(''):'<p class="note">No fixed-power attacks available.</p>';
+    const defense=r.incoming.length?`<h4>Opponent attacks against ${safe(r.a.name)}</h4>`+r.incoming.map(x=>`<div class="learn-row"><b>${safe(x.m.name)}</b><span>Incoming index ${x.value}</span></div>`).join(''):'<p class="note">Opponent move damage unknown or no fixed-power attacks.</p>';
+    return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity"><div class="rank-portrait"><img src="${safe(plannerPortrait(r.a))}" alt=""></div><div class="rank-info"><strong>${safe(r.a.name)} · Lv ${r.a.level}</strong><div class="pills">${r.a.types.map(pill).join('')}</div></div></div><div class="rank-risk">${risk}</div></div>${headline}<details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${detail}${defense}</details></article>`
+   }).join('')}</section>`
+ }).join('')
+}
+$('planAnalyze').onclick=async()=>{const result=$('planResults');result.textContent='Loading Pokémon and move data…';const gen=gameGeneration($('planGame').value);try{
+ const own=await Promise.all(plannerOwn.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen)));
+ const opp=await Promise.all(plannerOpp.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen)));
+ if(!own.length||!opp.length){result.textContent='Enter at least one Pokémon on each side.';return}
+ result.innerHTML=renderPlannerBattle(own,opp,gen);
+ }catch(e){result.textContent='Could not load battle data. Check Pokémon and move names and your connection.'}
+};
 // TM/HM compatibility uses exact version-group machine data, not species move presence alone.
 let machineEntries=[];
 const emeraldMachines=`focus-punch dragon-claw water-pulse calm-mind roar toxic hail bulk-up bullet-seed hidden-power sunny-day taunt ice-beam blizzard hyper-beam protect rain-dance giga-drain safeguard frustration solar-beam iron-tail thunderbolt thunder earthquake return dig psychic shadow-ball brick-break double-team reflect shock-wave flamethrower sludge-bomb sandstorm fire-blast rock-tomb aerial-ace torment facade secret-power rest attract thief steel-wing skill-swap snatch overheat`.split(' ');
