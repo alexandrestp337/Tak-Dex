@@ -6,15 +6,42 @@ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 let teams=JSON.parse(localStorage.getItem('poketact-teams')||'[]'),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const save=()=>localStorage.setItem('poketact-teams',JSON.stringify(teams));
 // CacheStorage is larger than localStorage and survives network outages for downloaded records.
 const OFFLINE_CACHE='takdex-pokeapi-records-v1';
+// V27: resolve name-based lookups to the numbered records stored by the offline downloader.
+// PokeAPI list endpoints return canonical numeric URLs, while our UI requests names.
+const API_ROOT='https://pokeapi.co/api/v2/';
+async function offlineRecord(path){
+ if(!('caches' in window))return null;
+ const cache=await caches.open(OFFLINE_CACHE);
+ const clean=path.replace(/^\/+|\/+$/g,'');
+ const direct=[API_ROOT+path,API_ROOT+clean,API_ROOT+clean+'/'];
+ for(const url of direct){const r=await cache.match(url);if(r)return r.json()}
+ const match=clean.match(/^(pokemon|pokemon-species|move|evolution-chain|machine)\/(.+)$/);
+ if(!match||/^\d+$/.test(match[2]))return null;
+ const listUrl=API_ROOT+match[1]+'?limit='+(['machine'].includes(match[1])?'3000':'2000');
+ const list=await cache.match(listUrl);
+ if(!list)return null;
+ const names=(await list.json()).results||[];
+ const wanted=decodeURIComponent(match[2]).toLowerCase();
+ const entry=names.find(x=>x.name===wanted);
+ if(!entry)return null;
+ const record=await cache.match(entry.url);
+ return record?record.json():null;
+}
 async function api(path){
- const key='pt-v2:'+path,url='https://pokeapi.co/api/v2/'+path;
+ const key='pt-v2:'+path,url=API_ROOT+path;
  try{const cached=localStorage.getItem(key);if(cached)return JSON.parse(cached)}catch{}
- try{if('caches' in window){const hit=await (await caches.open(OFFLINE_CACHE)).match(url);if(hit)return await hit.json()}}catch{}
- const res=await fetch(url);if(!res.ok)throw Error('Pokédex request failed');
- const data=await res.clone().json();
- try{if('caches' in window)await (await caches.open(OFFLINE_CACHE)).put(url,res.clone())}catch{}
- try{localStorage.setItem(key,JSON.stringify(data))}catch{}
- return data;
+ try{const offline=await offlineRecord(path);if(offline)return offline}catch{}
+ try{
+  const res=await fetch(url);if(!res.ok)throw Error('Pokédex request failed');
+  const data=await res.clone().json();
+  try{if('caches' in window)await (await caches.open(OFFLINE_CACHE)).put(url,res.clone())}catch{}
+  try{localStorage.setItem(key,JSON.stringify(data))}catch{}
+  return data;
+ }catch(e){
+  // Network failed: retry cache in case the service worker/cache became ready.
+  try{const offline=await offlineRecord(path);if(offline)return offline}catch{}
+  throw e;
+ }
 }
 // Force refresh during an explicit offline pack download, even for previously cached entries.
 async function offlineFetch(path){
@@ -427,7 +454,7 @@ for(const id of ['foeInput','foeInput2']){
  const art='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
  let busy=false;
  const progress=()=>{let p=null;try{p=JSON.parse(localStorage.getItem(key)||'null')}catch{}
-  status.textContent=p?.complete?'🟢 Full offline database downloaded · '+new Date(p.date).toLocaleDateString():p?.done?'🟠 Partial database · '+p.done+' / '+p.total+' files. Tap to resume.':'⚪ Full offline database not downloaded';
+  status.textContent=p?.complete?'🟢 Offline records downloaded · '+new Date(p.date).toLocaleDateString():p?.done?'🟠 Partial database · '+p.done+' / '+p.total+' files. Tap to resume.':'⚪ Offline database not downloaded';
   btn.textContent=p?.complete?'Update offline database':p?.done?'Resume offline download':'Download offline database';
  };
  const cached=async(url)=>!!(await (await caches.open(OFFLINE_CACHE)).match(url));
