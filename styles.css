@@ -200,3 +200,30 @@ body.light::after{background-image:linear-gradient(rgba(255,255,255,.04),rgba(25
 .battle-search input{padding-right:45px!important}
 .battle-clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:30px;height:30px;min-width:30px;padding:0;border:1px solid var(--edge);border-radius:50%;background:var(--surface);color:var(--text);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2}
 .battle-clear[hidden]{display:none!important}
+
+/* V21: readable text over the detailed light wallpaper, without altering cards. */
+body.light main > section > h2,
+body.light main > section > h3,
+body.light #battlePage > p,
+body.light #plannerPage > p,
+body.light #teamsPage > .bar h2,
+body.light #plannerPage > .bar h2,
+body.light #tmPage > .bar h2,
+body.light footer,
+body.light .app-header .brand p {
+  text-shadow: 0 0 4px #fff, 0 0 9px #fff, 0 0 16px #fff, 0 1px 2px #fffd;
+}
+body.light #battlePage > p, body.light footer {color:#353841}
+body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
+/* Soft-edged portraits: no black drop shadow, less cropping, symmetric fade. */
+.rank-portrait {
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.55) 9%,#000 23%,#000 75%,rgba(0,0,0,.6) 89%,transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.55) 9%,#000 23%,#000 75%,rgba(0,0,0,.6) 89%,transparent 100%);
+}
+.recommendation-head .rank-portrait img {
+  filter:none!important;
+  width:145px!important;height:145px!important;left:-16px;top:-3px;
+}
+@media(max-width:460px){.recommendation-head .rank-portrait img{width:130px!important;height:130px!important;left:-21px;top:0}}
+@media(max-width:355px){.recommendation-head .rank-portrait img{left:-31px}}
+.full-pokemon img {filter:none!important}
