@@ -1,1 +1,1 @@
-Tak-Dex V11: Replaces only the dark-theme background with the approved cinematic Poké Ball image. Existing features, layout, and navigation unchanged. Upload all seven files including takdex-background.webp. Light theme unchanged.
+Tak-Dex V12: Uses the approved darker portrait background. Background covers the full viewport with a subtle dimming overlay. All other V11 features remain unchanged. Upload all 7 files to the GitHub Pages repository.

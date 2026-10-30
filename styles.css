@@ -140,3 +140,7 @@ body.light::before{opacity:.16}
 body:not(.light){background-color:#090c10;background-image:url('./takdex-background.webp');background-repeat:no-repeat;background-position:right top;background-size:max(100%, 900px) auto;background-attachment:fixed}
 body::before,body.light::before{display:none!important;content:none!important}
 @media(min-width:900px){body:not(.light){background-size:cover}}
+
+/* V12: portrait wallpaper fills the phone viewport without stretching or bright gaps. */
+body:not(.light){background-color:#080a0e;background-image:linear-gradient(rgba(4,6,9,.20),rgba(4,6,9,.20)),url('./takdex-background.webp');background-repeat:no-repeat;background-position:center top;background-size:cover;background-attachment:fixed}
+@media(max-width:899px){body:not(.light){background-size:cover;background-position:center top}}
