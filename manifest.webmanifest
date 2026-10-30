@@ -1,0 +1,9 @@
+{
+  "name": "Pok\u00e9Tact",
+  "short_name": "Pok\u00e9Tact",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101522",
+  "theme_color": "#111827",
+  "icons": []
+}
