@@ -10,13 +10,15 @@ function search(input,results,choose){let token=0;input.addEventListener('input'
 function showTeams(){$('teams').innerHTML=teams.length?teams.map(t=>`<article class="card"><strong>${safe(t.name)}</strong><p>${safe(t.game)} · ${t.pokemon.filter(Boolean).length}/6 Pokémon</p><button data-open="${safe(t.id)}">Open</button> <button data-delete="${safe(t.id)}">Delete</button></article>`).join(''):'<p>No teams yet.</p>'}
 $('teams').onclick=e=>{const open=e.target.closest('[data-open]'),del=e.target.closest('[data-delete]');if(open)openTeam(open.dataset.open);if(del&&confirm('Delete team?')){teams=teams.filter(t=>t.id!==del.dataset.delete);save();showTeams();$('editor').hidden=true}};
 function openTeam(id){current=teams.find(t=>t.id===id);$('editor').hidden=false;$('editorTitle').textContent=current.name;$('editorGame').textContent=current.game;showSlots()}
-function showSlots(){$('slots').innerHTML=Array.from({length:6},(_,i)=>{const p=current.pokemon[i];return `<article class="slot">${p?`<div class="identity"><img src="${safe(p.image)}" alt=""><div><strong>${safe(p.name)}</strong><div class="pills">${p.types.map(pill).join('')}</div></div></div><div>${p.moves.map(chip).join('')}</div>`:`<strong>Empty slot ${i+1}</strong><p>Add a Pokémon</p>`}<button data-slot="${i}">${p?'Edit':'＋ Add'}</button>${p?` <button data-evolve="${i}">↑ Evolve</button>`:''}</article>`}).join('')};$('slots').onclick=e=>{const b=e.target.closest('[data-slot]');if(b)editSlot(Number(b.dataset.slot));const ev=e.target.closest('[data-evolve]');if(ev)evolveSlot(Number(ev.dataset.evolve))};
+const evolutionStatus=new Map();
+async function checkEvolution(p){const key=p.id+':'+current.game;if(evolutionStatus.has(key))return;try{const s=await api('pokemon-species/'+p.id);const c=await api(s.evolution_chain.url.replace('https://pokeapi.co/api/v2/',''));let node=null;function walk(n){if(n.species.name===s.name)node=n;else n.evolves_to.forEach(walk)}walk(c.chain);const options=node?.evolves_to||[];let available=false;for(const o of options){const candidate=await api('pokemon/'+o.species.name);if(candidate.moves.some(m=>m.version_group_details.some(v=>v.version_group.name===vg[current.game]))){available=true;break}}evolutionStatus.set(key,available);if(current?.pokemon.some(x=>x?.id===p.id))showSlots()}catch{}}
+function showSlots(){$('slots').innerHTML=Array.from({length:6},(_,i)=>{const p=current.pokemon[i];return `<article class="slot">${p?`<div class="identity"><img src="${safe(p.image)}" alt=""><div><strong>${safe(p.name)}</strong><div class="pills">${p.types.map(pill).join('')}</div></div></div><div>${p.moves.map(chip).join('')}</div>`:`<strong>Empty slot ${i+1}</strong><p>Add a Pokémon</p>`}<button data-slot="${i}">${p?'Edit':'＋ Add'}</button>${p&&evolutionStatus.get(p.id+':'+current.game)!==false?` <button data-evolve="${i}" ${evolutionStatus.has(p.id+':'+current.game)?'':'disabled'}>${evolutionStatus.has(p.id+':'+current.game)?'↑ Evolve':'Checking evolution…'}</button>`:''}</article>`}).join('');current.pokemon.filter(Boolean).forEach(p=>{if(!evolutionStatus.has(p.id+':'+current.game))checkEvolution(p)})};$('slots').onclick=e=>{const b=e.target.closest('[data-slot]');if(b)editSlot(Number(b.dataset.slot));const ev=e.target.closest('[data-evolve]');if(ev)evolveSlot(Number(ev.dataset.evolve))};
 function clearForm(){chosen=null;validMoves=[];selectedMoves=[null,null,null,null];$('pokeInput').value='';$('pokePreview').innerHTML='';$('moveNote').textContent='Select a Pokémon to load its moves.';$('error').hidden=true;$('savePoke').disabled=true;drawMoves()}
-function editSlot(i){slotIndex=i;clearForm();$('pokeHeading').textContent=current.pokemon[i]?'Edit Pokémon':'Add Pokémon';$('removePoke').hidden=!current.pokemon[i];$('evolvePoke').hidden=!current.pokemon[i];$('pokeDialog').showModal();const p=current.pokemon[i];if(p){$('pokeInput').value=p.name;loadPokemon(p.id,p.moves)}}
-async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=p.types.sort((a,b)=>a.slot-b.slot).map(t=>t.type.name);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
+function editSlot(i){slotIndex=i;clearForm();$('pokeHeading').textContent=current.pokemon[i]?'Edit Pokémon':'Add Pokémon';$('removePoke').hidden=!current.pokemon[i];$('evolvePoke').hidden=!current.pokemon[i]||evolutionStatus.get(current.pokemon[i]?.id+':'+current.game)===false;$('pokeDialog').showModal();const p=current.pokemon[i];if(p){$('pokeInput').value=p.name;loadPokemon(p.id,p.moves)}}
+async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=p.types.sort((a,b)=>a.slot-b.slot).map(t=>t.type.name);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image,baseSpeed:p.stats.find(s=>s.stat.name==='speed')?.base_stat};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
 function drawMoves(){$('moveFields').innerHTML=Array.from({length:4},(_,i)=>`<div class="moveRow"><b>${i+1}</b><div><div class="search"><input data-move-input="${i}" autocomplete="off" placeholder="Search attack ${i+1}" value="${safe(selectedMoves[i]?.name||'')}"><div class="suggestions" data-results="${i}" hidden></div></div><div class="moveType" data-type="${i}">${selectedMoves[i]?.type?pill(selectedMoves[i].type):''}</div></div><button type="button" class="clear" data-clear="${i}">×</button></div>`).join('')}
 $('moveFields').addEventListener('input',e=>{const i=e.target.dataset.moveInput;if(i===undefined)return;selectedMoves[+i]=null;const results=document.querySelector(`[data-results="${i}"]`),q=e.target.value.toLowerCase();document.querySelector(`[data-type="${i}"]`).innerHTML='';results.hidden=!q;results.innerHTML=validMoves.filter(n=>n.includes(q.replace(/\s+/g,'-'))).slice(0,12).map(n=>`<button type="button" data-pick="${i}" data-name="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No matching move for this game</p>'});
-$('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.target.closest('[data-pick]');if(c){const i=+c.dataset.clear;selectedMoves[i]=null;drawMoves()}if(b){const i=+b.dataset.pick,n=b.dataset.name;document.querySelector(`[data-results="${i}"]`).hidden=true;try{const m=await api('move/'+n);selectedMoves[i]={name:pretty(n),type:m.type.name};drawMoves()}catch{$('error').hidden=false;$('error').textContent='Could not load move type.'}}};
+$('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.target.closest('[data-pick]');if(c){const i=+c.dataset.clear;selectedMoves[i]=null;drawMoves()}if(b){const i=+b.dataset.pick,n=b.dataset.name;document.querySelector(`[data-results="${i}"]`).hidden=true;try{const m=await api('move/'+n);selectedMoves[i]={name:pretty(n),type:m.type.name,power:m.power,damageClass:m.damage_class?.name,target:m.target?.name,priority:m.priority||0};drawMoves()}catch{$('error').hidden=false;$('error').textContent='Could not load move type.'}}};
 $('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen)return;current.pokemon[slotIndex]={...chosen,moves:selectedMoves.filter(Boolean)};save();showSlots();showTeams();$('pokeDialog').close()};$('evolvePoke').onclick=()=>evolveSlot(slotIndex);$('removePoke').onclick=()=>{current.pokemon[slotIndex]=null;save();showSlots();showTeams();$('pokeDialog').close()};$('cancelPoke').onclick=()=>$('pokeDialog').close();
 $('game').innerHTML=games.map(g=>`<option>${g}</option>`).join('');$('game').value='Emerald';$('addTeam').onclick=()=>$('newDialog').showModal();$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();const t={id:String(Date.now())+Math.random().toString(36).slice(2),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id)};$('closeTeam').onclick=()=>$('editor').hidden=true;
 search($('pokeInput'),$('pokeResults'),n=>loadPokemon(n));search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={name:pretty(p.name),types:p.types.map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default};$('foePreview').innerHTML=`<div class="identity"><img src="${safe(foe.image)}"><div><strong>${safe(foe.name)}</strong><div class="pills">${foe.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
@@ -58,7 +60,7 @@ async function evolveSlot(i){
   const note=hints.length?hints.join(', '):'Evolution conditions may apply';
   if(!confirm(`Evolve ${old.name} into ${pretty(chosenOption.candidate.name)}?\n${note}\n\nPokéTact does not verify that conditions are met. Existing moves will stay unchanged.`))return;
   const p=chosenOption.candidate;
-  current.pokemon[i]={id:p.id,name:pretty(p.name),types:p.types.sort((a,b)=>a.slot-b.slot).map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'',moves:old.moves};
+  current.pokemon[i]={id:p.id,name:pretty(p.name),types:p.types.sort((a,b)=>a.slot-b.slot).map(t=>t.type.name),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'',moves:old.moves,baseSpeed:p.stats.find(s=>s.stat.name==='speed')?.base_stat};
   save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close();
  }catch(e){alert('Could not check evolution. Internet may be needed.')}finally{evolveBusy=false}
 }
@@ -106,6 +108,59 @@ function analyze(p,opponent,gen){
  const score=attackScore-defensePenalty;
  return {p,offense,best,threats,worst,score};
 }
+
+const spreadTargets=new Set(['all-opponents','all-other-pokemon','all-pokemon']);
+const allyHitTargets=new Set(['all-other-pokemon','all-pokemon']);
+function moveValue(move,attacker,target,gen,ally){
+ const mult=matchup(move.type,target.types,gen);
+ if(mult===null)return null;
+ if(move.damageClass==='status'||move.power===0)return null;
+ const stab=attacker.types.includes(move.type)?1.5:1;
+ const power=move.power||60; // old team records lack power; use a neutral placeholder, never label as actual damage
+ const spread=spreadTargets.has(move.target);
+ const penalty=spread&&gen>=4?.75:1;
+ const value=mult*stab*(power/60)*penalty;
+ const allyRisk=ally&&allyHitTargets.has(move.target)?matchup(move.type,ally.types,gen):0;
+ return {move,value,mult,spread,allyRisk,priority:move.priority||0};
+}
+function pairPlan(a,b,opponents,gen){
+ const actors=[a,b],plans=[];
+ for(let k=0;k<2;k++){
+  const actor=actors[k],ally=actors[1-k];
+  const moves=(actor.moves||[]).flatMap(m=>{
+   const targets=opponents.map((o,i)=>{const r=moveValue(m,actor,o,gen,ally);return r?{...r,targetIndex:i}:null}).filter(Boolean);
+   if(!targets.length)return[];
+   if(spreadTargets.has(m.target)){
+    const total=targets.reduce((s,t)=>s+t.value,0);
+    const allyRisk=targets[0].allyRisk;
+    const score=total-(allyRisk>=2?3.5:allyRisk>0?1.8:0);
+    return[{move:m,targets:targets.map(t=>t.targetIndex),score,allyRisk,spread:true,priority:m.priority||0}];
+   }
+   return targets.map(t=>({move:m,targets:[t.targetIndex],score:t.value,allyRisk:0,spread:false,priority:m.priority||0}));
+  });
+  plans.push(moves.sort((x,y)=>y.score-x.score).slice(0,12));
+ }
+ let best=null;
+ for(const x of plans[0])for(const y of plans[1]){
+  let score=x.score+y.score;
+  const covered=new Set([...x.targets,...y.targets]);
+  if(covered.size===2)score+=.8;
+  const overlap=x.targets.length===1&&y.targets.length===1&&x.targets[0]===y.targets[0];
+  if(overlap)score-=.25;
+  if(!best||score>best.score)best={score,actions:[x,y],covered:covered.size};
+ }
+ if(!best)return null;
+ const risks=actors.map(p=>Math.max(...opponents.flatMap(o=>o.types.map(t=>matchup(t,p.types,gen)||0))));
+ const defense=risks.map(r=>r>=4?3.2:r>=2?1.5:r<1?-.7:0).reduce((a,b)=>a+b,0);
+ const speed=actors.reduce((s,p)=>s+(p.baseSpeed||0),0)/2;
+ return {...best,actors,risks,rank:best.score-defense+Math.min(speed/200,0.5)};
+}
+function pairCard(plan,index,opponents){
+ const [a,b]=plan.actors;
+ const who=p=>`<div class="identity"><img src="${safe(p.image||'')}" alt=""><div><strong>${safe(p.name)}</strong><div class="pills">${p.types.map(pill).join('')}</div></div></div>`;
+ const actions=plan.actions.map((act,i)=>`<div class="pair-action">${safe(plan.actors[i].name)}: <strong>${safe(act.move.name)}</strong> → ${act.targets.map(t=>safe(opponents[t].name)).join(' + ')}${act.spread?' <span class="note">(spread)</span>':''}${act.allyRisk>0?` <span class="bad">May hit ally (${effectText(act.allyRisk)})</span>`:''}</div>`).join('');
+ return `<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${index+1}</span><div class="pair-identities">${who(a)}${who(b)}</div></div>${actions}<p class="note">Potential incoming STAB risk: ${safe(a.name)} ${effectText(plan.risks[0])} · ${safe(b.name)} ${effectText(plan.risks[1])}. Speed tie-breaker uses base Speed only, not actual turn order.</p></article>`;
+}
 function showBattle(){
  if(!current){$('matchups').innerHTML='<p>Open a team first.</p>';return}
  if(!foe){$('matchups').innerHTML='<p>Select an opponent above.</p>';return}
@@ -116,8 +171,17 @@ function showBattle(){
   const score=reports.reduce((s,r)=>s+r.score,0)/reports.length;
   return {p,reports,score,worst:Math.max(...reports.map(r=>r.worst))};
  }).sort((a,b)=>b.score-a.score);
- const caveat=doubleMode?'Double mode compares each Pokémon against both opponents and ranks individual team members. It does NOT yet calculate the best two-Pokémon pair, spread moves, ally protection, or turn order.':'Type-based ranking only; opponent moves are unknown.';
- $('matchups').innerHTML=`<p class="note">${caveat} STAB and type effectiveness are included; move power, stats, abilities, held items and actual damage are not.</p>`+
+ let pairSection='';
+ if(doubleMode){
+  const members=current.pokemon.filter(Boolean),plans=[];
+  for(let i=0;i<members.length;i++)for(let k=i+1;k<members.length;k++){
+   const plan=pairPlan(members[i],members[k],opponents,gen);if(plan)plans.push(plan);
+  }
+  plans.sort((a,b)=>b.rank-a.rank);
+  pairSection='<h3>Recommended pairs</h3>'+(plans.length?plans.slice(0,5).map((p,i)=>pairCard(p,i,opponents)).join(''):'<p>Add two Pokémon with damaging attacks to see pair recommendations.</p>')+'<h3>Individual matchups</h3>';
+ }
+ const caveat=doubleMode?'Double mode recommends Pokémon pairs, move targets and spread attacks when move metadata is available. It estimates ally-hit risk and uses base Speed only as a minor tie-breaker; actual turn order, Protect, abilities, items, damage and opponents’ real moves are unknown.':'Type-based ranking only; opponent moves are unknown.';
+ $('matchups').innerHTML=`<p class="note">${caveat} STAB and type effectiveness are included; move power is used for pair estimates when available, but actual damage is not calculated.</p>`+pairSection+
  ranked.map((r,i)=>`<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${i+1}</span><div class="identity"><img src="${safe(r.p.image||'')}" alt=""><div><strong>${safe(r.p.name)}</strong><div class="pills">${r.p.types.map(pill).join('')}</div></div></div></div>${r.reports.map((rep,k)=>`<div class="opponent-report"><h4>vs ${safe(opponents[k].name)}</h4><div class="rank-summary"><strong>${rep.best?`${safe(rep.best.name)} · ${effectText(rep.best.total)} incl. STAB`:'No moves selected'}</strong><span class="${rep.worst>=2?'bad':rep.worst<1?'good':''}">Worst incoming STAB: ${effectText(rep.worst)}</span></div><p class="note">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</p>${rep.offense.map(m=>`<div class="effect">${chip(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.effectiveness)} type · ${effectText(m.total)} incl. STAB</b></div>`).join('')}</div>`).join('')}</article>`).join('');
 }
 $('teamsTab').onclick=()=>{$('teamsPage').hidden=false;$('battlePage').hidden=true;$('teamsTab').classList.add('selected');$('battleTab').classList.remove('selected')};

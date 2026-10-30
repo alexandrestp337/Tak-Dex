@@ -3,3 +3,5 @@
 .rank-header{display:flex;align-items:center;gap:10px}.rank-number{background:var(--accent);color:#10241e;padding:9px 11px;border-radius:9px;font-weight:800}.rank-summary{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}.rank-summary strong{font-size:.92rem}.rank-summary span{font-size:.82rem;font-weight:750}.rank-card:first-of-type{border-color:var(--accent)}.rank-card .note{line-height:1.5}
 
 .mode-switch{display:flex;gap:8px;margin:12px 0}.mode-switch button.selected{background:var(--accent);color:#10241e}.opponent-report{border-top:1px solid var(--line);padding-top:9px;margin-top:10px}.opponent-report h4{margin:3px 0 8px}
+
+.pair-identities{display:flex;gap:12px;flex-wrap:wrap}.pair-identities .identity img{width:52px;height:52px}.pair-action{margin:10px 0;padding:8px;border-radius:8px;background:var(--surface,#ffffff0c)}.pair-action .bad{font-size:.8rem}

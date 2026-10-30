@@ -1,3 +1,6 @@
-PokéTact V4
-
-Adds Evolve buttons to saved Pokémon and a Single / Double battle toggle. Evolve uses PokéAPI evolution-chain data and asks for confirmation, retains all four moves and team slot. It displays some evolution conditions but does NOT verify them, and game availability filtering is approximate. Double mode ranks individual Pokémon against both opposing Pokémon, not optimal pairs or spread-move effects. The first lookup still requires internet. This is NOT a complete offline database or a full damage calculator. Existing teams remain in browser localStorage.
+# PokéTact V5
+- Evolution buttons hide once species is confirmed to have no available evolution for the selected game; while checking, the button is disabled.
+- Double battle now ranks pairs, proposes attacks and targets, recognizes common spread move targets and potential friendly-fire, balances type-based offense and incoming STAB risk, and uses base Speed as a minor tie-breaker.
+- Existing saved moves from earlier versions do not have power/target metadata. Re-select those moves in the editor for more informative pair recommendations.
+- This is a heuristic, not a turn simulator or damage calculator. It cannot predict opponent moves, Protect, switching, abilities, items, actual turn order, or accurate damage. Move targets and evolution conditions are not exhaustively modeled.
+- First lookups still require internet; full offline database remains future work.
