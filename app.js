@@ -330,8 +330,20 @@ function teamOptions(){return '<option value="">Select team…</option>'+teams.m
 function refreshTeamMenus(){['dexTeam','planTeam','tmTeam'].forEach(id=>{const value=$(id).value;$(id).innerHTML=teamOptions();$(id).value=teams.some(t=>t.id===value)?value:current?.id||''});refreshDexMembers()}
 function selectedTeam(id){return teams.find(t=>t.id===$(id).value)}
 function refreshDexMembers(){const t=selectedTeam('dexTeam');$('dexTeamPoke').innerHTML='<option value="">Choose Pokémon…</option>'+(t?.pokemon||[]).filter(Boolean).map(p=>`<option value="${p.id}">${safe(p.name)}</option>`).join('');if(t)$('dexGame').value=t.game}
+// V28: the Pokédex gets the same autocomplete as the Battle opponent field.
+// Selecting a suggestion clears the saved-team member selector so the typed choice wins.
+search($('dexInput'),$('dexResults'),name=>{
+ $('dexTeamPoke').value='';
+ $('dexInput').value=pretty(name);
+ $('dexResults').hidden=true;
+});
+const dexClear=$('dexClear');
+function syncDexClear(){dexClear.hidden=!$('dexInput').value.trim()}
+$('dexInput').addEventListener('input',()=>{ $('dexTeamPoke').value='';syncDexClear() });
+$('dexInput').addEventListener('focus',e=>{if(e.target.value)e.target.select()});
+dexClear.addEventListener('click',()=>{$('dexInput').value='';$('dexTeamPoke').value='';$('dexResults').hidden=true;syncDexClear();$('dexInput').focus()});
 $('dexTeam').onchange=refreshDexMembers;
-$('dexTeamPoke').onchange=()=>{if($('dexTeamPoke').value)$('dexInput').value=$('dexTeamPoke').selectedOptions[0].textContent};
+$('dexTeamPoke').onchange=()=>{if($('dexTeamPoke').value)$('dexInput').value=$('dexTeamPoke').selectedOptions[0].textContent;syncDexClear()};
 $('dexSearch').onclick=async()=>{
  const name=$('dexTeamPoke').value||$('dexInput').value.trim().toLowerCase().replace(/\s+/g,'-');if(!name)return;
  const game=$('dexGame').value,version=vg[game],result=$('dexResult');result.textContent='Loading Pokémon, evolution chain and level-up moves…';
