@@ -227,3 +227,19 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 @media(max-width:460px){.recommendation-head .rank-portrait img{width:130px!important;height:130px!important;left:-21px;top:0}}
 @media(max-width:355px){.recommendation-head .rank-portrait img{left:-31px}}
 .full-pokemon img {filter:none!important}
+
+/* V22: reduce battle-card Pokémon portrait scale by a further 15%, preserving
+   the symmetrical fade and centering artwork inside the existing portrait slot. */
+.recommendation-head .rank-portrait img{
+  width:123px!important;
+  height:123px!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%);
+}
+@media(max-width:460px){
+  .recommendation-head .rank-portrait img{
+    width:110px!important;
+    height:110px!important;
+  }
+}
