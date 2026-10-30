@@ -1,1 +1,1 @@
-Tak-Dex V12: Uses the approved darker portrait background. Background covers the full viewport with a subtle dimming overlay. All other V11 features remain unchanged. Upload all 7 files to the GitHub Pages repository.
+Tak-Dex V13: wallpaper sizing only. Fits the approved background to the visible viewport instead of cropping it based on full document height. No other app logic or UI changes. Upload all 7 files to the existing GitHub Pages repository.
