@@ -1,1 +1,1 @@
-Tak-Dex V37: unified TM/HM searchable combobox. Tap arrow to browse all, or type to filter by move or machine number. All existing team data stays in localStorage.
+Tak-Dex V38: evolution artwork and names are clickable to navigate to the selected Pokémon Pokédex entry. Keeps game selection and existing team data.
