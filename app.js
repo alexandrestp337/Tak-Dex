@@ -431,15 +431,23 @@ $('dexSearch').onclick=async()=>{
   const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
   const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
   const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
-  let encounterHtml='<h3>Wild encounters · '+safe(game)+'</h3><div class="card"><p class="note">Checking encounter records…</p></div>';
+  let encounterHtml='<h3>Encounter & acquisition records · '+safe(game)+'</h3><div class="card"><p class="note">Checking game-specific encounter index…</p></div>';
   result.innerHTML=`${encounterHtml}<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div>`;
-  // Wild encounter records are supplemental: a failed endpoint must not hide the Pokédex entry.
+  // Source-verified indexed records; lack of records is not proof of unavailability.
   try{
-   const records=await api('pokemon/'+pokemon.name+'/encounters');
-   const matching=records.flatMap(r=>r.version_details.filter(v=>v.version.name===game.toLowerCase().replace(/ /g,'-')).map(v=>({area:r.location_area.name,details:v.encounter_details})));
-   const block='<h3>Wild encounters · '+safe(game)+'</h3><div class="card">'+(matching.length?matching.map(r=>'<p><b>'+safe(pretty(r.area))+'</b>: '+r.details.map(d=>safe(pretty(d.method.name))+' · Lv '+d.min_level+(d.max_level!==d.min_level?'–'+d.max_level:'')).join('; ')+'</p>').join(''):'<p>Wild encounter records: 0</p><p class="note">This does not rule out starters, gifts, evolutions, trades, or special encounters.</p>')+'</div>';
+   const cat=window.takDexEncounterV55;
+   const pack=await cat.get(game,()=>{});
+   const rec=pack.entries[pokemon.id]||[];
+   const body=pack.hasSource?(rec.length?cat.format(rec):'<p>Recorded encounters: 0</p><p class="note">No matching encounter entries in this source. Evolution, trade, gifts, transfers and trainer appearances may not be represented.</p>'):'<p class="note">This dataset contains no verified encounter records for '+safe(game)+'. Availability is unknown, not zero.</p>';
+   const block='<h3>Encounter & acquisition records · '+safe(game)+'</h3><div class="card">'+body+'<p class="note">PokéAPI encounter dataset. Records describe encounter methods, not a complete obtainable-Pokémon list.</p></div>';
    result.innerHTML=result.innerHTML.replace(encounterHtml,block);
-  }catch{result.innerHTML=result.innerHTML.replace(encounterHtml,'<h3>Wild encounters</h3><div class="card">Encounter records unavailable or not downloaded.</div>')}
+  }catch{
+   // PokeAPI endpoint is a lightweight fallback if the optional bulk index cannot load.
+   try{const records=await api('pokemon/'+pokemon.id+'/encounters');const version=game.toLowerCase().replace(/ /g,'-');const matches=records.flatMap(r=>r.version_details.filter(v=>v.version.name===version).map(v=>({area:r.location_area.name,details:v.encounter_details})));
+    const content=matches.length?matches.map(r=>'<p><b>'+safe(pretty(r.area))+'</b>: '+r.details.map(d=>safe(pretty(d.method.name))+' · Lv '+d.min_level+(d.max_level!==d.min_level?'–'+d.max_level:'')).join('; ')+'</p>').join(''):'<p>No encounter records returned by the API. Coverage may be incomplete; availability remains unverified.</p>';
+    result.innerHTML=result.innerHTML.replace(encounterHtml,'<h3>Encounter & acquisition records · '+safe(game)+'</h3><div class="card">'+content+'<p class="note">Online fallback; offline location index not installed.</p></div>');
+   }catch{result.innerHTML=result.innerHTML.replace(encounterHtml,'<h3>Encounter & acquisition records</h3><div class="card">Encounter coverage unknown. Check your connection or download the optional encounter packs.</div>')}
+  }
  }catch(e){result.textContent='Could not load data. Check your connection or Pokémon name.'}
 };
 $('dexGame').onchange=()=>{$('dexTeam').value='';$('dexTeamPoke').innerHTML='';};
@@ -721,6 +729,91 @@ for(const id of ['foeInput','foeInput2']){
 })();
 
 
+// V55 — version-indexed encounter catalog. PokéAPI CSV data is parsed locally on demand.
+// Verified records do NOT constitute a complete obtainable-Pokémon roster.
+(function initEncounterCatalogV55(){
+ const ROOT='https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/';
+ const CACHE='takdex-encounter-catalog-v55';
+ const SOURCE=['versions','pokemon','pokemon_types','pokemon_types_past','types','pokedex_version_groups','pokemon_dex_numbers','encounters','encounter_slots','encounter_methods','encounter_condition_value_map','encounter_condition_values','location_areas','locations'];
+ const MEM=new Map();let loading=null;let lastProgress=()=>{};
+ const key=game=>new URL('takdex-encounters-v55/'+game.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.json',location.href).href;
+ function csv(text){const lines=text.trim().split(/\r?\n/),names=lines.shift().split(',');return lines.filter(Boolean).map(line=>{const parts=line.split(',');return Object.fromEntries(names.map((name,i)=>[name,(parts[i]||'').trim()]))})}
+ function index(rows,field){return new Map(rows.map(x=>[x[field],x]))}
+ const maxIds=[151,251,386,493,649,721,809,905,1025];
+ async function cached(game){if(MEM.has(game))return MEM.get(game);if(!('caches'in window))return null;const r=await(await caches.open(CACHE)).match(key(game));if(!r)return null;try{const p=await r.json();if(p.schema===55&&p.game===game){MEM.set(game,p);return p}}catch{}return null}
+ async function fetchTable(name){const res=await fetch(ROOT+name+'.csv');if(!res.ok)throw Error('PokéAPI '+name+'.csv: HTTP '+res.status);return csv(await res.text())}
+ async function buildAll(progress){
+  const data={};let done=0;
+  // Grouped fetches avoid saturating mobile connections, while retaining usable progress updates.
+  for(let i=0;i<SOURCE.length;i+=4){const batch=SOURCE.slice(i,i+4);await Promise.all(batch.map(async n=>{data[n]=await fetchTable(n);done++;progress('Downloading source tables · '+done+' / '+SOURCE.length)}))}
+  progress('Indexing version-specific encounters…');
+  const versions=data.versions,vsByName=index(versions,'identifier'),pokemon=index(data.pokemon,'id');
+  const typeName=index(data.types,'id'),methods=index(data.encounter_methods,'id'),slot=index(data.encounter_slots,'id');
+  const areas=index(data.location_areas,'id'),locs=index(data.locations,'id');
+  const conditionName=index(data.encounter_condition_values,'id');
+  const conditions=new Map();
+  for(const r of data.encounter_condition_value_map){let a=conditions.get(r.encounter_id);if(!a)conditions.set(r.encounter_id,a=[]);a.push(r.encounter_condition_value_id)}
+  const types=new Map(),past=new Map();
+  for(const r of data.pokemon_types){let t=types.get(r.pokemon_id);if(!t)types.set(r.pokemon_id,t=[]);t.push([+r.slot,typeName.get(r.type_id)?.identifier||''])}
+  for(const r of data.pokemon_types_past){let t=past.get(r.pokemon_id);if(!t)past.set(r.pokemon_id,t=new Map());let g=t.get(+r.generation_id);if(!g)t.set(+r.generation_id,g=[]);g.push([+r.slot,typeName.get(r.type_id)?.identifier||''])}
+  function historical(id,gen){let t=types.get(String(id))||[];const history=past.get(String(id));if(history){const applicable=[...history.keys()].filter(g=>gen<=g).sort((a,b)=>a-b);if(applicable.length)t=history.get(applicable[0])}return t.slice().sort((a,b)=>a[0]-b[0]).map(x=>x[1]).filter(Boolean)}
+  const regionDex=new Map(),regionByVersion=new Map();
+  for(const row of data.pokedex_version_groups){let a=regionDex.get(row.version_group_id);if(!a)regionDex.set(row.version_group_id,a=new Set());a.add(row.pokedex_id)}
+  for(const row of data.pokemon_dex_numbers){for(const [group,dexes] of regionDex)if(dexes.has(row.pokedex_id)){let set=regionByVersion.get(group);if(!set)regionByVersion.set(group,set=new Set());set.add(+row.species_id)}}
+  const supported=new Map(games.map(g=>[g.toLowerCase().replace(/ /g,'-'),g]));
+  const packs={};const rawByVersion={};
+  for(const [apiName,game] of supported){const v=vsByName.get(apiName);if(!v)continue;rawByVersion[v.id]={game,ids:new Map(),count:0,version:v}}
+  for(const row of data.encounters){
+   const bucket=rawByVersion[row.version_id];if(!bucket)continue;
+   const mon=pokemon.get(row.pokemon_id);if(!mon)continue;
+   const id=+mon.species_id;if(!Number.isInteger(id)||id<1||id>1025)continue;
+   bucket.count++;
+   const area=areas.get(row.location_area_id),locationRec=area&&locs.get(area.location_id);
+   const place=[locationRec?.identifier||'Unknown location',area?.identifier||''].filter(Boolean).join(' · ');
+   const method=methods.get(slot.get(row.encounter_slot_id)?.encounter_method_id)?.identifier||'unspecified';
+   const cond=(conditions.get(row.id)||[]).map(n=>conditionName.get(n)?.identifier).filter(Boolean).sort();
+   const condKey=cond.join(',');
+   let byMon=bucket.ids.get(id);if(!byMon)bucket.ids.set(id,byMon=new Map());
+   const groupKey=[place,method,condKey].join('|');let item=byMon.get(groupKey);
+   if(!item){item=[place,method,+row.min_level,+row.max_level,cond];byMon.set(groupKey,item)}
+   else{item[2]=Math.min(item[2],+row.min_level);item[3]=Math.max(item[3],+row.max_level)}
+  }
+  for(const g of games){
+   const name=g.toLowerCase().replace(/ /g,'-'),version=vsByName.get(name),bucket=version&&rawByVersion[version.id];
+   const gen=gameGeneration(g),max=maxIds[gen-1]||1025,regional=regionByVersion.get(version?.version_group_id)||new Set();
+   const mons=data.pokemon.filter(p=>p.is_default==='1'&&+p.id<=max&&+p.id<=1025).map(p=>[+p.id,p.identifier,historical(p.id,gen),regional.has(+p.species_id)?1:0]);
+   const entries={};if(bucket)for(const [id,rec] of bucket.ids)entries[id]=[...rec.values()].sort((a,b)=>a[0].localeCompare(b[0]));
+   packs[g]={schema:55,game:g,version:name,source:'PokéAPI game/version encounter CSV',sourceDate:new Date().toISOString().slice(0,10),records:bucket?.count||0,mons,entries,hasSource:!!bucket&&bucket.count>0};
+  }
+  progress('Saving indexed game packs…');
+  if(!('caches' in window))throw Error('Offline CacheStorage is unavailable in this browser');
+  const cache=await caches.open(CACHE);
+  for(let i=0;i<games.length;i++){
+   const game=games[i],pack=packs[game];
+   await cache.put(key(game),new Response(JSON.stringify(pack),{headers:{'content-type':'application/json'}}));MEM.set(game,pack);
+   if(i%5===0)progress('Saving encounter packs · '+(i+1)+' / '+games.length);
+  }
+  progress('Encounter index downloaded for '+games.length+' games');return packs;
+ }
+ async function get(game,cb){const ready=await cached(game);if(ready)return ready;
+  if(!loading)loading=buildAll(m=>{lastProgress(m)}).finally(()=>{loading=null});
+  if(cb)lastProgress=cb;
+  await loading;const pack=await cached(game);if(!pack)throw Error('No encounter pack for '+game);return pack;
+ }
+ async function refresh(cb){if(cb)lastProgress=cb;if(!loading)loading=buildAll(m=>lastProgress(m)).finally(()=>{loading=null});return loading}
+ async function count(){let total=0;for(const g of games)if(await cached(g))total++;return total}
+ function format(records){return (records||[]).map(r=>'<p><b>'+safe(pretty(r[0]))+'</b> · '+safe(pretty(r[1]))+' · Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:'')+(r[4]?.length?' · '+r[4].map(x=>safe(pretty(x))).join(', '):'')+'</p>').join('')}
+ window.takDexEncounterV55={get,cached,count,format,refresh};
+ // Explicitly expose the optional offline catalog downloader alongside the existing data download.
+ const more=$('morePage');if(more){const panel=document.createElement('article');panel.className='card';panel.style.cssText='margin:16px 0;padding:15px';panel.innerHTML='<h3>Encounter location data · V55</h3><p class="note">Optional indexed location packs for 34 games. Data comes from PokéAPI and may omit gifts, transfers, trainer appearances or encounters in newer titles.</p><p id="td55Progress" class="note">Checking saved encounter indexes…</p><button type="button" id="td55Download">Download / update encounter indexes</button>';
+  const offline=$('offlineDownload');if(offline&&offline.closest('.card'))offline.closest('.card').insertAdjacentElement('afterend',panel);else more.appendChild(panel);
+  const out=panel.querySelector('#td55Progress'),button=panel.querySelector('#td55Download');
+  const update=()=>count().then(n=>{out.textContent=n===games.length?'✓ Encounter indexes downloaded for all '+n+' games':n+' / '+games.length+' game packs stored. First download requires internet.'}).catch(()=>{out.textContent='Encounter CacheStorage unavailable.'});
+  button.onclick=async()=>{button.disabled=true;out.textContent='Downloading source files…';try{await refresh(m=>{out.textContent=m});out.textContent='✓ Indexed encounters downloaded for all '+games.length+' games.'}catch(e){out.textContent='Unable to download encounter indexes: '+(e?.message||e)+'; existing Pokémon lookup remains available.'}finally{button.disabled=false}};
+  update();
+ }
+})();
+
 // V43 — separate, on-demand Pokédex type explorer. Encounter-backed results only.
 (function initTypeExplorer(){
  const dex=$('dexPage');if(!dex||$('typeExplorerPage'))return;
@@ -735,41 +828,43 @@ for(const id of ['foeInput','foeInput2']){
  const returnBtn=document.createElement('button');returnBtn.type='button';returnBtn.id='returnToTypeExplorer';returnBtn.textContent='← Back to Explore by Type';returnBtn.style.cssText='display:none;margin:12px 0;padding:11px 14px;border-radius:10px;font-weight:700;cursor:pointer';dex.insertBefore(returnBtn,$('dexResult')||btn);
  function clearOrigin(){fromExplorer=false;returnBtn.style.display='none'}
  returnBtn.onclick=()=>{if(!fromExplorer)return;clearOrigin();go(false,true)};
- $('dexTab').addEventListener('click',clearOrigin);$('dexInput').addEventListener('input',()=>{if(fromExplorer)clearOrigin()});
+ $('dexTab').addEventListener('click',clearOrigin);for(const tab of ['teamsTab','battleTab','dexTab','moreTab'])$(tab).addEventListener('click',()=>{if(!page.hidden){page.hidden=true;dex.hidden=tab!=='dexTab';clearOrigin()}});$('dexInput').addEventListener('input',()=>{if(fromExplorer)clearOrigin()});
  $('dexGame').addEventListener('change',()=>{if(fromExplorer)clearOrigin()});
  btn.onclick=()=>{clearOrigin();gameEl.value=$('dexGame').value;selected=null;drawTypes();results.innerHTML='';status.textContent='Choose a type to explore.';go(false)};
  page.querySelector('#typeExplorerBack').onclick=()=>go(true);
  function drawTypes(){const gen=gameGeneration(gameEl.value);typeEl.innerHTML=Object.entries(colors).map(([type,color])=>{const unavailable=(gen<6&&type==='fairy')||(gen<2&&(type==='dark'||type==='steel'));return `<button type="button" data-explore-type="${type}" ${unavailable?'disabled title="Not available in this generation"':''} aria-pressed="${selected===type}" style="background:${color};opacity:${unavailable?'.28':'1'};filter:${unavailable?'grayscale(1)':'none'};color:${['electric','ice','ground','steel','normal'].includes(type)?'#151515':'white'};padding:10px 2px;border-radius:9px;border:${selected===type?'3px solid var(--text,white)':'2px solid transparent'};font-weight:700;cursor:${unavailable?'not-allowed':'pointer'}">${pretty(type)}</button>`}).join('')}
  function label(name){return pretty(name).replace(/\bArea\b$/,'').trim()}
+ let onlyRecorded=false;
+ const filterRow=document.createElement('label');filterRow.style.cssText='display:flex;align-items:center;gap:10px;margin:7px 0 12px;font-size:.9rem';filterRow.innerHTML='<input type="checkbox" id="td55RecordedOnly" style="width:auto"> Show only Pokémon with recorded encounters';
+ results.parentNode.insertBefore(filterRow,results);filterRow.querySelector('input').onchange=e=>{onlyRecorded=e.target.checked;show()};
+ const intro=page.querySelector('.note');if(intro)intro.textContent='Explore types across the selected generation. Pokémon with verified encounter records are marked; others may require evolution, trading or other methods. Not a complete obtainable-Pokémon roster.';
+ function itemHtml(m,hasSource){
+  const found=m.rec||[],has=found.length>0;
+  const evidence=has?'Recorded encounter'+(found.length>1?'s':''):m.regional?'Regional Pokédex · availability unverified':'Availability unverified';
+  return `<article class="card" style="margin:9px 0;padding:12px"><button type="button" data-explore-pokemon="${safe(m.name)}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left"><img loading="lazy" width="60" height="60" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png"><span><b>#${m.id} ${safe(pretty(m.name))}</b><span class="pills" style="display:block">${m.types.map(pill).join('')}</span><small>${safe(evidence)}</small></span></button><details><summary>${has?'Encounter records ('+found.length+')':hasSource?'No encounter records':'Coverage unknown'}</summary>${has?window.takDexEncounterV55.format(found):'<p class="note">'+(hasSource?'No matching records in the encounter source; this does not mean unobtainable.':'The source has no recorded encounters for this version.')+'</p>'}</details></article>`
+ }
  async function show(){const token=++request;results.innerHTML='';if(!selected){status.textContent='Choose a type to explore.';return}
-  const game=gameEl.value,gen=gameGeneration(game),version=game.toLowerCase().replace(/ /g,'-');
-  status.textContent='Loading '+pretty(selected)+' Pokémon and checking '+game+' encounter records…';
+  const game=gameEl.value,gen=gameGeneration(game);
+  status.textContent='Loading indexed '+pretty(selected)+' records for '+game+'…';
   try{
-   const typed=await api('type/'+selected);
-   // Type endpoint contains current typing; confirm historical typing individually to avoid false positives.
-   const candidates=typed.pokemon.filter(x=>{const id=Number(x.pokemon.url.match(/\/(\d+)\/$/)?.[1]);return id>0&&id<=1025}).map(x=>x.pokemon);
-   const verified=[];let checked=0;const maxIds=[151,251,386,493,649,721,809,905,1025];
-   // A game-specific positive encounter is evidence; no encounter is NOT evidence of unavailability.
-   for(let i=0;i<candidates.length;i+=8){
-    if(token!==request)return;
-    const batch=await Promise.all(candidates.slice(i,i+8).map(async p=>{
-     try{
-      const encounters=await api('pokemon/'+p.name+'/encounters');
-      const matches=encounters.flatMap(a=>a.version_details.filter(v=>v.version.name===version).map(v=>({area:a.location_area.name,details:v.encounter_details})));
-      const mon=await api('pokemon/'+p.name);
-      if(mon.id>maxIds[gen-1])return null;
-      if(!historicalTypes(mon,game).includes(selected))return null;
-      return {name:p.name,id:mon.id,matches,types:historicalTypes(mon,game)};
-     }catch{return null}
-    }));
-    verified.push(...batch.filter(Boolean));checked+=batch.length;
-    status.textContent='Checked '+checked+' / '+candidates.length+' species · '+verified.length+' matching species';
-    // Progressive results, sorted by national Pokédex number.
-    results.innerHTML=verified.sort((a,b)=>a.id-b.id).map(m=>`<article class="card" style="margin:9px 0;padding:12px"><button type="button" data-explore-pokemon="${safe(m.name)}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left"><img loading="lazy" width="60" height="60" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png"><span><b>#${m.id} ${safe(pretty(m.name))}</b><span class="pills" style="display:block">${m.types.map(pill).join('')}</span></span></button><details><summary>Wild encounter records (${m.matches.length})</summary>${m.matches.length?m.matches.map(loc=>`<p><b>${safe(label(loc.area))}</b>: ${loc.details.map(d=>safe(pretty(d.method.name))+' · Lv '+d.min_level+(d.max_level!==d.min_level?'–'+d.max_level:'')+(d.condition_values.length?' · '+d.condition_values.map(c=>safe(pretty(c.name))).join(', '):'')).join('; ')}</p>`).join(''):'<p>No wild encounter records found for this game. This does not mean unobtainable.</p>'}</details></article>`).join('');
-   }
+   const cat=window.takDexEncounterV55;
+   const pack=await cat.get(game,msg=>{if(token===request)status.textContent=msg});
    if(token!==request)return;
-   status.textContent=verified.length+' '+pretty(selected)+' Pokémon from this generation (not a verified game-obtainability list).';
-  }catch(e){if(token===request)status.textContent='Could not load encounter data. Connect to the internet or download the required data first.'}
+   const matched=pack.mons.filter(p=>p[2].includes(selected)).map(p=>({id:p[0],name:p[1],types:p[2],regional:!!p[3],rec:pack.entries[p[0]]||[]}));
+   const shown=onlyRecorded?matched.filter(m=>m.rec.length):matched;
+   results.innerHTML=shown.map(m=>itemHtml(m,pack.hasSource)).join('')||'<div class="card">No Pokémon match these filters.</div>';
+   const seen=matched.filter(m=>m.rec.length).length;
+   status.textContent=shown.length+' shown · '+seen+' with recorded encounters · '+matched.length+' matching '+pretty(selected)+' species.'+(pack.hasSource?'':' No encounter coverage for this version.');
+  }catch(e){
+   if(token!==request)return;
+   // A single official type request remains usable if the CSV bulk source is unreachable.
+   try{const typed=await api('type/'+selected);if(token!==request)return;
+    const max=[151,251,386,493,649,721,809,905,1025][gen-1]||1025;
+    const fallback=typed.pokemon.map(x=>({name:x.pokemon.name,id:+(x.pokemon.url.match(/\/(\d+)\/$/)||[])[1]})).filter(x=>x.id>0&&x.id<=max);
+    results.innerHTML=onlyRecorded?'<div class="card">Verified encounter index required for this filter.</div>':fallback.map(m=>itemHtml({...m,types:[selected],regional:false,rec:[]},false)).join('');
+    status.textContent='Offline index unavailable. Showing a generation-limited modern-type list; historical typings and availability are NOT verified. Download encounter indexes in More.';
+   }catch{if(token===request)status.textContent='Could not load source data. Connect to the internet or download the encounter indexes in More.'}
+  }
  }
  typeEl.onclick=e=>{const b=e.target.closest('[data-explore-type]');if(!b||b.disabled)return;selected=selected===b.dataset.exploreType?null:b.dataset.exploreType;drawTypes();show()};
  gameEl.onchange=()=>{request++;if((gameGeneration(gameEl.value)<6&&selected==='fairy')||(gameGeneration(gameEl.value)<2&&['dark','steel'].includes(selected)))selected=null;drawTypes();results.innerHTML='';if(selected)show();else status.textContent='Choose a type to explore.'};
