@@ -83,7 +83,7 @@ async function checkEvolution(p){const key=p.id+':'+current.game;if(evolutionSta
 function showSlots(){$('slots').innerHTML=Array.from({length:6},(_,i)=>{const p=current.pokemon[i];return `<article class="slot">${p?`<div class="identity"><img src="${safe(p.image)}" alt=""><div><strong>${safe(p.name)}</strong><div class="pills">${p.types.map(pill).join('')}</div></div></div><div>${p.moves.map(chip).join('')}</div>`:`<strong>Empty slot ${i+1}</strong><p>Add a Pokémon</p>`}<button data-slot="${i}">${p?'Edit':'＋ Add'}</button>${p&&evolutionStatus.get(p.id+':'+current.game)!==false?` <button data-evolve="${i}" ${evolutionStatus.has(p.id+':'+current.game)?'':'disabled'}>${evolutionStatus.has(p.id+':'+current.game)?'↑ Evolve':'Checking evolution…'}</button>`:''}</article>`}).join('');current.pokemon.filter(Boolean).forEach(p=>{if(!evolutionStatus.has(p.id+':'+current.game))checkEvolution(p)})};$('slots').onclick=e=>{const b=e.target.closest('[data-slot]');if(b)editSlot(Number(b.dataset.slot));const ev=e.target.closest('[data-evolve]');if(ev)evolveSlot(Number(ev.dataset.evolve))};
 function clearForm(){chosen=null;validMoves=[];selectedMoves=[null,null,null,null];$('pokeInput').value='';$('pokeNickname').value='';$('pokePreview').innerHTML='';$('moveNote').textContent='Select a Pokémon to load its moves.';$('error').hidden=true;$('savePoke').disabled=true;drawMoves()}
 function editSlot(i){slotIndex=i;clearForm();$('pokeHeading').textContent=current.pokemon[i]?'Edit Pokémon':'Add Pokémon';$('removePoke').hidden=!current.pokemon[i];$('evolvePoke').hidden=!current.pokemon[i]||evolutionStatus.get(current.pokemon[i]?.id+':'+current.game)===false;$('pokeDialog').showModal();const p=current.pokemon[i];if(p){$('pokeInput').value=p.name;$('pokeNickname').value=p.nickname||'';loadPokemon(p.id,p.moves)}}
-async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=historicalTypes(p,current.game);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image,baseSpeed:p.stats.find(s=>s.stat.name==='speed')?.base_stat,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat]))};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();Promise.all(selectedMoves.map(async (m,i)=>{if(m){selectedMoves[i]=await enrichMove(m,gameGeneration(current.game))}})).then(()=>{if(version===lookupVersion)drawMoves()});$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
+async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=historicalTypes(p,current.game);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image,baseSpeed:p.stats.find(s=>s.stat.name==='speed')?.base_stat,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:p.abilities};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();Promise.all(selectedMoves.map(async (m,i)=>{if(m){selectedMoves[i]=await enrichMove(m,gameGeneration(current.game))}})).then(()=>{if(version===lookupVersion)drawMoves()});$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
 function drawMoves(){$('moveFields').innerHTML=Array.from({length:4},(_,i)=>`<div class="moveRow"><b>${i+1}</b><div><div class="search"><input data-move-input="${i}" autocomplete="off" placeholder="Search attack ${i+1}" value="${safe(selectedMoves[i]?.name||'')}"><div class="suggestions" data-results="${i}" hidden></div></div><div class="moveType" data-type="${i}">${selectedMoves[i]?.type?pill(selectedMoves[i].type)+moveStats(selectedMoves[i]):''}</div></div><button type="button" class="clear" data-clear="${i}">×</button></div>`).join('')}
 $('moveFields').addEventListener('input',e=>{const i=e.target.dataset.moveInput;if(i===undefined)return;selectedMoves[+i]=null;const results=document.querySelector(`[data-results="${i}"]`),q=e.target.value.toLowerCase();document.querySelector(`[data-type="${i}"]`).innerHTML='';results.hidden=!q;results.innerHTML=validMoves.filter(n=>n.includes(q.replace(/\s+/g,'-'))).slice(0,12).map(n=>`<button type="button" data-pick="${i}" data-name="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No matching move for this game</p>'});
 $('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.target.closest('[data-pick]');if(c){const i=+c.dataset.clear;selectedMoves[i]=null;drawMoves()}if(b){const i=+b.dataset.pick,n=b.dataset.name;document.querySelector(`[data-results="${i}"]`).hidden=true;try{const m=await api('move/'+n);selectedMoves[i]={name:pretty(n),...moveGenerationData(m,gameGeneration(current.game)),target:m.target?.name,priority:m.priority||0,metaGeneration:gameGeneration(current.game)};drawMoves()}catch{$('error').hidden=false;$('error').textContent='Could not load move type.'}}};
@@ -96,7 +96,7 @@ $('exportTeam').onclick=()=>{if(!current)return;const payload={format:'takdex-te
 $('importTeam').onclick=()=>$('importTeamFile').click();
 $('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2000000)throw Error('File is too large');const data=JSON.parse(await file.text());const t=data?.format==='takdex-team'?data.team:data;if(!t||typeof t.name!=='string'||!games.includes(t.game)||!Array.isArray(t.pokemon)||t.pokemon.length>6)throw Error('Invalid Tak-Dex team file');const pokemon=Array.from({length:6},(_,i)=>{const mon=t.pokemon[i];if(mon==null)return null;if(typeof mon.id!=='number'||typeof mon.name!=='string'||!Array.isArray(mon.moves)||mon.moves.length>4||!Array.isArray(mon.types))throw Error('Invalid Pokémon data');return {...mon,nickname:typeof mon.nickname==='string'?mon.nickname.slice(0,30):''}});const team={id:String(Date.now())+Math.random().toString(36).slice(2),name:t.name.slice(0,40),game:t.game,pokemon};teams.push(team);save();showTeams();$('newDialog').close();openTeam(team.id)}catch(err){alert('Could not import team: '+err.message)}finally{e.target.value=''}};
 
-search($('pokeInput'),$('pokeResults'),n=>loadPokemon(n));search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat]))};$('foePreview').innerHTML=`<div class="identity"><img src="${safe(foe.image)}"><div><strong>${safe(foe.name)}</strong><div class="pills">${foe.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
+search($('pokeInput'),$('pokeResults'),n=>loadPokemon(n));search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:p.abilities};$('foePreview').innerHTML=`<div class="identity"><img src="${safe(foe.image)}"><div><strong>${safe(foe.name)}</strong><div class="pills">${foe.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
 
 let evolveBusy=false;
 async function evolveSlot(i){
@@ -140,7 +140,7 @@ async function evolveSlot(i){
  }catch(e){alert('Could not check evolution. Internet may be needed.')}finally{evolveBusy=false}
 }
 search($('foeInput2'),$('foeResults2'),async n=>{
- try{const p=await api('pokemon/'+n);foe2={name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat]))};$('foePreview2').innerHTML=`<div class="identity"><img src="${safe(foe2.image)}" alt=""><div><strong>${safe(foe2.name)}</strong><div class="pills">${foe2.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load second opponent.'}
+ try{const p=await api('pokemon/'+n);foe2={name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:p.abilities};$('foePreview2').innerHTML=`<div class="identity"><img src="${safe(foe2.image)}" alt=""><div><strong>${safe(foe2.name)}</strong><div class="pills">${foe2.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load second opponent.'}
 });
 $('singleMode').onclick=()=>{doubleMode=false;$('secondFoe').hidden=true;$('singleMode').classList.add('selected');$('doubleMode').classList.remove('selected');showBattle()};
 $('doubleMode').onclick=()=>{doubleMode=true;$('secondFoe').hidden=false;$('doubleMode').classList.add('selected');$('singleMode').classList.remove('selected');showBattle()};
@@ -195,24 +195,50 @@ function generationFromName(name){
 // Relative expected move strength, not a damage calculator. Base stats provide only an approximate ratio.
 const ALWAYS_HIT_MOVES=new Set(['Swift','Aerial Ace','Shock Wave','Magical Leaf','Feint Attack','Faint Attack','Shadow Punch','Aura Sphere','Magnet Bomb','Disarming Voice','Smart Strike','Flower Trick']);
 const VARIABLE_MOVES=new Set(['Magnitude','Present','Hidden Power','Return','Frustration','Flail','Reversal','Low Kick','Grass Knot','Gyro Ball','Electro Ball','Heavy Slam','Heat Crash','Eruption','Water Spout','Facade','Brine','Payback','Avalanche','Revenge','Assurance','Acrobatics','Hex','Venoshock','Stored Power','Punishment','Fling','Natural Gift','Trump Card','Rollout','Ice Ball','Fury Cutter','Triple Kick','Triple Axel','Beat Up','Seismic Toss','Night Shade','Dragon Rage','Sonic Boom','Super Fang','Endeavor','Psywave','Counter','Mirror Coat','Metal Burst','Bide','Final Gambit','OHKO','Guillotine','Horn Drill','Fissure','Sheer Cold']);
+// V39: defensive ability information is loaded from Pokémon records when available.
+const ABILITY_IMMUNITIES={levitate:['ground'], 'flash-fire':['fire'], 'water-absorb':['water'], 'storm-drain':['water'], 'dry-skin':['water'], 'volt-absorb':['electric'], 'lightning-rod':['electric'], 'motor-drive':['electric'], 'sap-sipper':['grass'], 'earth-eater':['ground'], 'well-baked-body':['fire']};
+function abilityNames(p){return (p.abilities||[]).map(x=>typeof x==='string'?x:x.ability?.name).filter(Boolean)}
+function defensiveEffect(move,defender,gen){
+ const base=matchup(move.type,defender.types,gen);
+ if(base===null||base===0)return base;
+ // Do not infer a single ability for Pokémon with multiple possible abilities.
+ const abilities=abilityNames(defender);
+ if(abilities.length===1&&ABILITY_IMMUNITIES[abilities[0]]?.includes(move.type))return 0;
+ return base;
+}
+function movePowerRange(m){
+ const n=m.name;
+ const ranges={Return:[1,102,'friendship 0–255'],Frustration:[1,102,'friendship 255–0'],Magnitude:[10,150,'random magnitude'],Present:[0,120,'random; may heal'], 'Hidden Power':[30,70,'IVs (generations 2–5)'],Flail:[20,200,'remaining HP'],Reversal:[20,200,'remaining HP'],'Low Kick':[20,120,'target weight'],'Grass Knot':[20,120,'target weight'],'Gyro Ball':[1,150,'relative Speed'],'Electro Ball':[40,150,'relative Speed'],'Heavy Slam':[40,120,'weight ratio'],'Heat Crash':[40,120,'weight ratio'],Eruption:[1,150,'remaining HP'],'Water Spout':[1,150,'remaining HP'],Facade:[70,140,'status condition'],Brine:[65,130,'target HP'],Payback:[50,100,'turn order'],Avalanche:[60,120,'damage received'],Revenge:[60,120,'damage received'],Assurance:[60,120,'target damaged'],Acrobatics:[55,110,'held item'],Hex:[65,130,'target status'],Venoshock:[65,130,'target poisoned'],'Stored Power':[20,860,'stat boosts'],Punishment:[60,200,'target boosts'],Rollout:[30,480,'consecutive hits'],'Ice Ball':[30,480,'consecutive hits'],'Fury Cutter':[10,160,'consecutive hits']};
+ if(n==='Hidden Power'&&m.metaGeneration>=6)return {min:60,max:60,note:'fixed in generations 6+'};
+ const r=ranges[n];if(r)return {min:r[0],max:r[1],note:r[2]};
+ if(Number.isFinite(m.power)&&m.power>0)return {min:m.power,max:m.power,note:''};
+ return null;
+}
+function accuracyLabel(m){
+ if(Number.isFinite(m.accuracy))return m.accuracy+'%';
+ if(m.accuracy===null&&(ALWAYS_HIT_MOVES.has(m.name)||m.alwaysHit))return 'Never misses';
+ if(m.accuracy===null&&m.damageClass==='status'&&m.target==='user')return 'N/A (self)';
+ return 'N/A / conditional';
+}
+function movePowerText(m){const r=movePowerRange(m);return r?(r.min===r.max?String(r.min):r.min+'–'+r.max)+(r.note?' ('+r.note+')':''):'Variable / special';}
 function expectedPower(m,attacker,target,gen){
- const eff=matchup(m.type,target.types,gen);
- if(eff===null||eff===0||m.damageClass==='status'||!Number.isFinite(m.power)||m.power<=0||(!Number.isFinite(m.accuracy)&&!(m.accuracy===null&&ALWAYS_HIT_MOVES.has(m.name)))||VARIABLE_MOVES.has(m.name))return null;
+ const eff=defensiveEffect(m,target,gen);
+ if(eff===null||eff===0||m.damageClass==='status'||!movePowerRange(m)||(!Number.isFinite(m.accuracy)&&!(m.accuracy===null&&ALWAYS_HIT_MOVES.has(m.name)))||(!movePowerRange(m)&&VARIABLE_MOVES.has(m.name)))return null;
  const stab=attacker.types.includes(m.type)?1.5:1;
  const atkKey=m.damageClass==='special'?'special-attack':'attack';
  const defKey=m.damageClass==='special'?'special-defense':'defense';
  const a=attacker.baseStats?.[atkKey],b=target.baseStats?.[defKey];
  // Mild stat weighting: no levels/EVs/natures, so avoid pretending this is true damage.
  const statFactor=Number.isFinite(a)&&Number.isFinite(b)?Math.sqrt((a+30)/(b+30)):1;
- return m.power*stab*eff*((m.accuracy===null?100:m.accuracy)/100)*statFactor;
+ return ((movePowerRange(m).min+movePowerRange(m).max)/2)*stab*eff*((m.accuracy===null?100:m.accuracy)/100)*statFactor;
 }
 function effectivePowerLabel(m){if(m.powerIndex===null||m.powerIndex===undefined)return 'Estimated score —';return 'Attack score '+Math.round(m.powerIndex)}
-function moveStats(m){return `<span class="move-stats">PWR ${Number.isFinite(m.power)?m.power:'—'} · ACC ${Number.isFinite(m.accuracy)?m.accuracy+'%':m.accuracy===null&&ALWAYS_HIT_MOVES.has(m.name)?'Always hits':'Data missing'}</span>`}
+function moveStats(m){return `<span class="move-stats">PWR ${safe(movePowerText(m))} · ACC ${safe(accuracyLabel(m))}</span>`}
 async function enrichMove(m,gen){
- if(m.metaGeneration===gen&&m.power!==undefined&&Number.isFinite(m.accuracy))return m;
+ if(m.metaGeneration===gen&&m.power!==undefined&&m.accuracy!==undefined&&m.target!==undefined)return m;
  try{
   const data=await api('move/'+String(m.name).toLowerCase().replace(/\s+/g,'-'));
-  const historical=moveGenerationData(data,gen);return {...m,...historical,target:data.target?.name,priority:data.priority||0,metaGeneration:gen};
+  const historical=moveGenerationData(data,gen);return {...m,...historical,target:data.target?.name,priority:data.priority||0,alwaysHit:data.meta?.accuracy===null&&data.accuracy===null,metaGeneration:gen};
  }catch{return m}
 }
 async function enrichTeamMoves(){
@@ -220,10 +246,10 @@ async function enrichTeamMoves(){
  const team=current,gen=gameGeneration(team.game);
  let updated=false;
  for(const p of team.pokemon.filter(Boolean)){
-  if(!p.baseStats){try{const info=await api('pokemon/'+p.id);p.baseStats=Object.fromEntries(info.stats.map(s=>[s.stat.name,s.base_stat]));updated=true}catch{}}
+  if(!p.baseStats||!p.abilities){try{const info=await api('pokemon/'+p.id);p.baseStats=Object.fromEntries(info.stats.map(s=>[s.stat.name,s.base_stat]));p.abilities=info.abilities;updated=true}catch{}}
   for(let i=0;i<p.moves.length;i++){
    const m=p.moves[i];
-   if(m.metaGeneration!==gen||!Number.isFinite(m.accuracy)){
+   if(m.metaGeneration!==gen||m.accuracy===undefined||m.target===undefined){
     const next=await enrichMove(m,gen);
     if(next!==m){p.moves[i]=next;updated=true}
    }
@@ -234,7 +260,7 @@ async function enrichTeamMoves(){
 }
 function analyze(p,opponent,gen){
  const offense=(p.moves||[]).map(m=>{
-  const effectiveness=matchup(m.type,opponent.types,gen);
+  const effectiveness=defensiveEffect(m,opponent,gen);
   const stab=p.types.includes(m.type)?1.5:1;
   return {...m,effectiveness,stab,total:effectiveness===null?null:effectiveness*stab};
  }).filter(m=>m.total!==null);
@@ -250,19 +276,19 @@ function analyze(p,opponent,gen){
 const spreadTargets=new Set(['all-opponents','all-other-pokemon','all-pokemon']);
 const allyHitTargets=new Set(['all-other-pokemon','all-pokemon']);
 function moveValue(move,attacker,target,gen,ally){
- const mult=matchup(move.type,target.types,gen);
+ const mult=defensiveEffect(move,target,gen);
  if(mult===null)return null;
  if(move.damageClass==='status'||move.power===0)return null;
  const stab=attacker.types.includes(move.type)?1.5:1;
- if(!Number.isFinite(move.power)||move.power<=0||(!Number.isFinite(move.accuracy)&&!(move.accuracy===null&&ALWAYS_HIT_MOVES.has(move.name)))||VARIABLE_MOVES.has(move.name))return null;
- const power=move.power;
+ if(!Number.isFinite(move.power)||move.power<=0||(!Number.isFinite(move.accuracy)&&!(move.accuracy===null&&ALWAYS_HIT_MOVES.has(move.name)))||!movePowerRange(move))return null;
+ const power=(movePowerRange(move).min+movePowerRange(move).max)/2;
  const spread=spreadTargets.has(move.target);
  const penalty=spread&&gen>=4?.75:1;
  const a=attacker.baseStats?.[move.damageClass==='special'?'special-attack':'attack'];
  const d=target.baseStats?.[move.damageClass==='special'?'special-defense':'defense'];
  const statFactor=Number.isFinite(a)&&Number.isFinite(d)?Math.sqrt((a+30)/(d+30)):1;
  const value=mult*stab*(power/60)*penalty*((move.accuracy===null?100:move.accuracy)/100)*statFactor;
- const allyRisk=ally&&allyHitTargets.has(move.target)?matchup(move.type,ally.types,gen):0;
+ const allyRisk=ally&&allyHitTargets.has(move.target)?defensiveEffect(move,ally,gen):0;
  return {move,value,mult,spread,allyRisk,priority:move.priority||0};
 }
 function pairPlan(a,b,opponents,gen){
@@ -322,7 +348,7 @@ function showBattle(){
   plans.sort((a,b)=>b.rank-a.rank);
   pairSection='<h3 class="subheading">RECOMMENDED PAIRS</h3>'+(plans.length?plans.slice(0,5).map((p,i)=>pairCard(p,i,opponents)).join(''):'<p>Add two Pokémon with damaging attacks to see pair recommendations.</p>')+'<h3 class="subheading">INDIVIDUAL MATCHUPS</h3>';
  }
- const note='Rankings estimate move strength using power, accuracy, STAB, type effectiveness and available base stats, balanced against potential incoming STAB threats. Not a damage calculator: levels, EVs, natures, abilities, items, variable-power moves and opponent moves are not modeled. Moves with unknown power are excluded from Best Move.';
+ const note='V39: defensive abilities with a single possible ability are considered; ambiguous abilities are not assumed. Variable-power attacks use midpoint estimates, not guaranteed damage. Rankings estimate move strength using power, accuracy, STAB, type effectiveness and available base stats, balanced against potential incoming STAB threats. Not a damage calculator: levels, EVs, natures, items, opponent moves and many conditional effects are not modeled. Moves with unknown power are excluded from Best Move.';
  $('matchups').innerHTML=`<p class="analysis-disclaimer">${note}</p>`+pairSection+
  ranked.map((r,i)=>{
  const top=r.reports[0],move=top.best;
@@ -435,18 +461,18 @@ function renderPlannerSlots(id,entries,own){$(id).innerHTML=Array.from({length:6
 function plannerEdit(e){const x=e.target;if(!x.dataset.plan)return;const arr=x.dataset.plan==='own'?plannerOwn:plannerOpp,i=+x.dataset.i;while(arr.length<=i)arr.push({name:'',level:50,moves:[]});const field=x.dataset.field;arr[i][field]=field==='moves'?x.value.split(',').map(s=>s.trim().toLowerCase().replace(/\s+/g,'-')).filter(Boolean).slice(0,4):field==='level'?Math.max(1,Math.min(100,Number(x.value)||50)):x.value.trim().toLowerCase().replace(/\s+/g,'-')}
 $('planOwn').addEventListener('input',plannerEdit);$('planOpp').addEventListener('input',plannerEdit);
 $('planGame').onchange=syncPlanner;$('planMode').onchange=syncPlanner;$('planTrainer').onchange=loadPlannerRoster;$('planVersion').onchange=loadPlannerRoster;$('planTeam').onchange=()=>{const t=selectedTeam('planTeam');if(t){$('planGame').value=t.game;syncPlanner()}else importPlannerTeam()};
-async function loadPlannerPokemon(e,gen){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen)}}catch{return {name:pretty(n),power:null}}}));return {id:p.id,name:pretty(p.name),types:historicalTypes(p,games.find(g=>gameGeneration(g)===gen)||"Emerald"),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),level:e.level,moves}}
-function estimateDamage(a,d,m,gen){if(!m||!Number.isFinite(m.power)||m.power<=0||m.damageClass==='status'||VARIABLE_MOVES.has(m.name))return null;const eff=matchup(m.type,d.types,gen);if(eff===null||eff===0)return 0;const category=m.damageClass==='special'?'special':'physical';const attack=a.baseStats?.[category==='special'?'special-attack':'attack']||70,defense=d.baseStats?.[category==='special'?'special-defense':'defense']||70;
- const l=Math.max(1,Math.min(100,a.level||50)),al=Math.max(1,Math.min(100,d.level||50));const atk=Math.floor((2*attack+31)*l/100)+5,def=Math.floor((2*defense+31)*al/100)+5;const stab=a.types.includes(m.type)?1.5:1;return Math.max(1,Math.floor((Math.floor((2*l/5+2)*m.power*atk/Math.max(1,def)/50)+2)*eff*stab))}
+async function loadPlannerPokemon(e,gen){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen)}}catch{return {name:pretty(n),power:null}}}));return {id:p.id,name:pretty(p.name),types:historicalTypes(p,games.find(g=>gameGeneration(g)===gen)||"Emerald"),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:p.abilities,level:e.level,moves}}
+function estimateDamage(a,d,m,gen){if(!m||m.damageClass==='status'||!movePowerRange(m))return null;const eff=defensiveEffect(m,d,gen);if(eff===null||eff===0)return 0;const category=m.damageClass==='special'?'special':'physical';const attack=a.baseStats?.[category==='special'?'special-attack':'attack']||70,defense=d.baseStats?.[category==='special'?'special-defense':'defense']||70;
+ const power=(movePowerRange(m).min+movePowerRange(m).max)/2;const l=Math.max(1,Math.min(100,a.level||50)),al=Math.max(1,Math.min(100,d.level||50));const atk=Math.floor((2*attack+31)*l/100)+5,def=Math.floor((2*defense+31)*al/100)+5;const stab=a.types.includes(m.type)?1.5:1;return Math.max(1,Math.floor((Math.floor((2*l/5+2)*power*atk/Math.max(1,def)/50)+2)*eff*stab))}
 function estimatedHP(p){const hp=p.baseStats?.hp||70,level=Math.max(1,Math.min(100,p.level||50));return Math.floor((2*hp+15)*level/100)+level+10}
 function plannerDamageLabel(a,d,m,gen){const high=estimateDamage(a,d,m,gen);if(high===null)return 'Damage varies';const hp=estimatedHP(d);const low=Math.floor(high*.85);return `Est. ${low}–${high} HP (${Math.round(100*low/hp)}–${Math.round(100*high/hp)}%)`}
 // V17: rank YOUR whole team independently against EACH opposing Pokémon, in battle order.
 function plannerPortrait(p){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`}
 function renderPlannerBattle(own,opp,gen){
- const disclaimer='<p class="analysis-disclaimer">Estimated HP damage is approximate (assumed IVs, no EVs, neutral nature, random 85–100% roll). Abilities, items, weather, boosts, multi-hit and special move mechanics are not modeled. Actual damage may differ. Opponents appear in their saved order.</p>';
+ const disclaimer='<p class="analysis-disclaimer">Estimated HP damage is approximate (assumed IVs, no EVs, neutral nature, random 85–100% roll). Only unambiguous ability immunities are modeled; items, weather, boosts, multi-hit and many special move mechanics are not. Variable-power moves use midpoint power estimates. Actual damage may differ. Opponents appear in their saved order.</p>';
  return disclaimer+opp.map((d,oi)=>{
   const ranks=own.map(a=>{
-   const attacks=a.moves.map(m=>({m,value:estimateDamage(a,d,m,gen),effectiveness:matchup(m.type,d.types,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
+   const attacks=a.moves.map(m=>({m,value:estimateDamage(a,d,m,gen),effectiveness:defensiveEffect(m,d,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
    const incoming=d.moves.map(m=>({m,value:estimateDamage(d,a,m,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
    const worst=incoming[0]?.value??null;
    const best=attacks[0]||null;
