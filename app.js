@@ -345,8 +345,8 @@ function showBattle(){
   plans.sort((a,b)=>b.rank-a.rank);
   pairSection='<h3 class="subheading">RECOMMENDED PAIRS</h3>'+(plans.length?plans.slice(0,5).map((p,i)=>pairCard(p,i,opponents)).join(''):'<p>Add two Pokémon with damaging attacks to see pair recommendations.</p>')+'<h3 class="subheading">INDIVIDUAL MATCHUPS</h3>';
  }
- const note='V39: defensive abilities with a single possible ability are considered; ambiguous abilities are not assumed. Variable-power attacks use midpoint estimates, not guaranteed damage. Rankings estimate move strength using power, accuracy, STAB, type effectiveness and available base stats, balanced against potential incoming STAB threats. Not a damage calculator: levels, EVs, natures, items, opponent moves and many conditional effects are not modeled. Moves with unknown power are excluded from Best Move.';
- $('matchups').innerHTML=`<p class="analysis-disclaimer">${note}</p>`+pairSection+
+ const note='Defensive abilities with a single possible ability are considered; ambiguous abilities are not assumed. Variable-power attacks use midpoint estimates, not guaranteed damage. Rankings estimate move strength using power, accuracy, STAB, type effectiveness and available base stats, balanced against potential incoming STAB threats. Not a damage calculator: levels, EVs, natures, items, opponent moves and many conditional effects are not modeled. Moves with unknown power are excluded from Best Move.';
+ $('matchups').innerHTML=pairSection+
  ranked.map((r,i)=>{
  const top=r.reports[0],move=top.best;
  const headline=move?`<div class="recommended-move"><small>⚔ BEST MOVE${doubleMode?' VS '+safe(opponents[0].name).toUpperCase():''}</small><strong>${safe(move.name)}</strong><span>${moveStats(move)} · ${effectText(move.effectiveness)} type · ${move.stab>1?'STAB':'No STAB'} · ${effectivePowerLabel(move)}</span></div>`:'<div class="recommended-move"><small>BEST MOVE</small><strong>No attacks saved</strong></div>';
@@ -354,6 +354,7 @@ function showBattle(){
  const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${rep.offense.map(m=>`<div class="move-detail-row">${chip(m)}<div class="move-detail-numbers">${moveStats(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.effectiveness)} type · ${m.stab>1?'STAB':'No STAB'} · ${effectivePowerLabel(m)}</b></div></div>`).join('')||'<p>No attacks saved</p>'}</div>`).join('');
  return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(r.p.name)}</strong><div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div>${headline}${doubleMode?`<p class="note">Double battle: details against both opponents below.</p>`:''}<details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
  }).join('')||'<p>Add Pokémon to your team to see recommendations.</p>';
+ $('matchups').insertAdjacentHTML('beforeend',`<p class="analysis-disclaimer">${note}</p>`);
 }
 $('teamsTab').onclick=()=>{$('teamsPage').hidden=false;$('battlePage').hidden=true;$('teamsTab').classList.add('selected');$('battleTab').classList.remove('selected')};
 $('battleTab').onclick=()=>{$('teamsPage').hidden=true;$('battlePage').hidden=false;$('battleTab').classList.add('selected');$('teamsTab').classList.remove('selected');showBattle();enrichTeamMoves()};function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('poketact-light',document.body.classList.contains('light'))};if(localStorage.getItem('poketact-light')==='true')document.body.classList.add('light');showTeams();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
@@ -532,7 +533,7 @@ function plannerDamageLabel(a,d,m,gen){const high=estimateDamage(a,d,m,gen);if(h
 function plannerPortrait(p){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`}
 function renderPlannerBattle(own,opp,gen){
  const disclaimer='<p class="analysis-disclaimer">Estimated HP damage is approximate (assumed IVs, no EVs, neutral nature, random 85–100% roll). Only unambiguous ability immunities are modeled; items, weather, boosts, multi-hit and many special move mechanics are not. Variable-power moves use midpoint power estimates. Actual damage may differ. Opponents appear in their saved order.</p>';
- return disclaimer+opp.map((d,oi)=>{
+ return opp.map((d,oi)=>{
   const ranks=own.map(a=>{
    const attacks=a.moves.map(m=>({m,value:estimateDamage(a,d,m,gen),effectiveness:defensiveEffect(m,d,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
    const incoming=d.moves.map(m=>({m,value:estimateDamage(d,a,m,gen)})).filter(x=>x.value!==null).sort((x,y)=>y.value-x.value);
@@ -548,7 +549,7 @@ function renderPlannerBattle(own,opp,gen){
     const defense=r.incoming.length?`<h4>Opponent attacks against ${safe(r.a.name)}</h4>`+r.incoming.map(x=>`<div class="learn-row"><b>${safe(x.m.name)}</b><span>${plannerDamageLabel(d,r.a,x.m,gen)}</span></div>`).join(''):'<p class="note">Opponent move damage unknown or no fixed-power attacks.</p>';
     return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity"><div class="rank-portrait"><img src="${safe(plannerPortrait(r.a))}" alt=""></div><div class="rank-info"><strong>${safe(r.a.name)} · Lv ${r.a.level}</strong><div class="pills">${r.a.types.map(pill).join('')}</div></div></div><div class="rank-risk">${risk}</div></div>${headline}<details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${detail}${defense}</details></article>`
    }).join('')}</section>`
- }).join('')
+ }).join('')+disclaimer
 }
 $('planAnalyze').onclick=async()=>{const result=$('planResults');result.textContent='Loading Pokémon and move data…';const gen=gameGeneration($('planGame').value);try{
  const own=await Promise.all(plannerOwn.filter(x=>x.name).map(x=>loadPlannerPokemon(x,gen)));
@@ -868,6 +869,23 @@ for(const id of ['foeInput','foeInput2']){
  const page=document.createElement('section');page.id='typeExplorerPage';page.hidden=true;
  page.innerHTML='<button id="typeExplorerBack" type="button" style="padding:10px;margin-bottom:12px">← Back to Pokédex</button><h2>Explore Pokémon by Type</h2><p class="note">Browse Pokémon by type, including species without recorded wild encounters. The list is generation-based; game-specific obtainability and trainer appearances are not yet verified.</p><label for="typeExplorerGame">Game</label><select id="typeExplorerGame"></select><div id="typeExplorerTypes" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0"></div><p id="typeExplorerStatus" class="note">Choose a type to explore.</p><div id="typeExplorerResults"></div>';
  dex.parentNode.appendChild(page);
+ const td61Style=document.createElement('style');
+ td61Style.textContent=`
+ #typeExplorerResults .td61-entry{margin:9px 0;padding:12px;background:var(--card);border:1px solid var(--edge)}
+ #typeExplorerResults .td61-entry-open{display:flex;align-items:center;gap:12px;width:100%;min-height:72px;text-align:left;padding:3px!important;border:0!important;border-radius:10px;background:transparent!important;color:var(--text)!important;box-shadow:none!important;text-shadow:none!important;cursor:pointer}
+ #typeExplorerResults .td61-entry-open:hover{background:color-mix(in srgb,var(--text) 5%,transparent)!important}
+ #typeExplorerResults .td61-entry-open:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+ #typeExplorerResults .td61-thumb{width:70px;height:70px;flex:0 0 70px;display:grid;place-items:center;border-radius:10px;background:color-mix(in srgb,var(--text) 5%,transparent)}
+ #typeExplorerResults .td61-thumb img{width:64px;height:64px;object-fit:contain}
+ #typeExplorerResults .td61-entry-info{display:grid;gap:3px;min-width:0;flex:1}
+ #typeExplorerResults .td61-entry-info strong{font-size:.96rem;color:var(--text)}
+ #typeExplorerResults .td61-entry-info .pills{margin:3px 0}
+ #typeExplorerResults .td61-entry-info small{font-size:.78rem;color:var(--muted)}
+ #typeExplorerResults .td61-entry-chevron{flex:0 0 auto;font-size:1.2rem;font-weight:700;color:var(--muted)}
+ #typeExplorerResults .td61-entry-details{border-top:1px solid var(--edge);margin-top:8px;padding-top:9px}
+ #typeExplorerResults .td61-entry-details summary{color:var(--muted);font-size:.84rem;cursor:pointer;padding:2px 0}
+ `;
+ document.head.appendChild(td61Style);
  const gameEl=page.querySelector('#typeExplorerGame'),typeEl=page.querySelector('#typeExplorerTypes'),status=page.querySelector('#typeExplorerStatus'),results=page.querySelector('#typeExplorerResults');
  gameEl.innerHTML=gameOptions;let selected=null,request=0,explorerScroll=0,fromExplorer=false;
  function go(back,restore=false){dex.hidden=!back;page.hidden=back;if(!back)window.scrollTo(0,restore?explorerScroll:0);else window.scrollTo(0,0)}
@@ -887,7 +905,7 @@ for(const id of ['foeInput','foeInput2']){
  function itemHtml(m,hasSource){
   const found=m.rec||[],has=found.length>0;
   const evidence=has?'Recorded encounter'+(found.length>1?'s':''):m.regional?'Regional Pokédex · availability unverified':'Availability unverified';
-  return `<article class="card" style="margin:9px 0;padding:12px"><button type="button" data-explore-pokemon="${safe(m.name)}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left"><img loading="lazy" width="60" height="60" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png"><span><b>#${m.id} ${safe(pretty(m.name))}</b><span class="pills" style="display:block">${m.types.map(pill).join('')}</span><small>${safe(evidence)}</small></span></button><details><summary>${has?'Encounter records ('+found.length+')':hasSource?'No encounter records':'Coverage unknown'}</summary>${has?window.takDexEncounterV55.format(found):'<p class="note">'+(hasSource?'No matching records in the encounter source; this does not mean unobtainable.':'The source has no recorded encounters for this version.')+'</p>'}</details></article>`
+  return `<article class="card td61-entry"><button class="td61-entry-open" type="button" data-explore-pokemon="${safe(m.name)}"><span class="td61-thumb"><img loading="lazy" width="64" height="64" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png"></span><span class="td61-entry-info"><strong>#${m.id} ${safe(pretty(m.name))}</strong><span class="pills">${m.types.map(pill).join('')}</span><small>${safe(evidence)}</small></span><span class="td61-entry-chevron" aria-hidden="true">›</span></button><details class="td61-entry-details"><summary>${has?'Encounter records ('+found.length+')':hasSource?'No encounter records':'Coverage unknown'}</summary>${has?window.takDexEncounterV55.format(found):'<p class="note">'+(hasSource?'No matching records in the encounter source; this does not mean unobtainable.':'The source has no recorded encounters for this version.')+'</p>'}</details></article>`
  }
  async function show(){const token=++request;results.innerHTML='';if(!selected){status.textContent='Choose a type to explore.';return}
   const game=gameEl.value,gen=gameGeneration(game);
