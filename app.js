@@ -711,3 +711,55 @@ for(const id of ['foeInput','foeInput2']){
  document.getElementById('backTypeChecker').addEventListener('click',()=>{hide();window.takActivate(3)});
  render();
 })();
+
+
+// V43 — separate, on-demand Pokédex type explorer. Encounter-backed results only.
+(function initTypeExplorer(){
+ const dex=$('dexPage');if(!dex||$('typeExplorerPage'))return;
+ const btn=document.createElement('button');btn.type='button';btn.id='openTypeExplorer';btn.textContent='◈ Explore Pokémon by Type ›';btn.style.cssText='width:100%;margin:12px 0;padding:13px;border-radius:12px;font-weight:700;cursor:pointer';
+ const anchor=$('dexResult');if(anchor)dex.insertBefore(btn,anchor);else dex.appendChild(btn);
+ const page=document.createElement('section');page.id='typeExplorerPage';page.hidden=true;
+ page.innerHTML='<button id="typeExplorerBack" type="button" style="padding:10px;margin-bottom:12px">← Back to Pokédex</button><h2>Explore Pokémon by Type</h2><p class="note">Verified wild encounter records only. No encounter record does not mean unobtainable. Starters, gifts, evolutions, trades and transfers are not yet indexed.</p><label for="typeExplorerGame">Game</label><select id="typeExplorerGame"></select><div id="typeExplorerTypes" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0"></div><p id="typeExplorerStatus" class="note">Choose a type to explore.</p><div id="typeExplorerResults"></div>';
+ dex.parentNode.appendChild(page);
+ const gameEl=page.querySelector('#typeExplorerGame'),typeEl=page.querySelector('#typeExplorerTypes'),status=page.querySelector('#typeExplorerStatus'),results=page.querySelector('#typeExplorerResults');
+ gameEl.innerHTML=gameOptions;let selected=null,request=0;
+ function go(back){dex.hidden=!back;page.hidden=back;window.scrollTo(0,0)}
+ btn.onclick=()=>{gameEl.value=$('dexGame').value;selected=null;drawTypes();results.innerHTML='';status.textContent='Choose a type to explore.';go(false)};
+ page.querySelector('#typeExplorerBack').onclick=()=>go(true);
+ function drawTypes(){typeEl.innerHTML=Object.entries(colors).map(([type,color])=>`<button type="button" data-explore-type="${type}" aria-pressed="${selected===type}" style="background:${color};color:${['electric','ice','ground','steel','normal'].includes(type)?'#151515':'white'};padding:10px 2px;border-radius:9px;border:${selected===type?'3px solid var(--text,white)':'2px solid transparent'};font-weight:700;cursor:pointer">${pretty(type)}</button>`).join('')}
+ function label(name){return pretty(name).replace(/\bArea\b$/,'').trim()}
+ async function show(){const token=++request;results.innerHTML='';if(!selected){status.textContent='Choose a type to explore.';return}
+  const game=gameEl.value,gen=gameGeneration(game),version=game.toLowerCase().replace(/ /g,'-');
+  status.textContent='Loading '+pretty(selected)+' Pokémon and checking '+game+' encounter records… This may take a while on first use.';
+  try{
+   const typed=await api('type/'+selected);
+   // Type endpoint contains current typing; confirm historical typing individually to avoid false positives.
+   const candidates=typed.pokemon.filter(x=>{const id=Number(x.pokemon.url.match(/\/(\d+)\/$/)?.[1]);return id>0&&id<=1025}).map(x=>x.pokemon);
+   const verified=[];let checked=0;
+   // A game-specific positive encounter is evidence; no encounter is NOT evidence of unavailability.
+   for(let i=0;i<candidates.length;i+=8){
+    if(token!==request)return;
+    const batch=await Promise.all(candidates.slice(i,i+8).map(async p=>{
+     try{
+      const encounters=await api('pokemon/'+p.name+'/encounters');
+      const matches=encounters.flatMap(a=>a.version_details.filter(v=>v.version.name===version).map(v=>({area:a.location_area.name,details:v.encounter_details})));
+      if(!matches.length)return null;
+      const mon=await api('pokemon/'+p.name);
+      if(!historicalTypes(mon,game).includes(selected))return null;
+      return {name:p.name,id:mon.id,matches,types:historicalTypes(mon,game)};
+     }catch{return null}
+    }));
+    verified.push(...batch.filter(Boolean));checked+=batch.length;
+    status.textContent='Checked '+checked+' / '+candidates.length+' species · '+verified.length+' with matching encounter records';
+    // Progressive results, sorted by national Pokédex number.
+    results.innerHTML=verified.sort((a,b)=>a.id-b.id).map(m=>`<article class="card" style="margin:9px 0;padding:12px"><button type="button" data-explore-pokemon="${safe(m.name)}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left"><img loading="lazy" width="60" height="60" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png"><span><b>#${m.id} ${safe(pretty(m.name))}</b><span class="pills" style="display:block">${m.types.map(pill).join('')}</span></span></button><details><summary>Encounter locations (${m.matches.length})</summary>${m.matches.map(loc=>`<p><b>${safe(label(loc.area))}</b>: ${loc.details.map(d=>safe(pretty(d.method.name))+' · Lv '+d.min_level+(d.max_level!==d.min_level?'–'+d.max_level:'')+(d.condition_values.length?' · '+d.condition_values.map(c=>safe(pretty(c.name))).join(', '):'')).join('; ')}</p>`).join('')}</details></article>`).join('');
+   }
+   if(token!==request)return;
+   status.textContent=verified.length+' Pokémon with recorded '+game+' encounters matching '+pretty(selected)+'. This is not a complete obtainable-Pokémon list.';
+  }catch(e){if(token===request)status.textContent='Could not load encounter data. Connect to the internet or download the required data first.'}
+ }
+ typeEl.onclick=e=>{const b=e.target.closest('[data-explore-type]');if(!b)return;selected=selected===b.dataset.exploreType?null:b.dataset.exploreType;drawTypes();show()};
+ gameEl.onchange=()=>{request++;results.innerHTML='';if(selected)show()};
+ results.onclick=e=>{const b=e.target.closest('[data-explore-pokemon]');if(!b)return;$('dexGame').value=gameEl.value;$('dexTeam').value='';$('dexTeamPoke').value='';$('dexInput').value=pretty(b.dataset.explorePokemon);go(true);$('dexSearch').click()};
+ drawTypes();
+})();
