@@ -411,6 +411,122 @@ $('dexResult').addEventListener('click',event=>{
  syncDexClear();
  $('dexSearch').click();
 });
+
+(function(){const style=document.createElement('style');style.id='td62-style';style.textContent=`
+#td62SmartMoves{margin:16px 0;padding:0;overflow:hidden}
+#td62SmartMoves>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;font-weight:750;user-select:none}
+#td62SmartMoves>summary::-webkit-details-marker{display:none}
+#td62SmartMoves>summary:focus-visible{outline:2px solid var(--accent,#e34d54);outline-offset:-3px}
+#td62SmartMoves .td62-caret{opacity:.8;transition:transform .15s ease}
+#td62SmartMoves[open] .td62-caret{transform:rotate(180deg)}
+#td62SmartMoves .td62-body{padding:0 15px 14px}
+#td62SmartMoves .td62-body>h4{margin:16px 0 8px}
+#td62SmartMoves .td62-row{padding:10px 0;border-top:1px solid var(--edge,#3f4149)}
+#td62SmartMoves .td62-head{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+#td62SmartMoves .td62-head strong{font-size:.96rem}
+#td62SmartMoves .td62-method{font-size:.85rem;font-weight:650;margin-top:5px}
+#td62SmartMoves .td62-meta{font-size:.79rem;opacity:.75;margin-top:3px}
+#td62SmartMoves .td62-stab{border:1px solid currentColor;border-radius:12px;font-size:.66rem;opacity:.72;padding:1px 6px}
+`;document.head.appendChild(style)})();
+// V62 — Smart Move Advisor. Learnability is shared with TM/HM Checker.
+// Do not infer compatibility from a move's global TM number or another game.
+function takMoveMethodsForGame(pokemon,moveName,game){
+ const record=(pokemon.moves||[]).find(x=>x.move?.name===moveName);
+ return (record?.version_group_details||[]).filter(x=>x.version_group?.name===vg[game]);
+}
+function takMachineCompatible(pokemon,moveName,game){
+ return takMoveMethodsForGame(pokemon,moveName,game).some(x=>x.move_learn_method?.name==='machine');
+}
+const TAK62_SUPPORT=new Set(['calm-mind','swords-dance','dragon-dance','nasty-plot','bulk-up','iron-defense','agility','rock-polish','coil','quiver-dance','work-up','growth','shell-smash','leech-seed','will-o-wisp','thunder-wave','toxic','spore','sleep-powder','stun-spore','hypnosis','reflect','light-screen','recover','roost','soft-boiled','moonlight','morning-sun','wish','protect','rest','substitute','taunt','encore','stealth-rock','spikes','rapid-spin','defog']);
+const TAK62_AVOID=new Set(['self-destruct','explosion','hyper-beam','giga-impact','blast-burn','frenzy-plant','hydro-cannon','solar-beam','solar-blade','focus-punch','future-sight','doom-desire','skull-bash','razor-wind','sky-attack','phantom-force','shadow-force','geomancy','meteor-beam','bide','counter','mirror-coat']);
+const TAK62_VARIABLE=new Set(['return','frustration','hidden-power','low-kick','grass-knot','gyro-ball','electro-ball','heat-crash','heavy-slam','flail','reversal','eruption','water-spout','facade','brine','payback','avalanche','revenge','hex','venoshock','stored-power','rollout','ice-ball','fury-cutter','seismic-toss','night-shade','dragon-rage','sonic-boom','super-fang','endeavor','psywave','magnitude','present','beat-up','triple-kick','triple-axel','fissure','guillotine','horn-drill','sheer-cold']);
+function tak62MoveMethodsText(details,machineItem){
+ const methods=[];
+ const level=details.filter(d=>d.move_learn_method?.name==='level-up').map(d=>d.level_learned_at).filter(Number.isFinite).sort((a,b)=>a-b);
+ if(level.length)methods.push(level[0]>0?'Lv '+level[0]:'Starting / Lv 0 listing');
+ if(details.some(d=>d.move_learn_method?.name==='machine'))methods.push(machineItem?machineItem.toUpperCase()+' (confirmed)':'TM/HM · number unverified');
+ return methods.join(' · ');
+}
+function tak62Score(move,stats,types,gen){
+ const h=move.hist;
+ if(!Number.isFinite(h.power)||h.power<35||!h.type||h.damageClass==='status'||TAK62_VARIABLE.has(move.name)||TAK62_AVOID.has(move.name))return null;
+ const neverMiss=ALWAYS_HIT_MOVES.has(pretty(move.name));
+ if(!Number.isFinite(h.accuracy)&&!neverMiss)return null;
+ const accuracy=Number.isFinite(h.accuracy)?h.accuracy:100;
+ const stat=stats[h.damageClass==='special'?'special-attack':'attack']||75;
+ const stab=types.includes(h.type)?1.5:1;
+ const twoTurn=new Set(['fly','dig','dive','bounce']).has(move.name)?0.75:1;
+ return h.power*(accuracy/100)*stab*twoTurn*Math.sqrt((stat+35)/110);
+}
+async function tak62RenderSmart(host,pokemon,game,isCurrent){
+ if(!isCurrent())return;
+ host.innerHTML='<p class="note">Checking exact '+safe(game)+' learnsets, TM/HM compatibility and move stats…</p>';
+ const gen=gameGeneration(game), types=historicalTypes(pokemon,game);
+ const stats=Object.fromEntries((pokemon.stats||[]).map(s=>[s.stat.name,s.base_stat]));
+ const applicable=(pokemon.moves||[]).map(x=>({name:x.move.name,details:takMoveMethodsForGame(pokemon,x.move.name,game)}))
+  .filter(x=>x.details.some(d=>['machine','level-up'].includes(d.move_learn_method?.name)));
+ if(!applicable.length){host.innerHTML='<p class="note">No verified level-up or machine moves are available in this game record. No recommendations can be confirmed.</p>';return}
+ let machines=null;
+ try{machines=await window.takDexReferenceV58?.machinesFor?.(game)}catch{}
+ const lookup=new Map((machines||[]).filter(m=>m.move&&m.item).map(m=>[m.move,m.item]));
+ let failures=0;
+ const candidates=new Array(applicable.length);
+ let cursor=0;
+ async function worker(){while(cursor<applicable.length){const i=cursor++,item=applicable[i];
+  try{
+   const d=await api('move/'+encodeURIComponent(item.name));
+   const hist=moveGenerationData(d,gen);
+   let machine=lookup.get(item.name)||null;
+   if(!machine&&item.details.some(x=>x.move_learn_method?.name==='machine')){
+    // PokeAPI move.machines is version-group-specific, not a global TM number.
+    const entry=(d.machines||[]).find(x=>x.version_group?.name===vg[game]);
+    if(entry?.machine?.url){try{const data=await api(entry.machine.url.replace(API_ROOT,''));
+     if(data.version_group?.name===vg[game]&&data.move?.name===item.name)machine=data.item?.name||null;
+    }catch{}}
+   }
+   candidates[i]={...item,hist,machine,score:tak62Score({name:item.name,hist},stats,types,gen)};
+  }catch{failures++}
+ }}
+ await Promise.all(Array.from({length:Math.min(6,applicable.length)},worker));
+ if(!isCurrent())return;
+ const verified=candidates.filter(Boolean);
+ const ranked=verified.filter(x=>x.score!==null).sort((a,b)=>b.score-a.score);
+ // Avoid presenting very weak early-game moves as a top recommendation once stronger options exist.
+ const attacking=ranked.filter(x=>x.score>=((ranked[0]?.score||0)*.48));
+ const chosen=[];const typesUsed=new Map();
+ // Start with strong STAB of each of the Pokémon's types, then diverse coverage.
+ for(const t of types){const match=attacking.find(x=>x.hist.type===t&&!chosen.includes(x));if(match){chosen.push(match);typesUsed.set(t,1)}}
+ for(const x of attacking){if(chosen.length>=6)break;if(chosen.includes(x))continue;
+  if((typesUsed.get(x.hist.type)||0)>=1)continue;chosen.push(x);typesUsed.set(x.hist.type,1)}
+ for(const x of attacking){if(chosen.length>=6)break;if(!chosen.includes(x))chosen.push(x)}
+ const support=verified.filter(x=>x.hist.damageClass==='status'&&TAK62_SUPPORT.has(x.name)).slice(0,4);
+ const row=x=>{
+  const method=tak62MoveMethodsText(x.details,x.machine);
+  const isStab=types.includes(x.hist.type);
+  const category=x.hist.damageClass==='special'?'Special':x.hist.damageClass==='physical'?'Physical':'Status';
+  const pwr=Number.isFinite(x.hist.power)?'PWR '+x.hist.power+' · ':'';
+  const acc=Number.isFinite(x.hist.accuracy)?x.hist.accuracy+'%':'—';
+  return `<div class="td62-row"><div class="td62-head"><strong>${safe(pretty(x.name))}</strong>${x.hist.type?pill(x.hist.type):''}${isStab?'<span class="td62-stab">STAB</span>':''}</div><div class="td62-method">${safe(method)}</div><div class="td62-meta">${safe(pwr+category+' · ACC '+acc)}</div></div>`;
+ };
+ let html='<p class="note">Verified for <b>'+safe(game)+'</b> using this Pokémon’s game-specific learn methods. Attacks are ranked by an approximate base-stat, power, accuracy and STAB score—not simulated damage.</p>';
+ html+='<h4>Suggested attacking moves</h4>'+(chosen.length?chosen.map(row).join(''):'<p class="note">No reliable fixed-power attack suggestions found for this game.</p>');
+ if(support.length)html+='<h4>Other learnable support options (unranked)</h4>'+support.map(row).join('');
+ html+='<p class="note">Only listed level-up and machine methods are confirmed. Egg moves, tutors, event moves, evolution timing, TM acquisition locations and move effects are not fully evaluated. A TM/HM number is shown only when verified for this game. Some moves have conditional effects, recoil or other drawbacks; check the full move details before using a one-time TM.</p>';
+ if(failures)html+='<p class="note">'+failures+' move records could not be loaded; suggestions may be incomplete. Resume your game’s offline pack or reconnect.</p>';
+ host.innerHTML=html;
+}
+function tak62AttachAdvisor(result,pokemon,game,requestId){
+ const disclosure=result.querySelector('#td62SmartMoves'),host=result.querySelector('#td62SmartBody');
+ if(!disclosure||!host)return;
+ let started=false;
+ disclosure.addEventListener('toggle',()=>{
+  if(!disclosure.open||started)return;
+  started=true;
+  tak62RenderSmart(host,pokemon,game,()=>requestId===takDexDexRequestV56&&host.isConnected)
+   .catch(()=>{if(requestId===takDexDexRequestV56&&host.isConnected)host.innerHTML='<p class="note">Move advice could not load. Check your game pack or internet connection, then reopen this Pokémon.</p>'});
+ });
+}
+
 let takDexDexRequestV56=0;
 $('dexSearch').onclick=async()=>{
  const requestId=++takDexDexRequestV56;
@@ -431,7 +547,8 @@ $('dexSearch').onclick=async()=>{
   const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
   const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
   const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
-  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div><section id="td56DexEncounters" aria-live="polite"><h3>Encounter & acquisition records · ${safe(game)}</h3><div class="card"><p class="note">Checking encounter records…</p></div></section>`;
+  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div><details class="card td62-smart" id="td62SmartMoves"><summary>✦ Smart Move Advisor <span class="td62-caret" aria-hidden="true">▾</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(game)}.</p></div></details><section id="td56DexEncounters" aria-live="polite"><h3>Encounter & acquisition records · ${safe(game)}</h3><div class="card"><p class="note">Checking encounter records…</p></div></section>`;
+  tak62AttachAdvisor(result,pokemon,game,requestId);
   // V56: render below learnset using a persistent element rather than innerHTML string replacement.
   const renderEncounter=html=>{
    if(requestId!==takDexDexRequestV56)return;
@@ -614,7 +731,7 @@ async function syncTM(){const game=$('tmGame').value;const result=$('tmResults')
   machineEntries=found.sort((a,b)=>a.item.localeCompare(b.item,undefined,{numeric:true}));renderMachineOptions();result.textContent=machineEntries.length?'Select a machine and check compatibility.':'No machine data found for this game.';
  }catch{result.textContent='Could not load machine data. First lookup needs internet.'}}
 $('tmGame').onchange=syncTM;$('tmTeam').onchange=()=>{const t=selectedTeam('tmTeam');if(t){$('tmGame').value=t.game;syncTM()}};
-$('tmCheck').onclick=async()=>{const item=machineEntries[Number($('tmMove').value)],t=selectedTeam('tmTeam'),individual=$('tmPokemon').value.trim().toLowerCase().replace(/\s+/g,'-');if(!item)return;const names=individual?[individual]:(t?.pokemon||[]).filter(Boolean).map(p=>p.name.toLowerCase().replace(/\s+/g,'-'));if(!names.length){$('tmResults').textContent='Select a team or enter a Pokémon.';return}const result=$('tmResults');result.textContent='Checking exact game compatibility…';const checks=await Promise.all(names.map(async name=>{try{const p=await api('pokemon/'+encodeURIComponent(name));const yes=p.moves.some(m=>m.move.name===item.move&&m.version_group_details.some(v=>v.version_group.name===vg[$('tmGame').value]&&v.move_learn_method.name==='machine'));return {name:pretty(p.name),yes}}catch{return {name:pretty(name),error:true}}}));result.innerHTML=`<h3>${safe(item.item.toUpperCase())} · ${safe(pretty(item.move))}</h3>${checks.map(x=>`<div class="card tm-result"><strong>${safe(x.name)}</strong><b class="${x.yes?'good':'bad'}">${x.error?'Unknown':x.yes?'✓ Compatible':'✕ Cannot learn'}</b></div>`).join('')}`};
+$('tmCheck').onclick=async()=>{const item=machineEntries[Number($('tmMove').value)],t=selectedTeam('tmTeam'),individual=$('tmPokemon').value.trim().toLowerCase().replace(/\s+/g,'-');if(!item)return;const names=individual?[individual]:(t?.pokemon||[]).filter(Boolean).map(p=>p.name.toLowerCase().replace(/\s+/g,'-'));if(!names.length){$('tmResults').textContent='Select a team or enter a Pokémon.';return}const result=$('tmResults');result.textContent='Checking exact game compatibility…';const checks=await Promise.all(names.map(async name=>{try{const p=await api('pokemon/'+encodeURIComponent(name));const yes=takMachineCompatible(p,item.move,$('tmGame').value);return {name:pretty(p.name),yes}}catch{return {name:pretty(name),error:true}}}));result.innerHTML=`<h3>${safe(item.item.toUpperCase())} · ${safe(pretty(item.move))}</h3>${checks.map(x=>`<div class="card tm-result"><strong>${safe(x.name)}</strong><b class="${x.yes?'good':'bad'}">${x.error?'Unknown':x.yes?'✓ Compatible':'✕ Cannot learn'}</b></div>`).join('')}`};
 refreshTeamMenus();
 // refresh after team creation/edit without changing existing behavior
 const previousShowTeams=showTeams;showTeams=function(){previousShowTeams();refreshTeamMenus()};
