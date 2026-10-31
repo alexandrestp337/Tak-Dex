@@ -631,11 +631,19 @@ for(const id of ['foeInput','foeInput2']){
  page.innerHTML=`<div class="bar"><h2>Type Matchup Checker</h2><button type="button" id="backTypeChecker">← More</button></div>
  <p class="note">Choose a game and one or two types to explore offensive and defensive matchups.</p>
  <div class="tool-card"><label>Game<select id="typeCheckGame"></select></label>
- <label>Primary type<select id="typeCheckOne"></select></label>
- <label>Secondary type (optional)<select id="typeCheckTwo"></select></label></div>
+ <div class="tc-picker-label">Select up to two types <span id="tcSelectionCount">(0/2)</span></div>
+ <div id="typeCheckGrid" class="tc-type-grid" role="group" aria-label="Select up to two Pokémon types"></div></div>
  <div id="typeCheckResults" aria-live="polite"></div>`;
  document.querySelector('main').appendChild(page);
  const css=document.createElement('style');css.textContent=`
+ #typeCheckerPage .tc-picker-label{font-weight:700;margin:12px 0 10px}
+ #typeCheckerPage .tc-picker-label span{opacity:.7;font-weight:500}
+ #typeCheckerPage .tc-type-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ #typeCheckerPage .tc-type-button{min-width:0;min-height:42px;border:2px solid transparent;border-radius:9px;background:var(--type-color);color:#fff;font-weight:800;font-size:.82rem;letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.6);box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);cursor:pointer;opacity:.76;transition:opacity .15s,border-color .15s,transform .15s}
+ #typeCheckerPage .tc-type-button[aria-pressed="true"]{opacity:1;border-color:var(--text,#fff);box-shadow:0 0 0 2px var(--type-color),0 2px 9px rgba(0,0,0,.22);transform:translateY(-1px)}
+ #typeCheckerPage .tc-type-button:focus-visible{outline:3px solid var(--type-color);outline-offset:3px}
+ #typeCheckerPage .tc-type-button:disabled{opacity:.24;cursor:not-allowed}
+ @media(min-width:580px){#typeCheckerPage .tc-type-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
  #typeCheckerPage .tc-group{margin:12px 0 20px}
  #typeCheckerPage .tc-group h3{margin:0 0 9px;font-size:1rem}
  #typeCheckerPage .tc-chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -643,13 +651,11 @@ for(const id of ['foeInput','foeInput2']){
  #typeCheckerPage .tc-chip small{opacity:.8}
  #typeCheckerPage .tc-explain{line-height:1.5}
  `;document.head.appendChild(css);
- const g=document.getElementById('typeCheckGame'),one=document.getElementById('typeCheckOne'),two=document.getElementById('typeCheckTwo'),results=document.getElementById('typeCheckResults');
+ const g=document.getElementById('typeCheckGame'),grid=document.getElementById('typeCheckGrid'),count=document.getElementById('tcSelectionCount'),results=document.getElementById('typeCheckResults');
  g.innerHTML=games.map(x=>`<option value="${safe(x)}">${safe(x)}</option>`).join('');
  g.value=games.includes('Emerald')?'Emerald':games[0];
  const allTypes=Object.keys(chart);
- one.innerHTML=allTypes.map(t=>`<option value="${t}">${pretty(t)}</option>`).join('');
- two.innerHTML='<option value="">None (single type)</option>'+allTypes.map(t=>`<option value="${t}">${pretty(t)}</option>`).join('');
- one.value='water';two.value='ground';
+ let selected=['water','ground'];
  const typesForGen=gen=>allTypes.filter(t=>gen>=6||t!=='fairy').filter(t=>gen>=2||(t!=='dark'&&t!=='steel'));
  const chip=(t,m)=>`<span class="tc-chip">${pill(t)} <small>${effectText(m)}</small></span>`;
  function group(title,items,empty='None'){
@@ -657,12 +663,13 @@ for(const id of ['foeInput','foeInput2']){
  }
  function render(){
   const gen=gameGeneration(g.value),valid=typesForGen(gen);
-  [...one.options].forEach(o=>o.disabled=!valid.includes(o.value));
-  [...two.options].forEach(o=>{o.disabled=!!o.value&&!valid.includes(o.value)});
-  if(!valid.includes(one.value))one.value=valid[0];
-  if(two.value&&!valid.includes(two.value))two.value='';
-  if(two.value===one.value)two.value='';
-  const selected=[one.value,...(two.value?[two.value]:[])];
+  selected=selected.filter(t=>valid.includes(t)).slice(0,2);
+  count.textContent=`(${selected.length}/2)`;
+  grid.innerHTML=allTypes.map(t=>{
+   const active=selected.includes(t),available=valid.includes(t);
+   return `<button type="button" class="tc-type-button" data-tc-type="${t}" style="--type-color:${colors[t]}" aria-pressed="${active}" ${available?'':'disabled'}>${pretty(t)}</button>`;
+  }).join('');
+  if(!selected.length){results.innerHTML='<article class="card"><p class="note">Tap a type above to see its matchups.</p></article>';return;}
   const defense=valid.map(t=>({t,m:matchup(t,selected,gen)}));
   // Offensive results describe either selected type used individually, not a combined attack.
   const offense=selected.map(t=>({type:t,rows:valid.map(d=>({t:d,m:matchup(t,[d],gen)}))}));
@@ -680,7 +687,16 @@ for(const id of ['foeInput','foeInput2']){
   ${group('No effect · 0×',select(o.rows,m=>m===0))}`).join('')}</article>
   <p class="note tc-explain">Type chart only: abilities (such as Levitate), items, weather, Terastallization and move-specific exceptions can change the result. Generation-specific type rules are used for the selected game. STAB usually boosts a same-type attack by 1.5×, but does not change type effectiveness.</p>`;
  }
- [g,one,two].forEach(el=>el.addEventListener('change',render));
+ g.addEventListener('change',render);
+ grid.addEventListener('click',event=>{
+  const button=event.target.closest('button[data-tc-type]');
+  if(!button||button.disabled)return;
+  const t=button.dataset.tcType;
+  if(selected.includes(t))selected=selected.filter(x=>x!==t);
+  else if(selected.length<2)selected.push(t);
+  else return;
+  render();
+ });
  function hide(){page.hidden=true}
  ['teamsTab','battleTab','dexTab','moreTab','openPlanner','openTM','backPlanner','backTM'].forEach(id=>document.getElementById(id)?.addEventListener('click',hide,true));
  trigger.addEventListener('click',()=>{
