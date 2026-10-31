@@ -854,9 +854,10 @@ for(const id of ['foeInput','foeInput2']){
   await IN_FLIGHT.get(game);return cached(game);
  }
  async function remove(game){MEM.delete(game);if('caches' in window){const cache=await caches.open(CACHE);await cache.delete(key(game))}window.dispatchEvent(new Event('td58-pack-update'))}
+ async function clearAll(){MEM.clear();if('caches' in window)await caches.delete(CACHE);window.dispatchEvent(new Event('td58-pack-update'))}
  async function count(){let total=0;for(const g of games)if(await cached(g))total++;return total}
  function format(records){return (records||[]).map(r=>'<p><b>'+safe(pretty(r[0]))+'</b> · '+safe(pretty(r[1]))+' · Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:'')+(r[4]?.length?' · '+r[4].map(x=>safe(pretty(x))).join(', '):'')+'</p>').join('')}
- window.takDexEncounterV55={get,cached,count,format,refresh,remove};
+ window.takDexEncounterV55={get,cached,count,format,refresh,remove,clearAll};
 })();
 
 // V43 — separate, on-demand Pokédex type explorer. Encounter-backed results only.
@@ -1068,43 +1069,43 @@ for(const id of ['foeInput','foeInput2']){
  $('td56Back').onclick=()=>{page.hidden=true;open=false;revision++;run++;closeSuggestions();window.takActivate(3)};
  for(const tab of ['teamsTab','battleTab','dexTab','moreTab'])$(tab).addEventListener('click',()=>{page.hidden=true;open=false;revision++;run++;closeSuggestions()});
 })();
-// V58 — dedicated, selective Offline Data manager.
-// Only the selected game's record cache and encounter index are persisted.
-(function initOfflineDataV58(){
- const more=$('morePage');if(!more||document.getElementById('td58OfflinePage'))return;
- const REF_PREFIX='takdex-reference-v58-', BASE='https://pokeapi.co/api/v2/';
+// V59 — one selectable game, one consolidated data download; safe cleanup.
+// Keep existing reference and encounter cache formats for backwards compatibility.
+(function initOfflineDataV59(){
+ const more=$('morePage');if(!more||document.getElementById('td59OfflinePage'))return;
+ const REF_PREFIX='takdex-reference-v58-',BASE='https://pokeapi.co/api/v2/';
  const CSV_ROOT='https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/';
  const LEGACY=more.querySelector('.offline-card');if(LEGACY)LEGACY.remove();
- const launch=document.createElement('button');launch.type='button';launch.className='tool-link';launch.id='td58OpenOffline';launch.textContent='↓ Offline Data ›';
+ const launch=document.createElement('button');launch.type='button';launch.className='tool-link';launch.id='td59OpenOffline';launch.textContent='↓ Offline Data ›';
  (more.querySelector('.tool-card')||more).appendChild(launch);
- const footer=document.querySelector('footer');if(footer&&footer.textContent.includes('optional full download'))footer.textContent=footer.textContent.replace('offline requires the optional full download','download per-game packs in More → Offline Data for offline records');
- const page=document.createElement('section');page.id='td58OfflinePage';page.hidden=true;
- page.innerHTML=`<div class="bar"><h2>Offline Data</h2><button type="button" id="td58Back">← More</button></div>
- <p class="note">Download only the games you play. Each game has separate Pokédex Reference and Encounter Locations packs. Other games are not saved.</p>
- <div class="tool-card"><label for="td58Game">Select a game<select id="td58Game">${gameOptions}</select></label></div>
- <div class="card td58-pack"><h3>Pokédex Reference · <span data-game-label></span></h3>
- <p class="note">Pokémon records, base stats, historical-compatible move details, species, evolution chains and TM/HM catalog. Generation-filtered; not a verified obtainable roster. Artwork is not part of this pack.</p>
- <p id="td58RefStatus" class="note" aria-live="polite">Checking saved data…</p>
- <div class="td58-actions"><button type="button" id="td58RefDownload">Download reference pack</button><button type="button" id="td58RefDelete" class="td58-delete">Remove pack</button></div></div>
- <div class="card td58-pack"><h3>Encounter Locations · <span data-game-label></span></h3>
- <p class="note">Wild encounter areas, methods, levels and source conditions. Gifts, evolutions, trades and trainer-only Pokémon are not a complete part of this source.</p>
- <p id="td58EncStatus" class="note" aria-live="polite">Checking saved data…</p>
- <div class="td58-actions"><button type="button" id="td58EncDownload">Download encounter pack</button><button type="button" id="td58EncDelete" class="td58-delete">Remove pack</button></div></div>
- <div class="card"><h3>Saved game packs</h3><div id="td58SavedList" class="note">Checking storage…</div></div>
- <p class="note">First encounter download still retrieves PokéAPI source tables to build your selected game's index; only the selected index is stored. Records missing from PokéAPI are not proof a Pokémon is unavailable.</p>`;
+ const footer=document.querySelector('footer');if(footer&&footer.textContent.includes('optional full download'))footer.textContent=footer.textContent.replace('offline requires the optional full download','choose your game under More → Offline Data');
+ const page=document.createElement('section');page.id='td59OfflinePage';page.hidden=true;
+ page.innerHTML=`<div class="bar"><h2>Offline Data</h2><button type="button" id="td59Back">← More</button></div>
+ <p class="note">Choose a game and download its available reference and encounter data together. Games without a pack remain usable online.</p>
+ <div class="tool-card"><label for="td59Game">Choose game<select id="td59Game">${gameOptions}</select></label>
+ <p class="note" id="td59Legend">🟢 Downloaded · 🟠 Partial · ⚪ Not downloaded</p></div>
+ <div class="card td59-card"><h3 id="td59Name">Game data pack</h3>
+ <p class="note">Pokémon stats, types, moves, learnsets, evolutions, TM/HM details and indexed wild encounters. Type calculations and available trainer rosters are included in the app itself. Artwork and some game-specific availability records may still need internet.</p>
+ <p id="td59State" class="note" aria-live="polite">Checking downloaded data…</p>
+ <p id="td59Progress" class="note" aria-live="polite"></p>
+ <div class="td59-actions"><button type="button" id="td59Download">Download game pack</button><button type="button" class="td59-delete" id="td59Delete">Remove game pack</button></div></div>
+ <div class="card td59-card"><h3>Saved game packs</h3><div id="td59Saved" class="note">Checking storage…</div>
+ <button type="button" class="td59-delete td59-clear" id="td59Clear">Clear all downloaded packs and old offline data</button></div>
+ <p class="note">A green indicator means both supported data components are saved, not that every location or trainer in that version is verified. Downloads may be large and can be resumed. Removing data does not delete saved teams or settings.</p>`;
  document.querySelector('main').appendChild(page);
  const css=document.createElement('style');css.textContent=`
- #td58OfflinePage .td58-pack{margin:13px 0;padding:16px}
- #td58OfflinePage .td58-pack h3{margin:0 0 8px;font-size:1.05rem}
- #td58OfflinePage .td58-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
- #td58OfflinePage .td58-actions button{flex:1 1 130px;width:auto;min-width:0;padding:11px 9px;font-size:.9rem}
- #td58OfflinePage .td58-delete{background:transparent!important;color:var(--text,#eee)!important;border:1px solid var(--edge,#555)!important;box-shadow:none!important}
- #td58OfflinePage .td58-delete:disabled{opacity:.35}
- #td58OfflinePage .td58-pack .note{overflow-wrap:anywhere}
- #td58SavedList>div{padding:7px 0;border-bottom:1px solid var(--edge,#444)}
+ #td59OfflinePage .td59-card{margin:13px 0;padding:16px}
+ #td59OfflinePage .td59-card h3{margin:0 0 9px;font-size:1.05rem}
+ #td59OfflinePage .td59-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+ #td59OfflinePage .td59-actions button{flex:1 1 142px;width:auto;min-width:0;padding:11px 9px;font-size:.9rem}
+ #td59OfflinePage .td59-delete{background:transparent!important;color:var(--text,#eee)!important;border:1px solid var(--edge,#555)!important;box-shadow:none!important}
+ #td59OfflinePage .td59-delete:disabled{opacity:.35}
+ #td59OfflinePage .td59-card .note{overflow-wrap:anywhere}
+ #td59OfflinePage #td59Saved>div{padding:7px 0;border-bottom:1px solid var(--edge,#444)}
+ #td59OfflinePage .td59-clear{width:100%;margin-top:12px;padding:11px 9px;font-size:.9rem}
  `;document.head.appendChild(css);
- const game=$('td58Game'),refStatus=$('td58RefStatus'),encStatus=$('td58EncStatus');
- const refBtn=$('td58RefDownload'),encBtn=$('td58EncDownload'),refDel=$('td58RefDelete'),encDel=$('td58EncDelete');
+ const game=$('td59Game'), state=$('td59State'), progress=$('td59Progress');
+ const downloadBtn=$('td59Download'),deleteBtn=$('td59Delete'),clearBtn=$('td59Clear');
  const slug=g=>g.toLowerCase().replace(/[^a-z0-9]+/g,'-');
  const refCacheName=g=>REF_PREFIX+slug(g);
  const refKey=g=>new URL('takdex-reference-v58/'+slug(g)+'.json',/^https?:/.test(location.href)?location.href:'https://takdex.invalid/').href;
@@ -1179,39 +1180,124 @@ for(const id of ['foeInput','foeInput2']){
   return meta;
  }
  async function removeReference(g){if('caches' in window)await caches.delete(refCacheName(g));window.dispatchEvent(new Event('td58-pack-update'))}
- async function update(showAll=true){const g=game.value,token=++taskState.token;
-  page.querySelectorAll('[data-game-label]').forEach(x=>x.textContent=g);
-  const [ref,enc]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g)]);
-  if(token!==taskState.token)return;
-  refStatus.textContent=ref?(ref.complete?'🟢 Downloaded':'🟠 Partial · resume download')+' · '+ref.saved+' cached records · '+new Date(ref.created).toLocaleDateString():'⚪ Not downloaded for '+g;
-  encStatus.textContent=enc?(enc.hasSource?'🟢 Downloaded':'🟠 Stored · no encounter coverage')+' · '+enc.records+' source entries':'⚪ Not downloaded for '+g;
-  refBtn.textContent=ref?.complete?'Check / resume reference pack':ref?'Resume reference pack':'Download reference pack';
-  encBtn.textContent=enc?'Refresh encounter pack':'Download encounter pack';
-  refDel.disabled=!ref||taskState.busy;encDel.disabled=!enc||taskState.busy;
-  for(const b of [refBtn,encBtn])b.disabled=taskState.busy;
-  if(showAll){const stored=[];for(const a of games){const [r,e]=await Promise.all([cachedReference(a),window.takDexEncounterV55.cached(a)]);if(r||e)stored.push({a,r,e})}
-   if(token!==taskState.token)return;
-   $('td58SavedList').innerHTML=stored.length?stored.map(({a,r,e})=>`<div><b>${safe(a)}</b> · ${r?(r.complete?'Reference ✓':'Reference partial'):'No reference'} · ${e?(e.hasSource?'Encounters ✓':'Encounter coverage unknown'):'No encounters'}</div>`).join(''):'No saved game packs yet.';
+
+ // A pack is 'downloaded' only if both indexes have positive coverage and reference download completed.
+ function statusFor(ref,enc){return ref?.complete&&enc?.hasSource?'ready':ref||enc?'partial':'missing'}
+ const iconFor={ready:'🟢',partial:'🟠',missing:'⚪'};
+ let statusMap=new Map(games.map(g=>[g,'missing']));
+ let statusVersion=0,refreshing=false;
+ const gameSelectIds=['game','editTeamGame','dexGame','planGame','tmGame','typeCheckGame','typeExplorerGame','td56Game','td59Game'];
+ // Explicit option.value is critical: Team dialog options used to derive their value from text.
+ function decorateGameSelects(){
+  for(const id of gameSelectIds){const select=$(id);if(!select)continue;
+   for(const option of select.options){const name=option.dataset.td59Game||option.value;
+    if(!games.includes(name))continue;
+    if(!option.dataset.td59Game){option.value=name;option.dataset.td59Game=name}
+    const label=iconFor[statusMap.get(name)||'missing']+' '+name;
+    if(option.textContent!==label)option.textContent=label;
+   }
   }
  }
- async function run(which){if(taskState.busy)return;taskState.busy=true;const g=game.value;game.disabled=true;
-  for(const b of [refBtn,encBtn,refDel,encDel])b.disabled=true;
-  const status=which==='ref'?refStatus:encStatus;
+ async function refreshStatusMap(){
+  if(refreshing){statusVersion++;return}
+  refreshing=true;const my=++statusVersion;
   try{
-   if(which==='ref')await downloadReference(g,txt=>status.textContent='↻ '+txt);
-   else await window.takDexEncounterV55.refresh(g,txt=>status.textContent='↻ '+txt);
-   status.textContent='🟢 '+g+' pack downloaded';
-  }catch(e){status.textContent='⚠ '+(e?.message||e)}finally{taskState.busy=false;game.disabled=false;await update()}
+   const records=await Promise.all(games.map(async g=>{
+    const [ref,enc]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g)]);
+    return [g,statusFor(ref,enc)];
+   }));
+   statusMap=new Map(records);
+   decorateGameSelects();
+  }catch(e){console.warn('Game pack status refresh:',e)}finally{refreshing=false;
+   if(statusVersion!==my)refreshStatusMap();
+  }
  }
- refBtn.onclick=()=>run('ref');encBtn.onclick=()=>run('enc');
- async function remove(which){if(taskState.busy)return;const g=game.value;
-  if(!confirm('Remove the '+(which==='ref'?'reference':'encounter')+' pack for '+g+'?'))return;
-  taskState.busy=true;game.disabled=true;try{if(which==='ref')await removeReference(g);else await window.takDexEncounterV55.remove(g)}catch(e){(which==='ref'?refStatus:encStatus).textContent='⚠ '+e.message}finally{taskState.busy=false;game.disabled=false;await update()}
+ // Update rebuilt dropdowns when focused or opened, even if another page replaces their options.
+ document.addEventListener('focusin',e=>{if(e.target?.tagName==='SELECT')decorateGameSelects()},true);
+ document.addEventListener('pointerdown',e=>{if(e.target?.closest?.('select'))decorateGameSelects()},true);
+ window.addEventListener('td58-pack-update',()=>refreshStatusMap());
+ window.takDexOfflineV59={refreshIndicators:refreshStatusMap};
+
+ async function getState(g){const [ref,enc]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g)]);return {ref,enc,status:statusFor(ref,enc)}}
+ function word(status){return status==='ready'?'Downloaded':status==='partial'?'Partial — resume available':'Not downloaded'}
+ async function hasLegacyCache(){
+  try{const keys=await caches.keys();if(keys.some(k=>['takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k)))return true}catch{}
+  try{if(localStorage.getItem('takdex-offline-full-v26'))return true;for(let i=0;i<localStorage.length;i++)if(localStorage.key(i)?.startsWith('pt-v2:'))return true}catch{}
+  return false;
  }
- refDel.onclick=()=>remove('ref');encDel.onclick=()=>remove('enc');
- game.onchange=()=>update();
- launch.onclick=()=>{window.takActivate(3);more.hidden=true;page.hidden=false;visible=true;game.value=$('dexGame')?.value||'Emerald';update();window.scrollTo(0,0)};
- $('td58Back').onclick=()=>{page.hidden=true;visible=false;window.takActivate(3)};
+ async function update(showAll=true){
+  const g=game.value,token=++taskState.token;
+  $('td59Name').textContent='Pokémon '+g+' — game data pack';
+  const {ref,enc,status:packStatus}=await getState(g);
+  if(token!==taskState.token)return;
+  state.textContent=iconFor[packStatus]+' '+word(packStatus)
+   +' · Reference: '+(ref?(ref.complete?'ready':'incomplete'):'missing')
+   +' · Encounters: '+(enc?(enc.hasSource?'indexed':'coverage unavailable'):'missing');
+  downloadBtn.textContent=packStatus==='ready'?'✓ '+g+' pack downloaded':packStatus==='partial'?'Resume '+g+' pack':'Download '+g+' pack';
+  downloadBtn.disabled=taskState.busy||packStatus==='ready';
+  deleteBtn.disabled=taskState.busy||(!ref&&!enc);
+  clearBtn.disabled=taskState.busy;
+  if(showAll){const saved=[];for(const name of games){const data=await getState(name);if(data.status!=='missing')saved.push({name,...data});}
+   if(token!==taskState.token)return;
+   $('td59Saved').innerHTML=saved.length?saved.map(p=>'<div>'+iconFor[p.status]+' <b>'+safe(p.name)+'</b> · '+word(p.status)+'</div>').join(''):'No game-specific packs stored.';
+   // Includes old V26 offline downloads that predate this manager.
+   clearBtn.disabled=taskState.busy||(!saved.length&&!(await hasLegacyCache()));
+  }
+  decorateGameSelects();
+ }
+ function setBusy(busy){taskState.busy=busy;game.disabled=busy;downloadBtn.disabled=busy;deleteBtn.disabled=busy;clearBtn.disabled=busy;}
+ async function downloadGame(){
+  if(taskState.busy)return;
+  const g=game.value;
+  setBusy(true);let errors=[];
+  try{
+   const existing=await getState(g);
+   if(!existing.ref?.complete){
+    progress.textContent='Downloading '+g+' reference data…';
+    try{await downloadReference(g,txt=>progress.textContent='↻ '+txt)}catch(e){errors.push('Reference: '+(e.message||e))}
+   }
+   if(!existing.enc?.hasSource){
+    progress.textContent='Downloading '+g+' encounter locations…';
+    try{await window.takDexEncounterV55.refresh(g,txt=>progress.textContent='↻ '+txt)}catch(e){errors.push('Encounters: '+(e.message||e))}
+   }
+   const final=await getState(g);
+   progress.textContent=errors.length?'⚠ '+errors.join(' | '):final.status==='ready'?'✓ '+g+' game data saved.':'⚠ Pack is partial; some source data is missing. Retry to resume.';
+  }finally{setBusy(false);await refreshStatusMap();await update()}
+ }
+ async function removeGame(){
+  if(taskState.busy)return;
+  const g=game.value,existing=await getState(g);
+  if(existing.status==='missing')return;
+  if(!window.confirm('Remove the downloaded '+g+' game pack?\n\nThis will delete its reference and encounter records. Saved teams and settings will NOT be deleted.'))return;
+  setBusy(true);
+  try{await removeReference(g);await window.takDexEncounterV55.remove(g);progress.textContent='Removed '+g+' game data.'}
+  catch(e){progress.textContent='⚠ Could not remove '+g+': '+(e.message||e)}
+  finally{setBusy(false);await refreshStatusMap();await update()}
+ }
+ async function clearAll(){
+  if(taskState.busy)return;
+  const msg='Delete ALL downloaded game packs AND older offline databases?\n\nSaved teams, nicknames, movesets and preferences will NOT be deleted.\n\nThis cannot be undone.';
+  if(!window.confirm(msg))return;
+  setBusy(true);progress.textContent='Removing game packs and old offline records…';
+  try{
+   // Clearing the catalog's in-memory map matters: otherwise removed games remain usable until reload.
+   await window.takDexEncounterV55.clearAll();
+   if('caches' in window){for(const k of await caches.keys()){
+    if(k.startsWith(REF_PREFIX)||['takdex-encounter-catalog-v55','takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k))await caches.delete(k);
+   }}
+   try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&(key.startsWith('pt-v2:')||key==='takdex-offline-full-v26'))localStorage.removeItem(key)}}catch{}
+   progress.textContent='✓ Downloaded data cleared. Your saved teams and preferences were kept.';
+  }catch(e){progress.textContent='⚠ Cleanup was incomplete: '+(e.message||e)}
+  finally{setBusy(false);await refreshStatusMap();await update()}
+ }
+ downloadBtn.addEventListener('click',downloadGame);
+ deleteBtn.addEventListener('click',removeGame);
+ clearBtn.addEventListener('click',clearAll);
+ game.onchange=()=>{progress.textContent='';update()};
+ launch.onclick=()=>{window.takActivate(3);more.hidden=true;page.hidden=false;visible=true;
+  game.value=$('dexGame')?.value||'Emerald';progress.textContent='';update();window.scrollTo(0,0)};
+ $('td59Back').onclick=()=>{page.hidden=true;visible=false;window.takActivate(3)};
  for(const tab of ['teamsTab','battleTab','dexTab','moreTab'])$(tab).addEventListener('click',()=>{page.hidden=true;visible=false});
  window.addEventListener('td58-pack-update',()=>{if(visible&&!taskState.busy)update()});
+ decorateGameSelects();refreshStatusMap();
 })();
