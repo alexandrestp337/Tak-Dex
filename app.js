@@ -722,11 +722,16 @@ for(const id of ['foeInput','foeInput2']){
  page.innerHTML='<button id="typeExplorerBack" type="button" style="padding:10px;margin-bottom:12px">← Back to Pokédex</button><h2>Explore Pokémon by Type</h2><p class="note">Verified wild encounter records only. No encounter record does not mean unobtainable. Starters, gifts, evolutions, trades and transfers are not yet indexed.</p><label for="typeExplorerGame">Game</label><select id="typeExplorerGame"></select><div id="typeExplorerTypes" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0"></div><p id="typeExplorerStatus" class="note">Choose a type to explore.</p><div id="typeExplorerResults"></div>';
  dex.parentNode.appendChild(page);
  const gameEl=page.querySelector('#typeExplorerGame'),typeEl=page.querySelector('#typeExplorerTypes'),status=page.querySelector('#typeExplorerStatus'),results=page.querySelector('#typeExplorerResults');
- gameEl.innerHTML=gameOptions;let selected=null,request=0;
- function go(back){dex.hidden=!back;page.hidden=back;window.scrollTo(0,0)}
- btn.onclick=()=>{gameEl.value=$('dexGame').value;selected=null;drawTypes();results.innerHTML='';status.textContent='Choose a type to explore.';go(false)};
+ gameEl.innerHTML=gameOptions;let selected=null,request=0,explorerScroll=0,fromExplorer=false;
+ function go(back,restore=false){dex.hidden=!back;page.hidden=back;if(!back)window.scrollTo(0,restore?explorerScroll:0);else window.scrollTo(0,0)}
+ const returnBtn=document.createElement('button');returnBtn.type='button';returnBtn.id='returnToTypeExplorer';returnBtn.textContent='← Back to Explore by Type';returnBtn.style.cssText='display:none;margin:12px 0;padding:11px 14px;border-radius:10px;font-weight:700;cursor:pointer';dex.insertBefore(returnBtn,btn);
+ function clearOrigin(){fromExplorer=false;returnBtn.style.display='none'}
+ returnBtn.onclick=()=>{if(!fromExplorer)return;clearOrigin();go(false,true)};
+ $('dexTab').addEventListener('click',clearOrigin);$('dexInput').addEventListener('input',()=>{if(fromExplorer)clearOrigin()});
+ $('dexGame').addEventListener('change',()=>{if(fromExplorer)clearOrigin()});
+ btn.onclick=()=>{clearOrigin();gameEl.value=$('dexGame').value;selected=null;drawTypes();results.innerHTML='';status.textContent='Choose a type to explore.';go(false)};
  page.querySelector('#typeExplorerBack').onclick=()=>go(true);
- function drawTypes(){typeEl.innerHTML=Object.entries(colors).map(([type,color])=>`<button type="button" data-explore-type="${type}" aria-pressed="${selected===type}" style="background:${color};color:${['electric','ice','ground','steel','normal'].includes(type)?'#151515':'white'};padding:10px 2px;border-radius:9px;border:${selected===type?'3px solid var(--text,white)':'2px solid transparent'};font-weight:700;cursor:pointer">${pretty(type)}</button>`).join('')}
+ function drawTypes(){const gen=gameGeneration(gameEl.value);typeEl.innerHTML=Object.entries(colors).map(([type,color])=>{const unavailable=(gen<6&&type==='fairy')||(gen<2&&(type==='dark'||type==='steel'));return `<button type="button" data-explore-type="${type}" ${unavailable?'disabled title="Not available in this generation"':''} aria-pressed="${selected===type}" style="background:${color};opacity:${unavailable?'.28':'1'};filter:${unavailable?'grayscale(1)':'none'};color:${['electric','ice','ground','steel','normal'].includes(type)?'#151515':'white'};padding:10px 2px;border-radius:9px;border:${selected===type?'3px solid var(--text,white)':'2px solid transparent'};font-weight:700;cursor:${unavailable?'not-allowed':'pointer'}">${pretty(type)}</button>`}).join('')}
  function label(name){return pretty(name).replace(/\bArea\b$/,'').trim()}
  async function show(){const token=++request;results.innerHTML='';if(!selected){status.textContent='Choose a type to explore.';return}
   const game=gameEl.value,gen=gameGeneration(game),version=game.toLowerCase().replace(/ /g,'-');
@@ -758,8 +763,8 @@ for(const id of ['foeInput','foeInput2']){
    status.textContent=verified.length+' Pokémon with recorded '+game+' encounters matching '+pretty(selected)+'. This is not a complete obtainable-Pokémon list.';
   }catch(e){if(token===request)status.textContent='Could not load encounter data. Connect to the internet or download the required data first.'}
  }
- typeEl.onclick=e=>{const b=e.target.closest('[data-explore-type]');if(!b)return;selected=selected===b.dataset.exploreType?null:b.dataset.exploreType;drawTypes();show()};
- gameEl.onchange=()=>{request++;results.innerHTML='';if(selected)show()};
- results.onclick=e=>{const b=e.target.closest('[data-explore-pokemon]');if(!b)return;$('dexGame').value=gameEl.value;$('dexTeam').value='';$('dexTeamPoke').value='';$('dexInput').value=pretty(b.dataset.explorePokemon);go(true);$('dexSearch').click()};
+ typeEl.onclick=e=>{const b=e.target.closest('[data-explore-type]');if(!b||b.disabled)return;selected=selected===b.dataset.exploreType?null:b.dataset.exploreType;drawTypes();show()};
+ gameEl.onchange=()=>{request++;if((gameGeneration(gameEl.value)<6&&selected==='fairy')||(gameGeneration(gameEl.value)<2&&['dark','steel'].includes(selected)))selected=null;drawTypes();results.innerHTML='';if(selected)show();else status.textContent='Choose a type to explore.'};
+ results.onclick=e=>{const b=e.target.closest('[data-explore-pokemon]');if(!b)return;$('dexGame').value=gameEl.value;$('dexTeam').value='';$('dexTeamPoke').value='';$('dexInput').value=pretty(b.dataset.explorePokemon);explorerScroll=window.scrollY;fromExplorer=true;returnBtn.style.display='block';go(true);$('dexSearch').click()};
  drawTypes();
 })();
