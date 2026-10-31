@@ -725,7 +725,7 @@ for(const id of ['foeInput','foeInput2']){
 (function initTypeExplorer(){
  const dex=$('dexPage');if(!dex||$('typeExplorerPage'))return;
  const btn=document.createElement('button');btn.type='button';btn.id='openTypeExplorer';btn.textContent='◈ By Type';btn.style.cssText='width:auto;display:inline-block;margin:0;padding:7px 13px;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer';
- const byTypeRow=document.createElement('div');byTypeRow.id='dexByTypeRow';byTypeRow.style.cssText='display:flex;justify-content:flex-end;align-items:center;width:100%;margin:0 0 8px';byTypeRow.appendChild(btn);const criteria=$('dexGame')?.closest('.card')||$('dexInput')?.closest('.card');if(criteria&&dex.contains(criteria)){let top=criteria;while(top.parentElement&&top.parentElement!==dex)top=top.parentElement;dex.insertBefore(byTypeRow,top)}else{const result=$('dexResult');if(result&&result.parentElement===dex)dex.insertBefore(byTypeRow,result);else dex.insertBefore(byTypeRow,dex.firstChild)}
+ const byTypeRow=document.createElement('div');byTypeRow.id='dexByTypeRow';byTypeRow.style.cssText='display:flex;justify-content:flex-end;align-items:center;width:100%;margin:0 0 8px';byTypeRow.appendChild(btn);const dexHeading=dex.querySelector('h2');if(dexHeading){dexHeading.insertAdjacentElement('afterend',byTypeRow)}else{dex.insertBefore(byTypeRow,dex.firstChild)}
  const page=document.createElement('section');page.id='typeExplorerPage';page.hidden=true;
  page.innerHTML='<button id="typeExplorerBack" type="button" style="padding:10px;margin-bottom:12px">← Back to Pokédex</button><h2>Explore Pokémon by Type</h2><p class="note">Browse Pokémon by type, including species without recorded wild encounters. The list is generation-based; game-specific obtainability and trainer appearances are not yet verified.</p><label for="typeExplorerGame">Game</label><select id="typeExplorerGame"></select><div id="typeExplorerTypes" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0"></div><p id="typeExplorerStatus" class="note">Choose a type to explore.</p><div id="typeExplorerResults"></div>';
  dex.parentNode.appendChild(page);
@@ -775,4 +775,12 @@ for(const id of ['foeInput','foeInput2']){
  gameEl.onchange=()=>{request++;if((gameGeneration(gameEl.value)<6&&selected==='fairy')||(gameGeneration(gameEl.value)<2&&['dark','steel'].includes(selected)))selected=null;drawTypes();results.innerHTML='';if(selected)show();else status.textContent='Choose a type to explore.'};
  results.onclick=e=>{const b=e.target.closest('[data-explore-pokemon]');if(!b)return;$('dexGame').value=gameEl.value;$('dexTeam').value='';$('dexTeamPoke').value='';$('dexInput').value=pretty(b.dataset.explorePokemon);explorerScroll=window.scrollY;fromExplorer=true;returnBtn.style.display='block';go(true);$('dexSearch').click()};
  drawTypes();
+})();
+
+// V47 — approved navigation artwork. Icons inherit the existing selected tab color.
+(function(){
+ const style=document.createElement('style');
+ style.textContent=`#teamsTab .takdex-nav-art,#battleTab .takdex-nav-art{display:block;width:24px;height:24px;flex:0 0 24px;margin:0 auto;background-color:currentColor;mask-position:center;mask-repeat:no-repeat;mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain}#teamsTab .takdex-nav-art{mask-image:url('takdex-team-nav.png');-webkit-mask-image:url('takdex-team-nav.png')}#battleTab .takdex-nav-art{mask-image:url('takdex-battle-nav.png');-webkit-mask-image:url('takdex-battle-nav.png')}`;
+ document.head.appendChild(style);
+ for(const id of ['teamsTab','battleTab']){const tab=document.getElementById(id);if(!tab)continue;const old=tab.querySelector('svg');if(!old)continue;const icon=document.createElement('span');icon.className='takdex-nav-art';icon.setAttribute('aria-hidden','true');old.replaceWith(icon)}
 })();
