@@ -413,7 +413,9 @@ $('dexResult').addEventListener('click',event=>{
  syncDexClear();
  $('dexSearch').click();
 });
+let takDexDexRequestV56=0;
 $('dexSearch').onclick=async()=>{
+ const requestId=++takDexDexRequestV56;
  const name=$('dexTeamPoke').value||$('dexInput').value.trim().toLowerCase().replace(/\s+/g,'-');if(!name)return;
  const game=$('dexGame').value,version=vg[game],result=$('dexResult');result.textContent='Loading Pokémon, evolution chain and level-up moves…';
  try{
@@ -431,23 +433,32 @@ $('dexSearch').onclick=async()=>{
   const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
   const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
   const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
-  let encounterHtml='<h3>Encounter & acquisition records · '+safe(game)+'</h3><div class="card"><p class="note">Checking game-specific encounter index…</p></div>';
-  result.innerHTML=`${encounterHtml}<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div>`;
-  // Source-verified indexed records; lack of records is not proof of unavailability.
+  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div><section id="td56DexEncounters" aria-live="polite"><h3>Encounter & acquisition records · ${safe(game)}</h3><div class="card"><p class="note">Checking encounter records…</p></div></section>`;
+  // V56: render below learnset using a persistent element rather than innerHTML string replacement.
+  const renderEncounter=html=>{
+   if(requestId!==takDexDexRequestV56)return;
+   const host=result.querySelector('#td56DexEncounters');
+   if(host)host.innerHTML='<h3>Encounter &amp; acquisition records · '+safe(game)+'</h3><div class="card">'+html+'</div>';
+  };
+  const noRecords='<p>Recorded wild encounter entries: 0</p><p class="note">This does not rule out gifts, evolution, trades, static encounters or trainer appearances.</p>';
+  const sourceFoot='<p class="note">PokéAPI encounter records, not a complete list of ways to obtain this Pokémon.</p>';
   try{
    const cat=window.takDexEncounterV55;
-   const pack=await cat.get(game,()=>{});
-   const rec=pack.entries[pokemon.id]||[];
-   const body=pack.hasSource?(rec.length?cat.format(rec):'<p>Recorded encounters: 0</p><p class="note">No matching encounter entries in this source. Evolution, trade, gifts, transfers and trainer appearances may not be represented.</p>'):'<p class="note">This dataset contains no verified encounter records for '+safe(game)+'. Availability is unknown, not zero.</p>';
-   const block='<h3>Encounter & acquisition records · '+safe(game)+'</h3><div class="card">'+body+'<p class="note">PokéAPI encounter dataset. Records describe encounter methods, not a complete obtainable-Pokémon list.</p></div>';
-   result.innerHTML=result.innerHTML.replace(encounterHtml,block);
-  }catch{
-   // PokeAPI endpoint is a lightweight fallback if the optional bulk index cannot load.
-   try{const records=await api('pokemon/'+pokemon.id+'/encounters');const version=game.toLowerCase().replace(/ /g,'-');const matches=records.flatMap(r=>r.version_details.filter(v=>v.version.name===version).map(v=>({area:r.location_area.name,details:v.encounter_details})));
-    const content=matches.length?matches.map(r=>'<p><b>'+safe(pretty(r.area))+'</b>: '+r.details.map(d=>safe(pretty(d.method.name))+' · Lv '+d.min_level+(d.max_level!==d.min_level?'–'+d.max_level:'')).join('; ')+'</p>').join(''):'<p>No encounter records returned by the API. Coverage may be incomplete; availability remains unverified.</p>';
-    result.innerHTML=result.innerHTML.replace(encounterHtml,'<h3>Encounter & acquisition records · '+safe(game)+'</h3><div class="card">'+content+'<p class="note">Online fallback; offline location index not installed.</p></div>');
-   }catch{result.innerHTML=result.innerHTML.replace(encounterHtml,'<h3>Encounter & acquisition records</h3><div class="card">Encounter coverage unknown. Check your connection or download the optional encounter packs.</div>')}
-  }
+   // The explorer already downloaded this index; no additional request is necessary.
+   const pack=cat&&await cat.cached(game);
+   if(pack){
+    const rec=pack.entries[pokemon.id]||[];
+    renderEncounter((pack.hasSource?(rec.length?cat.format(rec):noRecords):'<p class="note">No encounter coverage for this game in the indexed dataset. Availability unknown.</p>')+sourceFoot);
+   }else{
+    // An ordinary Pokédex search must not trigger the massive 34-game bulk download.
+    const records=await api('pokemon/'+pokemon.id+'/encounters');
+    const version=game.toLowerCase().replace(/ /g,'-');
+    const matches=records.flatMap(r=>(r.version_details||[]).filter(v=>v.version.name===version).map(v=>({area:r.location_area.name,details:v.encounter_details||[]})));
+    const content=matches.length?matches.map(r=>'<p><b>'+safe(pretty(r.area))+'</b>: '+r.details.map(d=>safe(pretty(d.method.name))+' · Lv '+d.min_level+(d.max_level!==d.min_level?'–'+d.max_level:'')).join('; ')+'</p>').join(''):noRecords;
+    renderEncounter(content+'<p class="note">Individual Pokémon encounter lookup. Download the optional game indexes in More for offline searches.</p>'+sourceFoot);
+   }
+  }catch(e){renderEncounter('<p class="note">Encounter data could not be loaded. Check your connection or download the Encounter Locations pack in More. Availability is unverified.</p>')}
+
  }catch(e){result.textContent='Could not load data. Check your connection or Pokémon name.'}
 };
 $('dexGame').onchange=()=>{$('dexTeam').value='';$('dexTeamPoke').innerHTML='';};
@@ -805,11 +816,21 @@ for(const id of ['foeInput','foeInput2']){
  function format(records){return (records||[]).map(r=>'<p><b>'+safe(pretty(r[0]))+'</b> · '+safe(pretty(r[1]))+' · Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:'')+(r[4]?.length?' · '+r[4].map(x=>safe(pretty(x))).join(', '):'')+'</p>').join('')}
  window.takDexEncounterV55={get,cached,count,format,refresh};
  // Explicitly expose the optional offline catalog downloader alongside the existing data download.
- const more=$('morePage');if(more){const panel=document.createElement('article');panel.className='card';panel.style.cssText='margin:16px 0;padding:15px';panel.innerHTML='<h3>Encounter location data · V55</h3><p class="note">Optional indexed location packs for 34 games. Data comes from PokéAPI and may omit gifts, transfers, trainer appearances or encounters in newer titles.</p><p id="td55Progress" class="note">Checking saved encounter indexes…</p><button type="button" id="td55Download">Download / update encounter indexes</button>';
-  const offline=$('offlineDownload');if(offline&&offline.closest('.card'))offline.closest('.card').insertAdjacentElement('afterend',panel);else more.appendChild(panel);
+ const more=$('morePage');if(more){const panel=document.createElement('article');panel.className='card';panel.style.cssText='margin:16px 0;padding:15px';panel.innerHTML='<h4>Encounter Locations pack</h4><p class="note">Optional game-indexed wild encounter data for 34 games. Gift, trade, transfer and trainer-only data may be incomplete.</p><p id="td55Progress" class="note">⚪ Checking saved encounter indexes…</p><button type="button" id="td55Download">Download Encounter Locations</button>';
+  const offline=$('offlineDownload');const offlineCard=offline?.closest('.offline-card')||offline?.closest('.card');
+  if(offlineCard){
+   // Keep both optional packs in one Offline Data card, each with its own status and action.
+   const first=document.createElement('div');first.className='td56-pack-label';first.innerHTML='<h4>Pokédex reference pack</h4><p class="note">Pokémon, moves, species, machines and artwork</p>';
+   offlineCard.insertBefore(first,$('offlineStatus'));
+   const info=offlineCard.querySelector('#offlineDownload + .note');
+   if(info)info.textContent='Optional large reference download. Keep Tak-Dex open until complete.';
+   panel.className='td56-pack-label';panel.style.cssText='margin-top:15px;padding-top:14px;border-top:1px solid var(--edge)';
+   offlineCard.appendChild(panel);
+  }else more.appendChild(panel);
   const out=panel.querySelector('#td55Progress'),button=panel.querySelector('#td55Download');
-  const update=()=>count().then(n=>{out.textContent=n===games.length?'✓ Encounter indexes downloaded for all '+n+' games':n+' / '+games.length+' game packs stored. First download requires internet.'}).catch(()=>{out.textContent='Encounter CacheStorage unavailable.'});
-  button.onclick=async()=>{button.disabled=true;out.textContent='Downloading source files…';try{await refresh(m=>{out.textContent=m});out.textContent='✓ Indexed encounters downloaded for all '+games.length+' games.'}catch(e){out.textContent='Unable to download encounter indexes: '+(e?.message||e)+'; existing Pokémon lookup remains available.'}finally{button.disabled=false}};
+  const update=()=>count().then(n=>{out.textContent=n===games.length?'🟢 Ready · '+n+' / '+games.length+' game indexes':n?'🟠 Partial · '+n+' / '+games.length+' games stored':'⚪ Not downloaded · 0 / '+games.length+' games';button.textContent=n===games.length?'Update Encounter Locations':'Download Encounter Locations';}).catch(()=>{out.textContent='⚠ Encounter storage unavailable.'});
+  button.onclick=async()=>{button.disabled=true;out.textContent='Downloading source files…';try{await refresh(m=>{out.textContent=m});out.textContent='🟢 Ready · '+games.length+' / '+games.length+' game indexes'}catch(e){out.textContent='Unable to download encounter indexes: '+(e?.message||e)+'; existing Pokémon lookup remains available.'}finally{button.disabled=false;update()}};
+  $('moreTab').addEventListener('click',update);
   update();
  }
 })();
@@ -878,4 +899,108 @@ for(const id of ['foeInput','foeInput2']){
  style.textContent=`#teamsTab .takdex-nav-art,#battleTab .takdex-nav-art,#dexTab .takdex-nav-art{display:block;width:24px;height:24px;flex:0 0 24px;margin:0 auto;background-color:currentColor;mask-position:center;mask-repeat:no-repeat;mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain}#teamsTab .takdex-nav-art{transform-origin:center;mask-image:url('takdex-team-nav.png');-webkit-mask-image:url('takdex-team-nav.png')}#battleTab .takdex-nav-art{mask-image:url('takdex-battle-nav.png');-webkit-mask-image:url('takdex-battle-nav.png')}#dexTab .takdex-nav-art{mask-image:url('takdex-pokedex-nav.png');-webkit-mask-image:url('takdex-pokedex-nav.png')}#teamsTab .takdex-nav-art,#battleTab .takdex-nav-art,#dexTab .takdex-nav-art{transform-origin:center}#teamsTab .takdex-nav-art{transform:translateY(-3px) scale(1.92)}#battleTab .takdex-nav-art{transform:translateY(-3px) scale(1.40)}#dexTab .takdex-nav-art{transform:translateY(-3px) scale(1.52)}`;
  document.head.appendChild(style);
  for(const id of ['teamsTab','battleTab','dexTab']){const tab=document.getElementById(id);if(!tab)continue;const old=tab.querySelector('svg');if(!old)continue;const icon=document.createElement('span');icon.className='takdex-nav-art';icon.setAttribute('aria-hidden','true');old.replaceWith(icon)}
+})();
+
+
+// V56 — Pokémon Comparison. Independent More tool with auto-complete + browse,
+// generation-specific typing, base-stat comparisons, weaknesses and encounter-index context.
+(function initPokemonComparisonV56(){
+ const more=$('morePage');if(!more||$('td56ComparePage'))return;
+ const launch=document.createElement('button');launch.id='td56OpenCompare';launch.type='button';launch.className='tool-link';launch.textContent='⚖ Pokémon Comparison ›';
+ const tools=more.querySelector('.tool-card');if(tools)tools.appendChild(launch);else more.insertBefore(launch,more.firstChild);
+ const page=document.createElement('section');page.id='td56ComparePage';page.hidden=true;
+ page.innerHTML=`<div class="bar"><h2>Pokémon Comparison</h2><button id="td56Back" type="button">← More</button></div>
+  <p class="note">Compare two Pokémon before training. Search suggestions are filtered by generation, but actual in-game availability still needs verification.</p>
+  <div class="tool-card"><label>Game<select id="td56Game"></select></label>
+  <div class="td56-select-grid"><label>Pokémon 1<div class="search td56-combo"><input type="text" id="td56A" autocomplete="off" placeholder="Search or browse…" aria-expanded="false" aria-controls="td56SuggestionsA"><button type="button" class="td56-arrow" data-picker="A" aria-label="Browse Pokémon 1">▾</button><div class="suggestions" id="td56SuggestionsA" hidden></div></div></label>
+  <label>Pokémon 2<div class="search td56-combo"><input type="text" id="td56B" autocomplete="off" placeholder="Search or browse…" aria-expanded="false" aria-controls="td56SuggestionsB"><button type="button" class="td56-arrow" data-picker="B" aria-label="Browse Pokémon 2">▾</button><div class="suggestions" id="td56SuggestionsB" hidden></div></div></label></div>
+  <button type="button" id="td56Run">Compare Pokémon</button></div>
+  <div id="td56Output" aria-live="polite"><p class="note">Choose two Pokémon to compare.</p></div>`;
+ document.querySelector('main').appendChild(page);
+ const st=document.createElement('style');st.textContent=`
+ #td56ComparePage .td56-select-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #td56ComparePage .td56-select-grid label{min-width:0}
+ #td56ComparePage .td56-combo input{padding-right:39px}
+ #td56ComparePage .td56-arrow{position:absolute;right:1px;top:6px;padding:5px 8px;background:transparent;color:var(--text);border-left:1px solid var(--edge);border-radius:0;box-shadow:none}
+ #td56ComparePage .suggestions{max-height:235px;z-index:50}
+ #td56ComparePage .suggestions button{width:100%;padding:9px 10px}
+ #td56ComparePage .td56-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+ #td56ComparePage .td56-mon{min-width:0;text-align:center;padding:12px 8px}
+ #td56ComparePage .td56-mon img{width:100px;height:100px;max-width:95%;object-fit:contain;display:block;margin:0 auto 6px}
+ #td56ComparePage .td56-mon h3{margin:4px 0;font-size:1rem}
+ #td56ComparePage .td56-stat-row{display:grid;grid-template-columns:minmax(0,1fr) 85px minmax(0,1fr);align-items:center;gap:6px;padding:9px 5px;border-bottom:1px solid var(--edge)}
+ #td56ComparePage .td56-stat-row strong{text-align:center;font-size:.79rem;color:var(--muted)}
+ #td56ComparePage .td56-stat-row .td56-left{text-align:right;font-variant-numeric:tabular-nums}
+ #td56ComparePage .td56-stat-row .td56-right{text-align:left;font-variant-numeric:tabular-nums}
+ #td56ComparePage .td56-win{color:var(--accent);font-weight:800}
+ #td56ComparePage .td56-match{text-align:left}
+ #td56ComparePage .td56-match p{margin:5px 0}
+ #td56ComparePage .td56-match h4{margin:12px 0 5px}
+ @media(max-width:390px){#td56ComparePage .td56-stat-row{grid-template-columns:minmax(0,1fr) 69px minmax(0,1fr)}#td56ComparePage .td56-mon img{width:80px;height:80px}}
+ `;document.head.appendChild(st);
+ const game=$('td56Game'),output=$('td56Output'),values={A:null,B:null};let revision=0,open=false;
+ game.innerHTML=gameOptions;game.value=current?.game||'Emerald';
+ function closeSuggestions(){for(const k of ['A','B']){$('td56Suggestions'+k).hidden=true;$('td56'+k).setAttribute('aria-expanded','false')}}
+ function maxPokemon(){return [151,251,386,493,649,721,809,905,1025][gameGeneration(game.value)-1]||1025}
+ function ident(name){return name.trim().toLowerCase().replace(/\s+/g,'-')}
+ async function suggestions(k,browse){
+  const input=$('td56'+k),box=$('td56Suggestions'+k),q=ident(input.value),mine=++revision;
+  closeSuggestions();box.hidden=false;input.setAttribute('aria-expanded','true');box.innerHTML='<p class="note">Loading Pokémon list…</p>';
+  try{
+   const rows=(await api('pokemon?limit=2000')).results||[];
+   if(mine!==revision||page.hidden)return;
+   // Numeric Pokémon IDs (not list positions) guard against names from later generations.
+   // This is a generation filter, NOT proof of in-game obtainability.
+   const max=maxPokemon();
+   const pool=rows.filter(r=>Number((r.url.match(/\/(\d+)\/?$/)||[])[1])<=max).map(r=>r.name);
+   const prefix=pool.filter(n=>n.startsWith(q)),other=q?pool.filter(n=>!n.startsWith(q)&&n.includes(q)):[];
+   const found=(browse&&!q?pool:prefix.concat(other)).slice(0,45);
+   box.innerHTML=found.length?found.map(n=>`<button type="button" data-compare-name="${safe(n)}">${safe(pretty(n))}</button>`).join('')+'<p class="note" style="padding:3px 8px">'+(q?'Type more to narrow results.':'Type to search the full Pokédex.')+'</p>':'<p class="note">No matching Pokémon.</p>';
+  }catch{if(mine===revision)box.innerHTML='<p class="note">Pokémon list unavailable. Connect to the internet or download Offline Data.</p>'}
+ }
+ async function pick(k,name){values[k]=name;const input=$('td56'+k);input.value=pretty(name);closeSuggestions();if(values.A&&values.B)await compare();}
+ for(const k of ['A','B']){
+  const input=$('td56'+k),box=$('td56Suggestions'+k);
+  input.addEventListener('input',()=>{run++;values[k]=null;output.innerHTML='<p class="note">Select two Pokémon to compare.</p>';if(input.value.trim().length>=2)suggestions(k,false);else{revision++;closeSuggestions()}});
+  input.addEventListener('focus',()=>{if(input.value.length>=2)suggestions(k,false)});
+  input.addEventListener('keydown',e=>{if(e.key==='Escape'){revision++;closeSuggestions()}if(e.key==='Enter'){const first=box.querySelector('[data-compare-name]');if(!box.hidden&&first){e.preventDefault();pick(k,first.dataset.compareName)}else{e.preventDefault();compare()}}});
+  box.addEventListener('click',e=>{const b=e.target.closest('[data-compare-name]');if(b)pick(k,b.dataset.compareName)});
+  page.querySelector('[data-picker="'+k+'"]').addEventListener('click',()=>{if(!box.hidden){revision++;closeSuggestions()}else suggestions(k,true)});
+ }
+ document.addEventListener('pointerdown',e=>{if(open&&!page.hidden&&!e.target.closest('#td56ComparePage .td56-combo')){revision++;closeSuggestions()}});
+ const stats=[['HP','hp'],['Attack','attack'],['Defense','defense'],['Sp. Atk','special-attack'],['Sp. Def','special-defense'],['Speed','speed']];
+ const statMap=p=>Object.fromEntries((p.stats||[]).map(x=>[x.stat.name,x.base_stat]));
+ function defensive(types,gen){const t=Object.keys(colors).filter(t=>gen>=6||t!=='fairy').filter(t=>gen>=2||!['dark','steel'].includes(t));return t.map(x=>({name:x,value:matchup(x,types,gen)})).filter(x=>x.value!==null)}
+ function group(types,gen){const effects=defensive(types,gen);return {weak:effects.filter(x=>x.value>1),resist:effects.filter(x=>x.value>0&&x.value<1),immune:effects.filter(x=>x.value===0)}}
+ function chips(list){return list.length?list.map(x=>`<span style="display:inline-block;margin:3px">${pill(x.name)} <b>${effectText(x.value)}</b></span>`).join(''):'<span class="note">None</span>'}
+ function abilityLabel(p){const found=(p.abilities||[]).map(a=>pretty(a.ability?.name||'')).filter(Boolean);return found.length?found.map(safe).join(' · '):'Not listed'}
+ function avail(p,pack){if(!pack)return 'Encounter index not downloaded · obtainability unverified';if(!pack.hasSource)return 'No encounter coverage for this game · availability unknown';const rec=pack.entries[p.id]||[];return rec.length?rec.length+' recorded wild encounter locations/methods':'0 recorded wild encounters · other acquisition methods may exist'}
+ function header(p,types,pack){const img=p.sprites?.other?.['official-artwork']?.front_default||p.sprites?.front_default||'';
+  return `<article class="card td56-mon"><img loading="lazy" src="${safe(img)}" alt=""><h3>${safe(pretty(p.name))}</h3><div class="pills" style="justify-content:center">${types.map(pill).join('')}</div><p class="note">#${p.id}</p><p class="note">${safe(avail(p,pack))}</p></article>`;
+ }
+ let run=0;
+ async function compare(){const mine=++run;const n1=values.A||ident($('td56A').value),n2=values.B||ident($('td56B').value);
+  closeSuggestions();if(!n1||!n2){output.innerHTML='<p class="note">Choose two Pokémon first.</p>';return}
+  const selectedGame=game.value;output.innerHTML='<p class="note">Loading Pokémon stats, types and encounters…</p>';
+  try{
+   const [p1,p2]=await Promise.all([api('pokemon/'+encodeURIComponent(n1)),api('pokemon/'+encodeURIComponent(n2))]);if(mine!==run||selectedGame!==game.value)return;
+   values.A=p1.name;values.B=p2.name;$('td56A').value=pretty(p1.name);$('td56B').value=pretty(p2.name);
+   const gen=gameGeneration(selectedGame),t1=historicalTypes(p1,selectedGame),t2=historicalTypes(p2,selectedGame),s1=statMap(p1),s2=statMap(p2);
+   const pack=window.takDexEncounterV55?await window.takDexEncounterV55.cached(selectedGame).catch(()=>null):null;if(mine!==run)return;
+   let html='<div class="td56-cards">'+header(p1,t1,pack)+header(p2,t2,pack)+'</div><article class="card"><h3>Base stat comparison</h3>';
+   for(const [label,key] of stats){const a=s1[key]??0,b=s2[key]??0;html+=`<div class="td56-stat-row"><span class="td56-left ${a>b?'td56-win':''}">${a}</span><strong>${label}</strong><span class="td56-right ${b>a?'td56-win':''}">${b}</span></div>`}
+   const total1=stats.reduce((a,[,k])=>a+(s1[k]||0),0),total2=stats.reduce((a,[,k])=>a+(s2[k]||0),0);
+   html+=`<div class="td56-stat-row"><span class="td56-left ${total1>total2?'td56-win':''}">${total1}</span><strong>Total</strong><span class="td56-right ${total2>total1?'td56-win':''}">${total2}</span></div></article>`;
+   const g1=group(t1,gen),g2=group(t2,gen);
+   html+='<div class="td56-cards">'+[[p1,g1],[p2,g2]].map(([p,g])=>`<article class="card td56-match"><h3>${safe(pretty(p.name))}</h3><p class="note">Type-chart matchups only. Abilities can alter immunities.</p><h4>Weak to</h4>${chips(g.weak)}<h4>Resists</h4>${chips(g.resist)}<h4>Immune to</h4>${chips(g.immune)}<h4>Abilities (current API)</h4><p class="note">${abilityLabel(p)}</p></article>`).join('')+'</div>';
+   const win=(key)=>s1[key]===s2[key]?'Tied':s1[key]>s2[key]?pretty(p1.name):pretty(p2.name);
+   html+=`<article class="card"><h3>Quick takeaways</h3><p><b>Faster:</b> ${safe(win('speed'))} · <b>Higher Attack:</b> ${safe(win('attack'))} · <b>Higher Sp. Atk:</b> ${safe(win('special-attack'))}</p><p class="note">Base stats are current PokéAPI values and may have changed in older games; this is not a full battle simulation. Abilities are current API listings and may differ in historical games. Recorded wild encounters do not establish starter, evolution, gift, trade or transfer availability. Compare actual moves and evolution requirements before committing to training.</p></article>`;
+   output.innerHTML=html;
+  }catch(e){if(mine===run)output.innerHTML='<p class="note">Unable to load a Pokémon. Check spelling and your internet/offline database.</p>'}
+ }
+ $('td56Run').onclick=compare;
+ game.onchange=()=>{run++;revision++;closeSuggestions();output.innerHTML='<p class="note">Game changed. Compare again for this game’s typing.</p>'};
+ launch.onclick=()=>{window.takActivate(3);more.hidden=true;page.hidden=false;open=true;game.value=$('dexGame').value||'Emerald';output.innerHTML='<p class="note">Choose two Pokémon to compare.</p>';window.scrollTo(0,0)};
+ $('td56Back').onclick=()=>{page.hidden=true;open=false;revision++;run++;closeSuggestions();window.takActivate(3)};
+ for(const tab of ['teamsTab','battleTab','dexTab','moreTab'])$(tab).addEventListener('click',()=>{page.hidden=true;open=false;revision++;run++;closeSuggestions()});
 })();
