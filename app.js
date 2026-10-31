@@ -616,3 +616,78 @@ for(const id of ['foeInput','foeInput2']){
  });
  progress();
 })();
+
+
+// V40 — Type Matchup Checker (added without modifying existing battle features).
+(function initTypeChecker(){
+ const more=document.getElementById('morePage');
+ if(!more || document.getElementById('typeCheckerPage'))return;
+ const trigger=document.createElement('button');
+ trigger.type='button';trigger.id='openTypeChecker';trigger.className='tool-link';
+ trigger.textContent='◈ Type Matchup Checker ›';
+ const toolGroup=more.querySelector('.tool-card');
+ if(toolGroup)toolGroup.appendChild(trigger);else more.appendChild(trigger);
+ const page=document.createElement('section');page.id='typeCheckerPage';page.hidden=true;
+ page.innerHTML=`<div class="bar"><h2>Type Matchup Checker</h2><button type="button" id="backTypeChecker">← More</button></div>
+ <p class="note">Choose a game and one or two types to explore offensive and defensive matchups.</p>
+ <div class="tool-card"><label>Game<select id="typeCheckGame"></select></label>
+ <label>Primary type<select id="typeCheckOne"></select></label>
+ <label>Secondary type (optional)<select id="typeCheckTwo"></select></label></div>
+ <div id="typeCheckResults" aria-live="polite"></div>`;
+ document.querySelector('main').appendChild(page);
+ const css=document.createElement('style');css.textContent=`
+ #typeCheckerPage .tc-group{margin:12px 0 20px}
+ #typeCheckerPage .tc-group h3{margin:0 0 9px;font-size:1rem}
+ #typeCheckerPage .tc-chips{display:flex;flex-wrap:wrap;gap:7px}
+ #typeCheckerPage .tc-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:9px;background:var(--card-bg,rgba(125,125,125,.1));border:1px solid rgba(140,140,140,.25);font-weight:600}
+ #typeCheckerPage .tc-chip small{opacity:.8}
+ #typeCheckerPage .tc-explain{line-height:1.5}
+ `;document.head.appendChild(css);
+ const g=document.getElementById('typeCheckGame'),one=document.getElementById('typeCheckOne'),two=document.getElementById('typeCheckTwo'),results=document.getElementById('typeCheckResults');
+ g.innerHTML=games.map(x=>`<option value="${safe(x)}">${safe(x)}</option>`).join('');
+ g.value=games.includes('Emerald')?'Emerald':games[0];
+ const allTypes=Object.keys(chart);
+ one.innerHTML=allTypes.map(t=>`<option value="${t}">${pretty(t)}</option>`).join('');
+ two.innerHTML='<option value="">None (single type)</option>'+allTypes.map(t=>`<option value="${t}">${pretty(t)}</option>`).join('');
+ one.value='water';two.value='ground';
+ const typesForGen=gen=>allTypes.filter(t=>gen>=6||t!=='fairy').filter(t=>gen>=2||(t!=='dark'&&t!=='steel'));
+ const chip=(t,m)=>`<span class="tc-chip">${pill(t)} <small>${effectText(m)}</small></span>`;
+ function group(title,items,empty='None'){
+  return `<div class="tc-group"><h3>${title}</h3><div class="tc-chips">${items.length?items.map(x=>chip(x.t,x.m)).join(''):`<span class="note">${empty}</span>`}</div></div>`;
+ }
+ function render(){
+  const gen=gameGeneration(g.value),valid=typesForGen(gen);
+  [...one.options].forEach(o=>o.disabled=!valid.includes(o.value));
+  [...two.options].forEach(o=>{o.disabled=!!o.value&&!valid.includes(o.value)});
+  if(!valid.includes(one.value))one.value=valid[0];
+  if(two.value&&!valid.includes(two.value))two.value='';
+  if(two.value===one.value)two.value='';
+  const selected=[one.value,...(two.value?[two.value]:[])];
+  const defense=valid.map(t=>({t,m:matchup(t,selected,gen)}));
+  // Offensive results describe either selected type used individually, not a combined attack.
+  const offense=selected.map(t=>({type:t,rows:valid.map(d=>({t:d,m:matchup(t,[d],gen)}))}));
+  const select=(rows,test)=>rows.filter(x=>test(x.m)).sort((a,b)=>a.t.localeCompare(b.t));
+  results.innerHTML=`<article class="card"><h3>Defensive matchups</h3><p class="note tc-explain">When a ${selected.map(pretty).join(' / ')} Pokémon is attacked, damage multipliers from both types combine.</p>
+   ${group('Weak to · 2× / 4×',select(defense,m=>m>1))}
+   ${group('Resists · ½× / ¼×',select(defense,m=>m>0&&m<1))}
+   ${group('Immune · 0×',select(defense,m=>m===0))}
+   <details><summary>Neutral incoming attacks</summary>${group('Normal damage · 1×',select(defense,m=>m===1))}</details>
+  </article>
+  <article class="card"><h3>Offensive matchups</h3><p class="note tc-explain">Each move has one attacking type. These results show which single-type opponents each of your selected STAB types hits super effectively; dual-type opponents can have different multipliers.</p>
+  ${offense.map(o=>`<h3>${pill(o.type)} attacks</h3>
+  ${group('Strong against · 2×',select(o.rows,m=>m>1))}
+  ${group('Not very effective · ½×',select(o.rows,m=>m>0&&m<1))}
+  ${group('No effect · 0×',select(o.rows,m=>m===0))}`).join('')}</article>
+  <p class="note tc-explain">Type chart only: abilities (such as Levitate), items, weather, Terastallization and move-specific exceptions can change the result. Generation-specific type rules are used for the selected game. STAB usually boosts a same-type attack by 1.5×, but does not change type effectiveness.</p>`;
+ }
+ [g,one,two].forEach(el=>el.addEventListener('change',render));
+ function hide(){page.hidden=true}
+ ['teamsTab','battleTab','dexTab','moreTab','openPlanner','openTM','backPlanner','backTM'].forEach(id=>document.getElementById(id)?.addEventListener('click',hide,true));
+ trigger.addEventListener('click',()=>{
+  document.querySelectorAll('main > section').forEach(el=>el.hidden=el!==page);
+  document.querySelectorAll('.main-tabs button').forEach(b=>b.classList.toggle('selected',b.id==='moreTab'));
+  page.hidden=false;render();window.scrollTo(0,0);
+ });
+ document.getElementById('backTypeChecker').addEventListener('click',()=>{hide();window.takActivate(3)});
+ render();
+})();
