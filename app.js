@@ -440,6 +440,56 @@ function takMachineCompatible(pokemon,moveName,game){
 const TAK62_SUPPORT=new Set(['calm-mind','swords-dance','dragon-dance','nasty-plot','bulk-up','iron-defense','agility','rock-polish','coil','quiver-dance','work-up','growth','shell-smash','leech-seed','will-o-wisp','thunder-wave','toxic','spore','sleep-powder','stun-spore','hypnosis','reflect','light-screen','recover','roost','soft-boiled','moonlight','morning-sun','wish','protect','rest','substitute','taunt','encore','stealth-rock','spikes','rapid-spin','defog']);
 const TAK62_AVOID=new Set(['self-destruct','explosion','hyper-beam','giga-impact','blast-burn','frenzy-plant','hydro-cannon','solar-beam','solar-blade','focus-punch','future-sight','doom-desire','skull-bash','razor-wind','sky-attack','phantom-force','shadow-force','geomancy','meteor-beam','bide','counter','mirror-coat']);
 const TAK62_VARIABLE=new Set(['return','frustration','hidden-power','low-kick','grass-knot','gyro-ball','electro-ball','heat-crash','heavy-slam','flail','reversal','eruption','water-spout','facade','brine','payback','avalanche','revenge','hex','venoshock','stored-power','rollout','ice-ball','fury-cutter','seismic-toss','night-shade','dragon-rage','sonic-boom','super-fang','endeavor','psywave','magnitude','present','beat-up','triple-kick','triple-axel','fissure','guillotine','horn-drill','sheer-cold']);
+// V63: descriptions are explanatory, not move-power estimates. Historical effects may vary by game.
+const TAK63_SUPPORT_GUIDE={
+ 'swords-dance':['Sharply increases Attack, improving physical damage.','Physical setup'],
+ 'dragon-dance':['Raises Attack and Speed one stage.','Physical setup'],
+ 'calm-mind':['Raises Special Attack and Special Defense.','Special setup'],
+ 'nasty-plot':['Sharply raises Special Attack.','Special setup'],
+ 'bulk-up':['Raises Attack and Defense.','Physical setup'],
+ 'iron-defense':['Sharply raises Defense.','Defensive setup'],
+ 'agility':['Sharply raises Speed.','Speed setup'],
+ 'rock-polish':['Sharply raises Speed.','Speed setup'],
+ 'coil':['Raises Attack, Defense and accuracy.','Physical setup'],
+ 'quiver-dance':['Raises Special Attack, Special Defense and Speed.','Special setup'],
+ 'work-up':['Raises Attack and Special Attack.','Mixed setup'],
+ 'growth':['Raises offensive stats; effect differs by generation and weather.','Situational'],
+ 'shell-smash':['Greatly boosts offensive stats and Speed, but lowers defenses.','Risky setup'],
+ 'leech-seed':['Drains a portion of the target’s HP each turn to heal the user.','Sustain'],
+ 'will-o-wisp':['Burns the target, reducing physical damage and dealing residual damage.','Status'],
+ 'thunder-wave':['Paralyzes a target, usually lowering its Speed.','Speed control'],
+ 'toxic':['Badly poisons the target; poison damage increases each turn. No fixed base power.','Chip damage'],
+ 'spore':['Puts the target to sleep, subject to immunities.','Sleep control'],
+ 'sleep-powder':['Attempts to put the target to sleep.','Sleep control'],
+ 'stun-spore':['Attempts to paralyze the target.','Speed control'],
+ 'hypnosis':['Attempts to put the target to sleep; accuracy is limited.','Sleep control'],
+ 'reflect':['Reduces damage taken from physical attacks while active.','Team defense'],
+ 'light-screen':['Reduces damage taken from special attacks while active.','Team defense'],
+ 'recover':['Restores up to half the user’s maximum HP.','Healing'],
+ 'roost':['Restores HP; Flying-type interactions change during the turn.','Healing'],
+ 'soft-boiled':['Restores up to half the user’s maximum HP.','Healing'],
+ 'moonlight':['Restores HP; weather affects the amount.','Healing'],
+ 'morning-sun':['Restores HP; weather affects the amount.','Healing'],
+ 'wish':['Restores HP on the following turn.','Delayed healing'],
+ 'protect':['Blocks most moves for a turn; repeated use is less reliable.','Defensive utility'],
+ 'rest':['Fully restores HP and removes major status, but puts the user to sleep.','Healing / sleep'],
+ 'substitute':['Uses some HP to create a decoy that absorbs many attacks.','Defensive utility'],
+ 'taunt':['Temporarily prevents the target from choosing status moves.','Disruption'],
+ 'encore':['Temporarily forces the target to repeat its last move.','Disruption'],
+ 'stealth-rock':['Sets entry hazards that damage opponents when they switch in.','Entry hazard'],
+ 'spikes':['Sets entry hazards that damage susceptible grounded opponents.','Entry hazard'],
+ 'rapid-spin':['Attacks and removes certain entry hazards; exact effects vary by game.','Field control'],
+ 'defog':['Clears certain field effects; exact effects vary by generation.','Field control']
+};
+function tak63SupportPriority(x,stats){
+ const n=x.name,atk=stats.attack||0,sp=stats['special-attack']||0;
+ if(['swords-dance','dragon-dance','bulk-up','coil'].includes(n))return atk>=sp?100:65;
+ if(['calm-mind','nasty-plot','quiver-dance'].includes(n))return sp>=atk?100:65;
+ if(['recover','roost','soft-boiled','wish','moonlight','morning-sun'].includes(n))return 94;
+ if(['toxic','will-o-wisp','thunder-wave','leech-seed','spore'].includes(n))return 88;
+ if(['protect','rest','reflect','light-screen','stealth-rock','spikes'].includes(n))return 78;
+ return 60;
+}
 function tak62MoveMethodsText(details,machineItem){
  const methods=[];
  const level=details.filter(d=>d.move_learn_method?.name==='level-up').map(d=>d.level_learned_at).filter(Number.isFinite).sort((a,b)=>a-b);
@@ -499,7 +549,7 @@ async function tak62RenderSmart(host,pokemon,game,isCurrent){
  for(const x of attacking){if(chosen.length>=6)break;if(chosen.includes(x))continue;
   if((typesUsed.get(x.hist.type)||0)>=1)continue;chosen.push(x);typesUsed.set(x.hist.type,1)}
  for(const x of attacking){if(chosen.length>=6)break;if(!chosen.includes(x))chosen.push(x)}
- const support=verified.filter(x=>x.hist.damageClass==='status'&&TAK62_SUPPORT.has(x.name)).slice(0,4);
+ const support=verified.filter(x=>x.hist.damageClass==='status'&&TAK62_SUPPORT.has(x.name)).sort((a,b)=>tak63SupportPriority(b,stats)-tak63SupportPriority(a,stats)).slice(0,4);
  const row=x=>{
   const method=tak62MoveMethodsText(x.details,x.machine);
   const isStab=types.includes(x.hist.type);
@@ -510,8 +560,13 @@ async function tak62RenderSmart(host,pokemon,game,isCurrent){
  };
  let html='<p class="note">Verified for <b>'+safe(game)+'</b> using this Pokémon’s game-specific learn methods. Attacks are ranked by an approximate base-stat, power, accuracy and STAB score—not simulated damage.</p>';
  html+='<h4>Suggested attacking moves</h4>'+(chosen.length?chosen.map(row).join(''):'<p class="note">No reliable fixed-power attack suggestions found for this game.</p>');
- if(support.length)html+='<h4>Other learnable support options (unranked)</h4>'+support.map(row).join('');
- html+='<p class="note">Only listed level-up and machine methods are confirmed. Egg moves, tutors, event moves, evolution timing, TM acquisition locations and move effects are not fully evaluated. A TM/HM number is shown only when verified for this game. Some moves have conditional effects, recoil or other drawbacks; check the full move details before using a one-time TM.</p>';
+ if(support.length)html+='<h4>Useful support &amp; status moves</h4><p class="note">Support moves have no base power because their effect is not a direct damaging attack. The descriptions below explain their role.</p>'+support.map(x=>{
+  const guide=TAK63_SUPPORT_GUIDE[x.name]||['Read its full effect before teaching.','Situational'];
+  const priority=tak63SupportPriority(x,stats);
+  const label=priority>=88?'Worth considering':'Situational';
+  return row(x).replace('</div></div>',`</div><div class="td63-support-desc"><b>${safe(label)}</b> · ${safe(guide[1])}: ${safe(guide[0])}</div></div>`);
+ }).join('');
+ html+='<p class="note">Only listed level-up and machine methods are confirmed. Egg moves, tutors, event moves, evolution timing, TM acquisition locations and historical status-move effects are not fully evaluated. A TM/HM number is shown only when verified for this game. Some moves have conditional effects, recoil or other drawbacks; check the full move details before using a one-time TM.</p>';
  if(failures)html+='<p class="note">'+failures+' move records could not be loaded; suggestions may be incomplete. Resume your game’s offline pack or reconnect.</p>';
  host.innerHTML=html;
 }
@@ -547,7 +602,7 @@ $('dexSearch').onclick=async()=>{
   const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
   const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
   const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
-  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div><details class="card td62-smart" id="td62SmartMoves"><summary>✦ Smart Move Advisor <span class="td62-caret" aria-hidden="true">▾</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(game)}.</p></div></details><section id="td56DexEncounters" aria-live="polite"><h3>Encounter & acquisition records · ${safe(game)}</h3><div class="card"><p class="note">Checking encounter records…</p></div></section>`;
+  result.innerHTML=`<article class="card dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${historicalTypes(pokemon,game).map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article><h3>Evolutions</h3><div class="card">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div><details class="card td62-smart" id="td62SmartMoves"><summary>✦ Smart Move Advisor <span class="td62-caret" aria-hidden="true">▾</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(game)}.</p></div></details><h3>Level-up learnset · ${safe(game)}</h3><div class="card">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><span>${safe(pretty(m.name))}</span>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div><section id="td56DexEncounters" aria-live="polite"><h3>Encounter & acquisition records · ${safe(game)}</h3><div class="card"><p class="note">Checking encounter records…</p></div></section>`;
   tak62AttachAdvisor(result,pokemon,game,requestId);
   // V56: render below learnset using a persistent element rather than innerHTML string replacement.
   const renderEncounter=html=>{
@@ -595,6 +650,22 @@ const emeraldLeague={
 // pokemondb.net/platinum/gymleaders-elitefour.
 const trainerRostersV57={"Emerald":{"gym":{"Roxanne":{"v1":[["geodude",12],["geodude",12],["nosepass",15]]},"Brawly":{"v1":[["machop",16],["meditite",16],["makuhita",19]]},"Wattson":{"v1":[["voltorb",20],["magneton",22],["electrike",20],["manectric",24]]},"Flannery":{"v1":[["numel",24],["slugma",24],["camerupt",26],["torkoal",29]]},"Norman":{"v1":[["spinda",27],["vigoroth",27],["linoone",29],["slaking",31]]},"Winona":{"v1":[["swablu",29],["tropius",29],["pelipper",30],["skarmory",31],["altaria",33]]},"Tate & Liza":{"v1":[["claydol",41],["xatu",41],["lunatone",42],["solrock",42]]},"Juan":{"v1":[["luvdisc",41],["whiscash",41],["sealeo",43],["crawdaunt",43],["kingdra",46]]}}},"FireRed":{"gym":{"Brock":{"v1":[["geodude",12],["onix",14]]},"Misty":{"v1":[["staryu",18],["starmie",21]]},"Lt. Surge":{"v1":[["voltorb",21],["pikachu",18],["raichu",24]]},"Erika":{"v1":[["victreebel",29],["tangela",24],["vileplume",29]]},"Koga":{"v1":[["koffing",37],["koffing",37],["muk",39],["weezing",43]]},"Sabrina":{"v1":[["kadabra",38],["mr-mime",37],["venomoth",38],["alakazam",43]]},"Blaine":{"v1":[["growlithe",42],["ponyta",40],["rapidash",42],["arcanine",47]]},"Giovanni":{"v1":[["rhyhorn",45],["dugtrio",42],["nidoqueen",44],["nidoking",45],["rhyhorn",50]]}},"elite":{"Lorelei":{"v1":[["dewgong",52],["cloyster",51],["slowbro",52],["jynx",54],["lapras",54]],"v2":[["dewgong",64],["cloyster",63],["piloswine",63],["jynx",66],["lapras",66]]},"Bruno":{"v1":[["onix",51],["hitmonchan",53],["hitmonlee",53],["onix",54],["machamp",56]],"v2":[["steelix",65],["hitmonchan",65],["hitmonlee",65],["steelix",66],["machamp",68]]},"Agatha":{"v1":[["gengar",54],["golbat",54],["haunter",53],["arbok",56],["gengar",58]],"v2":[["gengar",66],["crobat",66],["misdreavus",65],["arbok",68],["gengar",70]]},"Lance":{"v1":[["gyarados",56],["dragonair",54],["dragonair",54],["aerodactyl",58],["dragonite",60]],"v2":[["gyarados",68],["dragonite",66],["kingdra",66],["aerodactyl",70],["dragonite",72]]},"Blue (your starter: Bulbasaur)":{"v1":[["pidgeot",59],["alakazam",57],["rhydon",59],["exeggutor",59],["gyarados",61],["charizard",63]],"v2":[["heracross",72],["alakazam",73],["tyranitar",72],["exeggutor",73],["gyarados",73],["charizard",75]]},"Blue (your starter: Charmander)":{"v1":[["pidgeot",59],["alakazam",57],["rhydon",59],["arcanine",59],["exeggutor",61],["blastoise",63]],"v2":[["heracross",72],["alakazam",73],["tyranitar",72],["arcanine",73],["exeggutor",73],["blastoise",75]]},"Blue (your starter: Squirtle)":{"v1":[["pidgeot",59],["alakazam",57],["rhydon",59],["gyarados",59],["arcanine",61],["venusaur",63]],"v2":[["heracross",72],["alakazam",73],["tyranitar",72],["gyarados",73],["arcanine",73],["venusaur",75]]}}},"Platinum":{"gym":{"Roark":{"v1":[["geodude",12],["onix",12],["cranidos",14]],"v2":[["aerodactyl",62],["probopass",61],["golem",61],["rampardos",63],["tyranitar",65]]},"Gardenia":{"v1":[["turtwig",20],["cherrim",20],["roserade",22]],"v2":[["jumpluff",61],["bellossom",61],["cherrim",62],["torterra",63],["roserade",65]]},"Fantina":{"v1":[["duskull",24],["haunter",24],["mismagius",26]],"v2":[["banette",62],["mismagius",62],["dusknoir",62],["gengar",63],["drifblim",66]]},"Maylene":{"v1":[["meditite",28],["machoke",29],["lucario",32]],"v2":[["hitmontop",62],["breloom",62],["medicham",63],["machamp",64],["lucario",66]]},"Crasher Wake":{"v1":[["gyarados",33],["quagsire",34],["floatzel",37]],"v2":[["sharpedo",61],["floatzel",63],["quagsire",63],["ludicolo",65],["gyarados",66]]},"Byron":{"v1":[["magneton",37],["steelix",38],["bastiodon",41]],"v2":[["skarmory",61],["steelix",61],["magnezone",62],["bastiodon",63],["aggron",65]]},"Candice":{"v1":[["sneasel",40],["piloswine",40],["abomasnow",42],["froslass",44]],"v2":[["weavile",62],["abomasnow",61],["mamoswine",61],["froslass",63],["glaceon",65]]},"Volkner":{"v1":[["jolteon",46],["raichu",46],["luxray",48],["electivire",50]],"v2":[["jolteon",61],["raichu",61],["luxray",62],["lanturn",63],["electivire",65]]}},"elite":{"Aaron":{"v1":[["yanmega",49],["scizor",49],["vespiquen",50],["heracross",51],["drapion",53]],"v2":[["yanmega",65],["scizor",65],["vespiquen",66],["heracross",67],["drapion",69]]},"Bertha":{"v1":[["whiscash",50],["gliscor",53],["golem",52],["rhyperior",52],["hippowdon",55]],"v2":[["whiscash",66],["gliscor",69],["golem",68],["rhyperior",71],["hippowdon",68]]},"Flint":{"v1":[["houndoom",52],["flareon",55],["rapidash",53],["infernape",55],["magmortar",57]],"v2":[["houndoom",68],["flareon",71],["rapidash",69],["infernape",71],["magmortar",73]]},"Lucian":{"v1":[["mr-mime",53],["espeon",55],["bronzong",54],["alakazam",56],["gallade",59]],"v2":[["mr-mime",69],["espeon",71],["bronzong",70],["alakazam",72],["gallade",75]]},"Cynthia":{"v1":[["spiritomb",58],["roserade",58],["togekiss",60],["lucario",60],["milotic",58],["garchomp",62]],"v2":[["spiritomb",74],["roserade",74],["togekiss",76],["lucario",76],["milotic",74],["garchomp",78]]}}},"LeafGreen":{"gym":{"Brock":{"v1":[["geodude",12],["onix",14]]},"Misty":{"v1":[["staryu",18],["starmie",21]]},"Lt. Surge":{"v1":[["voltorb",21],["pikachu",18],["raichu",24]]},"Erika":{"v1":[["victreebel",29],["tangela",24],["vileplume",29]]},"Koga":{"v1":[["koffing",37],["koffing",37],["muk",39],["weezing",43]]},"Sabrina":{"v1":[["kadabra",38],["mr-mime",37],["venomoth",38],["alakazam",43]]},"Blaine":{"v1":[["growlithe",42],["ponyta",40],["rapidash",42],["arcanine",47]]},"Giovanni":{"v1":[["rhyhorn",45],["dugtrio",42],["nidoqueen",44],["nidoking",45],["rhyhorn",50]]}},"elite":{"Lorelei":{"v1":[["dewgong",52],["cloyster",51],["slowbro",52],["jynx",54],["lapras",54]],"v2":[["dewgong",64],["cloyster",63],["piloswine",63],["jynx",66],["lapras",66]]},"Bruno":{"v1":[["onix",51],["hitmonchan",53],["hitmonlee",53],["onix",54],["machamp",56]],"v2":[["steelix",65],["hitmonchan",65],["hitmonlee",65],["steelix",66],["machamp",68]]},"Agatha":{"v1":[["gengar",54],["golbat",54],["haunter",53],["arbok",56],["gengar",58]],"v2":[["gengar",66],["crobat",66],["misdreavus",65],["arbok",68],["gengar",70]]},"Lance":{"v1":[["gyarados",56],["dragonair",54],["dragonair",54],["aerodactyl",58],["dragonite",60]],"v2":[["gyarados",68],["dragonite",66],["kingdra",66],["aerodactyl",70],["dragonite",72]]},"Blue (your starter: Bulbasaur)":{"v1":[["pidgeot",59],["alakazam",57],["rhydon",59],["exeggutor",59],["gyarados",61],["charizard",63]],"v2":[["heracross",72],["alakazam",73],["tyranitar",72],["exeggutor",73],["gyarados",73],["charizard",75]]},"Blue (your starter: Charmander)":{"v1":[["pidgeot",59],["alakazam",57],["rhydon",59],["arcanine",59],["exeggutor",61],["blastoise",63]],"v2":[["heracross",72],["alakazam",73],["tyranitar",72],["arcanine",73],["exeggutor",73],["blastoise",75]]},"Blue (your starter: Squirtle)":{"v1":[["pidgeot",59],["alakazam",57],["rhydon",59],["gyarados",59],["arcanine",61],["venusaur",63]],"v2":[["heracross",72],["alakazam",73],["tyranitar",72],["gyarados",73],["arcanine",73],["venusaur",75]]}}}};
 const trainerSourceV57={Emerald:'https://pokemondb.net/emerald/gymleaders-elitefour',FireRed:'https://pokemondb.net/firered-leafgreen/gymleaders-elitefour',LeafGreen:'https://pokemondb.net/firered-leafgreen/gymleaders-elitefour',Platinum:'https://pokemondb.net/platinum/gymleaders-elitefour'};
+
+// V63 — additional version-accurate trainer Pokémon + levels.
+// Sources: https://pokemondb.net/heartgold-soulsilver/gymleaders-elitefour
+//          https://pokemondb.net/diamond-pearl/gymleaders-elitefour
+//          https://pokemondb.net/black-white/gymleaders-elitefour
+// Moves are intentionally unknown unless individually verified.
+const TAK63_VERIFIED_ROSTERS={"HeartGold":{"gym":{"Falkner":{"v1":[["pidgey",9],["pidgeotto",13]]},"Bugsy":{"v1":[["metapod",15],["kakuna",15],["scyther",17]]},"Whitney":{"v1":[["clefairy",17],["miltank",19]]},"Morty":{"v1":[["gastly",21],["haunter",21],["haunter",23],["gengar",25]]},"Chuck":{"v1":[["primeape",29],["poliwrath",31]]},"Jasmine":{"v1":[["magnemite",30],["magnemite",30],["steelix",35]]},"Pryce":{"v1":[["seel",30],["dewgong",32],["piloswine",34]]},"Clair":{"v1":[["dragonair",38],["dragonair",38],["gyarados",38],["kingdra",41]]}},"elite":{"Will":{"v1":[["xatu",40],["jynx",41],["exeggutor",41],["slowbro",41],["xatu",42]]},"Koga":{"v1":[["ariados",40],["venomoth",41],["muk",42],["forretress",43],["crobat",44]]},"Bruno":{"v1":[["hitmontop",42],["hitmonlee",42],["hitmonchan",42],["onix",43],["machamp",46]]},"Karen":{"v1":[["umbreon",42],["vileplume",42],["murkrow",44],["gengar",45],["houndoom",47]]},"Lance":{"v1":[["gyarados",44],["dragonite",49],["dragonite",49],["aerodactyl",48],["charizard",48],["dragonite",50]]}},"story":{"Red (Mt. Silver)":{"v1":[["pikachu",88],["venusaur",84],["charizard",84],["blastoise",84],["lapras",80],["snorlax",82]]}}},"SoulSilver":{"gym":{"Falkner":{"v1":[["pidgey",9],["pidgeotto",13]]},"Bugsy":{"v1":[["metapod",15],["kakuna",15],["scyther",17]]},"Whitney":{"v1":[["clefairy",17],["miltank",19]]},"Morty":{"v1":[["gastly",21],["haunter",21],["haunter",23],["gengar",25]]},"Chuck":{"v1":[["primeape",29],["poliwrath",31]]},"Jasmine":{"v1":[["magnemite",30],["magnemite",30],["steelix",35]]},"Pryce":{"v1":[["seel",30],["dewgong",32],["piloswine",34]]},"Clair":{"v1":[["dragonair",38],["dragonair",38],["gyarados",38],["kingdra",41]]}},"elite":{"Will":{"v1":[["xatu",40],["jynx",41],["exeggutor",41],["slowbro",41],["xatu",42]]},"Koga":{"v1":[["ariados",40],["venomoth",41],["muk",42],["forretress",43],["crobat",44]]},"Bruno":{"v1":[["hitmontop",42],["hitmonlee",42],["hitmonchan",42],["onix",43],["machamp",46]]},"Karen":{"v1":[["umbreon",42],["vileplume",42],["murkrow",44],["gengar",45],["houndoom",47]]},"Lance":{"v1":[["gyarados",44],["dragonite",49],["dragonite",49],["aerodactyl",48],["charizard",48],["dragonite",50]]}},"story":{"Red (Mt. Silver)":{"v1":[["pikachu",88],["venusaur",84],["charizard",84],["blastoise",84],["lapras",80],["snorlax",82]]}}},"Diamond":{"gym":{"Roark":{"v1":[["geodude",12],["onix",12],["cranidos",14]]},"Gardenia":{"v1":[["cherubi",19],["turtwig",19],["roserade",22]]},"Maylene":{"v1":[["meditite",27],["machoke",27],["lucario",30]]},"Crasher Wake":{"v1":[["gyarados",27],["quagsire",27],["floatzel",30]]},"Fantina":{"v1":[["drifblim",32],["gengar",34],["mismagius",36]]},"Byron":{"v1":[["bronzor",36],["steelix",36],["bastiodon",39]]},"Candice":{"v1":[["snover",38],["sneasel",38],["medicham",40],["abomasnow",42]]},"Volkner":{"v1":[["raichu",46],["ambipom",47],["octillery",48],["luxray",49]]}},"elite":{"Aaron":{"v1":[["dustox",53],["beautifly",53],["heracross",54],["vespiquen",54],["drapion",57]]},"Bertha":{"v1":[["quagsire",55],["whiscash",55],["golem",56],["sudowoodo",57],["hippowdon",59]]},"Flint":{"v1":[["rapidash",58],["steelix",57],["lopunny",57],["drifblim",58],["infernape",61]]},"Lucian":{"v1":[["mr-mime",59],["girafarig",59],["medicham",60],["alakazam",60],["bronzong",63]]},"Cynthia":{"v1":[["spiritomb",61],["gastrodon",60],["roserade",60],["milotic",63],["lucario",63],["garchomp",66]]}}},"Pearl":{"gym":{"Roark":{"v1":[["geodude",12],["onix",12],["cranidos",14]]},"Gardenia":{"v1":[["cherubi",19],["turtwig",19],["roserade",22]]},"Maylene":{"v1":[["meditite",27],["machoke",27],["lucario",30]]},"Crasher Wake":{"v1":[["gyarados",27],["quagsire",27],["floatzel",30]]},"Fantina":{"v1":[["drifblim",32],["gengar",34],["mismagius",36]]},"Byron":{"v1":[["bronzor",36],["steelix",36],["bastiodon",39]]},"Candice":{"v1":[["snover",38],["sneasel",38],["medicham",40],["abomasnow",42]]},"Volkner":{"v1":[["raichu",46],["ambipom",47],["octillery",48],["luxray",49]]}},"elite":{"Aaron":{"v1":[["dustox",53],["beautifly",53],["heracross",54],["vespiquen",54],["drapion",57]]},"Bertha":{"v1":[["quagsire",55],["whiscash",55],["golem",56],["sudowoodo",57],["hippowdon",59]]},"Flint":{"v1":[["rapidash",58],["steelix",57],["lopunny",57],["drifblim",58],["infernape",61]]},"Lucian":{"v1":[["mr-mime",59],["girafarig",59],["medicham",60],["alakazam",60],["bronzong",63]]},"Cynthia":{"v1":[["spiritomb",61],["gastrodon",60],["roserade",60],["milotic",63],["lucario",63],["garchomp",66]]}}},"Black":{"gym":{"Cilan (starter: Oshawott)":{"v1":[["lillipup",12],["pansage",14]]},"Chili (starter: Snivy)":{"v1":[["lillipup",12],["pansear",14]]},"Cress (starter: Tepig)":{"v1":[["lillipup",12],["panpour",14]]},"Lenora":{"v1":[["herdier",18],["watchog",20]]},"Burgh":{"v1":[["whirlipede",21],["dwebble",21],["leavanny",23]]},"Elesa":{"v1":[["emolga",25],["emolga",25],["zebstrika",27]]},"Clay":{"v1":[["krokorok",29],["palpitoad",29],["excadrill",31]]},"Skyla":{"v1":[["swoobat",33],["unfezant",33],["swanna",35]]},"Brycen":{"v1":[["vanillish",37],["cryogonal",37],["beartic",39]]},"Drayden (Black)":{"v1":[["fraxure",41],["druddigon",41],["haxorus",43]]}},"elite":{"Shauntal":{"v1":[["cofagrigus",48],["jellicent",48],["golurk",48],["chandelure",50]]},"Grimsley":{"v1":[["scrafty",48],["liepard",48],["krookodile",48],["bisharp",50]]},"Caitlin":{"v1":[["reuniclus",48],["musharna",48],["sigilyph",48],["gothitelle",50]]},"Marshal":{"v1":[["throh",48],["sawk",48],["conkeldurr",48],["mienshao",50]]},"Alder (postgame)":{"v1":[["accelgor",75],["bouffalant",75],["druddigon",75],["vanilluxe",75],["escavalier",75],["volcarona",77]]}},"story":{"N (N’s Castle — Black)":{"v1":[["zekrom",52],["carracosta",50],["vanilluxe",50],["archeops",50],["zoroark",50],["klinklang",50]]},"Ghetsis (N’s Castle)":{"v1":[["cofagrigus",52],["bouffalant",52],["seismitoad",52],["bisharp",52],["eelektross",52],["hydreigon",54]]}}},"White":{"gym":{"Cilan (starter: Oshawott)":{"v1":[["lillipup",12],["pansage",14]]},"Chili (starter: Snivy)":{"v1":[["lillipup",12],["pansear",14]]},"Cress (starter: Tepig)":{"v1":[["lillipup",12],["panpour",14]]},"Lenora":{"v1":[["herdier",18],["watchog",20]]},"Burgh":{"v1":[["whirlipede",21],["dwebble",21],["leavanny",23]]},"Elesa":{"v1":[["emolga",25],["emolga",25],["zebstrika",27]]},"Clay":{"v1":[["krokorok",29],["palpitoad",29],["excadrill",31]]},"Skyla":{"v1":[["swoobat",33],["unfezant",33],["swanna",35]]},"Brycen":{"v1":[["vanillish",37],["cryogonal",37],["beartic",39]]},"Iris (White)":{"v1":[["fraxure",41],["druddigon",41],["haxorus",43]]}},"elite":{"Shauntal":{"v1":[["cofagrigus",48],["jellicent",48],["golurk",48],["chandelure",50]]},"Grimsley":{"v1":[["scrafty",48],["liepard",48],["krookodile",48],["bisharp",50]]},"Caitlin":{"v1":[["reuniclus",48],["musharna",48],["sigilyph",48],["gothitelle",50]]},"Marshal":{"v1":[["throh",48],["sawk",48],["conkeldurr",48],["mienshao",50]]},"Alder (postgame)":{"v1":[["accelgor",75],["bouffalant",75],["druddigon",75],["vanilluxe",75],["escavalier",75],["volcarona",77]]}},"story":{"N (N’s Castle — White)":{"v1":[["reshiram",52],["carracosta",50],["vanilluxe",50],["archeops",50],["zoroark",50],["klinklang",50]]},"Ghetsis (N’s Castle)":{"v1":[["cofagrigus",52],["bouffalant",52],["seismitoad",52],["bisharp",52],["eelektross",52],["hydreigon",54]]}}}};
+Object.assign(trainerRostersV57,TAK63_VERIFIED_ROSTERS);
+Object.assign(trainerSourceV57,{
+ HeartGold:'https://pokemondb.net/heartgold-soulsilver/gymleaders-elitefour',
+ SoulSilver:'https://pokemondb.net/heartgold-soulsilver/gymleaders-elitefour',
+ Diamond:'https://pokemondb.net/diamond-pearl/gymleaders-elitefour',
+ Pearl:'https://pokemondb.net/diamond-pearl/gymleaders-elitefour',
+ Black:'https://pokemondb.net/black-white/gymleaders-elitefour',
+ White:'https://pokemondb.net/black-white/gymleaders-elitefour'
+});
 let plannerOpp=[],plannerOwn=[];
 function plannerPresetSet(){
  const game=$('planGame').value,cat=$('planMode').value;
@@ -606,10 +677,12 @@ function syncPlanner(){
  const oldTrainer=$('planTrainer').value,game=$('planGame').value,mode=$('planMode').value;
  const hasElite=game==='Emerald'||Boolean(trainerRostersV57[game]?.elite);
  const hasGym=Boolean(trainerRostersV57[game]?.gym);
+ const hasStory=Boolean(trainerRostersV57[game]?.story);
  const modeSelect=$('planMode');
  modeSelect.querySelector('[value="elite"]').disabled=!hasElite;
  modeSelect.querySelector('[value="gym"]').disabled=!hasGym;
- if((mode==='elite'&&!hasElite)||(mode==='gym'&&!hasGym))modeSelect.value=hasGym?'gym':hasElite?'elite':'custom';
+ modeSelect.querySelector('[value="story"]').disabled=!hasStory;
+ if((mode==='elite'&&!hasElite)||(mode==='gym'&&!hasGym)||(mode==='story'&&!hasStory))modeSelect.value=hasGym?'gym':hasElite?'elite':hasStory?'story':'custom';
  const custom=modeSelect.value==='custom',rosters=plannerPresetSet();
  $('eliteOptions').hidden=custom;
  const names=rosters?Object.keys(rosters):[];
@@ -622,7 +695,7 @@ function syncPlanner(){
  $('planVersion').querySelector('[value="v2"]').textContent=game==='Emerald'?'Repeat League challenge (same roster)':'Rematch / second challenge';
  const source=trainerSourceV57[game];
  $('eliteNote').innerHTML=custom?'Custom opponent — enter names, levels and known moves.':
-   (rosters?`Verified ${modeSelect.value==='gym'?'Gym Leader':'League'} Pokémon and levels for ${safe(game)}. ${source?`<a href="${safe(source)}" target="_blank" rel="noopener noreferrer">Roster source</a>. `:''}${modeSelect.value==='gym'&&$('planTrainer').value==='Tate & Liza'?'This is a double battle; planner matchups remain individual. ':''}Only moves explicitly verified in existing Emerald League data are prefilled; other moves are unknown until you enter them.`:
+   (rosters?`Verified ${modeSelect.value==='gym'?'Gym Leader':modeSelect.value==='story'?'story battle':'League'} Pokémon and levels for ${safe(game)}. ${source?`<a href="${safe(source)}" target="_blank" rel="noopener noreferrer">Roster source</a>. `:''}${modeSelect.value==='gym'&&$('planTrainer').value==='Tate & Liza'?'This is a double battle; planner matchups remain individual. ':''}Opponent moves are only filled when individually verified; otherwise enter known moves for defensive estimates.`:
    'No verified built-in roster for this game and category. Use Custom instead.');
  loadPlannerRoster();importPlannerTeam();
 }
@@ -634,10 +707,25 @@ function loadPlannerRoster(){
  renderPlannerSlots('planOpp',plannerOpp,false);
  if($('planMode').value!=='custom')$('planResults').innerHTML='';
 }
-function renderPlannerSlots(id,entries,own){$(id).innerHTML=Array.from({length:6},(_,i)=>{const e=entries[i]||{name:'',level:50,moves:[]};return `<div class="plan-slot"><b>#${i+1}</b><label>Pokémon<input data-plan="${own?'own':'opp'}" data-i="${i}" data-field="name" value="${safe(e.name)}" placeholder="Pokémon"></label><label>Lv<input type="number" min="1" max="100" data-plan="${own?'own':'opp'}" data-i="${i}" data-field="level" value="${Number(e.level)||50}"></label><label>Moves (comma-separated)<input data-plan="${own?'own':'opp'}" data-i="${i}" data-field="moves" value="${safe((e.moves||[]).join(', '))}" placeholder="Move 1, Move 2…"></label></div>`}).join('')}
-function plannerEdit(e){const x=e.target;if(!x.dataset.plan)return;const arr=x.dataset.plan==='own'?plannerOwn:plannerOpp,i=+x.dataset.i;while(arr.length<=i)arr.push({name:'',level:50,moves:[]});const field=x.dataset.field;arr[i][field]=field==='moves'?x.value.split(',').map(s=>s.trim().toLowerCase().replace(/\s+/g,'-')).filter(Boolean).slice(0,4):field==='level'?Math.max(1,Math.min(100,Number(x.value)||50)):x.value.trim().toLowerCase().replace(/\s+/g,'-')}
+function renderPlannerSlots(id,entries,own){
+ const container=$(id);
+ // Retain open cards when the selection is refreshed without losing work.
+ const open=new Set([...container.querySelectorAll('details.td63-slot[open]')].map(d=>Number(d.dataset.i)));
+ container.innerHTML=Array.from({length:6},(_,i)=>{
+  const e=entries[i]||{name:'',level:50,moves:[]},name=pretty(e.name||'Empty slot');
+  const lvl=Number(e.level)||50,moveCount=(e.moves||[]).length;
+  return `<details class="plan-slot td63-slot" data-i="${i}" ${open.has(i)?'open':''}><summary class="td63-slot-summary"><strong>#${i+1} · ${safe(name)}</strong><span>${e.name?'Lv '+lvl+' · '+moveCount+' move'+(moveCount===1?'':'s'):'Tap to add Pokémon'}</span><span class="td63-chevron" aria-hidden="true">⌄</span></summary><div class="td63-slot-fields"><label>Pokémon<input data-plan="${own?'own':'opp'}" data-i="${i}" data-field="name" value="${safe(e.name)}" placeholder="Pokémon"></label><label>Lv<input type="number" min="1" max="100" data-plan="${own?'own':'opp'}" data-i="${i}" data-field="level" value="${lvl}"></label><label>Moves (comma-separated)<input data-plan="${own?'own':'opp'}" data-i="${i}" data-field="moves" value="${safe((e.moves||[]).join(', '))}" placeholder="Move 1, Move 2…"></label></div></details>`;
+ }).join('');
+}
+function plannerEdit(e){const x=e.target;if(!x.dataset.plan)return;const arr=x.dataset.plan==='own'?plannerOwn:plannerOpp,i=+x.dataset.i;while(arr.length<=i)arr.push({name:'',level:50,moves:[]});const field=x.dataset.field;arr[i][field]=field==='moves'?x.value.split(',').map(s=>s.trim().toLowerCase().replace(/\s+/g,'-')).filter(Boolean).slice(0,4):field==='level'?Math.max(1,Math.min(100,Number(x.value)||50)):x.value.trim().toLowerCase().replace(/\s+/g,'-');
+ const slot=x.closest('.td63-slot'),summary=slot?.querySelector('.td63-slot-summary');
+ if(summary){const item=arr[i],title=summary.querySelector('strong'),meta=summary.querySelector('span');
+  if(title)title.textContent='#'+(i+1)+' · '+pretty(item.name||'Empty slot');
+  if(meta)meta.textContent=item.name?'Lv '+(Number(item.level)||50)+' · '+(item.moves||[]).length+' moves':'Tap to add Pokémon';
+ }}
 $('planOwn').addEventListener('input',plannerEdit);$('planOpp').addEventListener('input',plannerEdit);
 if(!$('planMode').querySelector('[value="gym"]'))$('planMode').querySelector('[value="elite"]').insertAdjacentHTML('beforebegin','<option value="gym">Gym Leaders</option>');
+if(!$('planMode').querySelector('[value="story"]'))$('planMode').querySelector('[value="custom"]').insertAdjacentHTML('beforebegin','<option value="story">Story / Special Battles</option>');
 $('planMode').parentElement.firstChild.textContent='Opponent category';
 $('planVersion').parentElement.firstChild.textContent='Battle version';
 $('planGame').onchange=syncPlanner;$('planMode').onchange=syncPlanner;$('planTrainer').onchange=()=>{loadPlannerRoster();const note=$('eliteNote');if(note){const double=$('planMode').value==='gym'&&$('planTrainer').value==='Tate & Liza';note.dataset.double=String(double);if(double&&!note.textContent.includes('double battle'))note.insertAdjacentHTML('beforeend',' <b>Tate &amp; Liza is a double battle; planner calculations remain individual.</b>')}};$('planVersion').onchange=loadPlannerRoster;$('planTeam').onchange=()=>{const t=selectedTeam('planTeam');if(t){$('planGame').value=t.game;syncPlanner()}else importPlannerTeam()};
@@ -658,14 +746,14 @@ function renderPlannerBattle(own,opp,gen){
    const best=attacks[0]||null;
    return {a,attacks,incoming,worst,best,score:(best?.value??0)/(Math.max(0,worst??0)+25)};
   }).sort((a,b)=>b.score-a.score);
-  return `<section class="planner-opponent"><div class="planner-opponent-heading"><div class="planner-opponent-number">${oi+1}</div><div class="planner-opponent-art"><img src="${safe(plannerPortrait(d))}" alt=""></div><div><small>OPPONENT ${oi+1} OF ${opp.length}</small><h3>${safe(d.name)} <span>Lv ${d.level}</span></h3><div class="pills">${d.types.map(pill).join('')}</div></div></div><div class="planner-opponent-moves"><b>Opponent moves:</b> ${d.moves.length?d.moves.map(m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`).join(' '):'<span class="note">Unknown — defensive risk cannot be evaluated</span>'}</div><h4 class="section-label">▥ YOUR TEAM · BEST MATCHUPS</h4>${ranks.map((r,i)=>{
+  return `<details class="planner-opponent td63-opponent"><summary class="planner-opponent-heading td63-opponent-heading"><div class="planner-opponent-number">${oi+1}</div><div class="planner-opponent-art"><img src="${safe(plannerPortrait(d))}" alt=""></div><div><small>OPPONENT ${oi+1} OF ${opp.length}</small><h3>${safe(d.name)} <span>Lv ${d.level}</span></h3><div class="pills">${d.types.map(pill).join('')}</div></div><span class="td63-chevron" aria-hidden="true">⌄</span></summary><div class="td63-opponent-body"><div class="planner-opponent-moves"><b>Opponent moves:</b> ${d.moves.length?d.moves.map(m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`).join(' '):'<span class="note">Unknown — defensive risk cannot be evaluated</span>'}</div><h4 class="section-label">▥ YOUR TEAM · BEST MATCHUPS</h4>${ranks.map((r,i)=>{
     const b=r.best;
     const headline=b?`<div class="recommended-move"><small>⚔ BEST MOVE VS ${safe(d.name).toUpperCase()}</small><strong>${safe(b.m.name)}</strong><span>${moveStats(b.m)} · ${effectText(b.effectiveness)} type · ${r.a.types.includes(b.m.type)?'STAB':'No STAB'} · ${plannerDamageLabel(r.a,d,b.m,gen)}</span></div>`:'<div class="recommended-move"><small>BEST MOVE</small><strong>No fixed-power attacks saved</strong></div>';
     const risk=r.worst===null?'Unknown':r.worst>=b?.value?'High risk':'Compare moves';
     const detail=r.attacks.length?r.attacks.map(x=>`<div class="learn-row"><b>${safe(x.m.name)}</b>${pill(x.m.type)}<span>${effectText(x.effectiveness)} · ${plannerDamageLabel(r.a,d,x.m,gen)}</span></div>`).join(''):'<p class="note">No fixed-power attacks available.</p>';
     const defense=r.incoming.length?`<h4>Opponent attacks against ${safe(r.a.name)}</h4>`+r.incoming.map(x=>`<div class="learn-row"><b>${safe(x.m.name)}</b><span>${plannerDamageLabel(d,r.a,x.m,gen)}</span></div>`).join(''):'<p class="note">Opponent move damage unknown or no fixed-power attacks.</p>';
-    return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity"><div class="rank-portrait"><img src="${safe(plannerPortrait(r.a))}" alt=""></div><div class="rank-info"><strong>${safe(r.a.name)} · Lv ${r.a.level}</strong><div class="pills">${r.a.types.map(pill).join('')}</div></div></div><div class="rank-risk">${risk}</div></div>${headline}<details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${detail}${defense}</details></article>`
-   }).join('')}</section>`
+    return `<details class="card rank-card td63-rank ${i===0?'rank-winner':''}"><summary class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity"><div class="rank-portrait"><img src="${safe(plannerPortrait(r.a))}" alt=""></div><div class="rank-info"><strong>${safe(r.a.name)} · Lv ${r.a.level}</strong><div class="pills">${r.a.types.map(pill).join('')}</div></div></div><div class="rank-risk">${risk}</div><span class="td63-chevron" aria-hidden="true">⌄</span></summary><div class="td63-rank-body">${headline}<details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${detail}${defense}</details></div></details>`
+   }).join('')}</div></details>`
  }).join('')+disclaimer
 }
 $('planAnalyze').onclick=async()=>{const result=$('planResults');result.textContent='Loading Pokémon and move data…';const gen=gameGeneration($('planGame').value);try{
@@ -675,6 +763,50 @@ $('planAnalyze').onclick=async()=>{const result=$('planResults');result.textCont
  result.innerHTML=renderPlannerBattle(own,opp,gen);
  }catch(e){result.textContent='Could not load battle data. Check Pokémon and move names and your connection.'}
 };
+
+// V63 — compact editor + results controls; collapsing never clears entered data.
+(function installPlannerDisclosures(){
+ const style=document.createElement('style');style.id='td63-disclosure-style';style.textContent=`
+ #td62SmartMoves{margin-top:15px;margin-bottom:17px}
+ #td62SmartMoves .td63-support-desc{font-size:.77rem;line-height:1.55;color:var(--muted);margin-top:5px}
+ #td62SmartMoves .td63-support-desc b{color:var(--text,#eee)}
+ #plannerPage .td63-slot{display:block;padding:0;min-width:0;overflow:hidden}
+ #plannerPage .td63-slot>summary,#plannerPage .td63-opponent>summary,#plannerPage .td63-rank>summary{list-style:none;cursor:pointer;user-select:none}
+ #plannerPage .td63-slot>summary::-webkit-details-marker,#plannerPage .td63-opponent>summary::-webkit-details-marker,#plannerPage .td63-rank>summary::-webkit-details-marker{display:none}
+ #plannerPage .td63-slot-summary{display:flex;align-items:center;gap:7px;min-height:55px;padding:10px 12px}
+ #plannerPage .td63-slot-summary>strong{flex:1;min-width:0;font-size:.91rem}
+ #plannerPage .td63-slot-summary>span:not(.td63-chevron){font-size:.72rem;color:var(--muted);text-align:right;max-width:42%}
+ #plannerPage .td63-slot-fields{display:grid;gap:10px;padding:0 12px 12px}
+ #plannerPage .td63-chevron{font-size:1.15rem;color:var(--muted);transition:transform .17s ease;flex:0 0 auto}
+ #plannerPage details[open]>summary>.td63-chevron{transform:rotate(180deg)}
+ #plannerPage .td63-opponent{border:1px solid var(--edge);border-radius:12px;padding:0;margin:12px 0;overflow:hidden;background:var(--card)}
+ #plannerPage .td63-opponent-heading{padding:9px 12px;display:flex;align-items:center;gap:10px;margin:0}
+ #plannerPage .td63-opponent-heading>div:nth-child(3){flex:1;min-width:0}
+ #plannerPage .td63-opponent-body{padding:0 10px 12px}
+ #plannerPage .td63-rank{padding:0;overflow:hidden}
+ #plannerPage .td63-rank>summary{padding:8px 9px;min-height:96px;align-items:center}
+ #plannerPage .td63-rank .td63-chevron{margin-left:0}
+ #plannerPage .td63-rank-body{padding:0 10px 12px}
+ #plannerPage .td63-tools{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin:5px 0 9px}
+ #plannerPage .td63-tools button{font-size:.74rem;min-height:32px;padding:6px 9px}
+ #plannerPage .td63-tools .td63-section-label{margin-right:auto;font-size:.74rem;color:var(--muted)}
+ #plannerPage .td63-opponent>summary:focus-visible,#plannerPage .td63-rank>summary:focus-visible,#plannerPage .td63-slot>summary:focus-visible{outline:2px solid var(--accent,#ed3044);outline-offset:-2px}
+ #plannerPage .td63-rank:not([open]){box-shadow:none}
+ #plannerPage .td63-rank:not([open]) .rank-risk{align-self:center}
+ `;document.head.appendChild(style);
+ for(const [id,label] of [['planOwn','Your team'],['planOpp','Opponents'],['planResults','Results']]){
+  const node=document.getElementById(id);if(!node)continue;
+  if(id==='planOwn')node.insertAdjacentHTML('beforebegin','<p class="note td63-level-note">Saved teams do not store Pokémon levels. Imported Pokémon start at Lv 50; update each level for more useful estimates.</p>');
+  node.insertAdjacentHTML('beforebegin',`<div class="td63-tools" data-td63-controls="${id}"><span class="td63-section-label">${label}</span><button type="button" data-td63-action="expand" data-td63-for="${id}">Expand all</button><button type="button" data-td63-action="collapse" data-td63-for="${id}">Collapse all</button></div>`);
+ }
+ document.getElementById('plannerPage').addEventListener('click',event=>{
+  const btn=event.target.closest('[data-td63-action]');if(!btn)return;
+  const host=document.getElementById(btn.dataset.td63For);if(!host)return;
+  const expand=btn.dataset.td63Action==='expand';
+  host.querySelectorAll('details.td63-slot,details.td63-opponent,details.td63-rank,details.expand-details').forEach(d=>d.open=expand);
+ });
+})();
+
 // TM/HM compatibility uses exact version-group machine data, not species move presence alone.
 let machineEntries=[];
 function machineLabel(m){return m.item.toUpperCase()+' — '+pretty(m.move)}
