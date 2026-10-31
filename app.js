@@ -655,7 +655,7 @@ for(const id of ['foeInput','foeInput2']){
  g.innerHTML=games.map(x=>`<option value="${safe(x)}">${safe(x)}</option>`).join('');
  g.value=games.includes('Emerald')?'Emerald':games[0];
  const allTypes=Object.keys(chart);
- let selected=['water','ground'];
+ let selected=[];
  const typesForGen=gen=>allTypes.filter(t=>gen>=6||t!=='fairy').filter(t=>gen>=2||(t!=='dark'&&t!=='steel'));
  const chip=(t,m)=>`<span class="tc-chip">${pill(t)} <small>${effectText(m)}</small></span>`;
  function group(title,items,empty='None'){
@@ -674,9 +674,13 @@ for(const id of ['foeInput','foeInput2']){
   // Offensive results describe either selected type used individually, not a combined attack.
   const offense=selected.map(t=>({type:t,rows:valid.map(d=>({t:d,m:matchup(t,[d],gen)}))}));
   const select=(rows,test)=>rows.filter(x=>test(x.m)).sort((a,b)=>a.t.localeCompare(b.t));
-  results.innerHTML=`<article class="card"><h3>Defensive matchups</h3><p class="note tc-explain">When a ${selected.map(pretty).join(' / ')} Pokémon is attacked, damage multipliers from both types combine.</p>
-   ${group('Weak to · 2× / 4×',select(defense,m=>m>1))}
-   ${group('Resists · ½× / ¼×',select(defense,m=>m>0&&m<1))}
+  const defenseExplanation=selected.length===1
+   ? `When a ${pretty(selected[0])}-type Pokémon is attacked, damage depends on the attacking move's type.`
+   : `When a ${selected.map(pretty).join(' / ')}-type Pokémon is attacked, the effectiveness multipliers for both defending types combine.`;
+  const multiplierLabel=(rows,filter)=>[...new Set(rows.filter(x=>filter(x.m)).map(x=>effectText(x.m)))].sort((a,b)=>parseFloat(b)-parseFloat(a)).join(' / ');
+  results.innerHTML=`<article class="card"><h3>Defensive matchups</h3><p class="note tc-explain">${defenseExplanation}</p>
+   ${group(`Weak to · ${multiplierLabel(defense,m=>m>1)||'None'}`,select(defense,m=>m>1))}
+   ${group(`Resists · ${multiplierLabel(defense,m=>m>0&&m<1)||'None'}`,select(defense,m=>m>0&&m<1))}
    ${group('Immune · 0×',select(defense,m=>m===0))}
    <details><summary>Neutral incoming attacks</summary>${group('Normal damage · 1×',select(defense,m=>m===1))}</details>
   </article>
@@ -702,7 +706,7 @@ for(const id of ['foeInput','foeInput2']){
  trigger.addEventListener('click',()=>{
   document.querySelectorAll('main > section').forEach(el=>el.hidden=el!==page);
   document.querySelectorAll('.main-tabs button').forEach(b=>b.classList.toggle('selected',b.id==='moreTab'));
-  page.hidden=false;render();window.scrollTo(0,0);
+  selected=[];page.hidden=false;render();window.scrollTo(0,0);
  });
  document.getElementById('backTypeChecker').addEventListener('click',()=>{hide();window.takActivate(3)});
  render();
