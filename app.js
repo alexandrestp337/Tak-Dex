@@ -1069,11 +1069,13 @@ for(const id of ['foeInput','foeInput2']){
  $('td56Back').onclick=()=>{page.hidden=true;open=false;revision++;run++;closeSuggestions();window.takActivate(3)};
  for(const tab of ['teamsTab','battleTab','dexTab','moreTab'])$(tab).addEventListener('click',()=>{page.hidden=true;open=false;revision++;run++;closeSuggestions()});
 })();
+// V60 — one game pack now includes artwork for offline Pokédex and battles.
 // V59 — one selectable game, one consolidated data download; safe cleanup.
 // Keep existing reference and encounter cache formats for backwards compatibility.
 (function initOfflineDataV59(){
  const more=$('morePage');if(!more||document.getElementById('td59OfflinePage'))return;
- const REF_PREFIX='takdex-reference-v58-',BASE='https://pokeapi.co/api/v2/';
+ const REF_PREFIX='takdex-reference-v58-',ART_PREFIX='takdex-artwork-v60-',BASE='https://pokeapi.co/api/v2/';
+ const SPRITES_ROOT='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
  const CSV_ROOT='https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/';
  const LEGACY=more.querySelector('.offline-card');if(LEGACY)LEGACY.remove();
  const launch=document.createElement('button');launch.type='button';launch.className='tool-link';launch.id='td59OpenOffline';launch.textContent='↓ Offline Data ›';
@@ -1081,17 +1083,17 @@ for(const id of ['foeInput','foeInput2']){
  const footer=document.querySelector('footer');if(footer&&footer.textContent.includes('optional full download'))footer.textContent=footer.textContent.replace('offline requires the optional full download','choose your game under More → Offline Data');
  const page=document.createElement('section');page.id='td59OfflinePage';page.hidden=true;
  page.innerHTML=`<div class="bar"><h2>Offline Data</h2><button type="button" id="td59Back">← More</button></div>
- <p class="note">Choose a game and download its available reference and encounter data together. Games without a pack remain usable online.</p>
+ <p class="note">Download a game’s available Pokédex, moves, encounters and artwork in one pack. Games without a pack remain usable online.</p>
  <div class="tool-card"><label for="td59Game">Choose game<select id="td59Game">${gameOptions}</select></label>
  <p class="note" id="td59Legend">🟢 Downloaded · 🟠 Partial · ⚪ Not downloaded</p></div>
  <div class="card td59-card"><h3 id="td59Name">Game data pack</h3>
- <p class="note">Pokémon stats, types, moves, learnsets, evolutions, TM/HM details and indexed wild encounters. Type calculations and available trainer rosters are included in the app itself. Artwork and some game-specific availability records may still need internet.</p>
+ <p class="note">Pokémon stats, types, moves, learnsets, evolutions, TM/HM data, wild encounters and Pokémon artwork. Type calculations and currently supported trainer rosters are built into the app. Some game-specific records are still unverified.</p>
  <p id="td59State" class="note" aria-live="polite">Checking downloaded data…</p>
  <p id="td59Progress" class="note" aria-live="polite"></p>
  <div class="td59-actions"><button type="button" id="td59Download">Download game pack</button><button type="button" class="td59-delete" id="td59Delete">Remove game pack</button></div></div>
  <div class="card td59-card"><h3>Saved game packs</h3><div id="td59Saved" class="note">Checking storage…</div>
  <button type="button" class="td59-delete td59-clear" id="td59Clear">Clear all downloaded packs and old offline data</button></div>
- <p class="note">A green indicator means both supported data components are saved, not that every location or trainer in that version is verified. Downloads may be large and can be resumed. Removing data does not delete saved teams or settings.</p>`;
+ <p class="note">A green indicator means reference, encounter index and artwork files are saved, not that every Pokémon is obtainable or all encounter conditions are verified. Artwork downloads can use significant storage. You can resume partial downloads without deleting teams.</p>`;
  document.querySelector('main').appendChild(page);
  const css=document.createElement('style');css.textContent=`
  #td59OfflinePage .td59-card{margin:13px 0;padding:16px}
@@ -1111,6 +1113,60 @@ for(const id of ['foeInput','foeInput2']){
  const refKey=g=>new URL('takdex-reference-v58/'+slug(g)+'.json',/^https?:/.test(location.href)?location.href:'https://takdex.invalid/').href;
  const caps=[151,251,386,493,649,721,809,905,1025];
  const maxFor=g=>caps[gameGeneration(g)-1]||1025;
+ const artCacheName=g=>ART_PREFIX+slug(g);
+ const artKey=g=>new URL('takdex-artwork-v60/'+slug(g)+'.json',/^https?:/.test(location.href)?location.href:'https://takdex.invalid/').href;
+ async function cachedArtwork(g){
+  if(!('caches' in window)||!(await caches.keys()).includes(artCacheName(g)))return null;
+  try{const r=await(await caches.open(artCacheName(g))).match(artKey(g));if(!r)return null;
+   const meta=await r.json();return meta.schema===60&&meta.game===g?meta:null;
+  }catch{return null}
+ }
+ // Pack artwork is intentionally stored under the ORIGINAL image URLs, so all screens
+ // (Pokédex, evolutions, Battle, 6v6, comparison and explorer) share one image cache.
+ async function downloadArtwork(g,report){
+  if(!('caches' in window))throw Error('Offline image storage unavailable');
+  const store=await caches.open(artCacheName(g));
+  const cap=maxFor(g),urls=[];
+  for(let id=1;id<=cap;id++){
+   urls.push(SPRITES_ROOT+'other/official-artwork/'+id+'.png');
+   urls.push(SPRITES_ROOT+id+'.png');
+  }
+  let completed=0,failed=0,saved=0,bytes=0,next=0;
+  await store.put(artKey(g),new Response(JSON.stringify({schema:60,game:g,complete:false,expected:urls.length,completed:0,saved:0,failed:0}),{headers:{'Content-Type':'application/json'}}));
+  const progress=()=>report('Artwork '+completed+'/'+urls.length+' images · '+failed+' unavailable');
+  progress();
+  async function worker(){
+   while(next<urls.length){const url=urls[next++];let hit=false;
+    try{
+     const old=await store.match(url);
+     if(old){hit=true;saved++}
+     else {
+      let lastError;
+      for(let attempt=0;attempt<2&&!hit;attempt++){
+       try{
+        const response=await fetch(url,{mode:'cors',cache:'no-store'});
+        if(!response.ok)throw Error('Image HTTP '+response.status);
+        if(!((response.headers.get('content-type')||'').toLowerCase().startsWith('image/')))throw Error('Not an image');
+        await store.put(url,response.clone());
+        bytes+=Number(response.headers.get('content-length'))||0;
+        saved++;hit=true;
+       }catch(e){lastError=e}
+      }
+      if(!hit)throw lastError||Error('Image unavailable');
+     }
+    }catch(e){failed++}
+    completed++;
+    if(completed%12===0||completed===urls.length)progress();
+   }
+  }
+  await Promise.all(Array.from({length:Math.min(5,urls.length)},worker));
+  const meta={schema:60,game:g,complete:failed===0,expected:urls.length,completed,saved,failed,bytes,created:new Date().toISOString()};
+  await store.put(artKey(g),new Response(JSON.stringify(meta),{headers:{'Content-Type':'application/json'}}));
+  window.dispatchEvent(new Event('td58-pack-update'));
+  if(failed)throw Error(failed+' image files could not be downloaded. Retry to resume.');
+  return meta;
+ }
+ async function removeArtwork(g){if('caches' in window)await caches.delete(artCacheName(g));window.takDexArtV60?.reset?.();}
  const taskState={busy:false,token:0};let visible=false;
  const fetchJSON=async url=>{const res=await fetch(url,{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status+' · '+url);return res.json()};
  const rows=text=>{const lines=text.trim().split(/\r?\n/),head=lines.shift().split(',');return lines.filter(Boolean).map(line=>{const parts=line.split(',');return Object.fromEntries(head.map((h,i)=>[h,(parts[i]||'').trim()]))})};
@@ -1182,7 +1238,7 @@ for(const id of ['foeInput','foeInput2']){
  async function removeReference(g){if('caches' in window)await caches.delete(refCacheName(g));window.dispatchEvent(new Event('td58-pack-update'))}
 
  // A pack is 'downloaded' only if both indexes have positive coverage and reference download completed.
- function statusFor(ref,enc){return ref?.complete&&enc?.hasSource?'ready':ref||enc?'partial':'missing'}
+ function statusFor(ref,enc,art){return ref?.complete&&enc?.hasSource&&art?.complete?'ready':ref||enc||art?'partial':'missing'}
  const iconFor={ready:'🟢',partial:'🟠',missing:'⚪'};
  let statusMap=new Map(games.map(g=>[g,'missing']));
  let statusVersion=0,refreshing=false;
@@ -1203,8 +1259,8 @@ for(const id of ['foeInput','foeInput2']){
   refreshing=true;const my=++statusVersion;
   try{
    const records=await Promise.all(games.map(async g=>{
-    const [ref,enc]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g)]);
-    return [g,statusFor(ref,enc)];
+    const [ref,enc,art]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g),cachedArtwork(g)]);
+    return [g,statusFor(ref,enc,art)];
    }));
    statusMap=new Map(records);
    decorateGameSelects();
@@ -1218,7 +1274,7 @@ for(const id of ['foeInput','foeInput2']){
  window.addEventListener('td58-pack-update',()=>refreshStatusMap());
  window.takDexOfflineV59={refreshIndicators:refreshStatusMap};
 
- async function getState(g){const [ref,enc]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g)]);return {ref,enc,status:statusFor(ref,enc)}}
+ async function getState(g){const [ref,enc,art]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g),cachedArtwork(g)]);return {ref,enc,art,status:statusFor(ref,enc,art)}}
  function word(status){return status==='ready'?'Downloaded':status==='partial'?'Partial — resume available':'Not downloaded'}
  async function hasLegacyCache(){
   try{const keys=await caches.keys();if(keys.some(k=>['takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k)))return true}catch{}
@@ -1228,14 +1284,15 @@ for(const id of ['foeInput','foeInput2']){
  async function update(showAll=true){
   const g=game.value,token=++taskState.token;
   $('td59Name').textContent='Pokémon '+g+' — game data pack';
-  const {ref,enc,status:packStatus}=await getState(g);
+  const {ref,enc,art,status:packStatus}=await getState(g);
   if(token!==taskState.token)return;
   state.textContent=iconFor[packStatus]+' '+word(packStatus)
    +' · Reference: '+(ref?(ref.complete?'ready':'incomplete'):'missing')
-   +' · Encounters: '+(enc?(enc.hasSource?'indexed':'coverage unavailable'):'missing');
+   +' · Encounters: '+(enc?(enc.hasSource?'indexed':'coverage unavailable'):'missing')
+   +' · Artwork: '+(art?(art.complete?'ready':(art.saved||0)+'/'+(art.expected||'?')+' images'):'missing');
   downloadBtn.textContent=packStatus==='ready'?'✓ '+g+' pack downloaded':packStatus==='partial'?'Resume '+g+' pack':'Download '+g+' pack';
   downloadBtn.disabled=taskState.busy||packStatus==='ready';
-  deleteBtn.disabled=taskState.busy||(!ref&&!enc);
+  deleteBtn.disabled=taskState.busy||(!ref&&!enc&&!art);
   clearBtn.disabled=taskState.busy;
   if(showAll){const saved=[];for(const name of games){const data=await getState(name);if(data.status!=='missing')saved.push({name,...data});}
    if(token!==taskState.token)return;
@@ -1260,6 +1317,10 @@ for(const id of ['foeInput','foeInput2']){
     progress.textContent='Downloading '+g+' encounter locations…';
     try{await window.takDexEncounterV55.refresh(g,txt=>progress.textContent='↻ '+txt)}catch(e){errors.push('Encounters: '+(e.message||e))}
    }
+   if(!existing.art?.complete){
+    progress.textContent='Downloading '+g+' Pokémon artwork…';
+    try{await downloadArtwork(g,txt=>progress.textContent='↻ '+txt)}catch(e){errors.push('Artwork: '+(e.message||e))}
+   }
    const final=await getState(g);
    progress.textContent=errors.length?'⚠ '+errors.join(' | '):final.status==='ready'?'✓ '+g+' game data saved.':'⚠ Pack is partial; some source data is missing. Retry to resume.';
   }finally{setBusy(false);await refreshStatusMap();await update()}
@@ -1270,7 +1331,7 @@ for(const id of ['foeInput','foeInput2']){
   if(existing.status==='missing')return;
   if(!window.confirm('Remove the downloaded '+g+' game pack?\n\nThis will delete its reference and encounter records. Saved teams and settings will NOT be deleted.'))return;
   setBusy(true);
-  try{await removeReference(g);await window.takDexEncounterV55.remove(g);progress.textContent='Removed '+g+' game data.'}
+  try{await removeReference(g);await window.takDexEncounterV55.remove(g);await removeArtwork(g);progress.textContent='Removed '+g+' game data and artwork.'}
   catch(e){progress.textContent='⚠ Could not remove '+g+': '+(e.message||e)}
   finally{setBusy(false);await refreshStatusMap();await update()}
  }
@@ -1283,10 +1344,11 @@ for(const id of ['foeInput','foeInput2']){
    // Clearing the catalog's in-memory map matters: otherwise removed games remain usable until reload.
    await window.takDexEncounterV55.clearAll();
    if('caches' in window){for(const k of await caches.keys()){
-    if(k.startsWith(REF_PREFIX)||['takdex-encounter-catalog-v55','takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k))await caches.delete(k);
+    if(k.startsWith(REF_PREFIX)||k.startsWith(ART_PREFIX)||['takdex-encounter-catalog-v55','takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k))await caches.delete(k);
    }}
    try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&(key.startsWith('pt-v2:')||key==='takdex-offline-full-v26'))localStorage.removeItem(key)}}catch{}
-   progress.textContent='✓ Downloaded data cleared. Your saved teams and preferences were kept.';
+   window.takDexArtV60?.reset?.();
+   progress.textContent='✓ Downloaded data and artwork cleared. Your saved teams and preferences were kept.';
   }catch(e){progress.textContent='⚠ Cleanup was incomplete: '+(e.message||e)}
   finally{setBusy(false);await refreshStatusMap();await update()}
  }
@@ -1300,4 +1362,66 @@ for(const id of ['foeInput','foeInput2']){
  for(const tab of ['teamsTab','battleTab','dexTab','moreTab'])$(tab).addEventListener('click',()=>{page.hidden=true;visible=false});
  window.addEventListener('td58-pack-update',()=>{if(visible&&!taskState.busy)update()});
  decorateGameSelects();refreshStatusMap();
+})();
+
+
+// V60 — retrieve per-game downloaded images for all Pokémon views in airplane mode.
+// A normal <img> tag cannot directly read CacheStorage; a cached Response is converted
+// to an object URL and swapped into the image when offline (or after network failure).
+(function initOfflineArtworkV60(){
+ const CACHE_PREFIX='takdex-artwork-v60-';
+ const blobURLs=new Map(),pending=new Map();
+ const allowed=url=>{try{const u=new URL(url,location.href);return u.hostname==='raw.githubusercontent.com'&&u.pathname.startsWith('/PokeAPI/sprites/master/sprites/pokemon/')&&u.pathname.endsWith('.png')}catch{return false}};
+ function reset(){for(const url of blobURLs.values())URL.revokeObjectURL(url);blobURLs.clear();pending.clear()}
+ async function resolve(src){
+  if(!allowed(src))return null;
+  if(blobURLs.has(src))return blobURLs.get(src);
+  if(pending.has(src))return pending.get(src);
+  const task=(async()=>{
+   if(!('caches' in window))return null;
+   const keys=(await caches.keys()).filter(k=>k.startsWith(CACHE_PREFIX));
+   // Prefer the requested artwork, then fall back to the normal sprite when the
+   // API has no official artwork for a particular Pokémon (and vice versa).
+   const alternate=src.includes('/other/official-artwork/')
+    ?src.replace('/other/official-artwork/','/')
+    :src.replace('/sprites/pokemon/','/sprites/pokemon/other/official-artwork/');
+   for(const candidate of [src,alternate])for(const key of keys){
+    const res=await(await caches.open(key)).match(candidate);
+    if(res){const blob=await res.blob();if(blob.type&&!blob.type.startsWith('image/'))continue;
+     const url=URL.createObjectURL(blob);blobURLs.set(src,url);return url;
+    }
+   }
+   return null;
+  })().catch(()=>null).finally(()=>pending.delete(src));
+  pending.set(src,task);return task;
+ }
+ async function replace(img){
+  if(!img||img.tagName!=='IMG'||!img.isConnected)return;
+  const original=img.getAttribute('src')||'';
+  if(!allowed(original)||img.dataset.td60Pending===original)return;
+  img.dataset.td60Pending=original;
+  const local=await resolve(original);
+  if(img.isConnected&&(img.getAttribute('src')||'')===original&&local){
+   // Existing Pokédex evolution images hide on error; restore when cache succeeds.
+   img.style.visibility='';img.src=local;
+  }
+  if(img.dataset.td60Pending===original)delete img.dataset.td60Pending;
+ }
+ function scan(node){if(node.nodeType!==1)return;
+  if(node.tagName==='IMG')replace(node);
+  if(node.querySelectorAll)node.querySelectorAll('img').forEach(replace);
+ }
+ // Capture failures before inline onerror handlers hide evolution portraits.
+ document.addEventListener('error',e=>{if(e.target?.tagName==='IMG')replace(e.target)},true);
+ const observer=new MutationObserver(records=>{
+  if(navigator.onLine!==false)return;
+  for(const r of records){
+   if(r.type==='attributes')scan(r.target);
+   else for(const n of r.addedNodes)scan(n);
+  }
+ });
+ observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['src']});
+ if(navigator.onLine===false)scan(document.body);
+ window.addEventListener('offline',()=>scan(document.body));
+ window.takDexArtV60={reset,resolve};
 })();
