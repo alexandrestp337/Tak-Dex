@@ -2225,13 +2225,31 @@ for(const id of ['foeInput','foeInput2']){
  function normal(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,'-')}
  function openPage(which){['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage'].forEach(id=>$(id).hidden=true);page.hidden=which!=='move';report.hidden=which!=='coverage';['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===(source==='dex'?2:3)));window.scrollTo(0,0)}
  function back(){page.hidden=true;report.hidden=true;if(source==='dex'){$('dexPage').hidden=false;['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===2));requestAnimationFrame(()=>window.scrollTo(0,savedScroll))}else window.takActivate(3)}
- function launch(m,origin){source=origin||'more';savedScroll=window.scrollY;openPage('move');if(m){query.value=pretty(m);load(m)}else{res.innerHTML='<p class="note">Choose or search for a move above.</p>';query.focus()}}
+ function launch(m,origin){
+  source=origin||'more';
+  savedScroll=window.scrollY;
+  ++searchReq;
+  ++req;
+  query.value='';
+  suggest.hidden=true;
+  suggest.innerHTML='';
+  openPage('move');
+
+  if(m){
+    query.value=pretty(m);
+    load(m);
+  }else{
+    res.innerHTML='<p class="note">Choose or search for a move above.</p>';
+    query.focus();
+  }
+}
  button.addEventListener('click',()=>launch('', 'more'));
  $('td68MoveBack').addEventListener('click',back);
  ['teamsTab','battleTab','dexTab','moreTab'].forEach(id=>$(id).addEventListener('click',()=>{page.hidden=true;report.hidden=true},true));
  $('dexResult').addEventListener('click',e=>{const b=e.target.closest('[data-td68-move]');if(!b)return;e.preventDefault();tak67CaptureDexSections();launch(b.dataset.td68Move,'dex')});
  async function moveList(){if(!list){list=api('move?limit=2000').then(x=>(x.results||[]).map(v=>v.name)).catch(e=>{list=null;throw e});}return list}
  async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const values=(await moveList()).filter(n=>n.includes(q)).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" data-td68-select="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No match — try a different spelling.</p>'}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
+ query.addEventListener('click',()=>{if(query.value)query.select()});
  query.addEventListener('input',findSuggestions);query.addEventListener('focus',()=>{if(query.value.length>=2)findSuggestions()});
  suggest.addEventListener('click',e=>{const b=e.target.closest('[data-td68-select]');if(!b)return;query.value=pretty(b.dataset.td68Select);suggest.hidden=true;load(b.dataset.td68Select)});
  query.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=suggest.querySelector('[data-td68-select]');const name=!suggest.hidden&&first?first.dataset.td68Select:query.value;suggest.hidden=true;load(name)}if(e.key==='Escape')suggest.hidden=true});
@@ -2252,7 +2270,7 @@ for(const id of ['foeInput','foeInput2']){
   'double-edge':'Deals damage and also inflicts recoil on the user, unless a relevant ability prevents it.'
  };
  async function load(value){const name=normal(value),mine=++req;if(!name)return;query.value=pretty(name);res.innerHTML='<p class="note">Loading move details…</p>';
-  try{const data=await api('move/'+encodeURIComponent(name));if(mine!==req)return;const game=td66SavedGame()||'Emerald',selectedGen=gameGeneration(game),intro=generationFromName(data.generation?.name?.replace('generation-','')||'');
+  try{const data=await api('move/'+encodeURIComponent(name));if(mine!==req)return;const game=current?.game||null,selectedGen=game ? gameGeneration(game) : null,intro=generationFromName(data.generation?.name?.replace('generation-','')||'');
    const introduced=({'generation-i':1,'generation-ii':2,'generation-iii':3,'generation-iv':4,'generation-v':5,'generation-vi':6,'generation-vii':7,'generation-viii':8,'generation-ix':9})[data.generation?.name]||1;
    const present={power:data.power,accuracy:data.accuracy,pp:data.pp,damageClass:data.damage_class?.name,type:data.type?.name};
    const rows=[];for(let g=introduced;g<=9;g++){const item=statsAt(data,g);rows.push({...item,g})}
@@ -2265,7 +2283,7 @@ for(const id of ['foeInput','foeInput2']){
    const historicEffects=(data.effect_changes||[]).map(x=>({version:x.version_group?.name,text:english(x.effect_entries)?.effect||english(x.effect_entries)?.short_effect||''})).filter(x=>x.text);
    const extra=historicEffects.length?'<h4>Older effect descriptions</h4>'+historicEffects.map(x=>`<p class="td68-minor"><b>${safe(pretty(x.version||'Historical version'))}:</b> ${safe(x.text.replace(/\$effect_chance/g,Number.isFinite(data.effect_chance)?data.effect_chance+'%':'conditional chance'))}</p>`).join(''):'';
    const contact=(data.flags||[]).some(f=>f.name==='contact');
-   res.innerHTML=`<article class="card"><h2>${safe(pretty(data.name))} ${pill(present.type)}</h2><p class="note">${safe(pretty(present.damageClass))} · Introduced in Generation ${introduced}</p><div class="td68-facts">${[['Power',statDesc(present.power)],['Accuracy',Number.isFinite(present.accuracy)?present.accuracy+'%':'—'],['PP',statDesc(present.pp)]].map(([label,val])=>`<div class="td68-fact"><strong>${val}</strong><small>${label}</small></div>`).join('')}</div><h3>What it does</h3><div class="td68-effect">${paragraphs(effectText)}</div>${extra}<p class="td68-minor">Target: ${safe(pretty(data.target?.name||'Unknown'))} · Priority: ${Number(data.priority)||0} · Contact: ${contact?'Yes':'No / unlisted'}</p><h3>Changes between generations</h3><p class="td68-minor">${changes} Older games may also have different battle mechanics; descriptions summarize confirmed differences where available.</p><div style="overflow-x:auto"><table class="td68-history"><thead><tr><th>Generation</th><th>PWR</th><th>ACC</th><th>PP</th><th>Category</th><th>Type</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.g===selectedGen?'td68-current':''}"><td>${row.g} ${row.g===selectedGen?'· '+safe(game):''}</td><td>${statDesc(row.power)}</td><td>${Number.isFinite(row.accuracy)?row.accuracy+'%':'—'}</td><td>${statDesc(row.pp)}</td><td>${safe(pretty(row.damageClass))}</td><td>${safe(pretty(row.type))}</td></tr>`).join('')}</tbody></table></div><p class="note">${selected?'Your selected game: '+safe(game)+' (Gen '+selectedGen+').':'This move was not introduced by '+safe(game)+' (Gen '+selectedGen+').'} Values are from the move database; a move’s presence in a game still needs checking in that game’s learnsets.</p></article>`;
+   res.innerHTML=`<article class="card"><h2>${safe(pretty(data.name))} ${pill(present.type)}</h2><p class="note">${safe(pretty(present.damageClass))} · Introduced in Generation ${introduced}</p><div class="td68-facts">${[['Power',statDesc(present.power)],['Accuracy',Number.isFinite(present.accuracy)?present.accuracy+'%':'—'],['PP',statDesc(present.pp)]].map(([label,val])=>`<div class="td68-fact"><strong>${val}</strong><small>${label}</small></div>`).join('')}</div><h3>What it does</h3><div class="td68-effect">${paragraphs(effectText)}</div>${extra}<p class="td68-minor">Target: ${safe(pretty(data.target?.name||'Unknown'))} · Priority: ${Number(data.priority)||0} · Contact: ${contact?'Yes':'No / unlisted'}</p><h3>Changes between generations</h3><p class="td68-minor">${changes} Older games may also have different battle mechanics; descriptions summarize confirmed differences where available.</p><div style="overflow-x:auto"><table class="td68-history"><thead><tr><th>Generation</th><th>PWR</th><th>ACC</th><th>PP</th><th>Category</th><th>Type</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.g===selectedGen?'td68-current':''}"><td>${row.g} ${row.g===selectedGen?'· '+safe(game):''}</td><td>${statDesc(row.power)}</td><td>${Number.isFinite(row.accuracy)?row.accuracy+'%':'—'}</td><td>${statDesc(row.pp)}</td><td>${safe(pretty(row.damageClass))}</td><td>${safe(pretty(row.type))}</td></tr>`).join('')}</tbody></table></div><p class="note">${!game?'No team selected — showing all generations.':selected?'Your selected game: '+safe(game)+' (Gen '+selectedGen+').':'This move was not introduced by '+safe(game)+' (Gen '+selectedGen+').'} Values are from the move database; a move’s presence in a game still needs checking in that game’s learnsets.</p></article>`;
   }catch(e){if(mine===req)res.innerHTML='<p class="error">Could not load that move. Check spelling or reconnect to download its record.</p>'}
  }
  // Reliable inventory of the 34 selectable games. Never mistake a missing download for no encounters.
