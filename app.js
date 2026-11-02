@@ -565,11 +565,12 @@ async function tak62RenderSmart(host,pokemon,game,isCurrent){
  const support=verified.filter(x=>x.hist.damageClass==='status'&&TAK62_SUPPORT.has(x.name)).sort((a,b)=>tak63SupportPriority(b,stats)-tak63SupportPriority(a,stats)).slice(0,4);
  const row=x=>{
   const method=tak62MoveMethodsText(x.details,x.machine);
-  const isStab=types.includes(x.hist.type);
+  const isStab=types.includes(x.hist.type)&&x.hist.damageClass!=='status';
   const category=x.hist.damageClass==='special'?'Special':x.hist.damageClass==='physical'?'Physical':'Status';
-  const pwr=Number.isFinite(x.hist.power)?'PWR '+x.hist.power+' · ':'';
+  const pwr=Number.isFinite(x.hist.power)?x.hist.power:'—';
   const acc=Number.isFinite(x.hist.accuracy)?x.hist.accuracy+'%':'—';
-  return `<div class="td62-row"><div class="td62-head"><button type="button" class="td68-move-link" data-td68-move="${safe(x.name)}">${safe(pretty(x.name))}</button>${x.hist.type?pill(x.hist.type):''}${isStab?'<span class="td62-stab">STAB</span>':''}</div><div class="td62-method">${safe(method)}</div><div class="td62-meta">${safe(pwr+category+' · ACC '+acc)}</div></div>`;
+  const pp=Number.isFinite(x.hist.pp)?x.hist.pp:'—';
+  return `<div class="td62-row td681-move-row"><div class="td681-move-head td681-move-head--advisor"><span class="td681-move-name-group"><button type="button" class="td68-move-link" data-td68-move="${safe(x.name)}">${safe(pretty(x.name))}</button>${isStab?'<span class="td62-stab td681-stab">STAB</span>':''}</span><span class="td681-type">${x.hist.type?pill(x.hist.type):''}</span></div><div class="td681-move-meta"><span>${safe(category)}</span><span>PWR ${safe(pwr)} · ACC ${safe(acc)} · PP ${safe(pp)}</span></div><div class="td62-method">${safe(method)}</div></div>`;
  };
  let html='<p class="note">Verified for <b>'+safe(game)+'</b> using this Pokémon’s game-specific learn methods. Attacks are ranked by an approximate base-stat, power, accuracy and STAB score—not simulated damage.</p>';
  html+='<h4>Suggested attacking moves</h4>'+(chosen.length?chosen.map(row).join(''):'<p class="note">No reliable fixed-power attack suggestions found for this game.</p>');
@@ -683,7 +684,7 @@ $('dexSearch').onclick=async()=>{
   const offensive=dexTypes.map(t=>({type:t,rows:Object.keys(colors).filter(d=>!(dexGen<6&&d==='fairy')&&!(dexGen<2&&['dark','steel'].includes(d))).map(d=>({t:d,m:matchup(t,[d],dexGen)}))}));
   const offenseRows=offensive.map(o=>`<div class="td66-offense-section"><h4>${pill(o.type)} · STAB attack type</h4>${[['Strong against',v=>v>1],['Not very effective',v=>v>0&&v<1],['No effect',v=>v===0]].map(([title,test])=>`<div class="td66-match-row"><strong>${title}</strong><div class="td66-match-pills">${o.rows.filter(x=>test(x.m)).map(x=>`${pill(x.t)} <span class="td66-mult">${effectText(x.m)}</span>`).join('')||'<span class="note">None</span>'}</div></div>`).join('')}</div>`).join('');
   const matchupHtml=`<details class="card td66-dex-section td66-type-match" data-dex-section="type" ${tak67DexSectionOpen('type')?'open':''}><summary>Type Strengths &amp; Weaknesses <span>⌄</span></summary><div class="td66-section-body"><h4>Defensive matchups</h4><p class="note">Incoming attack effectiveness · game-generation type chart · before abilities or items.</p>${matchGroup('Weak to',m=>m>1)}${matchGroup('Resistant to',m=>m>0&&m<1)}${matchGroup('Immune to',m=>m===0)}<details class="td66-neutral"><summary>Neutral attacks</summary>${matchGroup('1× incoming',m=>m===1)}</details><h4>Offensive STAB type coverage</h4><p class="note">These are type matchups against single-type opponents, not proof that a Pokémon knows an attack. Dual-type opponents can differ.</p>${offenseRows}</div></details>`;
-  result.innerHTML=`<section class="card td66-pokemon-card"><article class="dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${dexTypes.map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article>${matchupHtml}</section><details class="card td66-dex-section" data-dex-section="evolutions" ${tak67DexSectionOpen('evolutions')?'open':''}><summary>Evolutions <span>⌄</span></summary><div class="td66-section-body">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div></details><details class="card td66-dex-section" data-dex-section="learnset" ${tak67DexSectionOpen('learnset')?'open':''}><summary>Level-up learnset · ${safe(learnsetReference)} <span>⌄</span></summary><div class="td66-section-body">${details.length?details.map(m=>`<div class="learn-row"><b>Lv ${m.level}</b><button type="button" class="td68-move-link" data-td68-move="${safe(m.name)}">${safe(pretty(m.name))}</button>${m.type?pill(m.type):''}${moveStats(m)}</div>`).join(''):'No level-up moves listed for this version.'}</div></details><details class="card td62-smart" id="td62SmartMoves" data-dex-section="advisor" ${tak67DexSectionOpen('advisor')?'open':''}><summary>✦ Smart Move Advisor <span class="td62-caret" aria-hidden="true">▾</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(learnsetReference)}.</p></div></details><details class="card td66-dex-section" id="td56DexEncounters" data-dex-section="encounters" ${tak67DexSectionOpen('encounters')?'open':''}><summary>Encounter &amp; acquisitions · ${safe(game)} <span>⌄</span></summary><div class="td66-section-body"><p class="note">Checking encounter records…</p></div></details>`;
+  result.innerHTML=`<section class="card td66-pokemon-card"><article class="dex-entry"><img src="${safe(img)}" alt=""><div><h3>${safe(pretty(pokemon.name))}</h3><div class="pills">${dexTypes.map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article>${matchupHtml}</section><details class="card td66-dex-section" data-dex-section="evolutions" ${tak67DexSectionOpen('evolutions')?'open':''}><summary>Evolutions <span>⌄</span></summary><div class="td66-section-body">${evo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt="" onerror="this.style.visibility='hidden'"><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}<p class="note">Evolution availability and special requirements may differ by game. Requirements are shown from species data.</p></div></details><details class="card td66-dex-section" data-dex-section="learnset" ${tak67DexSectionOpen('learnset')?'open':''}><summary>Level-up learnset · ${safe(learnsetReference)} <span>⌄</span></summary><div class="td66-section-body">${details.length?details.map(m=>`<div class="td681-move-row td681-learn-row"><div class="td681-move-head"><b class="td681-level">Lv ${safe(m.level)}</b><span class="td681-move-name-group"><button type="button" class="td68-move-link" data-td68-move="${safe(m.name)}">${safe(pretty(m.name))}</button>${dexTypes.includes(m.type)&&m.damageClass!=='status'?'<span class="td62-stab td681-stab">STAB</span>':''}</span><span class="td681-type">${m.type?pill(m.type):''}</span></div><div class="td681-move-meta"><span>${safe(m.damageClass==='special'?'Special':m.damageClass==='physical'?'Physical':'Status')}</span><span>PWR ${safe(Number.isFinite(m.power)?m.power:'—')} · ACC ${safe(Number.isFinite(m.accuracy)?m.accuracy+'%':'—')} · PP ${safe(Number.isFinite(m.pp)?m.pp:'—')}</span></div></div>`).join(''):'No level-up moves listed for this version.'}</div></details><details class="card td62-smart" id="td62SmartMoves" data-dex-section="advisor" ${tak67DexSectionOpen('advisor')?'open':''}><summary>✦ Smart Move Advisor <span class="td62-caret" aria-hidden="true">▾</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(learnsetReference)}.</p></div></details><details class="card td66-dex-section" id="td56DexEncounters" data-dex-section="encounters" ${tak67DexSectionOpen('encounters')?'open':''}><summary>Encounter &amp; acquisitions · ${safe(game)} <span>⌄</span></summary><div class="td66-section-body"><p class="note">Checking encounter records…</p></div></details>`;
   tak62AttachAdvisor(result,pokemon,game==='All Games'?'Scarlet':game,requestId);
   // V56: render below learnset using a persistent element rather than innerHTML string replacement.
   const renderEncounter=html=>{
@@ -2131,6 +2132,58 @@ for(const id of ['foeInput','foeInput2']){
 })();
 
 
+// V68.1 — minimal saved-team chooser on the quick Battle page.
+(function initQuickBattleTeamV681(){
+ const battle=$('battlePage'), opponent=$('foeInput')?.closest('label');
+ if(!battle||!opponent||$('td681BattleTeam'))return;
+ const label=document.createElement('label');
+ label.id='td681BattleTeamLabel';label.textContent='Choose your team';
+ const select=document.createElement('select');select.id='td681BattleTeam';label.appendChild(select);
+ opponent.before(label);
+ const style=document.createElement('style');style.id='td681-style';style.textContent=`
+ #td681BattleTeamLabel{display:block;margin:12px 0 14px}
+ #td681BattleTeam{display:block;width:100%;margin-top:6px}
+ #dexResult .td681-move-row{padding:11px 0;border-bottom:1px solid var(--edge,#40434a);min-width:0}
+ #dexResult .td681-move-row:last-child{border-bottom:0}
+ #dexResult .td681-move-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center;min-width:0}
+ #dexResult .td681-move-head--advisor{grid-template-columns:minmax(0,1fr) auto}
+ #dexResult .td681-level{font-size:.78rem;white-space:nowrap;color:var(--muted,#999)}
+ #dexResult .td681-move-name-group{display:inline-flex;align-items:center;gap:5px;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden}
+ #dexResult .td681-move-name-group .td68-move-link{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
+ #dexResult .td681-stab{display:inline-flex;flex:none;white-space:nowrap;border:1px solid currentColor;border-radius:12px;font-size:.65rem;line-height:1.15;opacity:.85;padding:2px 5px}
+ #dexResult .td681-type{white-space:nowrap;justify-self:end;min-width:0}
+ #dexResult .td681-move-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:6px;font-size:.76rem;color:var(--muted,#aaa)}
+ #dexResult .td681-move-meta>span:last-child{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-size:.75rem}
+ #dexResult .td681-learn-row .td681-move-meta{padding-left:52px}
+ #dexResult .td681-move-row .td62-method{margin-top:6px;opacity:.85;font-size:.76rem}
+ #dexResult .td62-row.td681-move-row{padding:11px 0}
+ @media(max-width:360px){#dexResult .td681-move-head{grid-template-columns:38px minmax(0,1fr) auto;gap:5px}#dexResult .td681-learn-row .td681-move-meta{padding-left:43px}#dexResult .td681-move-meta{font-size:.71rem}#dexResult .td681-move-meta>span:last-child{font-size:.68rem}}
+ `;document.head.appendChild(style);
+ function refresh(){
+  const selected=select.value;
+  select.innerHTML='<option value="">Select saved team…</option>'+teamOptions().replace(/^<option[^>]*>[^<]*<\/option>/,'');
+  // The current loaded team is always selected even if it came from Team Builder.
+  const next=current?.id||selected;
+  select.value=teams.some(t=>t.id===next)?next:'';
+ }
+ select.addEventListener('change',async()=>{
+  const chosenTeam=teams.find(t=>t.id===select.value);
+  if(!chosenTeam){select.value=current?.id||'';return}
+  current=chosenTeam;
+  td66RememberGame(chosenTeam.game);
+  // Preserve the opponent while recalculating its historical typing for this game.
+  const oldName=foe?.name,otherName=foe2?.name;
+  try{
+   if(oldName){const p=await api('pokemon/'+oldName.toLowerCase().replace(/\s+/g,'-'));if(current!==chosenTeam)return;foe.types=historicalTypes(p,chosenTeam.game);const host=$('foePreview').querySelector('.pills');if(host)host.innerHTML=foe.types.map(pill).join('')}
+   if(otherName){const p=await api('pokemon/'+otherName.toLowerCase().replace(/\s+/g,'-'));if(current!==chosenTeam)return;foe2.types=historicalTypes(p,chosenTeam.game);const host=$('foePreview2').querySelector('.pills');if(host)host.innerHTML=foe2.types.map(pill).join('')}
+  }catch{foe=null;foe2=null;$('foeInput').value='';$('foePreview').innerHTML='';$('foeInput2').value='';$('foePreview2').innerHTML=''}
+  showBattle();enrichTeamMoves();
+ });
+ $('battleTab').addEventListener('click',refresh);
+ $('teams').addEventListener('click',()=>{if(!$('battlePage').hidden)refresh()});
+ refresh();
+})();
+
 // V68 — Move Checker. Shared PokeAPI move database, with explicit cross-generation differences.
 (function installMoveCheckerV68(){
  const main=document.querySelector('main'),more=$('morePage');if(!main||!more)return;
@@ -2138,6 +2191,9 @@ for(const id of ['foeInput','foeInput2']){
  more.querySelector('.tool-card')?.appendChild(button);
  const covButton=document.createElement('button');covButton.id='td68OpenCoverage';covButton.type='button';covButton.className='tool-link';covButton.textContent='▦ Database Coverage ›';
  more.querySelector('.tool-card')?.appendChild(covButton);
+ // Keep these as the final two More entries, regardless of earlier tool registrations.
+ const moreTools=more.querySelector('.tool-card'),offlineLink=$('td59OpenOffline');
+ if(moreTools&&offlineLink)moreTools.append(offlineLink,covButton);
  const page=document.createElement('section');page.id='td68MovePage';page.hidden=true;
  page.innerHTML=`<div class="bar"><h2>Move Checker</h2><button type="button" id="td68MoveBack">← Back</button></div>
  <p class="note">Full move effects and historical changes. Current stats appear first; your selected game's generation is highlighted below.</p>
@@ -2148,6 +2204,7 @@ for(const id of ['foeInput','foeInput2']){
  report.innerHTML=`<div class="bar"><h2>Database Coverage</h2><button type="button" id="td68CoverageBack">← More</button></div><p class="note">Actual coverage from built-in trainer rosters and locally downloaded data. A game with an indexed encounter list is not necessarily complete for gifts or special acquisitions. Unknown does not mean unobtainable.</p><div id="td68CoverageResults"></div>`;
  main.appendChild(report);
  const css=document.createElement('style');css.id='td68-style';css.textContent=`
+ #td68CoveragePage[hidden],#td68MovePage[hidden]{display:none!important}
  #td68MovePage .td68-search{position:relative}#td68MovePage #td68MoveSuggest{max-height:260px;overflow-y:auto;z-index:400;background:var(--card,#191c24)}
  #td68MovePage .td68-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}#td68MovePage .td68-fact{text-align:center;border:1px solid var(--edge,#444);border-radius:11px;padding:10px 4px;min-width:0}
  #td68MovePage .td68-fact strong{font-size:1.2rem;display:block}#td68MovePage .td68-fact small{color:var(--muted,#999)}
@@ -2221,7 +2278,8 @@ for(const id of ['foeInput','foeInput2']){
   }));
   host.innerHTML=`<p class="note">${parts.length} game selections · ${parts.filter(x=>x.encLoaded).length} local encounter indexes · ${parts.filter(x=>x.refLoaded).length} complete local reference packs. Not a claim of database completeness.</p><div class="card" style="padding:0">${parts.map(x=>`<div class="td68-coverage-row"><strong>${safe(x.game)}</strong><small>Encounter index: ${x.encLoaded?x.encounters+' wild encounter records':'not downloaded / coverage unknown'} · TM/HM reference: ${x.refLoaded?x.machines+' machines':'not downloaded / unverified'}</small><small>Built-in trainer presets: ${x.trainerCount} trainers / ${x.rosterEntries} listed Pokémon; ${x.trainerCount?'remaining moves may be unverified':'no verified preset in this release'}</small></div>`).join('')}</div>`;
  }
- covButton.addEventListener('click',showCoverage);$('td68CoverageBack').addEventListener('click',()=>window.takActivate(3));
+ covButton.addEventListener('click',showCoverage);$('td68CoverageBack').addEventListener('click',()=>{report.hidden=true;window.takActivate(3)});
+ ['teamsTab','battleTab','dexTab','moreTab'].forEach(id=>$(id).addEventListener('click',()=>{report.hidden=true}));
  // Raise the currently open autocomplete above adjacent rows; flip upward near viewport bottom.
  function placePopup(box){if(!box||box.hidden||!box.isConnected)return;const input=box.closest('.td65-move-search')?.querySelector('input')||box.closest('label')?.querySelector('input.td66-pokemon-input');if(!input)return;const r=input.getBoundingClientRect();const below=innerHeight-r.bottom;const above=r.top;box.classList.toggle('td68-open-up',below<175&&above>below);}
  const observer=new MutationObserver(records=>{for(const r of records){const e=r.target;if(e?.matches?.('#plannerPage .td65-move-options,#plannerPage .td66-pokemon-options'))placePopup(e);}});
