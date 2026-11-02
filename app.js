@@ -1280,7 +1280,7 @@ for(const id of ['foeInput','foeInput2']){
  function reuse(game,item){if(String(item).startsWith('hm'))return 'HM · reusable in games with HMs';if(['Brilliant Diamond','Shining Pearl','Scarlet','Violet'].includes(game))return 'Single-use copy · obtainable again through game systems';if(gameGeneration(game)<=4)return 'TM · single-use';if(game==='Sword'||game==='Shield')return String(item).startsWith('tr')?'TR · single-use':'TM · reusable';return 'TM · reusable (where the game has TMs)'}
  const tm=$('tmPage'),box=document.createElement('details');box.id='td65MachineGuide';box.className='card';box.style.cssText='margin:12px 0';
  $('tmResults').parentNode.insertBefore(box,$('tmResults'));
- function update(){const game=$('tmGame').value,item=machineEntries[Number($('tmMove').value)];if(!item){box.innerHTML='<summary>Where to get it <span>⌄</span></summary><div class="td66-section-body"><p class="note">Choose a TM/HM to see acquisition information.</p></div>';return}
+ function update(){const game=$('tmGame').value,item=machineEntries[Number($('tmMove').value)];if(!item){box.innerHTML='<summary>Where to get it</summary><div class="td66-section-body"><p class="note">Choose a TM/HM to see acquisition information.</p></div>';return}
   const source=reference[game],where=label(game,item.item),how=reuse(game,item.item);
   box.innerHTML=`<summary>Where to get ${safe(String(item.item).toUpperCase())} · ${safe(pretty(item.move))} <span>⌄</span></summary><div class="td66-section-body"><p><b>${where?safe(where):'Location not yet verified for '+safe(game)}</b></p><p class="note">${safe(how)}</p>`+(source?`<p class="note"><a href="${safe(source)}" target="_blank" rel="noopener noreferrer">Location reference ↗</a> · Select another machine to update.</p>`:'<p class="note">Unverified location; no location is invented for this game.</p>')+'</div>';
  }
@@ -1288,7 +1288,51 @@ for(const id of ['foeInput','foeInput2']){
  $('tmGame').addEventListener('change',()=>setTimeout(update,800));$('tmTeam').addEventListener('change',()=>setTimeout(update,800));$('tmCheck').addEventListener('click',()=>setTimeout(update,0));
  // Observe the hidden TM select, which is populated asynchronously by the existing loader.
  const obs=new MutationObserver(()=>update());obs.observe($('tmMove'),{childList:true,attributes:true,subtree:false});
- window.takDexMachineGuideV65={label,reuse,update};update();
+ async function findMoveLocation(game,move,data){
+  if(!game || !move)return null;
+
+  let machines=null;
+  try{
+    machines=await window.takDexReferenceV58?.machinesFor?.(game);
+  }catch{}
+
+  let item=machines?.find(m=>m.move===move)?.item;
+
+  if(!item && game==='Emerald'){
+    const n=emeraldMachines.indexOf(move);
+    const h=emeraldHMs.indexOf(move);
+    if(n>=0)item='tm'+String(n+1).padStart(2,'0');
+    else if(h>=0)item='hm'+String(h+1).padStart(2,'0');
+  }
+
+  if(!item && vg[game]){
+    const match=(data?.machines||[]).find(
+      m=>m.version_group?.name===vg[game]
+    );
+    if(match){
+      try{
+        const machine=await api(
+          match.machine.url.replace(API_ROOT,'')
+        );
+        item=machine.item?.name||null;
+      }catch{}
+    }
+  }
+
+  if(!item)return null;
+
+  return {
+    item,
+    location:label(game,item)||null,
+    reuse:reuse(game,item),
+    reference:reference[game]||null
+  };
+}
+
+window.takDexMachineGuideV65={
+  label,reuse,update,reference,findMoveLocation
+};
+update();
 })();
 
 // V55 — version-indexed encounter catalog. PokéAPI CSV data is parsed locally on demand.
@@ -2284,6 +2328,44 @@ for(const id of ['foeInput','foeInput2']){
    const extra=historicEffects.length?'<h4>Older effect descriptions</h4>'+historicEffects.map(x=>`<p class="td68-minor"><b>${safe(pretty(x.version||'Historical version'))}:</b> ${safe(x.text.replace(/\$effect_chance/g,Number.isFinite(data.effect_chance)?data.effect_chance+'%':'conditional chance'))}</p>`).join(''):'';
    const contact=(data.flags||[]).some(f=>f.name==='contact');
    res.innerHTML=`<article class="card"><h2>${safe(pretty(data.name))} ${pill(present.type)}</h2><p class="note">${safe(pretty(present.damageClass))} · Introduced in Generation ${introduced}</p><div class="td68-facts">${[['Power',statDesc(present.power)],['Accuracy',Number.isFinite(present.accuracy)?present.accuracy+'%':'—'],['PP',statDesc(present.pp)]].map(([label,val])=>`<div class="td68-fact"><strong>${val}</strong><small>${label}</small></div>`).join('')}</div><h3>What it does</h3><div class="td68-effect">${paragraphs(effectText)}</div>${extra}<p class="td68-minor">Target: ${safe(pretty(data.target?.name||'Unknown'))} · Priority: ${Number(data.priority)||0} · Contact: ${contact?'Yes':'No / unlisted'}</p><h3>Changes between generations</h3><p class="td68-minor">${changes} Older games may also have different battle mechanics; descriptions summarize confirmed differences where available.</p><div style="overflow-x:auto"><table class="td68-history"><thead><tr><th>Generation</th><th>PWR</th><th>ACC</th><th>PP</th><th>Category</th><th>Type</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.g===selectedGen?'td68-current':''}"><td>${row.g} ${row.g===selectedGen?'· '+safe(game):''}</td><td>${statDesc(row.power)}</td><td>${Number.isFinite(row.accuracy)?row.accuracy+'%':'—'}</td><td>${statDesc(row.pp)}</td><td>${safe(pretty(row.damageClass))}</td><td>${safe(pretty(row.type))}</td></tr>`).join('')}</tbody></table></div><p class="note">${!game?'No team selected — showing all generations.':selected?'Your selected game: '+safe(game)+' (Gen '+selectedGen+').':'This move was not introduced by '+safe(game)+' (Gen '+selectedGen+').'} Values are from the move database; a move’s presence in a game still needs checking in that game’s learnsets.</p></article>`;
+ 
+    // Move acquisition guide — reuse verified TM/HM locations.
+    const locationBox = document.createElement('details');
+    locationBox.className = 'card';
+    locationBox.style.margin = '12px 0';
+    locationBox.innerHTML = `
+      <summary><b>Where to get ${safe(pretty(data.name))}</b></summary>
+      <div class="td66-section-body">
+        <p class="note">Looking up acquisition information…</p>
+      </div>`;
+    res.appendChild(locationBox);
+
+    let acquisition = null;
+
+    if (game && introduced <= selectedGen) {
+      try {
+        acquisition = await window.takDexMachineGuideV65
+          ?.findMoveLocation(game, data.name, data);
+      } catch (error) {
+        console.warn('Move location lookup failed:', error);
+      }
+    }
+
+    if (mine !== req) return;
+
+    const where = acquisition?.location || null;
+    const body = locationBox.querySelector('.td66-section-body');
+
+    body.innerHTML = where
+      ? `<p><b>${safe(where)}</b></p>
+         <p class="note">${safe(acquisition.reuse)}</p>
+         ${acquisition.reference
+           ? `<p class="note"><a href="${safe(acquisition.reference)}"
+                target="_blank" rel="noopener noreferrer">
+                Location reference ↗</a></p>`
+           : ''}`
+      : '<p class="note">Unknown</p>';
+
   }catch(e){if(mine===req)res.innerHTML='<p class="error">Could not load that move. Check spelling or reconnect to download its record.</p>'}
  }
  // Reliable inventory of the 34 selectable games. Never mistake a missing download for no encounters.
