@@ -2340,31 +2340,40 @@ update();
       </div>`;
     res.appendChild(locationBox);
 
-    let acquisition = null;
-
-    if (game && introduced <= selectedGen) {
+    // A loaded team limits the guide to its game. Without one, show every
+    // game for which the existing acquisition guide has a verified location.
+    const locationGames = game
+      ? [game]
+      : ['Emerald', 'Platinum', 'FireRed', 'LeafGreen'];
+    const guide = window.takDexMachineGuideV65;
+    const locations = await Promise.all(locationGames.map(async (locationGame) => {
+      if (introduced > gameGeneration(locationGame)) return null;
       try {
-        acquisition = await window.takDexMachineGuideV65
-          ?.findMoveLocation(game, data.name, data);
+        const acquisition = await guide?.findMoveLocation(locationGame, data.name, data);
+        return acquisition?.location ? {game: locationGame, ...acquisition} : null;
       } catch (error) {
-        console.warn('Move location lookup failed:', error);
+        console.warn('Move location lookup failed for '+locationGame+':', error);
+        return null;
       }
-    }
+    }));
 
     if (mine !== req) return;
 
-    const where = acquisition?.location || null;
+    const known = locations.filter(Boolean);
     const body = locationBox.querySelector('.td66-section-body');
-
-    body.innerHTML = where
-      ? `<p><b>${safe(where)}</b></p>
-         <p class="note">${safe(acquisition.reuse)}</p>
-         ${acquisition.reference
-           ? `<p class="note"><a href="${safe(acquisition.reference)}"
-                target="_blank" rel="noopener noreferrer">
-                Location reference ↗</a></p>`
-           : ''}`
-      : '<p class="note">Unknown</p>';
+    body.innerHTML = known.length
+      ? known.map(acquisition => `
+          <div style="margin-bottom:14px">
+            <p><b>${safe(acquisition.game)}</b></p>
+            <p>${safe(String(acquisition.item).toUpperCase())} — ${safe(acquisition.location)}</p>
+            <p class="note">${safe(acquisition.reuse)}</p>
+            ${acquisition.reference
+              ? `<p class="note"><a href="${safe(acquisition.reference)}"
+                   target="_blank" rel="noopener noreferrer">Location reference ↗</a></p>`
+              : ''}
+          </div>
+        `).join('')
+      : '<p class="note">Unknown</p>';;
 
   }catch(e){if(mine===req)res.innerHTML='<p class="error">Could not load that move. Check spelling or reconnect to download its record.</p>'}
  }
