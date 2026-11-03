@@ -2194,6 +2194,9 @@ update();
  #dexResult .td681-level{font-size:.78rem;white-space:nowrap;color:var(--muted,#999)}
  #dexResult .td681-move-name-group{display:inline-flex;align-items:center;gap:5px;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden}
  #dexResult .td681-move-name-group .td68-move-link{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
+ /* Smart Move Advisor: keep full names visible beside STAB on narrow screens. */
+ #dexResult .td681-move-head--advisor .td681-move-name-group{white-space:normal;overflow:visible;flex-wrap:wrap;max-width:none}
+ #dexResult .td681-move-head--advisor .td681-move-name-group .td68-move-link{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;flex:0 1 auto}
  #dexResult .td681-stab{display:inline-flex;flex:none;white-space:nowrap;border:1px solid currentColor;border-radius:12px;font-size:.65rem;line-height:1.15;opacity:.85;padding:2px 5px}
  #dexResult .td681-type{white-space:nowrap;justify-self:end;min-width:0}
  #dexResult .td681-move-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:6px;font-size:.76rem;color:var(--muted,#aaa)}
@@ -2373,7 +2376,12 @@ update();
               : ''}
           </div>
         `).join('')
-      : '<p class="note">Unknown</p>';;
+      : `<div class="td68-acquisition-empty" role="status" style="padding:6px 0 3px">
+           <p style="margin:0 0 6px"><strong>No acquisition information available yet.</strong></p>
+           <p class="note" style="margin:0">${game
+             ? 'We don\'t have a verified location for this move in the selected game.'
+             : 'No verified acquisition locations are currently available for this move.'}</p>
+         </div>`;
 
   }catch(e){if(mine===req)res.innerHTML='<p class="error">Could not load that move. Check spelling or reconnect to download its record.</p>'}
  }
