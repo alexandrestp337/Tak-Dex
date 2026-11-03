@@ -2196,7 +2196,7 @@ update();
  #dexResult .td681-move-name-group .td68-move-link{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
  /* Smart Move Advisor: keep full names visible beside STAB on narrow screens. */
  #dexResult .td681-move-head--advisor .td681-move-name-group{white-space:normal;overflow:visible;flex-wrap:wrap;max-width:none}
- #dexResult .td681-move-head--advisor .td681-move-name-group .td68-move-link{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;flex:0 1 auto}
+ #dexResult .td681-move-head--advisor .td681-move-name-group .td68-move-link{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:normal;word-break:normal;flex:0 0 auto;max-width:100%}
  #dexResult .td681-stab{display:inline-flex;flex:none;white-space:nowrap;border:1px solid currentColor;border-radius:12px;font-size:.65rem;line-height:1.15;opacity:.85;padding:2px 5px}
  #dexResult .td681-type{white-space:nowrap;justify-self:end;min-width:0}
  #dexResult .td681-move-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:6px;font-size:.76rem;color:var(--muted,#aaa)}
@@ -2204,7 +2204,7 @@ update();
  #dexResult .td681-learn-row .td681-move-meta{padding-left:52px}
  #dexResult .td681-move-row .td62-method{margin-top:6px;opacity:.85;font-size:.76rem}
  #dexResult .td62-row.td681-move-row{padding:11px 0}
- @media(max-width:360px){#dexResult .td681-move-head{grid-template-columns:38px minmax(0,1fr) auto;gap:5px}#dexResult .td681-learn-row .td681-move-meta{padding-left:43px}#dexResult .td681-move-meta{font-size:.71rem}#dexResult .td681-move-meta>span:last-child{font-size:.68rem}}
+ @media(max-width:360px){#dexResult .td681-move-head{grid-template-columns:38px minmax(0,1fr) auto;gap:5px}#dexResult .td681-move-head--advisor{grid-template-columns:minmax(0,1fr) auto;gap:8px}#dexResult .td681-learn-row .td681-move-meta{padding-left:43px}#dexResult .td681-move-meta{font-size:.71rem}#dexResult .td681-move-meta>span:last-child{font-size:.68rem}}
  `;document.head.appendChild(style);
  function refresh(){
   const selected=select.value;
