@@ -317,3 +317,13 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #dexResult .evo-navigate:hover,#dexResult .evo-navigate:focus-visible{background:rgba(225,55,70,.12);outline:2px solid transparent}
 #dexResult .evo-navigate:focus-visible{outline-color:var(--accent,#e33343)}
 #dexResult .evo-navigate .evo-types{display:flex;flex-wrap:wrap}
+
+/* V70 — keep Android taps from flashing a blue WebView rectangle.
+   Retain an accessible focus-visible outline for keyboard navigation. */
+.main-tabs button,.tool-link,.td70-dex-slot{ -webkit-tap-highlight-color:transparent; }
+.main-tabs button:focus-visible,.tool-link:focus-visible,.td70-dex-slot:focus-visible{outline:2px solid var(--accent,#e33343)!important;outline-offset:2px!important;}
+#slots .td70-dex-slot{display:block;width:100%;padding:4px 2px;margin:0 0 9px;background:transparent!important;color:var(--text)!important;border:0!important;border-radius:10px;box-shadow:none!important;text-align:left;font:inherit;}
+#slots .td70-dex-slot:hover{background:color-mix(in srgb,var(--text) 6%,transparent)!important;}
+#plannerPage .td70-known-risk{padding:9px 10px;margin:9px 0;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.79rem;line-height:1.5;overflow-wrap:anywhere;}
+#plannerPage .td70-known-risk strong{color:var(--text);}
+#plannerPage .td66-defense{max-width:140px;overflow-wrap:anywhere;}
