@@ -26,6 +26,77 @@ const OFFLINE_CACHE='takdex-pokeapi-records-v1';
 // V27: resolve name-based lookups to the numbered records stored by the offline downloader.
 // PokeAPI list endpoints return canonical numeric URLs, while our UI requests names.
 const API_ROOT='https://pokeapi.co/api/v2/';
+// V70 storage repair: historical pt-v2 records used ~10 MiB of localStorage.
+// IndexedDB is the canonical on-demand API cache. Move each legacy entry only after
+// its IndexedDB transaction COMMITTED; never delete data merely because an attempt began.
+const TD70_DB_NAME='takdex-cache-v70', TD70_STORE='api-records';
+let td70DatabasePromise=null,td70MigrationPromise=null;
+function td70DB(){
+ if(!('indexedDB' in window))return Promise.reject(Error('IndexedDB is unavailable in this browser'));
+ if(!td70DatabasePromise)td70DatabasePromise=new Promise((resolve,reject)=>{
+  const req=indexedDB.open(TD70_DB_NAME,1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(TD70_STORE))req.result.createObjectStore(TD70_STORE)};
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error||Error('Unable to open IndexedDB'));
+  req.onblocked=()=>reject(Error('An older Tak-Dex tab is blocking the cache migration'));
+ }).catch(e=>{td70DatabasePromise=null;throw e});
+ return td70DatabasePromise;
+}
+async function td70IDB(action,key,value){
+ const db=await td70DB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(TD70_STORE,action==='get'||action==='count'?'readonly':'readwrite');
+  const store=tx.objectStore(TD70_STORE);
+  let result;
+  const req=action==='get'?store.get(key):action==='put'?store.put(value,key):action==='clear'?store.clear():store.count();
+  req.onsuccess=()=>{result=req.result};
+  tx.oncomplete=()=>resolve(result);
+  tx.onabort=()=>reject(tx.error||Error('IndexedDB transaction aborted'));
+  tx.onerror=()=>reject(tx.error||Error('IndexedDB transaction failed'));
+ });
+}
+async function td70MigrateOldCache(){
+ const oldKeys=[];
+ try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith('pt-v2:'))oldKeys.push(key)}}catch(e){throw Error('Cannot read legacy cache: '+e.message)}
+ if(!oldKeys.length)return 0;
+ let moved=0;
+ for(const key of oldKeys){
+  const raw=localStorage.getItem(key);
+  if(raw===null)continue;
+  let value;try{value=JSON.parse(raw)}catch(e){console.warn('Preserving unreadable old API record',key,e);continue}
+  // The record may also already exist in the database after a previously interrupted migration.
+  await td70IDB('put',key,value);
+  localStorage.removeItem(key); // only after successful commit
+  moved++;
+ }
+ if(moved)console.info('Tak-Dex: safely migrated '+moved+' oversized API records to IndexedDB');
+ return moved;
+}
+function td70EnsureMigrated(){
+ if(!td70MigrationPromise)td70MigrationPromise=td70MigrateOldCache().catch(e=>{
+  td70MigrationPromise=null;console.warn('Tak-Dex legacy cache migration could not complete; original records were kept',e);throw e;
+ });
+ return td70MigrationPromise;
+}
+// Start promptly to free space before the next team creation or import.
+td70EnsureMigrated().catch(()=>{});
+async function td70APICacheGet(key){
+ try{const data=await td70IDB('get',key);if(data!==undefined)return data}catch(e){console.warn('IndexedDB read unavailable; checking old cache',e)}
+ try{const raw=localStorage.getItem(key);if(raw!==null)return JSON.parse(raw)}catch{}
+ return null;
+}
+async function td70APICachePut(key,data){
+ try{await td70IDB('put',key,data)}catch(e){
+  // Network and per-game CacheStorage are independent fallbacks; never refill localStorage.
+  console.warn('API record could not be saved in IndexedDB',key,e);
+ }
+}
+async function td70ClearAPICache(){
+ // Wait out any in-flight migration so it cannot repopulate a cache just cleared by the user.
+ try{await td70EnsureMigrated()}catch{}
+ await td70IDB('clear');
+}
+async function td70HasAPICache(){try{return (await td70IDB('count'))>0}catch{return false}}
 async function offlineRecord(path){
  if(!('caches' in window))return null;
  const globalCache=await caches.open(OFFLINE_CACHE);
@@ -43,16 +114,15 @@ async function offlineRecord(path){
 }
 async function api(path){
  const key='pt-v2:'+path,url=API_ROOT+path;
- try{const cached=localStorage.getItem(key);if(cached)return JSON.parse(cached)}catch{}
+ const cached=await td70APICacheGet(key);
+ if(cached!==null)return cached;
  try{const offline=await offlineRecord(path);if(offline)return offline}catch{}
  try{
   const res=await fetch(url);if(!res.ok)throw Error('Pokédex request failed');
-  const data=await res.clone().json();
-  try{if('caches' in window)await (await caches.open(OFFLINE_CACHE)).put(url,res.clone())}catch{}
-  try{localStorage.setItem(key,JSON.stringify(data))}catch{}
+  const data=await res.json();
+  await td70APICachePut(key,data);
   return data;
  }catch(e){
-  // Network failed: retry cache in case the service worker/cache became ready.
   try{const offline=await offlineRecord(path);if(offline)return offline}catch{}
   throw e;
  }
@@ -179,7 +249,7 @@ async function td70ExportTeam(team){
 }
 $('exportTeam').onclick=()=>td70ExportTeam(current);
 $('importTeam').onclick=()=>$('importTeamFile').click();
-$('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2000000)throw Error('File is too large');const data=JSON.parse(await file.text());const t=data?.format==='takdex-team'?data.team:data;if(!t||typeof t.name!=='string'||!games.includes(t.game)||!Array.isArray(t.pokemon)||t.pokemon.length>6)throw Error('Invalid Tak-Dex team file');const pokemon=Array.from({length:6},(_,i)=>{const mon=t.pokemon[i];if(mon==null)return null;if(typeof mon.id!=='number'||typeof mon.name!=='string'||!Array.isArray(mon.moves)||mon.moves.length>4||!Array.isArray(mon.types))throw Error('Invalid Pokémon data');return {...mon,nickname:typeof mon.nickname==='string'?mon.nickname.slice(0,30):''}});const team={id:String(Date.now())+Math.random().toString(36).slice(2),name:t.name.slice(0,40),game:t.game,pokemon};teams.push(team);save();showTeams();$('newDialog').close();openTeam(team.id)}catch(err){alert('Could not import team: '+err.message)}finally{e.target.value=''}};
+$('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2000000)throw Error('File is too large');const data=JSON.parse(await file.text());const t=data?.format==='takdex-team'?data.team:data;if(!t||typeof t.name!=='string'||!games.includes(t.game)||!Array.isArray(t.pokemon)||t.pokemon.length>6)throw Error('Invalid Tak-Dex team file');const pokemon=Array.from({length:6},(_,i)=>{const mon=t.pokemon[i];if(mon==null)return null;if(typeof mon.id!=='number'||typeof mon.name!=='string'||!Array.isArray(mon.moves)||mon.moves.length>4||!Array.isArray(mon.types))throw Error('Invalid Pokémon data');return {...mon,nickname:typeof mon.nickname==='string'?mon.nickname.slice(0,30):''}});const team={id:String(Date.now())+Math.random().toString(36).slice(2),name:t.name.slice(0,40),game:t.game,pokemon};await td70EnsureMigrated();const updated=[...teams,team];localStorage.setItem('poketact-teams',JSON.stringify(updated));teams=updated;showTeams();$('newDialog').close();openTeam(team.id)}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
 
 search($('pokeInput'),$('pokeResults'),n=>loadPokemon(n));search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,current.game)};$('foePreview').innerHTML=`<div class="identity"><img src="${safe(foe.image)}"><div><strong>${safe(foe.name)}</strong><div class="pills">${foe.types.map(pill).join('')}</div></div></div>`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
 
@@ -889,6 +959,59 @@ const td65EmeraldGymMoves={
  'Juan':[['water-pulse','attract','sweet-kiss','flail'],['rain-dance','water-pulse','amnesia','earthquake'],['encore','body-slam','aurora-beam','water-pulse'],['water-pulse','crabhammer','taunt','leer'],['water-pulse','double-team','ice-beam','rest']]
 };
 
+// V70: Platinum's exact NPC attacks are absent from the normal PokeAPI Pokémon
+// records. Use community-extracted Platinum ROM trainer data rather than assuming
+// a Pokémon's four most recent level-up moves are the trainer's actual moves.
+// Attribution: https://github.com/OttoTonsorialist/pkmn_gen_four_trainer_data
+// Cross-reference: https://www.smogon.com/forums/threads/pokemon-platinum-trainer-data.3665884/
+const TD70_PLATINUM_TRAINER_SOURCE='https://raw.githubusercontent.com/OttoTonsorialist/pkmn_gen_four_trainer_data/main/platinum_trainers.json';
+const TD70_PLATINUM_TRAINER_CACHE='takdex-platinum-trainer-moves-v70';
+const TD70_PLATINUM_TRAINER_KEY='https://takdex.invalid/offline/platinum-trainer-moves.json';
+let td70TrainerCatalogPromise=null;
+function td70MoveSlug(value){return String(value||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+async function td70PlatinumTrainerCached(){
+ if(!('caches'in window))return null;
+ try{
+  const hit=await(await caches.open(TD70_PLATINUM_TRAINER_CACHE)).match(TD70_PLATINUM_TRAINER_KEY);
+  if(!hit)return null;
+  const payload=await hit.json();
+  return payload?.schema===70&&Array.isArray(payload.trainers)&&payload.trainers.length>=13?payload:null;
+ }catch{return null}
+}
+async function td70PlatinumTrainerCatalog(){
+ if(!td70TrainerCatalogPromise)td70TrainerCatalogPromise=(async()=>{
+  const cached=await td70PlatinumTrainerCached();if(cached)return cached;
+  const response=await fetch(TD70_PLATINUM_TRAINER_SOURCE);
+  if(!response.ok)throw Error('Platinum trainer source returned HTTP '+response.status);
+  const raw=await response.json();
+  if(!Array.isArray(raw.trainers))throw Error('Platinum trainer source has an unexpected format');
+  // Save a compact, source-derived roster (not the multi-megabyte complete dataset).
+  const trainers=raw.trainers.filter(t=>/^(Leader |Elite Four |Champion )/.test(t.trainer_class||'')&&Array.isArray(t.pokemon)&&t.pokemon.length>1)
+   .map(t=>({name:t.trainer_class,pokemon:t.pokemon.map(m=>({name:td70MoveSlug(m.species),level:Number(m.level),moves:(m.moves||[]).slice(0,4).map(td70MoveSlug)}))}));
+  const payload={schema:70,source:TD70_PLATINUM_TRAINER_SOURCE,trainers};
+  if(trainers.length<13)throw Error('Platinum trainer source has too few boss rosters');
+  if('caches'in window)try{await(await caches.open(TD70_PLATINUM_TRAINER_CACHE)).put(TD70_PLATINUM_TRAINER_KEY,new Response(JSON.stringify(payload),{headers:{'content-type':'application/json'}}))}
+  catch(e){console.warn('Platinum trainer moves loaded online but could not be saved offline',e)}
+  window.dispatchEvent(new Event('td58-pack-update'));
+  return payload;
+ })().catch(e=>{td70TrainerCatalogPromise=null;throw e});
+ return td70TrainerCatalogPromise;
+}
+function td70PlatinumTrainerMoves(catalog,trainerName,roster){
+ const sourceName=trainerName==='Crasher Wake'?'Leader Wake':trainerName==='Cynthia'?'Champion Cynthia':
+  ['Aaron','Bertha','Flint','Lucian'].includes(trainerName)?'Elite Four '+trainerName:'Leader '+trainerName;
+ const candidates=catalog.trainers.filter(t=>t.name===sourceName&&t.pokemon.length===roster.length);
+ for(const entry of candidates){
+  const unused=entry.pokemon.map((p,i)=>({...p,i}));
+  const matches=roster.map(([name,level])=>{
+   const at=unused.findIndex(p=>p.name===td70MoveSlug(name)&&p.level===Number(level));
+   return at<0?null:unused.splice(at,1)[0];
+  });
+  if(matches.every(Boolean))return matches.map(m=>m.moves);
+ }
+ return null; // Distinguish unverified from a confirmed empty moveset.
+}
+
 // V68 — Additional independently checked Gen I–III gym/league rosters.
 // Pokémon + levels only; move slots remain blank when the exact attacks are not confirmed.
 // Sources: pokemondb.net/red-blue/gymleaders-elitefour,
@@ -1008,12 +1131,31 @@ function syncPlanner(){
  loadPlannerRoster();importPlannerTeam();
 }
 function importPlannerTeam(){const t=selectedTeam('planTeam');if(!t){renderPlannerSlots('planOwn',plannerOwn,true);return}plannerOwn=(t?.pokemon||[]).filter(Boolean).map(p=>({name:tak67PlannerValue(p.name).toLowerCase().replace(/\s+/g,'-'),level:50,moves:(p.moves||[]).map(m=>tak67PlannerValue(typeof m==='string'?m:m?.name).toLowerCase().replace(/\s+/g,'-'))}));renderPlannerSlots('planOwn',plannerOwn,true)}
+let td70TrainerRosterToken=0;
 function loadPlannerRoster(){
- const rosters=plannerPresetSet(),sel=rosters?.[$('planTrainer').value];
+ const request=++td70TrainerRosterToken,rosters=plannerPresetSet(),sel=rosters?.[$('planTrainer').value];
  const row=sel?.[$('planVersion').value]||sel?.v1;
- plannerOpp=row?row.map(([name,level,...moves],i)=>({name,level,moves:($('planGame').value==='Emerald'&&$('planMode').value==='gym'&&$('planVersion').value==='v1'&&td65EmeraldGymMoves[$('planTrainer').value]?.[i])||moves})):Array.from({length:6},()=>({name:'',level:50,moves:[]}));
+ const game=$('planGame').value,trainer=$('planTrainer').value,mode=$('planMode').value,version=$('planVersion').value;
+ plannerOpp=row?row.map(([name,level,...moves],i)=>({name,level,moves:(game==='Emerald'&&mode==='gym'&&version==='v1'&&td65EmeraldGymMoves[trainer]?.[i])||moves})):Array.from({length:6},()=>({name:'',level:50,moves:[]}));
  renderPlannerSlots('planOpp',plannerOpp,false);
- if($('planMode').value!=='custom')$('planResults').innerHTML='';
+ if(mode!=='custom')$('planResults').innerHTML='';
+ if(game==='Platinum'&&mode!=='custom'&&row){
+  $('eliteNote').insertAdjacentHTML('beforeend',' <span id="td70TrainerLoadNote">Loading Platinum opponent attacks…</span>');
+  td70PlatinumTrainerCatalog().then(catalog=>{
+   if(request!==td70TrainerRosterToken)return;
+   const verified=td70PlatinumTrainerMoves(catalog,trainer,row);
+   const label=$('td70TrainerLoadNote');
+   if(!verified){if(label)label.textContent='Exact trainer moves unavailable for this roster; manual entry is possible.';return}
+   plannerOpp=plannerOpp.map((p,i)=>({...p,moves:p.moves?.some(Boolean)?p.moves:verified[i]}));
+   renderPlannerSlots('planOpp',plannerOpp,false);
+   if(label)label.innerHTML='Loaded '+verified.length+' verified movesets from <a href="https://github.com/OttoTonsorialist/pkmn_gen_four_trainer_data" target="_blank" rel="noopener noreferrer">Platinum game-data extraction</a>.';
+  }).catch(e=>{
+   if(request!==td70TrainerRosterToken)return;
+   const label=$('td70TrainerLoadNote');
+   if(label)label.textContent='Trainer moves unavailable offline. Download Platinum data in Offline Data or enter moves manually.';
+   console.warn('Platinum exact trainer moves unavailable:',e);
+  });
+ }
 }
 function tak67PlannerValue(v){const s=String(v??'').trim();return /^(undefined|null)$/i.test(s)?'':s}
 function plannerMovesFour(e){return Array.from({length:4},(_,i)=>tak67PlannerValue(e?.moves?.[i]))}
@@ -2028,7 +2170,7 @@ update();
  page.innerHTML=`<div class="bar"><h2>Offline Data</h2><button type="button" id="td59Back">← More</button></div>
  <p class="note">Download a game’s available Pokédex, moves, encounters and artwork in one pack. Games without a pack remain usable online.</p>
  <div class="tool-card"><label for="td59Game">Choose game<select id="td59Game"><option value="">Choose game…</option>${gameOptions}</select></label>
- <p class="note" id="td59Legend">🟢 Downloaded · 🟠 Partial · ⚪ Not downloaded</p></div>
+ <p class="note" id="td59Legend">🟢 Complete pack · 🟠 Partial / related-game shared data · ⚪ No downloaded game pack</p></div>
  <div class="card td59-card"><h3 id="td59Name">Game data pack</h3>
  <p class="note">Pokémon stats, types, moves, learnsets, evolutions, TM/HM data, wild encounter and acquisition evidence, and artwork. Type calculations and currently supported trainer rosters are built into the app. Acquisition records remain incomplete for many versions.</p>
  <p id="td59State" class="note" aria-live="polite">Checking downloaded data…</p>
@@ -2200,9 +2342,23 @@ update();
  async function removeReference(g){if('caches' in window)await caches.delete(refCacheName(g));window.dispatchEvent(new Event('td58-pack-update'))}
 
  // A pack is 'downloaded' only if both indexes have positive coverage and reference download completed.
- function statusFor(ref,enc,art){return ref?.complete&&enc?.hasSource&&enc?.schema>=64&&art?.complete?'ready':ref||enc||art?'partial':'missing'}
- async function sharedAvailable(){try{return (await caches.keys()).some(k=>k.startsWith(ART_PREFIX)||k===OFFLINE_CACHE||k.startsWith(REF_PREFIX))}catch{return false}}
- const iconFor={ready:'🟢',partial:'🟠',shared:'🔵',missing:'⚪'};
+ function statusFor(ref,enc,art,trainerReady=true){return ref?.complete&&enc?.hasSource&&enc?.schema>=64&&art?.complete&&trainerReady?'ready':ref||enc||art?'partial':'missing'}
+ // Only meaningfully compatible packs count as shared. An unrelated downloaded
+ // game MUST NOT turn every game's indicator orange. The on-demand API cache can
+ // still serve cross-generation requests, but is not itself a verified game pack.
+ function sharedFromSources(target,sources){
+  return games.includes(target)&&sources.some(source=>source!==target&&gameGeneration(source)===gameGeneration(target));
+ }
+ async function sharedAvailable(target){
+  if(!games.includes(target))return false;
+  try{for(const source of games){
+   if(source===target||gameGeneration(source)!==gameGeneration(target))continue;
+   const [ref,art]=await Promise.all([cachedReference(source),cachedArtwork(source)]);
+   if((ref&&(ref.complete||ref.saved>0))||(art&&(art.complete||art.saved>0)))return true;
+  }}catch(e){console.warn('Shared game-pack detection:',e)}
+  return false;
+ }
+ const iconFor={ready:'🟢',partial:'🟠',shared:'🟠',missing:'⚪'};
  let statusMap=new Map(games.map(g=>[g,'missing']));
  let statusVersion=0,refreshing=false;
  const gameSelectIds=['game','editTeamGame','dexGame','planGame','tmGame','typeCheckGame','typeExplorerGame','td56Game','td59Game'];
@@ -2222,11 +2378,13 @@ update();
   refreshing=true;const my=++statusVersion;
   try{
    const records=await Promise.all(games.map(async g=>{
-    const [ref,enc,art]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g),cachedArtwork(g)]);
-    return [g,statusFor(ref,enc,art)];
+    const [ref,enc,art,trainers]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g),cachedArtwork(g),g==='Platinum'?td70PlatinumTrainerCached():Promise.resolve(true)]);
+    return [g,statusFor(ref,enc,art,!!trainers)];
    }));
-   const hasShared=await sharedAvailable();
-   statusMap=new Map(records.map(([name,status])=>[name,status==='missing'&&hasShared?'shared':status]));
+   // Each game is evaluated separately. Only games from the same generation as
+   // an actually downloaded pack receive an orange partial-data indicator.
+   const sources=records.filter(([,status])=>status!=='missing').map(([name])=>name);
+   statusMap=new Map(records.map(([name,status])=>[name,status==='missing'&&sharedFromSources(name,sources)?'shared':status]));
    decorateGameSelects();
   }catch(e){console.warn('Game pack status refresh:',e)}finally{refreshing=false;
    if(statusVersion!==my)refreshStatusMap();
@@ -2238,12 +2396,12 @@ update();
  window.addEventListener('td58-pack-update',()=>refreshStatusMap());
  window.takDexOfflineV59={refreshIndicators:refreshStatusMap};
 
- async function getState(g){if(!games.includes(g))return {ref:null,enc:null,art:null,status:'missing'};const [ref,enc,art]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g),cachedArtwork(g)]);return {ref,enc,art,status:statusFor(ref,enc,art)}}
- function word(status){return status==='ready'?'Downloaded':status==='partial'?'Partial — resume available':status==='shared'?'Shared data present · game pack not downloaded':'Not downloaded'}
+ async function getState(g){if(!games.includes(g))return {ref:null,enc:null,art:null,status:'missing'};const [ref,enc,art,trainers]=await Promise.all([cachedReference(g),window.takDexEncounterV55.cached(g),cachedArtwork(g),g==='Platinum'?td70PlatinumTrainerCached():Promise.resolve(true)]);return {ref,enc,art,trainers:!!trainers,status:statusFor(ref,enc,art,!!trainers)}}
+ function word(status){return status==='ready'?'Downloaded':status==='partial'?'Partial — resume available':status==='shared'?'Partial — related-game shared data · this pack not downloaded':'Not downloaded'}
  async function hasLegacyCache(){
   try{const keys=await caches.keys();if(keys.some(k=>['takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k)))return true}catch{}
   try{if(localStorage.getItem('takdex-offline-full-v26'))return true;for(let i=0;i<localStorage.length;i++)if(localStorage.key(i)?.startsWith('pt-v2:'))return true}catch{}
-  return false;
+  return td70HasAPICache();
  }
  async function update(showAll=true){
   const g=game.value,token=++taskState.token;
@@ -2261,11 +2419,12 @@ update();
   $('td59Name').textContent='Pokémon '+g+' — game data pack';
   const {ref,enc,art,status:packStatus}=await getState(g);
   if(token!==taskState.token)return;
-  const shownStatus=packStatus==='missing'&&await sharedAvailable()?'shared':packStatus;
+  const shownStatus=packStatus==='missing'&&await sharedAvailable(g)?'shared':packStatus;
   state.textContent=iconFor[shownStatus]+' '+word(shownStatus)
    +' · Reference: '+(ref?(ref.complete?'ready':'incomplete'):'missing')
    +' · Encounters: '+(enc?(enc.hasSource?(enc.schema>=64?'indexed + acquisition evidence':'older index — update required'):'coverage unavailable'):'missing')
-   +' · Artwork: '+(art?(art.complete?'ready':(art.saved||0)+'/'+(art.expected||'?')+' images'):'missing');
+   +' · Artwork: '+(art?(art.complete?'ready':(art.saved||0)+'/'+(art.expected||'?')+' images'):'missing')
+   +(g==='Platinum'?' · Trainer attacks: '+((await td70PlatinumTrainerCached())?'saved':'missing'):'');
   downloadBtn.textContent=packStatus==='ready'?'✓ '+g+' pack downloaded':packStatus==='partial'?'Resume '+g+' pack':'Download '+g+' pack';
   downloadBtn.disabled=taskState.busy||packStatus==='ready';
   deleteBtn.disabled=taskState.busy||(!ref&&!enc&&!art);
@@ -2298,6 +2457,10 @@ update();
     setProgress(g,'Downloading '+g+' Pokémon artwork…',true);
     try{await downloadArtwork(g,txt=>setProgress(g,'↻ '+txt))}catch(e){errors.push('Artwork: '+(e.message||e))}
    }
+   if(g==='Platinum'&&!(await td70PlatinumTrainerCached())){
+    setProgress(g,'Downloading verified Platinum trainer moves…',true);
+    try{await td70PlatinumTrainerCatalog()}catch(e){errors.push('Trainer moves: '+(e.message||e))}
+   }
    const final=await getState(g);
    setProgress(g,errors.length?'⚠ '+errors.join(' | '):final.status==='ready'?'✓ '+g+' game data saved.':'⚠ Pack is partial; some source data is missing. Retry to resume.',true);
   }finally{setBusy(false);await refreshStatusMap();await update()}
@@ -2308,7 +2471,7 @@ update();
   if(existing.status==='missing')return;
   if(!window.confirm('Remove the downloaded '+g+' game pack?\n\nThis will delete its reference and encounter records. Saved teams and settings will NOT be deleted.'))return;
   setBusy(true);
-  try{await removeReference(g);await window.takDexEncounterV55.remove(g);await removeArtwork(g);progress.textContent='Removed '+g+' game data and artwork.'}
+  try{await removeReference(g);await window.takDexEncounterV55.remove(g);await removeArtwork(g);if(g==='Platinum'){await caches.delete(TD70_PLATINUM_TRAINER_CACHE);td70TrainerCatalogPromise=null}progress.textContent='Removed '+g+' game data and artwork.'}
   catch(e){progress.textContent='⚠ Could not remove '+g+': '+(e.message||e)}
   finally{setBusy(false);await refreshStatusMap();await update()}
  }
@@ -2324,6 +2487,9 @@ update();
     if(k.startsWith(REF_PREFIX)||k.startsWith(ART_PREFIX)||['takdex-encounter-catalog-v55','takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k))await caches.delete(k);
    }}
    try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&(key.startsWith('pt-v2:')||key==='takdex-offline-full-v26'))localStorage.removeItem(key)}}catch{}
+   await td70ClearAPICache();
+   if('caches'in window)await caches.delete(TD70_PLATINUM_TRAINER_CACHE);
+   td70TrainerCatalogPromise=null;
    window.takDexArtV60?.reset?.();
    progress.textContent='✓ Downloaded data and artwork cleared. Your saved teams and preferences were kept.';
   }catch(e){progress.textContent='⚠ Cleanup was incomplete: '+(e.message||e)}
@@ -2555,11 +2721,50 @@ update();
  const main=document.querySelector('main'),more=$('morePage');if(!main||!more)return;
  const button=document.createElement('button');button.id='td68OpenMove';button.type='button';button.className='tool-link';button.textContent='✦ Move Checker ›';
  more.querySelector('.tool-card')?.appendChild(button);
- const covButton=document.createElement('button');covButton.id='td68OpenCoverage';covButton.type='button';covButton.className='tool-link';covButton.textContent='▦ Database Coverage ›';
- more.querySelector('.tool-card')?.appendChild(covButton);
- // Keep these as the final two More entries, regardless of earlier tool registrations.
+ // V70: Database Coverage belongs under More → About, not on the More root.
+ const aboutButton=document.createElement('button');aboutButton.id='td70OpenAbout';aboutButton.type='button';aboutButton.className='tool-link';aboutButton.textContent='ⓘ About Tak-Dex ›';
  const moreTools=more.querySelector('.tool-card'),offlineLink=$('td59OpenOffline');
- if(moreTools&&offlineLink)moreTools.append(offlineLink,covButton);
+ if(moreTools)moreTools.append(aboutButton);
+ if(moreTools&&offlineLink)moreTools.append(offlineLink,aboutButton);
+ const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
+ aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
+ <div class="card td70-about-card"><h3>Tak-Dex</h3>
+ <p><strong>Web version:</strong> V70 · Development preview 2</p>
+ <p><strong>Build:</strong> 2026-11-05</p>
+ <p><strong>Android:</strong> V2 is the current release · V3 is being prepared</p>
+ <p class="note">Pokémon companion for team building, Pokédex reference, battle matchups, the 6v6 Planner and offline data. Built and improved through actual playthroughs.</p></div>
+ <div class="card td70-about-card"><h3>Storage &amp; offline reference</h3><p class="note" id="td70AboutStorage">Checking local storage…</p></div>
+ <div class="tool-card"><button type="button" id="td68OpenCoverage" class="tool-link">▦ Database Coverage ›</button></div>
+ <p class="note">Database Coverage shows local reference packs and available trainer presets. A listed Pokémon or trainer is not proof that every acquisition requirement or opponent move has been verified.</p>
+ <div class="card td70-about-card"><h3>Release status</h3><p class="note">V70 is a testing build. Historical mechanics, Platinum trainer moves, offline packs, and Android sharing require regression tests before release. Existing saved teams are kept on this device.</p></div>`;
+ main.appendChild(aboutPage);
+ const covButton=$('td68OpenCoverage');
+ let aboutStorageToken=0;
+ async function updateAboutStorage(){
+  const token=++aboutStorageToken,host=$('td70AboutStorage');host.textContent='Checking local storage…';
+  try{
+   let legacy=0,bytes=0;
+   for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i),v=localStorage.getItem(k)||'';
+    if(k.startsWith('pt-v2:'))legacy++;
+    bytes+=(k.length+v.length)*2;
+   }
+   const [dbCount,packs,trainer]=await Promise.all([
+    td70IDB('count').catch(()=>null),
+    Promise.all(games.map(g=>window.takDexReferenceV58?.cached?.(g).catch(()=>null))).then(rows=>rows.filter(x=>x?.complete).length),
+    td70PlatinumTrainerCached()
+   ]);
+   if(token!==aboutStorageToken)return;
+   host.textContent='Saved reference packs: '+packs+' / '+games.length+
+    ' · Pokémon/move records in IndexedDB: '+(dbCount===null?'unavailable':dbCount)+
+    ' · Legacy cache records awaiting migration: '+legacy+
+    ' · localStorage estimate: '+(bytes/1048576).toFixed(2)+' MiB'+
+    ' · Platinum opponent moves: '+(trainer?'saved offline':'not downloaded');
+  }catch(e){if(token===aboutStorageToken)host.textContent='Local storage status unavailable: '+e.message}
+ }
+ aboutButton.addEventListener('click',()=>{window.takActivate(3);more.hidden=true;aboutPage.hidden=false;updateAboutStorage();window.scrollTo(0,0)});
+ $('td70AboutBack').addEventListener('click',()=>{aboutStorageToken++;aboutPage.hidden=true;window.takActivate(3)});
+ for(const id of ['teamsTab','battleTab','dexTab','moreTab'])$(id).addEventListener('click',()=>{aboutPage.hidden=true},true);
  const page=document.createElement('section');page.id='td68MovePage';page.hidden=true;
  page.innerHTML=`<div class="bar"><h2>Move Checker</h2><button type="button" id="td68MoveBack">← Back</button></div>
  <p class="note">Full move effects and historical changes. Current stats appear first; your selected game's generation is highlighted below.</p>
@@ -2567,10 +2772,11 @@ update();
  <div id="td68MoveResult" aria-live="polite"><p class="note">Select a move to see its power, accuracy, PP, effect, and generation changes.</p></div>`;
  main.appendChild(page);
  const report=document.createElement('section');report.id='td68CoveragePage';report.hidden=true;
- report.innerHTML=`<div class="bar"><h2>Database Coverage</h2><button type="button" id="td68CoverageBack">← More</button></div><p class="note">Actual coverage from built-in trainer rosters and locally downloaded data. A game with an indexed encounter list is not necessarily complete for gifts or special acquisitions. Unknown does not mean unobtainable.</p><div id="td68CoverageResults"></div>`;
+ report.innerHTML=`<div class="bar"><h2>Database Coverage</h2><button type="button" id="td68CoverageBack">← About</button></div><p class="note">Actual coverage from built-in trainer rosters and locally downloaded data. A game with an indexed encounter list is not necessarily complete for gifts or special acquisitions. Unknown does not mean unobtainable.</p><div id="td68CoverageResults"></div>`;
  main.appendChild(report);
  const css=document.createElement('style');css.id='td68-style';css.textContent=`
- #td68CoveragePage[hidden],#td68MovePage[hidden]{display:none!important}
+ #td68CoveragePage[hidden],#td68MovePage[hidden],#td70AboutPage[hidden]{display:none!important}
+ #td70AboutPage .td70-about-card{padding:16px;margin:13px 0}#td70AboutPage .td70-about-card h3{margin:0 0 10px}#td70AboutPage .td70-about-card p{margin:8px 0}
  #td68MovePage .td68-search{position:relative}#td68MovePage #td68MoveSuggest{max-height:260px;overflow-y:auto;z-index:400;background:var(--card,#191c24)}
  #td68MovePage .td68-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}#td68MovePage .td68-fact{text-align:center;border:1px solid var(--edge,#444);border-radius:11px;padding:10px 4px;min-width:0}
  #td68MovePage .td68-fact strong{font-size:1.2rem;display:block}#td68MovePage .td68-fact small{color:var(--muted,#999)}
@@ -2589,7 +2795,7 @@ update();
  `;document.head.appendChild(css);
  const query=$('td68MoveInput'),suggest=$('td68MoveSuggest'),res=$('td68MoveResult');let source='more',savedScroll=0,req=0,searchReq=0,list=null;
  function normal(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,'-')}
- function openPage(which){['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage'].forEach(id=>$(id).hidden=true);page.hidden=which!=='move';report.hidden=which!=='coverage';['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===(source==='dex'?2:3)));window.scrollTo(0,0)}
+ function openPage(which){['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage'].forEach(id=>$(id).hidden=true);aboutPage.hidden=true;page.hidden=which!=='move';report.hidden=which!=='coverage';['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===(source==='dex'?2:3)));window.scrollTo(0,0)}
  function back(){page.hidden=true;report.hidden=true;if(source==='dex'){$('dexPage').hidden=false;['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===2));requestAnimationFrame(()=>window.scrollTo(0,savedScroll))}else window.takActivate(3)}
  function launch(m,origin){
   source=origin||'more';
@@ -2712,9 +2918,10 @@ update();
    const rosters=Object.values(categories).reduce((sum,cat)=>sum+Object.values(cat).reduce((z,versions)=>z+Object.values(versions).reduce((n,rows)=>n+rows.length,0),0),0);
    return {game,trainerCount:trainers,rosterEntries:rosters,encounters:enc?.records||0,encLoaded:!!enc?.hasSource,machines:ref?.machines?.length||0,refLoaded:!!ref?.complete};
   }));
-  host.innerHTML=`<p class="note">${parts.length} game selections · ${parts.filter(x=>x.encLoaded).length} local encounter indexes · ${parts.filter(x=>x.refLoaded).length} complete local reference packs. Not a claim of database completeness.</p><div class="card" style="padding:0">${parts.map(x=>`<div class="td68-coverage-row"><strong>${safe(x.game)}</strong><small>Encounter index: ${x.encLoaded?x.encounters+' wild encounter records':'not downloaded / coverage unknown'} · TM/HM reference: ${x.refLoaded?x.machines+' machines':'not downloaded / unverified'}</small><small>Built-in trainer presets: ${x.trainerCount} trainers / ${x.rosterEntries} listed Pokémon; ${x.trainerCount?'remaining moves may be unverified':'no verified preset in this release'}</small></div>`).join('')}</div>`;
+  const platinumTrainers=await td70PlatinumTrainerCached();
+  host.innerHTML=`<p class="note">${parts.length} game selections · ${parts.filter(x=>x.encLoaded).length} local encounter indexes · ${parts.filter(x=>x.refLoaded).length} complete local reference packs · Platinum exact trainer moves: ${platinumTrainers?'saved':'not downloaded'}. Not a claim of database completeness.</p><div class="card" style="padding:0">${parts.map(x=>`<div class="td68-coverage-row"><strong>${safe(x.game)}</strong><small>Encounter index: ${x.encLoaded?x.encounters+' wild encounter records':'not downloaded / coverage unknown'} · TM/HM reference: ${x.refLoaded?x.machines+' machines':'not downloaded / unverified'}</small><small>Built-in trainer presets: ${x.trainerCount} trainers / ${x.rosterEntries} listed Pokémon; ${x.trainerCount?'remaining moves may be unverified':'no verified preset in this release'}</small></div>`).join('')}</div>`;
  }
- covButton.addEventListener('click',showCoverage);$('td68CoverageBack').addEventListener('click',()=>{report.hidden=true;window.takActivate(3)});
+ covButton.addEventListener('click',showCoverage);$('td68CoverageBack').addEventListener('click',()=>{report.hidden=true;window.takActivate(3);more.hidden=true;aboutPage.hidden=false;window.scrollTo(0,0)});
  ['teamsTab','battleTab','dexTab','moreTab'].forEach(id=>$(id).addEventListener('click',()=>{report.hidden=true}));
  // Raise the currently open autocomplete above adjacent rows; flip upward near viewport bottom.
  function placePopup(box){if(!box||box.hidden||!box.isConnected)return;const input=box.closest('.td65-move-search')?.querySelector('input')||box.closest('label')?.querySelector('input.td66-pokemon-input');if(!input)return;const r=input.getBoundingClientRect();const below=innerHeight-r.bottom;const above=r.top;box.classList.toggle('td68-open-up',below<175&&above>below);}
