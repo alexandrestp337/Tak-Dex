@@ -327,3 +327,28 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #plannerPage .td70-known-risk{padding:9px 10px;margin:9px 0;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:.79rem;line-height:1.5;overflow-wrap:anywhere;}
 #plannerPage .td70-known-risk strong{color:var(--text);}
 #plannerPage .td66-defense{max-width:140px;overflow-wrap:anywhere;}
+
+/* V70 DEV4.1: Let the 6v6 defensive summary size to its actual move name.
+   Scope this to ranked Planner cards; leave other matchups unchanged. */
+#plannerPage .td63-rank > summary .rank-risk.td66-defense {
+  flex:0 0 auto;
+  width:max-content;
+  min-width:max-content;
+  max-width:none;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+#plannerPage .td63-rank .td70-defense-verdict,
+#plannerPage .td63-rank .td70-defense-source {
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+/* On narrow screens, move the verdict under the header instead of squeezing
+   Pokémon names or splitting long attack names inside an invisible column. */
+@media (max-width:560px) {
+  #plannerPage .td63-rank > summary.recommendation-head {flex-wrap:wrap;}
+  #plannerPage .td63-rank > summary .rank-identity {flex:1 0 calc(100% - 78px);}
+  #plannerPage .td63-rank > summary .td63-chevron {order:1;}
+  #plannerPage .td63-rank > summary .rank-risk.td66-defense {order:2;margin-left:auto;}
+}
