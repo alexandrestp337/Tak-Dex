@@ -422,3 +422,85 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
  #dexResult .td71-dex-hero .td71-stat-total{padding-top:5px;margin-top:5px;gap:5px;font-size:.70rem}
  #dexResult .td71-dex-hero .td71-base-stats .note{display:none}
 }
+
+/* V72 DEV1 — two-stage saved-team accordion, compact move summaries and controls. */
+#teams .td72-overview-mon{display:flex;align-items:center;gap:7px;min-width:0;text-align:left;padding:4px 2px;background:transparent!important;color:var(--text)!important;border:0!important;box-shadow:none!important;cursor:pointer;font:inherit}
+#teams .td72-overview-mon:hover,#teams .td72-overview-mon:focus-visible{background:color-mix(in srgb,var(--text) 7%,transparent)!important;outline-offset:2px}
+#teams .td72-team-actions{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;min-width:0;margin:8px 0 0}
+#teams .td72-team-actions button{font-size:clamp(.67rem,2.55vw,.82rem);padding:8px clamp(5px,1.8vw,10px);white-space:nowrap;min-width:0}
+#teams .td72-team-actions .delete-team-link{position:static!important;margin-left:auto!important;right:auto!important;bottom:auto!important;padding:8px 2px!important;font-size:clamp(.66rem,2.6vw,.78rem)!important;font-weight:500!important;white-space:nowrap;flex:none}
+#teams .td72-details-toggle{width:100%;background:transparent!important;color:var(--text)!important;border:1px solid var(--edge)!important;box-shadow:none!important;margin:12px 0 0;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
+#teams .td72-details-toggle span:first-child{font-weight:750;font-size:.88rem}
+#teams .td72-details-content{border-top:1px solid var(--edge);margin-top:10px;padding-top:7px}
+#teams .td72-details-content[hidden]{display:none!important}
+#teams .td72-details-content #editor{margin-top:0;border:0;padding-top:0}
+#teams .td72-details-content #editor>.bar{display:none}
+#slots .td72-slot-moves{display:grid;gap:3px;margin:9px 0 13px}
+#slots .td72-slot-move{display:flex;align-items:center;flex-wrap:wrap;gap:3px 8px;min-width:0;padding:2px 0;font-size:.81rem}
+#slots .td72-slot-move>.td72-move-name{display:inline-block;flex:0 0 auto;max-width:100%;white-space:nowrap;overflow-wrap:normal;word-break:normal;margin:2px 0;font-weight:500;font-size:.82rem;padding:8px 10px}
+#slots .td72-move-extra{display:flex;align-items:center;flex:1 1 auto;gap:4px 8px;flex-wrap:wrap;min-width:0}
+#slots .td72-move-extra .pill{font-size:.67rem;padding:4px 6px;white-space:nowrap}
+#slots .td72-move-extra small{color:var(--muted);font-size:.71rem;white-space:nowrap}
+#plannerPage .td72-level-control{display:flex;align-items:stretch;gap:5px;margin-top:5px;min-width:0}
+#plannerPage .td72-level-control>button{width:42px;min-width:42px;min-height:42px;padding:5px;background:var(--card);color:var(--text);border:1px solid var(--edge);font-size:1.3rem;line-height:1}
+#plannerPage .td72-level-control>input{margin:0;max-width:94px!important;min-height:42px;text-align:center;font-weight:750;appearance:textfield;-moz-appearance:textfield}
+#plannerPage .td72-level-control>input::-webkit-inner-spin-button,#plannerPage .td72-level-control>input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#plannerPage .td63-rank>summary{flex-wrap:wrap}
+#plannerPage .td72-rank-best{flex:0 0 100%;order:20;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;border-top:1px solid var(--edge);padding:8px 2px 2px;margin-top:4px;font-size:.77rem;min-width:0}
+#plannerPage .td72-rank-best b{font-size:.86rem}
+#plannerPage .td72-rank-best>span{display:flex;align-items:center;flex-wrap:wrap;gap:4px;color:var(--muted);font-weight:600}
+#plannerPage .td72-rank-best .pill{font-size:.62rem;padding:3px 5px}
+.td72-ability-warning{border-left:3px solid #e6b251;padding:9px 11px;margin:10px 0!important;border-radius:5px;background:color-mix(in srgb,#e6b251 8%,transparent);font-size:.78rem}
+.td72-foe-ability{display:block;font-size:.77rem;margin:8px 0;max-width:340px}
+.td72-foe-ability select{font-size:.82rem;padding:8px;margin-top:4px}
+#td68MovePage .td72-move-header-actions{display:flex;align-items:center;gap:6px}
+#td68MovePage .td72-move-header-actions button{font-size:.8rem;padding:8px 10px;white-space:nowrap}
+#td72MoveTypePanel{padding:0 0 12px}
+#td72MoveTypePanel>label{max-width:440px}
+#td72MoveTypePanel .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+#td72MoveTypePanel .td72-move-types button{background:color-mix(in srgb,var(--td72-color) 25%,var(--card));border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
+#td72MoveTypePanel .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
+#td72MoveTypeResults{display:grid;gap:7px}
+#td72MoveTypeResults .td72-type-move{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:var(--card);border:1px solid var(--edge);color:var(--text);padding:10px 12px;min-width:0}
+#td72MoveTypeResults .td72-type-move>span{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+#td72MoveTypeResults .td72-type-move small{color:var(--muted);font-size:.75rem}
+#td68MovePage .td72-move-compat{margin:15px 0;padding:12px}
+#td68MovePage .td72-compat-row{margin:7px 0;padding:7px 9px;font-size:.78rem;gap:8px}
+#td68MovePage .td72-compat-pokemon{display:flex;align-items:center;gap:6px;min-width:0}
+#td68MovePage .td72-compat-pokemon img{width:37px;height:37px;object-fit:contain}
+#td68MovePage .td72-compat-row>span:last-child{text-align:right;overflow-wrap:anywhere;max-width:55%}
+@media(max-width:355px){#teams .td72-team-actions{gap:3px}#teams .td72-team-actions button{padding:7px 4px}#teams .td72-team-actions .delete-team-link{font-size:.65rem!important}}
+
+/* V72 DEV2: keep type options hidden when unavailable in selected generation. */
+#td72MoveTypePanel .td72-move-types button[hidden]{display:none!important}
+
+/* V72 DEV2 — Battle opponent typeahead opens above the input, not behind
+   Android's on-screen keyboard. Scope to both single/double opponent fields;
+   every other autocomplete retains its existing placement. */
+#battlePage .battle-search{position:relative;z-index:40}
+#battlePage .battle-search .suggestions{
+ top:auto;
+ bottom:calc(100% + 5px);
+ max-height:min(190px,40dvh);
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ z-index:120;
+}
+#battlePage .battle-search .suggestions[hidden]{display:none!important}
+
+/* V72 DEV3 — Team Builder has a single type-colored move chip (no duplicate type badge). */
+#slots .td72-move-extra{flex:0 1 auto}
+#slots .td72-move-extra small{white-space:nowrap}
+
+/* V72 DEV3 mini-patch: pin Team Builder PWR / ACC against the right edge.
+   Keep the move chips at intrinsic width and let the complete stats group
+   flow to a new right-aligned line only when the viewport is too narrow. */
+#slots .td72-slot-move{justify-content:space-between;column-gap:8px}
+#slots .td72-slot-move>.td72-move-name{margin-right:0}
+#slots .td72-slot-move>.td72-move-extra{
+  flex:0 0 auto;
+  margin-left:auto;
+  justify-content:flex-end;
+  text-align:right;
+}
+#slots .td72-slot-move>.td72-move-extra small{display:block;white-space:nowrap}
