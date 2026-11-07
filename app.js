@@ -216,10 +216,10 @@ for(const id of ['teamsTab','battleTab','dexTab','moreTab'])$(id)?.addEventListe
 
 function clearForm(){chosen=null;validMoves=[];selectedMoves=[null,null,null,null];$('pokeInput').value='';$('pokeNickname').value='';$('pokePreview').innerHTML='';$('moveNote').textContent='Select a Pokémon to load its moves.';$('error').hidden=true;$('savePoke').disabled=true;drawMoves()}
 function editSlot(i){slotIndex=i;clearForm();$('pokeHeading').textContent=current.pokemon[i]?'Edit Pokémon':'Add Pokémon';$('removePoke').hidden=!current.pokemon[i];$('evolvePoke').hidden=!current.pokemon[i]||evolutionStatus.get(current.pokemon[i]?.id+':'+current.game)===false;$('pokeDialog').showModal();const p=current.pokemon[i];if(p){$('pokeInput').value=p.name;$('pokeNickname').value=p.nickname||'';loadPokemon(p.id,p.moves)}}
-async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=historicalTypes(p,current.game);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image,baseSpeed:p.stats.find(s=>s.stat.name==='speed')?.base_stat,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,current.game)};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();Promise.all(selectedMoves.map(async (m,i)=>{if(m){selectedMoves[i]=await enrichMove(m,gameGeneration(current.game))}})).then(()=>{if(version===lookupVersion)drawMoves()});$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
+async function loadPokemon(name,old=[]){const version=++lookupVersion;$('savePoke').disabled=true;$('moveNote').textContent='Loading moves…';try{const p=await api('pokemon/'+name);if(version!==lookupVersion)return;const types=historicalTypes(p,current.game);const image=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';chosen={id:p.id,name:pretty(p.name),types,image,baseSpeed:p.stats.find(s=>s.stat.name==='speed')?.base_stat,baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,current.game)};validMoves=p.moves.filter(m=>m.version_group_details.some(d=>d.version_group.name===vg[current.game])).map(m=>m.move.name);selectedMoves=old.concat([null,null,null,null]).slice(0,4);$('pokePreview').innerHTML=`<div class="identity"><img src="${safe(image)}" alt=""><div><strong>${safe(chosen.name)}</strong><div class="pills">${types.map(pill).join('')}</div></div></div>`;drawMoves();Promise.all(selectedMoves.map(async (m,i)=>{if(m){selectedMoves[i]=await enrichMove(m,gameGeneration(current.game),current.game)}})).then(()=>{if(version===lookupVersion)drawMoves()});$('moveNote').textContent=`Moves listed for ${current.game}. Select each attack from the dropdown.`;$('savePoke').disabled=false}catch(e){$('error').hidden=false;$('error').textContent='Could not load Pokémon. Check your connection.'}}
 function drawMoves(){$('moveFields').innerHTML=Array.from({length:4},(_,i)=>`<div class="moveRow"><b>${i+1}</b><div><div class="search"><input data-move-input="${i}" autocomplete="off" placeholder="Search attack ${i+1}" value="${safe(selectedMoves[i]?.name||'')}"><div class="suggestions" data-results="${i}" hidden></div></div><div class="moveType" data-type="${i}">${selectedMoves[i]?.type?pill(selectedMoves[i].type)+moveStats(selectedMoves[i]):''}</div></div><button type="button" class="clear" data-clear="${i}">×</button></div>`).join('')}
 $('moveFields').addEventListener('input',e=>{const i=e.target.dataset.moveInput;if(i===undefined)return;selectedMoves[+i]=null;const results=document.querySelector(`[data-results="${i}"]`),q=e.target.value.toLowerCase();document.querySelector(`[data-type="${i}"]`).innerHTML='';results.hidden=!q;results.innerHTML=validMoves.filter(n=>n.includes(q.replace(/\s+/g,'-'))).slice(0,12).map(n=>`<button type="button" data-pick="${i}" data-name="${safe(n)}">${safe(pretty(n))}</button>`).join('')||'<p class="note">No matching move for this game</p>'});
-$('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.target.closest('[data-pick]');if(c){const i=+c.dataset.clear;selectedMoves[i]=null;drawMoves()}if(b){const i=+b.dataset.pick,n=b.dataset.name;document.querySelector(`[data-results="${i}"]`).hidden=true;try{const m=await api('move/'+n);selectedMoves[i]={name:pretty(n),...moveGenerationData(m,gameGeneration(current.game)),target:m.target?.name,priority:m.priority||0,metaGeneration:gameGeneration(current.game)};drawMoves()}catch{$('error').hidden=false;$('error').textContent='Could not load move type.'}}};
+$('moveFields').onclick=async e=>{const c=e.target.closest('[data-clear]'),b=e.target.closest('[data-pick]');if(c){const i=+c.dataset.clear;selectedMoves[i]=null;drawMoves()}if(b){const i=+b.dataset.pick,n=b.dataset.name;document.querySelector(`[data-results="${i}"]`).hidden=true;try{const m=await api('move/'+n);selectedMoves[i]={name:pretty(n),...moveGenerationData(m,gameGeneration(current.game),current.game),target:m.target?.name,priority:m.priority||0,metaGeneration:gameGeneration(current.game),historicalRevision:1};drawMoves()}catch{$('error').hidden=false;$('error').textContent='Could not load move type.'}}};
 $('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen)return;current.pokemon[slotIndex]={...chosen,nickname:$('pokeNickname').value.trim(),moves:selectedMoves.filter(Boolean)};save();showSlots();showTeams();$('pokeDialog').close()};$('evolvePoke').onclick=()=>evolveSlot(slotIndex);$('removePoke').onclick=()=>{current.pokemon[slotIndex]=null;save();showSlots();showTeams();$('pokeDialog').close()};$('cancelPoke').onclick=()=>$('pokeDialog').close();
 $('game').innerHTML='<option value="">Choose game…</option>'+games.map(g=>`<option>${g}</option>`).join('');$('game').value='';$('game').required=true;const td71TeamName=$('teamName');function td71UpdateTeamPlaceholder(){td71TeamName.placeholder=games.includes($('game').value)?'My '+$('game').value+' team':'My Pokémon team'}$('game').addEventListener('change',td71UpdateTeamPlaceholder);td71UpdateTeamPlaceholder();$('addTeam').onclick=()=>{$('game').value='';td71UpdateTeamPlaceholder();$('newDialog').showModal()};$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();if(!games.includes($('game').value)){$('game').reportValidity();return}const t={id:String(Date.now())+Math.random().toString(36).slice(2),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id);td72DetailsTeam=t.id;showTeams()};$('closeTeam').onclick=td70CloseTeam;$('editTeamGame').innerHTML=games.map(g=>`<option>${g}</option>`).join('');
 $('editTeam').onclick=()=>{if(!current)return;$('editTeamName').value=current.name;$('editTeamGame').value=current.game;$('editTeamDialog').showModal()};
@@ -343,32 +343,82 @@ function matchup(attack,defenders,gen){
 }
 function effectText(x){return x===0?'Immune':x===.25?'¼×':x===.5?'½×':x===1?'1×':x===2?'2×':x===4?'4×':`${x}×`}
 
-function moveGenerationData(data,gen){
+// V72.1: PokeAPI past_values mark the VERSION GROUP at which an older
+// value stopped applying, not merely a generation.  Within Gen 7, Let's Go
+// temporarily changed Solar Beam/Sky Attack/Absorb/Mega Drain and Sword/Shield
+// restored their normal values.  Treating those groups as whole generations
+// incorrectly assigned 200 BP to Solar Beam in Emerald and Platinum.
+const TD72_MOVE_GROUP_TIME={
+ 'red-blue':1,'yellow':1.2,
+ 'gold-silver':2,'crystal':2.2,
+ 'ruby-sapphire':3,'colosseum':3.1,'firered-leafgreen':3.2,'emerald':3.3,'xd':3.4,
+ 'diamond-pearl':4,'platinum':4.2,'heartgold-soulsilver':4.4,
+ 'black-white':5,'black-2-white-2':5.3,
+ 'x-y':6,'omega-ruby-alpha-sapphire':6.4,
+ 'sun-moon':7,'ultra-sun-ultra-moon':7.3,'lets-go-pikachu-lets-go-eevee':7.7,
+ 'sword-shield':8,'the-isle-of-armor':8.1,'the-crown-tundra':8.2,
+ 'brilliant-diamond-and-shining-pearl':8.3,'legends-arceus':8.5,
+ 'scarlet-violet':9,'the-teal-mask':9.2,'the-indigo-disk':9.4
+};
+// For generation-only queries, use the final non-Let's-Go main-series
+// reference of that generation.  Game-specific UI passes its exact game.
+const TD72_MAINLINE_VERSION_POINT={1:1.2,2:2.2,3:3.4,4:4.4,5:5.3,6:6.4,7:7.3,8:8.3,9:9.4};
+function generationFromName(name){
+ const key=String(name||'').toLowerCase();
+ const roman={i:1,ii:2,iii:3,iv:4,v:5,vi:6,vii:7,viii:8,ix:9};
+ return TD72_MOVE_GROUP_TIME[key]??roman[key.replace(/^generation-/,'')]??null;
+}
+function moveGenerationData(data,gen,game){
  let power=data.power,accuracy=data.accuracy,pp=data.pp,type=data.type?.name,damageClass=data.damage_class?.name;
- // PokeAPI past_values entries describe values BEFORE their generation change.
- const changes=[...(data.past_values||[])].sort((a,b)=>generationFromName(b.version_group?.name)-generationFromName(a.version_group?.name));
- for(const change of changes){
-  const changeGen=generationFromName(change.version_group?.name);
-  if(changeGen>gen){
-   if(Number.isFinite(change.power))power=change.power; // null in past_values means unchanged, not zero
-   if(Object.hasOwn(change,'accuracy') && Number.isFinite(change.accuracy))accuracy=change.accuracy; // null past value must not overwrite known numeric accuracy
-   if(Object.hasOwn(change,'pp')&&Number.isFinite(change.pp))pp=change.pp;
-   if(change.type)type=change.type.name;
-  }
+ const point=game&&TD72_MOVE_GROUP_TIME[vg[game]]!==undefined
+  ? TD72_MOVE_GROUP_TIME[vg[game]]
+  : (TD72_MAINLINE_VERSION_POINT[gen]??gen);
+ // Move past_values are previous values BEFORE the change at version_group.
+ // Apply changes newest to oldest until reaching the selected game's version.
+ const changes=[...(data.past_values||[])].map(change=>({change,at:generationFromName(change.version_group?.name)}))
+  .filter(row=>Number.isFinite(row.at))
+  .sort((a,b)=>b.at-a.at);
+ for(const {change,at} of changes){
+  if(at<=point)continue;
+  if(Number.isFinite(change.power))power=change.power;
+  if(Number.isFinite(change.accuracy))accuracy=change.accuracy;
+  if(Number.isFinite(change.pp))pp=change.pp;
+  if(change.type)type=change.type.name;
  }
+ // Pre-Gen4 physical/special was determined by elemental move type.
  if(gen<=3&&damageClass!=='status'){
   const special=['fire','water','electric','grass','ice','psychic','dragon','dark'];
   damageClass=special.includes(type)?'special':'physical';
  }
  return {power,accuracy,pp,type,damageClass};
 }
-function generationFromName(name){
- const key=name||'';
- const order=['red-blue','gold-silver','ruby-sapphire','diamond-pearl','black-white','x-y','sun-moon','sword-shield','scarlet-violet'];
- const aliases={yellow:1,crystal:2,emerald:3,'firered-leafgreen':3,platinum:4,'heartgold-soulsilver':4,'black-2-white-2':5,'omega-ruby-alpha-sapphire':6,'ultra-sun-ultra-moon':7,'brilliant-diamond-and-shining-pearl':8};
- if(aliases[key])return aliases[key];
- const i=order.indexOf(key);return i<0?9:i+1;
+// Guard against saved team records produced by the older historical parser.
+// These four moves changed ONLY in the Gen 7 Let's Go spin-offs.
+const TD72_MAINLINE_MOVE_CORRECTIONS={
+ 'solar-beam':{power:120,pp:10},
+ 'sky-attack':{power:140,pp:5},
+ // Both moves gained five PP in Gen 4. Do NOT overwrite Emerald's Gen 3 PP.
+ 'absorb':{power:20,pp:25,ppBefore4:20},
+ 'mega-drain':{power:40,pp:15,ppBefore4:10}
+};
+function td72MainlineCorrection(m,gen){
+ if(!m||gen>7||gen<1)return false;
+ const key=String(m.name||'').trim().replace(/([a-z])([A-Z])/g,'$1-$2').toLowerCase().replace(/[\s_]+/g,'-');
+ const expected=TD72_MAINLINE_MOVE_CORRECTIONS[key];
+ if(!expected)return false;
+ let changed=false;
+ for(const [k,v] of [['power',expected.power],['pp',gen<=3?(expected.ppBefore4??expected.pp):expected.pp]])if(m[k]!==v){m[k]=v;changed=true;}
+ return changed;
 }
+// Existing local teams may have the bad 200-PWR value stored persistently.
+// Correct them at startup, BEFORE showing any Battle recommendation.
+(function td72RepairSavedMoveHistory(){
+ let dirty=false;
+ for(const t of teams)for(const pokemon of (t.pokemon||[]))if(pokemon){
+  for(const m of (pokemon.moves||[]))if(td72MainlineCorrection(m,gameGeneration(t.game)))dirty=true;
+ }
+ if(dirty){try{save()}catch(e){console.warn('Move history corrected in memory; could not persist yet',e)}}
+})();
 // Relative expected move strength, not a damage calculator. Base stats provide only an approximate ratio.
 const ALWAYS_HIT_MOVES=new Set(['Swift','Aerial Ace','Shock Wave','Magical Leaf','Feint Attack','Faint Attack','Shadow Punch','Aura Sphere','Magnet Bomb','Disarming Voice','Smart Strike','Flower Trick']);
 const VARIABLE_MOVES=new Set(['Magnitude','Present','Hidden Power','Return','Frustration','Flail','Reversal','Low Kick','Grass Knot','Gyro Ball','Electro Ball','Heavy Slam','Heat Crash','Eruption','Water Spout','Facade','Brine','Payback','Avalanche','Revenge','Assurance','Acrobatics','Hex','Venoshock','Stored Power','Punishment','Fling','Natural Gift','Trump Card','Rollout','Ice Ball','Fury Cutter','Triple Kick','Triple Axel','Beat Up','Seismic Toss','Night Shade','Dragon Rage','Sonic Boom','Super Fang','Endeavor','Psywave','Counter','Mirror Coat','Metal Burst','Bide','Final Gambit','OHKO','Guillotine','Horn Drill','Fissure','Sheer Cold']);
@@ -466,12 +516,12 @@ function expectedPower(m,attacker,target,gen){
 }
 function effectivePowerLabel(m){if(m.powerIndex===null||m.powerIndex===undefined)return 'Estimated score —';return 'Attack score '+Math.round(m.powerIndex)}
 function moveStats(m){return `<span class="move-stats">PWR ${safe(movePowerText(m))} · ACC ${safe(accuracyLabel(m))}</span>`}
-async function enrichMove(m,gen){
- if(m.metaGeneration===gen&&m.power!==undefined&&m.accuracy!==undefined&&m.target!==undefined)return m;
+async function enrichMove(m,gen,game){
+ if(m.metaGeneration===gen&&m.historicalRevision===1&&m.power!==undefined&&m.accuracy!==undefined&&m.target!==undefined)return m;
  try{
   const data=await api('move/'+String(m.name).toLowerCase().replace(/\s+/g,'-'));
-  const historical=moveGenerationData(data,gen);return {...m,...historical,target:data.target?.name,priority:data.priority||0,alwaysHit:data.meta?.accuracy===null&&data.accuracy===null,metaGeneration:gen};
- }catch{return m}
+  const historical=moveGenerationData(data,gen,game);return {...m,...historical,target:data.target?.name,priority:data.priority||0,alwaysHit:data.meta?.accuracy===null&&data.accuracy===null,metaGeneration:gen,historicalRevision:1};
+ }catch{td72MainlineCorrection(m,gen);return m}
 }
 async function enrichTeamMoves(){
  if(!current)return;
@@ -481,8 +531,8 @@ async function enrichTeamMoves(){
   if(!p.baseStats||!p.abilities){try{const info=await api('pokemon/'+p.id);p.baseStats=Object.fromEntries(info.stats.map(s=>[s.stat.name,s.base_stat]));p.abilities=info.abilities;updated=true}catch{}}
   for(let i=0;i<p.moves.length;i++){
    const m=p.moves[i];
-   if(m.metaGeneration!==gen||m.accuracy===undefined||m.target===undefined){
-    const next=await enrichMove(m,gen);
+   if(m.metaGeneration!==gen||m.historicalRevision!==1||m.accuracy===undefined||m.target===undefined){
+    const next=await enrichMove(m,gen,team.game);
     if(next!==m){p.moves[i]=next;updated=true}
    }
   }
@@ -829,7 +879,7 @@ async function tak62RenderSmart(host,pokemon,game,isCurrent){
  async function worker(){while(cursor<applicable.length){const i=cursor++,item=applicable[i];
   try{
    const d=await api('move/'+encodeURIComponent(item.name));
-   const hist=moveGenerationData(d,gen);
+   const hist=moveGenerationData(d,gen,game);
    let machine=lookup.get(item.name)||null;
    if(!machine&&item.details.some(x=>x.move_learn_method?.name==='machine')){
     // PokeAPI move.machines is version-group-specific, not a global TM number.
@@ -966,7 +1016,7 @@ $('dexSearch').onclick=async()=>{
   }));
   const moves=pokemon.moves.flatMap(m=>m.version_group_details.filter(v=>v.version_group.name===version&&v.move_learn_method.name==='level-up').map(v=>({name:m.move.name,level:v.level_learned_at}))).sort((a,b)=>a.level-b.level||a.name.localeCompare(b.name));
   const unique=[...new Map(moves.map(m=>[m.level+':'+m.name,m])).values()];
-  const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game))}}catch{return m}}));
+  const details=await Promise.all(unique.map(async m=>{try{const data=await api('move/'+m.name);return {...m,...moveGenerationData(data,gameGeneration(game),game)}}catch{return m}}));
   // Autocomplete may trigger rapid consecutive searches: only the latest may render.
   if(requestId!==takDexDexRequestV56)return;
   const img=pokemon.sprites.other?.['official-artwork']?.front_default||pokemon.sprites.front_default||'';
@@ -1362,7 +1412,7 @@ if(!$('planMode').querySelector('[value="story"]'))$('planMode').querySelector('
 $('planMode').parentElement.firstChild.textContent='Opponent category';
 $('planVersion').parentElement.firstChild.textContent='Battle version';
 $('planGame').onchange=()=>{td70PlannerRequest++;plannerOwn=[];renderPlannerSlots('planOwn',plannerOwn,true);$('planResults').textContent='Choose an opponent and analyze matchups.';syncPlanner()};$('planMode').onchange=syncPlanner;$('planTrainer').onchange=()=>{loadPlannerRoster();const note=$('eliteNote');if(note){const double=$('planMode').value==='gym'&&$('planTrainer').value==='Tate & Liza';note.dataset.double=String(double);if(double&&!note.textContent.includes('double battle'))note.insertAdjacentHTML('beforeend',' <b>Tate &amp; Liza is a double battle; planner calculations remain individual.</b>')}};$('planVersion').onchange=loadPlannerRoster;$('planTeam').onchange=()=>{const t=selectedTeam('planTeam');if(t&&t.game!==$('planGame').value){refreshPlannerTeamMenu();return}if(t)openTeam(t.id);importPlannerTeam();$('planResults').textContent='Choose an opponent and analyze matchups.'};
-async function loadPlannerPokemon(e,gen,game){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).filter(Boolean).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen)}}catch{return {name:pretty(n),power:null}}}));return {id:p.id,name:pretty(p.name),types:historicalTypes(p,game),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,game),level:e.level,moves,selectedAbility:abilityNames({abilities:historicalAbilities(p,game)}).includes(e.ability)?e.ability:null}}
+async function loadPlannerPokemon(e,gen,game){const p=await api('pokemon/'+encodeURIComponent(e.name));const moves=await Promise.all((e.moves||[]).filter(Boolean).map(async n=>{try{const m=await api('move/'+encodeURIComponent(n));return {name:pretty(m.name),...moveGenerationData(m,gen,game)}}catch{return {name:pretty(n),power:null}}}));return {id:p.id,name:pretty(p.name),types:historicalTypes(p,game),baseStats:Object.fromEntries(p.stats.map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,game),level:e.level,moves,selectedAbility:abilityNames({abilities:historicalAbilities(p,game)}).includes(e.ability)?e.ability:null}}
 function estimateDamage(a,d,m,gen){if(!m||m.damageClass==='status'||!movePowerRange(m)||td72AbilityReport(m,d,gen).possibleImmune.length)return null;const eff=defensiveEffect(m,d,gen);if(eff===null||eff===0)return 0;const category=m.damageClass==='special'?'special':'physical';const attack=a.baseStats?.[category==='special'?'special-attack':'attack']||70,defense=d.baseStats?.[category==='special'?'special-defense':'defense']||70;
  const power=['Rollout','Ice Ball'].includes(m.name)?30:(movePowerRange(m).min+movePowerRange(m).max)/2;const l=Math.max(1,Math.min(100,a.level||50)),al=Math.max(1,Math.min(100,d.level||50));const atk=Math.floor((2*attack+31)*l/100)+5,def=Math.floor((2*defense+31)*al/100)+5;const stab=a.types.includes(m.type)?1.5:1;return Math.max(1,Math.floor((Math.floor((2*l/5+2)*power*atk/Math.max(1,def)/50)+2)*eff*stab))}
 function estimatedHP(p){const hp=p.baseStats?.hp||70,level=Math.max(1,Math.min(100,p.level||50));return Math.floor((2*hp+15)*level/100)+level+10}
@@ -2891,14 +2941,14 @@ update();
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V72 · Development preview 3</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "V4 · Android release" : "V4 · Last released Android build"}</p>
- <p><strong>Build:</strong> 2026-11-06</p>
+ <p><strong>Web version:</strong> V72.1 · move-history hotfix</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "V4 · Android release" : "V4 · Last released Android build"}</p>
+ <p><strong>Build:</strong> 2026-11-07</p>
  
  <p class="note">Pokémon companion for team building, Pokédex reference, battle matchups, the 6v6 Planner and offline data. Built and improved through actual playthroughs.</p></div>
  <div class="card td70-about-card"><h3>Storage &amp; offline reference</h3><p class="note" id="td70AboutStorage">Checking local storage…</p></div>
  <div class="tool-card"><button type="button" id="td68OpenCoverage" class="tool-link">▦ Database Coverage ›</button></div>
  <p class="note">Database Coverage shows local reference packs and available trainer presets. A listed Pokémon or trainer is not proof that every acquisition requirement or opponent move has been verified.</p>
- <div class="card td70-about-card"><h3>Release status</h3><p class="note">V72 DEV3 development preview. Android V4 remains the installed stable release. Historical mechanics, Platinum trainer moves, offline packs, and Android sharing may still require on-device verification. Existing saved teams are kept on this device.</p></div>`;
+ <div class="card td70-about-card"><h3>Release status</h3><p class="note">V72.1 move-history hotfix. Android V4 remains the installed stable release. Historical mechanics, Platinum trainer moves, offline packs, and Android sharing may still require on-device verification. Existing saved teams are kept on this device.</p></div>`;
  main.appendChild(aboutPage);
  const covButton=$('td68OpenCoverage');
  let aboutStorageToken=0;
@@ -3011,7 +3061,7 @@ update();
    const collected=[],missing=[];let cursor=0,done=0;
    const introduced=d=>({ 'generation-i':1,'generation-ii':2,'generation-iii':3,'generation-iv':4,'generation-v':5,'generation-vi':6,'generation-vii':7,'generation-viii':8,'generation-ix':9 })[d.generation?.name]||99;
    async function worker(){while(cursor<names.length&&request===td72TypeRequest){const name=names[cursor++];
-     try{const d=await api('move/'+encodeURIComponent(name));if(introduced(d)<=gen){const h=moveGenerationData(d,gen);if(h.type===type)collected.push({name,...h})}}
+     try{const d=await api('move/'+encodeURIComponent(name));if(introduced(d)<=gen){const h=moveGenerationData(d,gen,game);if(h.type===type)collected.push({name,...h})}}
      catch{missing.push(name)}
      done++;if(done%12===0&&request===td72TypeRequest)td72TypeStatus.textContent=`Checking ${done}/${names.length} moves for ${game}…`;
    }}
@@ -3094,7 +3144,7 @@ update();
  query.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=suggest.querySelector('[data-td68-select]');const name=!suggest.hidden&&first?first.dataset.td68Select:query.value;suggest.hidden=true;load(name)}if(e.key==='Escape')suggest.hidden=true});
  $('td68MoveGo').addEventListener('click',()=>{suggest.hidden=true;load(query.value)});
  const generationNames=['','Red/Blue/Yellow','Gold/Silver/Crystal','Ruby/Sapphire/Emerald/FRLG','Diamond/Pearl/Platinum/HGSS','Black/White/B2W2','X/Y/ORAS','Sun/Moon/USUM','Sword/Shield/BDSP','Scarlet/Violet'];
- function statsAt(data,g){const hist=moveGenerationData(data,g),intro=generationFromName(data.generation?.name?.replace('generation-','')||'');return {...hist,pp:hist.pp??data.pp}}
+ function statsAt(data,g,game){const hist=moveGenerationData(data,g,game),intro=generationFromName(data.generation?.name?.replace('generation-','')||'');return {...hist,pp:hist.pp??data.pp}}
  function statDesc(n){return Number.isFinite(n)?String(n):'—'}
  function english(rows){return (rows||[]).find(r=>r.language?.name==='en')||null}
  function paragraphs(s){return String(s||'').split(/\n+/).map(t=>t.trim()).filter(Boolean).map(t=>`<p>${safe(t)}</p>`).join('')}
@@ -3113,7 +3163,7 @@ update();
    const introduced=({'generation-i':1,'generation-ii':2,'generation-iii':3,'generation-iv':4,'generation-v':5,'generation-vi':6,'generation-vii':7,'generation-viii':8,'generation-ix':9})[data.generation?.name]||1;
    const globalLatest={power:data.power,accuracy:data.accuracy,pp:data.pp,damageClass:data.damage_class?.name,type:data.type?.name};
    const introducedYet=!selectedGen||selectedGen>=introduced;
-   const present=introducedYet?(selectedGen?statsAt(data,selectedGen):globalLatest):{power:null,accuracy:null,pp:null,damageClass:null,type:null};
+   const present=introducedYet?(selectedGen?statsAt(data,selectedGen,game):globalLatest):{power:null,accuracy:null,pp:null,damageClass:null,type:null};
    const rows=[];for(let g=introduced;g<=9;g++){const item=statsAt(data,g);rows.push({...item,g})}
    const desc=english(data.effect_entries),flavor=english([...(data.flavor_text_entries||[])].reverse());
    let effectText=guidance[data.name]||desc?.short_effect||flavor?.flavor_text||'A verified effect description is not available in this record.';
