@@ -11,7 +11,7 @@
 <meta property="og:description" content="Build your Pokémon team, analyze matchups, estimate damage and prepare for your next battle.">
 <meta property="og:url" content="https://alexandrestp337.github.io/Tak-Dex/">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="styles.css?v=72.3.1">
+<link rel="stylesheet" href="styles.css?v=73.0.5.3">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 
@@ -104,7 +104,6 @@
 
 <section id="battlePage" hidden>
   <h2 class="section-label">◉ OPPONENT</h2>
-  <p>Choose the opposing Pokémon to see how effective your team's moves are.</p>
   <div class="mode-switch">
     <button type="button" id="singleMode" class="selected">Single battle</button>
     <button type="button" id="doubleMode">Double battle</button>
@@ -133,7 +132,9 @@
 
 <section id="dexPage" hidden>
   <h2>Pokédex</h2>
-  <div class="tool-card">
+  <details id="td73DexSelector" class="td73-dex-selector" open>
+    <summary><strong>Find a Pokémon</strong><span aria-hidden="true">⌄</span></summary>
+    <div class="tool-card">
     <label>Game<select id="dexGame"></select></label>
     <label>Saved team<select id="dexTeam"></select></label>
     <label>Team Pokémon<select id="dexTeamPoke"></select></label>
@@ -145,7 +146,9 @@
       </div>
     </label>
     <button type="button" id="dexSearch">View Pokémon</button>
-  </div>
+    </div>
+  </details>
+  <button type="button" id="td73DexReturn" class="td73-back-button" hidden>← Back to Battle</button>
   <div id="dexResult" aria-live="polite"></div>
 </section>
 
@@ -154,16 +157,31 @@
   <div class="tool-card">
     <button type="button" id="openPlanner" class="tool-link">⚔ 6v6 Battle Planner ›</button>
     <button type="button" id="openTM" class="tool-link">▣ TM / HM Compatibility ›</button>
+    <button type="button" id="openMaps" class="tool-link">⌖ Interactive Maps ›</button>
   </div>
   <div class="card offline-card">
     <h3>Offline data</h3>
     <p id="offlineStatus" class="note">Checking offline data…</p>
     <button type="button" id="offlineDownload">Download offline data</button>
-    <p class="note">Optional full download: Pokémon, moves, evolution chains, species, all game-specific TM/HM machine records and artwork. This can take considerable time and storage. Keep the app open while downloading.</p>
+    <p class="note">Keep the app open until the download finishes.</p>
   </div>
   <div class="card theme-card">
     <h3>Theme</h3>
     <button type="button" id="moreTheme">Toggle light / dark mode</button>
+  </div>
+</section>
+
+<section id="mapsPage" hidden>
+  <div class="bar"><h2>Interactive Maps</h2><button type="button" id="backMaps">← More</button></div>
+  <div class="tool-card td73-map-filters">
+    <label>Game<select id="mapsGame"></select></label>
+    <input id="mapsRegion" type="hidden" value="">
+    <label>Find location<input id="mapsSearch" type="search" placeholder="e.g. Lake Valor, Route 212" autocomplete="off"></label>
+    <label>Show<select id="mapsCategory"><option value="all">All landmarks</option><option value="town">Cities &amp; towns</option><option value="route">Routes</option><option value="landmark">Special locations</option><option value="tutor">Move Tutors</option><option value="gym">Gyms &amp; Badges</option></select></label>
+  </div>
+  <div id="mapsContent" class="td73-map-layout" hidden>
+    <div class="card td73-map-card"><div class="td73-map-toolbar"><strong id="mapsHeading">Region map</strong><span><button id="mapsZoomOut" type="button" aria-label="Zoom out">−</button><button id="mapsZoomIn" type="button" aria-label="Zoom in">+</button><button id="mapsZoomReset" type="button">Reset</button><span id="mapsZoomValue" class="td73-map-zoom-value">100%</span></span></div><div id="mapsCanvas" class="td73-map-canvas" role="group" aria-label="Interactive Platinum Sinnoh map with location pins"></div></div>
+    <div class="td73-map-side"><article class="card" id="mapsDetails"><h3>Select a location</h3><p class="note">Tap a map pin or a location below for details.</p></article><section class="card"><h3>Locations</h3><p class="note" id="mapsCount">Select a game to load the region.</p><div id="mapsList" class="td73-map-location-list"></div></section></div>
   </div>
 </section>
 
@@ -172,7 +190,6 @@
     <h2>6v6 Battle Planner</h2>
     <button type="button" id="backPlanner">← More</button>
   </div>
-  <p class="note">This planner uses levels, moves and base stats. It is separate from quick Single / Double battles.</p>
   <div class="tool-card">
     <label>Game<select id="planGame"></select></label>
     <label>Battle type
@@ -281,7 +298,6 @@
     <h2>Edit team</h2>
     <label>Team name<input id="editTeamName" maxlength="40" required></label>
     <label>Game<select id="editTeamGame"></select></label>
-    <p class="note">Changing the game may affect move availability and Pokémon typings.</p>
     <div class="buttons">
       <button type="button" id="cancelEditTeam">Cancel</button>
       <button>Save changes</button>
@@ -319,8 +335,11 @@
   </form>
 </dialog>
 
-<footer>TAK-DEX · Teams saved on this device · Online works immediately; offline requires the optional full download.</footer>
+<footer>TAK-DEX · Teams saved on this device · Online works immediately; choose your game under More → Offline Data.</footer>
 
-<script src="app.js?v=72.4"></script>
+<script src="app.js?v=73.0.5.3"></script>
+<script src="tutor-locations.js?v=73.0.5.3"></script>
+<script src="v73-ui.js?v=73.0.5.3"></script>
+<script src="maps.js?v=73.0.5.3"></script>
 </body>
 </html>

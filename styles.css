@@ -504,3 +504,118 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
   text-align:right;
 }
 #slots .td72-slot-move>.td72-move-extra small{display:block;white-space:nowrap}
+
+
+/* V73 DEV1 — Native touch flash uses Tak-Dex red, but existing transparent
+   highlights stay transparent. No new click animation or active state. */
+:root{ -webkit-tap-highlight-color:rgba(223,46,65,.25); }
+.main-tabs button,.tool-link,.td70-dex-slot{ -webkit-tap-highlight-color:transparent; }
+
+/* Pokédex search selector — genuinely collapsible, independent of results. */
+#td73DexSelector{margin:12px 0 16px;border:1px solid var(--edge);border-radius:14px;overflow:hidden;background:var(--card)}
+#td73DexSelector>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 17px;cursor:pointer;user-select:none;list-style:none;color:var(--text)}
+#td73DexSelector>summary::-webkit-details-marker{display:none}
+#td73DexSelector>summary>span{font-size:1.2rem;color:var(--muted);transition:transform .15s ease}
+#td73DexSelector[open]>summary>span{transform:rotate(180deg)}
+#td73DexSelector>.tool-card{border:0;margin:0;border-radius:0;border-top:1px solid var(--edge);box-shadow:none}
+.td73-back-button{margin:4px 0 14px;padding:8px 13px}
+.td73-poke-link{cursor:pointer;border-radius:9px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.td73-poke-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.td73-planner-poke{display:inline-flex;align-items:center;gap:6px;max-width:100%;text-align:left}
+.td73-planner-poke img{width:36px;height:36px;object-fit:contain}
+/* V73 DEV2: real Sinnoh game artwork with plain, accessible pinpoints. */
+.td73-map-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:end}
+.td73-map-filters label{min-width:0}
+.td73-region-label{min-height:54px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:5px 4px;color:var(--muted);font-size:.83rem}
+.td73-region-label strong{font-size:1.05rem;color:var(--text)}
+.td73-map-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr);gap:12px;align-items:start}
+.td73-map-layout .card{margin:0 0 12px;min-width:0}
+.td73-map-card{min-width:0;padding:12px}
+.td73-map-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:10px}
+.td73-map-toolbar span{display:flex;gap:5px}
+.td73-map-toolbar button{min-width:32px;min-height:32px;padding:4px 7px}
+.td73-map-canvas{width:100%;aspect-ratio:1024/724;min-height:180px;max-height:none;overflow:hidden;border-radius:12px;background:#15181f;touch-action:none;position:relative}
+.td73-map-canvas svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.td73-map-canvas .td73-map-place{cursor:pointer;outline:none}
+.td73-map-canvas .td73-map-place .td73-pin-hit{fill:transparent;stroke:none}
+.td73-map-canvas .td73-map-place .td73-pin-core{fill:#df2d42;stroke:#fff;stroke-width:3.2}
+.td73-map-canvas .td73-map-place.selected .td73-pin-core{fill:#fff;stroke:#c71d36;stroke-width:5}
+.td73-map-canvas .td73-map-place:focus-visible .td73-pin-core{stroke:#fff;stroke-width:6}
+.td73-map-canvas .td73-map-place .td73-pin-halo{fill:#12151bb5;stroke:#fff9;stroke-width:1}
+.td73-map-canvas .td73-map-place.selected .td73-pin-halo{stroke:#fff;stroke-width:2}
+.td73-map-no-game{min-height:170px;display:grid;place-content:center;gap:8px;padding:26px;text-align:center;color:var(--muted)}
+.td73-map-no-game strong{color:var(--text)}
+.td73-map-credit{font-size:.72rem;line-height:1.5;color:var(--muted)}
+.td73-map-location-list{max-height:390px;overflow-y:auto;display:grid;gap:4px}
+.td73-map-location-list button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:9px;border:1px solid var(--edge);background:transparent;color:var(--text);border-radius:9px;cursor:pointer;font:inherit;font-size:.83rem}
+.td73-map-location-list button.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.td73-map-location-list small{white-space:nowrap;color:var(--muted)}
+#mapsDetails h3{margin-top:0}
+#mapsDetails .td73-detail-actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+#mapsDetails .td73-detail-actions button{font-size:.8rem}
+#mapsDetails .td73-tutor-list{display:grid;gap:5px;margin-top:8px}
+#mapsDetails .td73-tutor-list div{padding:6px 8px;background:color-mix(in srgb,var(--accent) 5%,transparent);border-radius:7px;font-size:.8rem}
+.td73-map-footnote{margin:9px 1px 0;font-size:.76rem}
+@media(max-width:720px){.td73-map-layout{grid-template-columns:1fr}.td73-map-filters{grid-template-columns:1fr 1fr}}
+@media(max-width:390px){.td73-map-filters{grid-template-columns:1fr}}
+
+/* V73 DEV3: fan map dimensions and selection-only route highlights. */
+.td73-map-canvas{aspect-ratio:1100/947}
+.td73-map-toolbar .td73-map-zoom-value{font-size:.72rem;color:var(--muted);min-width:38px;text-align:right;align-self:center}
+.td73-map-canvas .td73-map-route{cursor:pointer;outline:none}
+.td73-map-canvas .td73-map-route polyline{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.td73-map-canvas .td73-map-route .td73-route-hit{stroke:rgba(0,0,0,0.005);stroke-width:25;pointer-events:stroke}
+.td73-map-canvas .td73-map-route .td73-route-visible{stroke:#dc243d;stroke-width:6;opacity:0}
+.td73-map-canvas .td73-map-route .td73-route-glow{stroke:#fff;stroke-width:12;opacity:0}
+.td73-map-canvas .td73-map-route.selected .td73-route-visible{opacity:1}
+.td73-map-canvas .td73-map-route.selected .td73-route-glow{opacity:.95}
+.td73-map-canvas .td73-map-route:focus-visible .td73-route-visible{opacity:1;stroke:#fff}
+.td73-map-canvas .td73-map-place .td73-pin-core{fill:#d82140;stroke:#fff;stroke-width:2.5}
+.td73-map-canvas .td73-map-place .td73-pin-halo{fill:rgba(15,18,24,.5);stroke:#fff;stroke-width:1.5}
+.td73-map-canvas .td73-map-place.selected .td73-pin-halo{fill:#d82140;stroke:#fff;stroke-width:2.8}
+.td73-map-location-list button.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 17%,transparent);box-shadow:inset 3px 0 var(--accent)}
+@media(max-width:720px){.td73-map-location-list{max-height:330px}.td73-map-canvas .td73-map-route .td73-route-hit{stroke-width:34}}
+
+/* DEV4: HD Town Map, native markers preserved beneath interactive hit targets. */
+.td73-map-canvas{aspect-ratio:1/1;background:#087fa9}
+.td73-map-canvas .td73-map-place.td73-map-town .td73-pin-halo,
+.td73-map-canvas .td73-map-place.td73-map-town .td73-pin-core{opacity:0}
+.td73-map-canvas .td73-map-place.td73-map-town.selected .td73-pin-halo,
+.td73-map-canvas .td73-map-place.td73-map-town.selected .td73-pin-core,
+.td73-map-canvas .td73-map-place.td73-map-town:focus-visible .td73-pin-core{opacity:1}
+.td73-map-canvas .td73-map-place.td73-map-town.selected .td73-pin-halo{fill:rgba(210,18,52,.23);stroke:#fff;stroke-width:3}
+.td73-map-canvas .td73-map-place.td73-map-landmark .td73-pin-halo{fill:rgba(13,15,24,.54)}
+.td73-map-canvas .td73-map-place.td73-map-gym .td73-badge-diamond{fill:#ffdd73;stroke:#922d37;stroke-width:2.5;opacity:.94}
+.td73-map-canvas .td73-map-place.td73-map-gym .td73-badge-center{fill:#d92543}
+.td73-map-canvas .td73-map-place.td73-map-gym.selected .td73-badge-diamond{fill:#fff;stroke:#dc193f;stroke-width:5}
+.td73-map-canvas .td73-map-place.td73-map-gym:focus-visible .td73-badge-diamond{stroke:#fff;stroke-width:5}
+.td73-map-canvas .td73-map-route .td73-route-hit{stroke-width:31}
+.td73-map-canvas .td73-map-route .td73-route-visible{stroke-width:9}
+.td73-map-canvas .td73-map-route .td73-route-glow{stroke-width:18}
+@media(max-width:720px){.td73-map-canvas .td73-map-route .td73-route-hit{stroke-width:46}}
+
+/* V73 DEV5: route highlights removed; use point selection only. */
+.td73-map-canvas .td73-map-route .td73-route-visible,
+.td73-map-canvas .td73-map-route .td73-route-glow{display:none!important}
+.td73-map-canvas .td73-map-place.td73-map-route .td73-pin-halo{fill:rgba(27,28,35,.72);stroke:#fff;stroke-width:1.5}
+.td73-map-canvas .td73-map-place.td73-map-route .td73-pin-core{fill:#dc243d}
+.td73-map-canvas .td73-map-place.td73-map-route.selected .td73-pin-halo{fill:rgba(220,36,61,.42);stroke-width:3}
+#mapsDetails .td73-tutor-move{appearance:none;border:0;padding:0;background:transparent;color:var(--text);font:inherit;font-weight:750;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+#mapsDetails .td73-tutor-move:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+#mapsDetails .td73-gym-battle-button{margin:9px 0 12px;width:100%;text-align:center}
+.td73-map-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* WHOASP credit: separate line, retained during dynamic footer text updates. */
+footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px; }
+
+/* V73 DEV5.2: keep Maps closed until a game is chosen. */
+#mapsContent[hidden]{display:none!important}
+/* Transparent route-shaped hit strokes. No road dots or drawn highlights. */
+.td73-map-canvas .td73-map-road-hit{cursor:pointer;outline:none}
+.td73-map-canvas .td73-map-road-hit .td73-route-hit{fill:none;stroke:transparent;stroke-width:38;stroke-linecap:round;stroke-linejoin:round;pointer-events:stroke}
+.td73-map-canvas .td73-map-place.td73-map-route .td73-pin-hit{fill:transparent;stroke:none;pointer-events:all}
+@media(max-width:720px){.td73-map-canvas .td73-map-road-hit .td73-route-hit{stroke-width:50}}
+
+/* DEV5.3: Mt. Coronet is selectable along its full mountain spine without a visible overlay. */
+.td73-map-canvas .td73-map-mountain-hit{cursor:pointer;outline:none}
+.td73-map-canvas .td73-map-mountain-hit .td73-mountain-zone{fill:transparent;stroke:none;pointer-events:fill}

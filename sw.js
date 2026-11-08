@@ -1,7 +1,7 @@
 // V70: match the actual versioned URLs requested by index.html for offline cold starts.
-const NAME='takdex-v72-20261107-move-history-fix';
+const NAME='takdex-v73-dev5-3-20261108';
 const ART='takdex-artwork-v26';
-const FILES=['./','./index.html','./styles.css?v=72.3.1','./app.js?v=72.4','./manifest.webmanifest','./icon-192.png','./icon-512.png','./takdex-background.webp','./takdex-background-light.webp','./takdex-radar-logo.png','./takdex-header-logo.png','./takdex-team-nav.png','./takdex-battle-nav.png','./takdex-pokedex-nav.png','./takdex-splash.png'];
+const FILES=['./','./index.html','./styles.css?v=73.0.5.3','./app.js?v=73.0.5.3','./tutor-locations.js?v=73.0.5.3','./v73-ui.js?v=73.0.5.3','./maps.js?v=73.0.5.3','./manifest.webmanifest','./icon-192.png','./icon-512.png','./takdex-background.webp','./takdex-background-light.webp','./takdex-radar-logo.png','./takdex-header-logo.png','./takdex-team-nav.png','./takdex-battle-nav.png','./takdex-pokedex-nav.png','./takdex-splash.png','./sinnoh-platinum-game-map.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(NAME).then(c=>c.addAll(FILES)))});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('takdex-v')&&k!==NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
