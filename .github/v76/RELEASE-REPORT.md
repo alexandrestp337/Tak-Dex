@@ -1,0 +1,65 @@
+# V76 web development and automated test report
+
+The candidate started from the annotated `V75-STABLE` tag at commit `3a97d5acbc4d434e3fb24aaced1dad5534188531`. Both `Development` and `main` pointed there at verification. About displayed V74 in that baseline. The dedicated work branch is `v76-development`. GitHub Pages uses `main` at the repository root. This candidate is for draft review against `Development`.
+
+## Stage results
+
+| Stage | Changes and regression gates |
+| --- | --- |
+| DEV1 | Implemented the read-only parser, saved-party bridge, imported stat calculation, and survival-aware 6v6 model. Passed 13 Node checks with synthetic saves and both Chromium smoke widths before DEV2. |
+| DEV2 | Reworked Battle and 6v6 layouts, added stat controls and linked moves to Move Checker. Re-ran the 13 Node checks and 412 px and 1280 px smoke checks before DEV3. |
+| DEV3 | Added Emerald encounter navigation, group viewport fitting, fullscreen details, compact map controls and dropdown cleanup. Re-ran the same stage gates before the full release suite. The release hardening pass added cartridge-backed Unova trainer corrections and Dex behavior when evolution lookup is unavailable. |
+| DEV4 | Compared four public Gen V saves against PKTool. Expanded Chromium coverage of import, navigation, both stat editors, persistence, maps, and offline reload. Added automated coverage for historical moves and types, trainer entries, and cache manifest files. |
+
+## Final automated coverage
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Synthetic parser | Pass | All four titles, shuffled encrypted records, shiny, form, EVs/IVs, PP, party stats, corrupted primary fallback, blank format rejection and counter wraparound. |
+| Public save reference comparison | Pass | 4 raw saves and 24 party slots. Compared species, forms, level, HP and stats, IVs, EVs, nature, item, ability, shiny, moves and PP/PP Ups against an independent PKTool build. Both the synthetic and public tests verify input bytes are preserved. |
+| Battle model | Pass | First-hit lethal prevention, Speed reversal, ties, HP gating, Revenge and Avalanche with misses, Payback and Assurance context, Hyper Beam versus Overheat, and full-HP survival items and abilities. |
+| Stat calculation | Pass | Imported stat baselines, offsets when leveling, BW2 underlying stat level, mobile tap-to-select, both sides' step buttons, player offset and level persistence. |
+| Historical references | Pass | Assurance power in Gen V and Gen VI, Gen V Steel resistance to Ghost, verified Black and Black 2 spot checks. |
+| Browser save sync | Pass | Real Chromium file picker, saved-game data, rejection and no-op behavior, changed snapshot, retained Battle and fullscreen Map state. |
+| Browser navigation | Pass | Regular Battle layout, 6v6 expanded moves, Move Checker round-trips, Pokédex learnset scroll and equal action button sizes. |
+| Browser map and offline | Pass | Emerald multi-pin viewport fit at 412 px, changing fullscreen selection, clearing details, keeping map viewport during save update, offline cold reload with saved party and bundled references. |
+| Baseline comparison | Pass | V75-STABLE and candidate at 412 px and 1280 px. Navigation, footer credit, viewport overflow check, historical move/type values. |
+| Android WebView, native storage and Samsung phone | Untested | Linux Chromium supplied the browser evidence. Android V9 is a separate post-acceptance stage. |
+
+The Node suite comprises **21 checks**, including four public fixtures. Chromium 156 ran the baseline and candidate smoke harnesses at 412 px and 1280 px and the detailed touch-enabled candidate scenario at 412 × 860 px. No uncaught page errors occurred in those runs. The service-worker manifest was checked against the page URLs and local files. Existing database records, map artwork, and feedback configuration were checked for byte-level preservation by the branch diff.
+
+## Reproduction
+
+Run the Node tests with `TAKDEX_REFERENCE_SAVES` pointing to a directory containing the four named 512 KiB saves listed in `reference.json`. Without that setting, the public fixture cases are skipped. The raw saves are omitted from the repository. `pktool-reference.cpp` is the read-only comparison driver used with PKTool's portable core.
+
+```sh
+TAKDEX_REFERENCE_SAVES=/path/to/reference-saves node --test .github/v76/*.test.cjs
+node .github/v76/smoke.cjs http://127.0.0.1:8764
+node .github/v76/smoke.cjs http://127.0.0.1:8765
+node .github/v76/browser.cjs http://127.0.0.1:8765
+```
+
+Serve an untouched V75-STABLE checkout on port 8764 and the candidate on 8765 with a local static server. Browser scripts resolve `playwright-core` and default to `/usr/bin/chromium`. Set `CHROMIUM_PATH` for other Chromium installations.
+
+## Incomplete items and assumptions
+
+- The web picker reads raw 512 KiB exports. Emulator state containers, persistent file grants, and resume detection require a native provider. A successful import describes the last saved party. Unsaved emulator HP, switches, stat stages and moves are outside the snapshot.
+- Read validation covers the footer, trainer block, party block and each Pokémon in the selected bank. Other boxes and game blocks are outside the import. Public saves exercised six occupied slots per title. Additional retail fixtures are needed for more non-default forms, partial parties and pre-starter saves.
+- Trainer IV difficulty and the Challenge level behavior were investigated. The reference export verifies move IDs, items and underlying levels for matching entries. It omits per-Pokémon IV difficulty, EVs and natures. Unsupported trainer stat profiles retain the labeled 15-IV neutral estimate or the existing 30-IV Challenge estimate and can be adjusted. The exact Cynthia/Lucario percentages require the user's actual stats and confirmed opponent setup.
+- Rankings are estimates across two turns with three representative damage rolls, fixed entered move choices, and supported mechanics. AI move selection, switching, doubles turn interactions, critical hits, damage flooring across all generations, held-item and ability edge cases, and all remaining conditional effects require further coverage. Some cosmetics retain a raw form index with base-species presentation. Evolution requirements are available through the existing checker when its reference can be fetched or was previously cached.
+- The Emerald map is a schematic based on Hoenn map-section coordinates. Locations without matched coordinates remain encounter records. Existing Sinnoh and Unova visuals retain their original data. Extended mobile and visual acceptance remains necessary, especially long movesets, extreme text scaling, double Battle, and WebView keyboard behavior.
+- The web bridge entry point is `window.takDexSaveSync.synchronize({teamId, bytes, modifiedAt})`. A native provider should call it with a local raw byte buffer and the file timestamp after the user authorizes access. It resolves to `updated`, `unchanged`, `stale`, or `superseded`, and rejects invalid snapshots. Validate native timing, Android V8 identity and signing, storage-grant persistence, emulator switching, context menus, keyboard behavior, Hold to Compare, the floating bubble, export, and offline behavior on the Galaxy S25 Ultra.
+
+## Proposed unified Move Checker
+
+Use a single result identity per move and resolve machine numbers within the selected game. Include All Moves, TM and HM filters. Keep the current move-detail and generation history views. Append the existing acquisition and map actions when verified records exist, and reuse the team strip with separate direct compatibility and after-evolution indicators. Retain both More menu entries during acceptance, with the TM/HM entry able to preselect its filter after approval. Compare all existing search, offline, acquisition, and compatibility flows before retiring the separate TM/HM Checker.
+
+## References
+
+- Generation V layouts, offsets, block cryptography and indexed names. [PKHeX source at a5311f9](https://github.com/kwsch/PKHeX/tree/a5311f9f55a84376fd2e2499b25d9fb9640d9f2d)
+- Independent party decoding and checksum reference. [PKTool source at dbb6db0](https://github.com/pioacosta/PKTool/tree/dbb6db01486287ebde05aa1ead803aa9279f5a87)
+- Four raw saves used in the automated corpus. [RoC's PC public saves at 49ea657](https://github.com/ReignOfComputer/RoCs-PC/tree/49ea65771b8777fc4f4098c36c125bf1af039d4f)
+- Generation V save block structure. [Project Pokémon B2W2 documentation](https://projectpokemon.org/docs/gen-5/b2w2-save-structure-r72/)
+- Hoenn map-section coordinates. [pret/pokeemerald at 8cf5188](https://github.com/pret/pokeemerald/blob/8cf518839e529eeb2477905ede1df7213ac134b8/src/data/region_map/region_map_sections.json)
+- English cartridge trainer, item and move evidence. [PokeDaisy Gen V guide generator at 717f4f4](https://github.com/lidor30/pokedaisy/blob/717f4f49979f4aa5c4c8f4cd64638a0fa935d844/scripts/gen_gen5_guide.py)
+- Trainer difficulty format and related investigation. [TrainerTyrant](https://github.com/ThirdLemon/TrainerTyrant) · [BW2 PWT research](https://github.com/DavidAGInnovation/bw2-pwt-research)

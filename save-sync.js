@@ -7,6 +7,8 @@
   550:[10016],555:[10017],641:[10019],642:[10020],645:[10021],
   646:[10023,10022],647:[10024],648:[10018]
  };
+ const natureNames=['Hardy','Lonely','Brave','Adamant','Naughty','Bold','Docile','Relaxed','Impish','Lax','Timid','Hasty','Serious','Jolly','Naive','Modest','Mild','Quiet','Bashful','Rash','Calm','Gentle','Sassy','Careful','Quirky'];
+ const hiddenPowerTypes=['fighting','flying','poison','ground','rock','bug','ghost','steel','fire','water','grass','electric','psychic','ice','dragon','dark'];
  const pending = new Map();
  let namesRequest;
  async function names() {
@@ -22,14 +24,20 @@
   const moves = await Promise.all(record.moves.map(async move=>{
    if (!move) return null;
    const m=await api('move/'+move.id);
-   return {...moveGenerationData(m,5,game),name:pretty(m.name),...move};
+   const historical=moveGenerationData(m,5,game);
+   if(m.name==='hidden-power'){
+    const order=['hp','attack','defense','speed','special-attack','special-defense'];
+    const typeBits=order.reduce((bits,key,i)=>bits|((record.ivs[key]&1)<<i),0);
+    historical.type=hiddenPowerTypes[Math.floor(typeBits*15/63)];
+   }
+   return {...historical,name:pretty(m.name),...move};
   }));
   const evolutions=encounters?.mons.filter(row=>row[4]===record.species).map(row=>({id:row[0],name:row[1]}))??null;
   return {id,name:pretty(p.name),canonicalName:p.name,image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,
    types:historicalTypes(p,game),baseStats:Object.fromEntries(td76HistoricalStats(p,game).map(s=>[s.stat.name,s.base_stat])),
    abilities:historicalAbilities(p,game),ability:lookup.abilities[record.abilityId]||'',weight:p.weight,
    moves:moves.filter(Boolean),item:lookup.items[record.itemId]||'',shiny:record.shiny,
-   saveStats:{...record,evolutions}};
+   saveStats:{...record,natureName:natureNames[record.nature],evolutions}};
  }
  function status(teamId,message) {
   for (const node of document.querySelectorAll('[data-save-status]')) {
@@ -45,6 +53,7 @@
    const parsed=window.takDexGen5Save.parse(bytes);
    if (parsed.game!==team.game) throw Error('This save is for '+parsed.game+'.');
    const previous=team.saveLink;
+   if (previous?.trainerKey===parsed.trainerKey && ((parsed.sequence-previous.sequence)&0xffff)>=0x8000) return 'stale';
    if (previous && modifiedAt && previous.modifiedAt && modifiedAt<previous.modifiedAt) return 'stale';
    const signature=JSON.stringify(parsed.pokemon);
    if (previous?.signature===signature) return 'unchanged';
@@ -54,9 +63,10 @@
    if (pending.get(teamId)!==token || !teams.includes(team) || team.game!==parsed.game) return 'superseded';
    const oldParty=team.pokemon;
    team.pokemon=Array.from({length:6},(_,i)=>pokemon[i]||null);
-   team.saveLink={signature,modifiedAt:modifiedAt||null,syncedAt:Date.now()};
+   team.saveLink={signature,trainerKey:parsed.trainerKey,sequence:parsed.sequence,modifiedAt:modifiedAt||null,syncedAt:Date.now()};
    try { save(); }
    catch(error) {team.pokemon=oldParty;team.saveLink=previous;throw error;}
+   window.dispatchEvent(new CustomEvent('td76:save-synced',{detail:{teamId}}));
    for (const tile of document.querySelectorAll('[data-td74-builder-team]')) {
     if (tile.dataset.td74BuilderTeam!==teamId || tile.getAttribute('aria-expanded')==='true') continue;
     const p=team.pokemon[Number(tile.dataset.td74BuilderSlot)];
@@ -77,7 +87,7 @@
   }
  }
  function description(team) {
-  return team.saveLink ? 'Save snapshot · '+new Date(team.saveLink.syncedAt).toLocaleString() : 'Read-only save snapshot';
+  return team?.saveLink ? 'Saved-game snapshot · '+new Date(team.saveLink.syncedAt).toLocaleString() : 'Read-only save snapshot';
  }
  window.takDexSaveSync={synchronize,description};
  $('teams').addEventListener('change',async event=>{

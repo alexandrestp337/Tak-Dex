@@ -1388,7 +1388,6 @@ main .buttons,dialog .buttons{margin-top:8px;}
  --td76-selection-width: 2px;
  --td76-selection-radius: 10px;
 }
-#battlePage #foePreview, #battlePage #foePreview2 {display:none}
 #td681BattleTeamLabel {margin-top:4px}
 #td76BattleStrip {margin-bottom:10px}
 #battlePage .td74-clash-columns, #td74Focus .td74-clash-columns {margin-top:8px}

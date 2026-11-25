@@ -366,7 +366,8 @@ $('exportTeam').onclick=()=>td70ExportTeam(current);
 $('importTeam').onclick=()=>$('importTeamFile').click();
 $('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2000000)throw Error('File is too large');const data=JSON.parse(await file.text());const t=data?.format==='takdex-team'?data.team:data;if(!t||typeof t.name!=='string'||!games.includes(t.game)||!Array.isArray(t.pokemon)||t.pokemon.length>6)throw Error('Invalid Tak-Dex team file');const pokemon=Array.from({length:6},(_,i)=>{const mon=t.pokemon[i];if(mon==null)return null;if(typeof mon.id!=='number'||typeof mon.name!=='string'||!Array.isArray(mon.moves)||mon.moves.length>4||!Array.isArray(mon.types))throw Error('Invalid Pokémon data');return {...mon,nickname:typeof mon.nickname==='string'?mon.nickname.slice(0,30):''}});const team={id:String(Date.now())+Math.random().toString(36).slice(2),name:t.name.slice(0,40),game:t.game,pokemon};await td70EnsureMigrated();const updated=[...teams,team];localStorage.setItem('poketact-teams',JSON.stringify(updated));teams=updated;showTeams();$('newDialog').close();openTeam(team.id)}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
 
-search($('pokeInput'),$('pokeResults'),n=>{td74DraftDirty=true;const previous=td75Preview||current?.pokemon?.[slotIndex];if(td51Canonical(previous?.name)!==td51Canonical(n))$('pokeNickname').value='';loadPokemon(n)});search($('foeInput'),$('foeResults'),async n=>{try{const p=await api('pokemon/'+n);foe={weight:p.weight??null,name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(td76HistoricalStats(p,current.game).map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,current.game)};$('foePreview').innerHTML=`<div class="identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(foe.name)}" data-td73-context="battle" title="Tap for Pokédex"><img src="${safe(foe.image)}"><div><strong>${safe(td41PokemonLabel(foe.name))}</strong>${td3AbilityText(foe)}<div class="pills">${foe.types.map(pill).join('')}</div></div></div>${td72FoeAbilitySelector(foe,1)}`;showBattle()}catch{$('matchups').textContent='Could not load opponent.'}});
+search($('pokeInput'),$('pokeResults'),n=>{td74DraftDirty=true;const previous=td75Preview||current?.pokemon?.[slotIndex];if(td51Canonical(previous?.name)!==td51Canonical(n))$('pokeNickname').value='';loadPokemon(n)});search($('foeInput'),$('foeResults'),name=>td76ChooseQuickOpponent(name,1));
+
 
 let evolveBusy=false;
 async function evolveSlot(i){
@@ -400,21 +401,32 @@ async function evolveSlot(i){
   td74DraftDirty=false;save();showSlots();showTeams();if(td74InlineTeam===team.id&&td74InlineSlot===i)editSlot(i);if($('pokeDialog').open)$('pokeDialog').close();
  }catch(e){alert('Could not check evolution. Internet may be needed.')}finally{evolveBusy=false}
 }
-search($('foeInput2'),$('foeResults2'),async n=>{
- try{const p=await api('pokemon/'+n);foe2={weight:p.weight??null,name:pretty(p.name),types:historicalTypes(p,current.game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(td76HistoricalStats(p,current.game).map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,current.game)};$('foePreview2').innerHTML=`<div class="identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(foe2.name)}" data-td73-context="battle" title="Tap for Pokédex"><img src="${safe(foe2.image)}" alt=""><div><strong>${safe(td41PokemonLabel(foe2.name))}</strong>${td3AbilityText(foe2)}<div class="pills">${foe2.types.map(pill).join('')}</div></div></div>${td72FoeAbilitySelector(foe2,2)}`;showBattle()}catch{$('matchups').textContent='Could not load second opponent.'}
-});
-window.td74OpenBattleOpponent=async function(name,game){
- if(!name)return;
- const target=String(name).toLowerCase().trim().replace(/\s+/g,'-');
- window.takActivate(1);
- $('foeInput').value=pretty(target);$('foeResults').hidden=true;
- $('matchups').textContent='Loading opponent…';
- try{const p=await api('pokemon/'+encodeURIComponent(target));
-  const g=current?.game||game||td66SavedGame()||'Platinum';
-  foe={weight:p.weight??null,name:pretty(p.name),types:historicalTypes(p,g),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,baseStats:Object.fromEntries(td76HistoricalStats(p,g).map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,g)};
-  $('foePreview').innerHTML=`<div class="identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(foe.name)}" data-td73-context="battle"><img src="${safe(foe.image)}" alt=""><div><strong>${safe(td41PokemonLabel(foe.name))}</strong>${td3AbilityText(foe)}<div class="pills">${foe.types.map(pill).join('')}</div></div></div>${td72FoeAbilitySelector(foe,1)}`;
+async function td76QuickOpponent(name,game){
+ const p=await api('pokemon/'+encodeURIComponent(td73IdentityKey(name)));
+ return {id:p.id,canonicalName:p.name,weight:p.weight??null,name:pretty(p.name),types:historicalTypes(p,game),
+  image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,
+  baseStats:Object.fromEntries(td76HistoricalStats(p,game).map(s=>[s.stat.name,s.base_stat])),
+  abilities:historicalAbilities(p,game)};
+}
+async function td76ChooseQuickOpponent(name,index,game){
+ const team=current,g=team?.game||game||td66SavedGame();
+ if(!g)return;
+ try{
+  const pokemon=await td76QuickOpponent(name,g);
+  if(current!==team)return;
+  if(index===1)foe=pokemon;else foe2=pokemon;
   showBattle();
- }catch(err){$('matchups').textContent='Could not load opponent. Check offline data / connection.';}
+ }catch(error){
+  $('matchups').textContent='Could not load opponent.';
+  console.warn('Opponent reference unavailable',error);
+ }
+}
+search($('foeInput2'),$('foeResults2'),name=>td76ChooseQuickOpponent(name,2));
+window.td74OpenBattleOpponent=function(name,game){
+ if(!name)return;
+ window.takActivate(1);
+ $('foeInput').value=pretty(name);$('foeResults').hidden=true;
+ return td76ChooseQuickOpponent(name,1,game);
 };
 $('singleMode').onclick=()=>{doubleMode=false;$('secondFoe').hidden=true;$('singleMode').classList.add('selected');$('doubleMode').classList.remove('selected');showBattle()};
 $('doubleMode').onclick=()=>{doubleMode=true;$('secondFoe').hidden=false;$('doubleMode').classList.add('selected');$('singleMode').classList.remove('selected');showBattle()};
@@ -602,18 +614,6 @@ function td72RiskLabel(move,defender,gen,attacker){
  return r.possibleImmune.length?`Possible 0×: ${r.possibleImmune.map(pretty).join(' / ')}`:
  r.possibleReduced.length?`May be reduced by ${r.possibleReduced.map(pretty).join(' / ')}`:'';
 }
-function td72FoeAbilitySelector(target,id){
- const abilities=td2AllAbilities(target);
- if(!abilities.length)return '';
- target.selectedAbility=td2ResolveAbility(target,target.selectedAbility);
- return `<label class="td72-foe-ability">Opponent ability <select data-td72-foe-ability="${id}">${td2AbilityOptions(target,target.selectedAbility)}</select>${td3AbilityDescriptionHtml(td2ActualAbility(target),current?.game||td66SavedGame())}</label>`;
-}
-for(const [hostId,index] of [['foePreview',1],['foePreview2',2]])$(hostId)?.addEventListener('change',e=>{
- const control=e.target.closest('[data-td72-foe-ability]');if(!control)return;
- const target=index===1?foe:foe2;if(!target)return;
- target.selectedAbility=td2AllAbilities(target).includes(control.value)?control.value:null;
- const identity=control.closest('.td72-foe-ability')?.previousElementSibling?.querySelector('strong');if(identity){identity.parentElement.querySelector('.td3-ability-name')?.remove();identity.insertAdjacentHTML('afterend',td3AbilityText(target));}td3UpdateAbilityDescription(control,current?.game||td66SavedGame());showBattle();
-});
 function movePowerRange(m){
  const n=m.name;
  if(n==='Assurance'&&m.metaGeneration>=4&&m.metaGeneration<=5)return {min:50,max:100,note:'target damaged'};
@@ -643,9 +643,16 @@ function td2Power(m,a,d,g){
  if(n==='Assurance'&&typeof d?.damagedThisTurn==='boolean')return fixed(base*(d.damagedThisTurn?2:1));
  if(['Avalanche','Revenge'].includes(n)&&typeof a?.hitByTargetThisTurn==='boolean')return fixed(base*(a.hitByTargetThisTurn?2:1));
  if(n==='Payback'&&typeof d?.actedThisTurn==='boolean')return fixed(base*(d.actedThisTurn?2:1));
+ if(n==='Retaliate'&&typeof a?.allyFaintedLastTurn==='boolean')return fixed(base*(a.allyFaintedLastTurn?2:1));
+ if(['Wake Up Slap','Smelling Salts'].includes(n)&&d?.status)return fixed(base*(d.status===(n==='Wake Up Slap'?'sleep':'paralysis')?2:1));
  if(['Assurance','Payback','Avalanche','Revenge','Facade','Brine','Hex','Venoshock','Acrobatics'].includes(n))r={...r,min:base,max:base*2};
  if(n==='Fury Cutter')r={...r,min:base,max:Math.min(160,base*16)};
  if(n==='Hidden Power'&&g>=6)return fixed(60);
+ if(n==='Hidden Power'&&g>=3&&a?.ivs){
+  const order=['hp','attack','defense','speed','special-attack','special-defense'];
+  const bits=order.reduce((word,k,i)=>word|(((a.ivs[k]>>>1)&1)<<i),0);
+  return fixed(30+Math.floor(bits*40/63));
+ }
  if(n==='Hidden Power'&&g===2)return {...r,min:31,max:70};
  if(['Crush Grip','Wring Out'].includes(n)&&hp(d)!==null)return fixed(Math.max(1,Math.floor(120*hp(d))));
  if(n==='Trump Card'&&Number.isInteger(m.remainingPP))return fixed([200,80,60,50][m.remainingPP]??40);
@@ -797,7 +804,7 @@ function td33BaseBattleMon(p,team=null,index=-1){
  const baseStats={...(p.baseStats||{})};
  const saved=team&&index>=0?td72SavedLevels(team.id)[index]:null;
  const same=td73SamePokemon(saved,p);
- return {...rest,baseStats,battleStats:{...baseStats},baseSpeed:baseStats.speed,heldItem:same?(saved.item??p.heldItem??p.item??''):(p.heldItem??p.item??'')};
+ return {...rest,baseStats,battleStats:team&&p.saveStats&&!p.saveStats.egg?{...p.saveStats.stats}:{...baseStats},currentHP:p.saveStats?.currentHP,friendship:p.saveStats?.friendship,ivs:p.saveStats?.ivs,baseSpeed:baseStats.speed,heldItem:same?(saved.item??p.heldItem??p.item??''):(p.heldItem??p.item??'')};
 }
 function showBattle(){
  if(!foe||doubleMode)window.td76RenderBattleStrip?.(current);
@@ -805,14 +812,15 @@ function showBattle(){
  if(!foe){$('matchups').innerHTML='<p>Select an opponent above.</p>';return}
  if(doubleMode&&!foe2){$('matchups').innerHTML='<p>Select the second opponent to compare both threats.</p>';return}
  const gen=gameGeneration(current.game),opponents=(doubleMode?[foe,foe2]:[foe]).map(p=>td33BaseBattleMon(p));
- const ranked=current.pokemon.filter(Boolean).map(p=>{
+ const ranked=current.pokemon.filter(p=>p&&!p.saveStats?.egg).map(p=>{
   const reports=opponents.map(o=>analyze(td33BaseBattleMon(p,current,current.pokemon.indexOf(p)),o,gen));
   const score=reports.reduce((s,r)=>s+r.score,0)/reports.length;
   return {p,reports,score,worst:Math.max(...reports.map(r=>r.worst))};
  }).sort((a,b)=>b.score-a.score);
  let pairSection='';
  if(doubleMode){
-  const members=current.pokemon.map((p,i)=>td33BaseBattleMon(p,current,i)).filter(Boolean),plans=[];
+  window.td76RenderBattleStrip?.(current,ranked);
+  const members=current.pokemon.map((p,i)=>p?.saveStats?.egg?null:td33BaseBattleMon(p,current,i)).filter(Boolean),plans=[];
   for(let i=0;i<members.length;i++)for(let k=i+1;k<members.length;k++){
    const plan=pairPlan(members[i],members[k],opponents,gen);if(plan)plans.push(plan);
   }
@@ -826,7 +834,7 @@ function showBattle(){
 
  const defense=r.worst>=4?'HIGH RISK':r.worst>=2?'WEAK DEFENSE':r.worst<1?'RESISTS ATTACKS':'NEUTRAL DEFENSE';
  const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${rep.offense.map(m=>`<div class="move-detail-row"><span class="td75-move-name"><span><button type="button" class="td76-move-link" data-td76-move="${safe(m.name)}">${safe(m.name)}</button> <small>${safe(pretty(m.damageClass))}</small></span><span class="td32-type-stab">${pill(m.type)}${td3Stab(m.damageClass!=='status'&&m.stab>1)}</span></span><div class="move-detail-numbers">${moveStats(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.total)} combined · ${safe(td72RiskLabel(m,opponents[k],gen,r.p)||effectivePowerLabel(m))}</b></div></div>`).join('')||'<p>No attacks saved</p>'}</div>`).join('');
- return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div><details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
+ return `<article data-td76-battle-card="${current.pokemon.indexOf(r.p)}" class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div><details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
  }).join('')||'<p>Add Pokémon to your team to see recommendations.</p>';
 
 }
@@ -890,7 +898,6 @@ function td70CloseTeam(){
  td74CloseInline(true);td72DetailsTeam=null;
  current=null;chosen=null;foe=null;foe2=null;lookupVersion++;
  $('editor').hidden=true;
- $('foePreview').innerHTML='';$('foePreview2').innerHTML='';
  $('foeInput').value='';$('foeInput2').value='';
  try{localStorage.removeItem('takdex-v71-active-team')}catch{}
  document.querySelectorAll('select[data-td66-global-game="1"]').forEach(el=>{
@@ -1214,9 +1221,10 @@ $('dexSearch').onclick=async()=>{
  try{
   const pokemon=await api('pokemon/'+encodeURIComponent(name));
   if(!td7PokemonAllowed(pokemon.name,pokemon.id,game)){result.textContent='This Pokémon form is not available in the selected game.';return;}
-  const species=await api('pokemon-species/'+pokemon.species.name);
-  const chain=await api(species.evolution_chain.url.replace('https://pokeapi.co/api/v2/',''));
-  const evo=[];function walk(node,depth){const conditions=node.evolution_details.map(d=>[d.min_level?'Lv '+d.min_level:'',d.item?.name||'',d.trigger?.name==='trade'?'Trade':'',d.min_happiness?'Friendship':'',d.time_of_day||'',d.held_item?.name||'',d.known_move?.name||'',d.location?.name||''].filter(Boolean).join(' · ')).filter(Boolean);evo.push({name:node.species.name,id:Number(node.species.url.match(/\/(\d+)\/$/)?.[1]||0),depth,conditions});node.evolves_to.forEach(n=>walk(n,depth+1))}walk(chain.chain,0);const td71MaxSpecies=game==='All Games'?1025:[151,251,386,493,649,721,809,905,1025][gameGeneration(game)-1]||1025;const visibleEvo=evo.filter(e=>e.id>0&&e.id<=td71MaxSpecies);
+  const chain=await api('pokemon-species/'+pokemon.species.name)
+   .then(species=>api(species.evolution_chain.url.replace('https://pokeapi.co/api/v2/','')))
+   .catch(()=>null);
+  const evo=[];function walk(node,depth){const conditions=node.evolution_details.map(d=>[d.min_level?'Lv '+d.min_level:'',d.item?.name||'',d.trigger?.name==='trade'?'Trade':'',d.min_happiness?'Friendship':'',d.time_of_day||'',d.held_item?.name||'',d.known_move?.name||'',d.location?.name||''].filter(Boolean).join(' · ')).filter(Boolean);evo.push({name:node.species.name,id:Number(node.species.url.match(/\/(\d+)\/$/)?.[1]||0),depth,conditions});node.evolves_to.forEach(n=>walk(n,depth+1))}if(chain?.chain)walk(chain.chain,0);const td71MaxSpecies=game==='All Games'?1025:[151,251,386,493,649,721,809,905,1025][gameGeneration(game)-1]||1025;const visibleEvo=evo.filter(e=>e.id>0&&e.id<=td71MaxSpecies);
   // V25: resolve each evolution form independently: typing can change on evolution.
   // A failed lookup leaves a neutral label instead of inventing a type.
   await Promise.all(visibleEvo.map(async e=>{
@@ -1240,7 +1248,7 @@ $('dexSearch').onclick=async()=>{
   const td71Total=td71Stats.reduce((sum,[,key])=>sum+(td71StatValues[key]||0),0);
   const td71StatsHtml=`<section class="td71-base-stats" aria-label="Pokémon base stats"><h3>Base stats</h3>${td71Stats.map(([label,key])=>{const n=td71StatValues[key]||0;return `<div class="td71-stat-row"><span>${safe(label)}</span><b>${n}</b><span class="td71-stat-track"><span style="width:${Math.min(100,n/255*100).toFixed(1)}%"></span></span></div>`}).join('')}<div class="td71-stat-total"><strong>Total BST</strong><strong>${td71Total}</strong></div></section>`;
   const matchupHtml=`<details class="card td66-dex-section td66-type-match" data-dex-section="type" ${tak67DexSectionOpen('type')?'open':''}><summary>Type Strengths &amp; Weaknesses <span>⌄</span></summary><div class="td66-section-body"><h4>Defensive matchups</h4>${matchGroup('Weak to',m=>m>1)}${matchGroup('Resistant to',m=>m>0&&m<1)}${matchGroup('Immune to',m=>m===0)}<details class="td66-neutral"><summary>Neutral attacks</summary>${matchGroup('1× incoming',m=>m===1)}</details><h4>Offensive STAB type coverage</h4>${offenseRows}</div></details>`;
-  result.innerHTML=`<section class="card td66-pokemon-card"><div class="td71-dex-hero"><article class="dex-entry" data-td71-quick-compare="${safe(pokemon.name)}"><img src="${safe(img)}" alt=""><div><h3>${safe(td41PokemonLabel(pokemon.name))}</h3><div class="pills">${dexTypes.map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article>${td71StatsHtml}</div>${matchupHtml}</section><details class="card td66-dex-section" data-dex-section="evolutions" ${tak67DexSectionOpen('evolutions')?'open':''}><summary>Evolutions <span>⌄</span></summary><div class="td66-section-body">${visibleEvo.length===1?'<p class="note">Does not evolve in the selected game.</p>':visibleEvo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" data-td71-quick-compare="${safe(e.name)}" data-dex-evolution-id="${e.id}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" decoding="async" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt=""><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}</div></details><details class="card td66-dex-section" data-dex-section="learnset" ${tak67DexSectionOpen('learnset')?'open':''}><summary>Level-up learnset · ${safe(learnsetReference)} <span>⌄</span></summary><div class="td66-section-body">${details.length?details.map(m=>`<div class="td681-move-row td681-learn-row"><div class="td681-move-head"><b class="td681-level">Lv ${safe(m.level)}</b><span class="td681-move-name-group"><button type="button" class="td68-move-link" data-td68-move="${safe(m.name)}">${safe(pretty(m.name))}</button>${dexTypes.includes(m.type)&&m.damageClass!=='status'?'<span class="td62-stab td681-stab">STAB</span>':''}</span><span class="td681-type">${m.type?pill(m.type):''}</span></div><div class="td681-move-meta"><span>${safe(m.damageClass==='special'?'Special':m.damageClass==='physical'?'Physical':'Status')}</span><span>PWR ${safe(Number.isFinite(m.power)?m.power:'—')} · ACC ${safe(Number.isFinite(m.accuracy)?m.accuracy+'%':'—')} · PP ${safe(Number.isFinite(m.pp)?m.pp:'—')}</span></div></div>`).join(''):'No level-up moves listed for this version.'}</div></details><details class="card td62-smart" id="td62SmartMoves" data-dex-section="advisor" ${tak67DexSectionOpen('advisor')?'open':''}><summary>✦ Smart Move Advisor <span>⌄</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(learnsetReference)}.</p></div></details><details class="card td66-dex-section" id="td56DexEncounters" data-dex-section="encounters" ${tak67DexSectionOpen('encounters')?'open':''}><summary>Encounter &amp; acquisitions · ${safe(game)} <span>⌄</span></summary><div class="td66-section-body"><p class="note">Checking encounter records…</p></div></details>`;
+  result.innerHTML=`<section class="card td66-pokemon-card"><div class="td71-dex-hero"><article class="dex-entry" data-td71-quick-compare="${safe(pokemon.name)}"><img src="${safe(img)}" alt=""><div><h3>${safe(td41PokemonLabel(pokemon.name))}</h3><div class="pills">${dexTypes.map(pill).join('')}</div><p>${safe(game)} · #${pokemon.id}</p></div></article>${td71StatsHtml}</div>${matchupHtml}</section><details class="card td66-dex-section" data-dex-section="evolutions" ${tak67DexSectionOpen('evolutions')?'open':''}><summary>Evolutions <span>⌄</span></summary><div class="td66-section-body">${!chain?.chain?'<p class="note">Evolution details unavailable.</p>':visibleEvo.length===1?'<p class="note">Does not evolve in the selected game.</p>':visibleEvo.map(e=>`<div class="evo-line" style="padding-left:${Math.min(e.depth*14,40)}px">${e.depth?'↳ ':''}<button type="button" class="evo-navigate" data-dex-evolution="${safe(e.name)}" data-td71-quick-compare="${safe(e.name)}" data-dex-evolution-id="${e.id}" aria-label="View ${safe(pretty(e.name))} in Pokédex"><img class="evo-art" loading="lazy" decoding="async" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${e.id}.png" alt=""><span class="evo-description"><strong>${safe(pretty(e.name))}</strong><span class="pills evo-types">${(e.types||[]).map(pill).join('')||'<small>Type unavailable offline</small>'}</span>${e.conditions.length?' <small>('+safe(e.conditions.join(' / '))+')</small>':''}</span></button></div>`).join('')}</div></details><details class="card td66-dex-section" data-dex-section="learnset" ${tak67DexSectionOpen('learnset')?'open':''}><summary>Level-up learnset · ${safe(learnsetReference)} <span>⌄</span></summary><div class="td66-section-body">${details.length?details.map(m=>`<div class="td681-move-row td681-learn-row"><div class="td681-move-head"><b class="td681-level">Lv ${safe(m.level)}</b><span class="td681-move-name-group"><button type="button" class="td68-move-link" data-td68-move="${safe(m.name)}">${safe(pretty(m.name))}</button>${dexTypes.includes(m.type)&&m.damageClass!=='status'?'<span class="td62-stab td681-stab">STAB</span>':''}</span><span class="td681-type">${m.type?pill(m.type):''}</span></div><div class="td681-move-meta"><span>${safe(m.damageClass==='special'?'Special':m.damageClass==='physical'?'Physical':'Status')}</span><span>PWR ${safe(Number.isFinite(m.power)?m.power:'—')} · ACC ${safe(Number.isFinite(m.accuracy)?m.accuracy+'%':'—')} · PP ${safe(Number.isFinite(m.pp)?m.pp:'—')}</span></div></div>`).join(''):'No level-up moves listed for this version.'}</div></details><details class="card td62-smart" id="td62SmartMoves" data-dex-section="advisor" ${tak67DexSectionOpen('advisor')?'open':''}><summary>✦ Smart Move Advisor <span>⌄</span></summary><div id="td62SmartBody" class="td62-body"><p class="note">Expand to check this Pokémon’s learnable moves in ${safe(learnsetReference)}.</p></div></details><details class="card td66-dex-section" id="td56DexEncounters" data-dex-section="encounters" ${tak67DexSectionOpen('encounters')?'open':''}><summary>Encounter &amp; acquisitions · ${safe(game)} <span>⌄</span></summary><div class="td66-section-body"><p class="note">Checking encounter records…</p></div></details>`;
   window.takDexBattleNavigationV73?.mountBack();
   requestAnimationFrame(()=>{if(requestId===takDexDexRequestV56&&!$('dexPage').hidden)result.scrollIntoView({block:'start'});});
   tak62AttachAdvisor(result,pokemon,game==='All Games'?'Scarlet':game,requestId);
@@ -1508,7 +1516,7 @@ function td72SavedLevels(id){
 function td72SavePlannerLevels(){
  const t=selectedTeam('planTeam');if(!t||t.game!==$('planGame').value||td73PlannerSourceTeam!==t.id)return;
  try{const rows=JSON.parse(localStorage.getItem(TD72_LEVELS_KEY)||'{}');const store=rows&&typeof rows==='object'&&!Array.isArray(rows)?rows:{};
- store[t.id]=plannerOwn.map(p=>({id:p?.id||null,name:td73IdentityKey(p),level:Math.max(1,Math.min(100,Number(p?.level)||50)),item:tak67PlannerValue(p?.item),statAdjustments:p?.statAdjustments||{}}));localStorage.setItem(TD72_LEVELS_KEY,JSON.stringify(store));
+ store[t.id]=plannerOwn.map(p=>({id:p?.id||null,name:td73IdentityKey(p),saveLevel:p?.saveStats?.level,level:Math.max(1,Math.min(100,Number(p?.level)||50)),item:tak67PlannerValue(p?.item),statAdjustments:p?.statAdjustments||{}}));localStorage.setItem(TD72_LEVELS_KEY,JSON.stringify(store));
  }catch(e){console.warn('Could not save 6v6 levels',e)}
 }
 
@@ -1568,7 +1576,7 @@ function importPlannerTeam(){
   $('planResults').textContent='Only '+game+' teams can be used in a '+game+' battle.';return;
  }
  if(!t){renderPlannerSlots('planOwn',plannerOwn,true);return}
- const savedLevels=td72SavedLevels(t.id);plannerOwn=Array.from({length:6},(_,i)=>t.pokemon?.[i]||null).map((p,i)=>{if(!p)return {name:'',level:50,moves:[]};const name=td73IdentityKey(p);const previous=savedLevels[i];const same=td73SamePokemon(previous,p);return {id:p.id||null,name,saveStats:p.saveStats,level:p.saveStats?.level||(same&&Number.isInteger(previous.level)&&previous.level>=1&&previous.level<=100?previous.level:50),moves:(p.moves||[]).map(m=>tak67PlannerValue(typeof m==='string'?m:m?.name).toLowerCase().replace(/\s+/g,'-')),savedMoveMeta:(p.moves||[]).filter(m=>typeof m==='object'&&m),item:p.saveStats?p.item||'':same?previous.item??p.item??'':p.item||'',statAdjustments:same?previous.statAdjustments||{}:{},baseStats:p.baseStats||null,types:p.types||[],abilities:p.abilities||[],ability:p.ability||'',weight:p.weight??null}});
+ const savedLevels=td72SavedLevels(t.id);plannerOwn=Array.from({length:6},(_,i)=>t.pokemon?.[i]||null).map((p,i)=>{if(!p)return {name:'',level:50,moves:[]};const name=td73IdentityKey(p);const previous=savedLevels[i];const same=td73SamePokemon(previous,p);return {id:p.id||null,name,shiny:p.shiny,saveStats:p.saveStats,level:same&&(!p.saveStats||previous.saveLevel===p.saveStats.level)&&Number.isInteger(previous.level)&&previous.level>=1&&previous.level<=100?previous.level:p.saveStats?.level||50,moves:(p.moves||[]).map(m=>tak67PlannerValue(typeof m==='string'?m:m?.name).toLowerCase().replace(/\s+/g,'-')),savedMoveMeta:(p.moves||[]).filter(m=>typeof m==='object'&&m),item:p.saveStats?p.item||'':same?previous.item??p.item??'':p.item||'',statAdjustments:same?previous.statAdjustments||{}:{},baseStats:p.baseStats||null,types:p.types||[],abilities:p.abilities||[],ability:p.ability||'',weight:p.weight??null}});
  renderPlannerSlots('planOwn',plannerOwn,true);
 }
 function td61SyncVersionOptions(sel){const control=$('planVersion');const options=[...control.options];for(const o of options){if(['v2','v3','v4'].includes(o.value)){o.disabled=!sel?.[o.value];o.hidden=['v3','v4'].includes(o.value)&&!sel?.[o.value];}}if(!sel?.[control.value])control.value='v1';control.disabled=!sel?.v2&&!sel?.v3&&!sel?.v4;}
@@ -1578,7 +1586,16 @@ function loadPlannerRoster(){
  if($('planMode').value!=='custom')td61SyncVersionOptions(sel);
  const row=sel?.[$('planVersion').value]||sel?.v1;
  const game=$('planGame').value,trainer=$('planTrainer').value,mode=$('planMode').value,version=$('planVersion').value;
- plannerOpp=row?row.map(([name,level,...moves],i)=>{const exact=['Black 2','White 2'].includes(game)?window.takDexB2W2?.rosters?.[mode]?.[trainer]?.[version]?.[i]:(game==='Platinum'&&mode==='elite')?window.takDexPlatinumLeagueV77?.get(trainer,version,name):null;return {name,level,...(exact?td74ChallengeProfile(game,version,window.takDexB2W2?.rosters?.[mode]?.[trainer]):{}),id:window.takDexBWCoreV75?.ids?.[name]||null,moves:exact?.moves||((game==='Black'||game==='White')?window.takDexBWTrainerMovesV76?.get(trainer,mode,version,name):null)||(game==='Emerald'&&mode==='gym'&&version==='v1'&&td65EmeraldGymMoves[trainer]?.[i])||moves,item:exact?.item||'',ability:exact?.ability||''}}):Array.from({length:6},()=>({name:'',level:50,moves:[]}));
+ plannerOpp=row?row.map(([name,level,...moves],i)=>{
+  const sequel=['Black 2','White 2'].includes(game);
+  const exact=sequel?window.takDexB2W2?.rosters?.[mode]?.[trainer]?.[version]?.[i]:(game==='Platinum'&&mode==='elite')?window.takDexPlatinumLeagueV77?.get(trainer,version,name):null;
+  const verified=window.takDexUnovaTrainerReference?.(game,trainer,version,td51NameKey(name),level);
+  const challenge=exact?td74ChallengeProfile(game,version,window.takDexB2W2?.rosters?.[mode]?.[trainer]):{};
+  if(challenge.challengeOffset&&verified&&level>verified.statLevel&&level-verified.statLevel<=5)challenge.challengeOffset=level-verified.statLevel;
+  return {name,level,...challenge,id:window.takDexBWCoreV75?.ids?.[name]||null,
+   moves:verified?.moves??exact?.moves??((game==='Black'||game==='White')?window.takDexBWTrainerMovesV76?.get(trainer,mode,version,name):null)??((game==='Emerald'&&mode==='gym'&&version==='v1')?td65EmeraldGymMoves[trainer]?.[i]:null)??moves,
+   item:verified?.item??exact?.item??'',ability:exact?.ability||'',verifiedTrainerMoves:!!verified};
+ }):Array.from({length:6},()=>({name:'',level:50,moves:[]}));
  renderPlannerSlots('planOpp',plannerOpp,false);
  if(mode!=='custom')$('planResults').innerHTML='';
  if(['Black 2','White 2'].includes(game)&&['v3','v4'].includes(version)&&mode!=='custom')$('eliteNote').textContent='Challenge Mode: stats use Normal Mode levels and 30 IVs; displayed levels are used for damage. Nature and EVs remain estimates.';else if(mode!=='custom')$('eliteNote').textContent='';
@@ -1855,7 +1872,7 @@ let td70PlannerRequest=0;
 $('planAnalyze').onclick=async()=>{const request=++td70PlannerRequest,result=$('planResults');const game=$('planGame').value,gen=gameGeneration(game);
  if(!gen){result.textContent='Choose a game before analyzing a battle.';return}
  result.textContent='Loading Pokémon and move data…';try{
- const signature=()=>JSON.stringify([plannerOwn,plannerOpp].map(rows=>rows.map(x=>[td73IdentityKey(x),x.id||null,td73MoveSignature(x.moves),x.level,x.item,x.ability,x.statAdjustments,x.challengeOffset])));
+ const signature=()=>JSON.stringify([plannerOwn,plannerOpp].map(rows=>rows.map(x=>[td73IdentityKey(x),x.id||null,td73MoveSignature(x.moves),x.level,x.item,x.ability,x.statAdjustments,x.challengeOffset,x.saveStats])));
  const sig=signature(),snapshot=rows=>rows.filter(x=>x.name).map(x=>({...x,moves:[...(x.moves||[])]}));
  const [own,opp]=await Promise.all([snapshot(plannerOwn),snapshot(plannerOpp)].map(rows=>Promise.all(rows.map(x=>loadPlannerPokemon(x,gen,game)))));
  if(request!==td70PlannerRequest||game!==$('planGame').value||sig!==signature())return;
@@ -2014,7 +2031,7 @@ for(const id of ['foeInput','foeInput2']){
  field.addEventListener('click',()=>{if(field.value)field.select()});
  field.addEventListener('input',update);
  clear.addEventListener('pointerdown',e=>e.preventDefault());
- clear.addEventListener('click',()=>{field.value='';field.dispatchEvent(new Event('input',{bubbles:true}));$(id==='foeInput'?'foePreview':'foePreview2').innerHTML='';if(id==='foeInput')foe=null;else foe2=null;showBattle();field.focus();update()});
+ clear.addEventListener('click',()=>{field.value='';field.dispatchEvent(new Event('input',{bubbles:true}));if(id==='foeInput')foe=null;else foe2=null;showBattle();field.focus();update()});
  update();
 }
 
@@ -3326,11 +3343,14 @@ update();
   openTeam(chosenTeam.id);
   refresh();
   // Preserve the opponent while recalculating its historical typing for this game.
-  const oldName=foe?.name,otherName=foe2?.name;
   try{
-   if(oldName){const p=await api('pokemon/'+oldName.toLowerCase().replace(/\s+/g,'-'));if(current!==chosenTeam)return;foe.types=historicalTypes(p,chosenTeam.game);foe.abilities=historicalAbilities(p,chosenTeam.game);if(!abilityNames(foe).includes(foe.selectedAbility))foe.selectedAbility=null;const host=$('foePreview').querySelector('.pills');if(host)host.innerHTML=foe.types.map(pill).join('');const ability=$('foePreview').querySelector('.td72-foe-ability');if(ability){ability.outerHTML=td72FoeAbilitySelector(foe,1);const sel=$('foePreview').querySelector('[data-td72-foe-ability]');if(sel)sel.value=foe.selectedAbility||''}}
-   if(otherName){const p=await api('pokemon/'+otherName.toLowerCase().replace(/\s+/g,'-'));if(current!==chosenTeam)return;foe2.types=historicalTypes(p,chosenTeam.game);foe2.abilities=historicalAbilities(p,chosenTeam.game);if(!abilityNames(foe2).includes(foe2.selectedAbility))foe2.selectedAbility=null;const host=$('foePreview2').querySelector('.pills');if(host)host.innerHTML=foe2.types.map(pill).join('');const ability=$('foePreview2').querySelector('.td72-foe-ability');if(ability){ability.outerHTML=td72FoeAbilitySelector(foe2,2);const sel=$('foePreview2').querySelector('[data-td72-foe-ability]');if(sel)sel.value=foe2.selectedAbility||''}}
-  }catch{foe=null;foe2=null;$('foeInput').value='';$('foePreview').innerHTML='';$('foeInput2').value='';$('foePreview2').innerHTML=''}
+   const [first,second]=await Promise.all([foe,foe2].map(p=>p?td76QuickOpponent(p,chosenTeam.game):null));
+   if(current!==chosenTeam)return;
+   foe=first;foe2=second;
+  }catch{
+   if(current!==chosenTeam)return;
+   foe=null;foe2=null;$('foeInput').value='';$('foeInput2').value='';
+  }
   showBattle();enrichTeamMoves();
  });
  $('battleTab').addEventListener('click',refresh);
@@ -3611,7 +3631,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
       <div class="td66-section-body">
         <p class="note">Looking up acquisition information…</p>
       </div>`;
-    res.appendChild(locationBox);if(['dex','team','maps'].includes(source)){const heading=res.querySelector('article h2');if(heading){const row=document.createElement('div');row.className='td64-move-heading';heading.before(row);row.append(heading);const backButton=document.createElement('button');backButton.type='button';backButton.className='td64-move-back';backButton.textContent='← Back';backButton.onclick=back;row.append(backButton);$('td68MoveBack').hidden=true;}}
+    res.appendChild(locationBox);if(['dex','team','maps','battle','planner'].includes(source)){const heading=res.querySelector('article h2');if(heading){const row=document.createElement('div');row.className='td64-move-heading';heading.before(row);row.append(heading);const backButton=document.createElement('button');backButton.type='button';backButton.className='td64-move-back';backButton.textContent='← Back';backButton.onclick=back;row.append(backButton);$('td68MoveBack').hidden=true;}}
     requestAnimationFrame(()=>{if(mine===req&&!page.hidden)res.scrollIntoView({block:'start'})});
     if(compatible){const mode=$('td5FilterMode').value,team=teams.find(t=>t.id===$('td5FilterTeam').value);if(mode==='team'&&team){const compat=document.createElement('section');compat.className='card td72-move-compat';compat.innerHTML=`<h3>Who can learn ${safe(pretty(name))} in my team?</h3><div class="td74-mon-row td51-compat-strip">${td51CompatTiles(team.pokemon||[],(team.pokemon||[]).map(m=>compatible.find(r=>r.mon===m)),name,true)}</div>`;res.appendChild(compat)}else if(compatible.some(r=>r.later.has(name)&&!r.direct.has(name))){const compat=document.createElement('section');compat.className='card';compat.textContent='↑ After evolution';res.appendChild(compat)}}else if(current?.id&&(!td72MoveGameOverride||td72MoveGameOverride===current.game)){const teamId=current.id,compat=document.createElement('section');compat.id='td72MoveCompatibility';compat.className='card td72-move-compat';compat.innerHTML='<h3>Who can learn it in my team?</h3><p class="note">Checking game-specific compatibility…</p>';res.appendChild(compat);td72RenderMoveTeamCompatibility(data.name,teamId,mine).catch(error=>{if(mine===req&&compat.isConnected)compat.textContent='Team compatibility data unavailable.';console.warn('Move compatibility unavailable',error)})}
 

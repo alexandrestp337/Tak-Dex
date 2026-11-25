@@ -48,7 +48,7 @@
    return id ? {id,remainingPP:bytes[0x30+i],ppUps:bytes[0x34+i]} : null;
   });
   return {species,form:bytes[0x40]>>>3,pid,egg,level,stats,currentHP,nature,moves,
-   itemId:data.getUint16(0x0a,true),abilityId:bytes[0x15],friendship:bytes[0x14],
+   statusWord:data.getUint32(0x88,true),itemId:data.getUint16(0x0a,true),abilityId:bytes[0x15],friendship:bytes[0x14],
    shiny:((pid>>>16)^(pid&0xffff)^data.getUint16(0x0c,true)^data.getUint16(0x0e,true))<8,
    ivs:Object.fromEntries(keys.map((key,i)=>[key,(ivWord>>>(5*i))&31])),
    evs:Object.fromEntries(keys.map((key,i)=>[key,bytes[0x18+i]]))};
@@ -60,7 +60,7 @@
   for (const layout of layouts) for (const offset of [0,layout.size]) {
    const footer = offset+layout.size-0x100, party=offset+partyOffset, trainer=offset+0x19400;
    const version=bytes[trainer+0x1f], count=bytes[party+4];
-   if (!layout.versions.includes(version) || count<1 || count>6 ||
+   if (!layout.versions.includes(version) || count>6 ||
        crc(bytes.subarray(footer,footer+layout.footer))!==u16(footer+layout.footer+14)) continue;
    const validBlock=(start,length,index)=> {
     const checksum=crc(bytes.subarray(start,start+length));
@@ -69,7 +69,7 @@
    if (!validBlock(party,0x534,26) || !validBlock(trainer,layout.trainer,27)) continue;
    try {
     const pokemon=Array.from({length:count},(_,i)=>record(bytes.subarray(party+8+i*220,party+8+(i+1)*220)));
-    candidates.push({game:games[version],sequence:u16(footer+layout.footer),pokemon});
+    candidates.push({game:games[version],trainerKey:data.getUint32(trainer+0x14,true),sequence:u16(footer+layout.footer),pokemon});
    } catch { /* An intact backup can survive corruption in the newest bank. */ }
   }
   if (!candidates.length) throw Error('No valid Generation V party and trainer blocks found.');

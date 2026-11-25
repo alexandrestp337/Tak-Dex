@@ -3,9 +3,12 @@
  'use strict';
  const hp = mon => Math.max(0,Math.min(estimatedHP(mon),mon.currentHP??estimatedHP(mon)));
  function speed(mon,gen) {
-  const scarf=gen>=4 && moveKey(mon.heldItem)==='choice-scarf' ? 1.5 : 1;
+  const ability=td2ActualAbility(mon);
+  const weatherAbility={rain:'swift-swim',sun:'chlorophyll',sand:'sand-rush',hail:'slush-rush'}[mon.weather];
+  const weather=ability&&ability===weatherAbility?2:1;
+  const scarf=gen>=4 && td73MoveKey(mon.heldItem)==='choice-scarf' ? 1.5 : 1;
   const paralysis=mon.status==='paralysis' && td2ActualAbility(mon)!=='quick-feet' ? (gen>=7?.5:.25) : 1;
-  return Math.floor((mon.battleStats?.speed||0)*scarf*paralysis);
+  return Math.floor((mon.battleStats?.speed||0)*scarf*paralysis*weather*(mon.status&&mon.status!=='none'&&ability==='quick-feet'?1.5:1));
  }
  function orderChance(a,d,m,n,gen) {
   const priority=(mon,move)=> Number(move.priority??0)+(gen>=5&&move.damageClass==='status'&&td2ActualAbility(mon)==='prankster'?1:0);
@@ -42,8 +45,10 @@
     if (!chance) return;
     const next=(newState,newActed,newHits,newChance)=>stepIndex===0
      ? step(j,i,1,newState,newActed,newHits,newChance) : simulate(turn+1,newState,newChance);
-    if (current.hp[i]===0 || current.hp[j]===0) return next(current,acted,hits,chance);
-    const move=moves[i], mode=current.mode[i], nextMode=current.mode.slice();
+    if (acted[i] || current.hp[i]===0 || current.hp[j]===0) return next(current,acted,hits,chance);
+    const move=moves[i];
+    if(move===idle)return next(current,acted,hits,chance);
+    const mode=current.mode[i], nextMode=current.mode.slice();
     if (mode==='recharge' || (mode!=='charged' && charging(move,mons[i],gen))) {
      nextMode[i]=mode==='recharge'?null:'charged';
      const nextActed=acted.slice();
@@ -56,11 +61,14 @@
     const context=td2Power(move,attacker,defender,gen);
     const base=td2Power(move,mons[i],mons[j],gen);
     const available=!(Number.isFinite(move.remainingPP)&&move.remainingPP<turn-(mode==='charged'?1:0));
+    const canHit=available && (move.name!=='Fake Out'||turn===1) &&
+     (move.name!=='Focus Punch'||!hits[i]) &&
+     (move.name!=='Sucker Punch'||!acted[j]&&['physical','special'].includes(moves[j].damageClass));
     if (i===0 && turn===1 && available) {
      result.acts+=chance;
      if (context && base && context.min>base.min) result.boost+=chance;
     }
-    const outcomes=available?damageOptions(attacker,defender,move,gen):[{damage:0,weight:1}];
+    const outcomes=canHit?damageOptions(attacker,defender,move,gen):[{damage:0,weight:1}];
     for (const outcome of outcomes) {
      if (i===0 && turn===1 && outcome.damage>0) {
       result.damage+=chance*outcome.weight*outcome.damage;
@@ -68,15 +76,28 @@
       result.maximum=Math.max(result.maximum,outcome.damage);
      }
      const remaining=current.hp.slice(), newActed=acted.slice(), newHits=hits.slice(), modes=nextMode.slice();
-     remaining[j]=Math.max(0,remaining[j]-outcome.damage);
+     const usedItems=current.usedItems.slice();
+     const fullHP=remaining[j]===estimatedHP(mons[j]);
+     const ability=td2ActualAbility(mons[j]), attackerAbility=td2ActualAbility(mons[i]);
+     const sturdy=gen>=5&&ability==='sturdy'&&!['mold-breaker','turboblaze','teravolt'].includes(attackerAbility);
+     const sash=gen>=4&&!usedItems[j]&&td73MoveKey(mons[j].heldItem)==='focus-sash';
+     const wouldFaint=outcome.damage>=remaining[j];
+     if(fullHP&&wouldFaint&&(sturdy||sash)){
+      remaining[j]=1;
+      if(!sturdy)usedItems[j]=true;
+     }else remaining[j]=Math.max(0,remaining[j]-outcome.damage);
+     if(move.name==='Fake Out'&&outcome.damage>0&&!acted[j]&&td2ActualAbility(mons[j])!=='inner-focus'){
+      next({hp:remaining,mode:modes,usedItems},[true,true],newHits,chance*outcome.weight);
+      continue;
+     }
      newActed[i]=true;
      newHits[j]=outcome.damage>0;
      if (outcome.damage>0 && TD2_RECHARGE.has(move.name)) modes[i]='recharge';
-     next({hp:remaining,mode:modes},newActed,newHits,chance*outcome.weight);
+     next({hp:remaining,mode:modes,usedItems},newActed,newHits,chance*outcome.weight);
     }
    }
   }
-  simulate(1,{hp:initial,mode:[null,null]},1);
+  simulate(1,{hp:initial,mode:[null,null],usedItems:[false,false]},1);
   return result;
  }
  const idle={name:'No entered attack',priority:0};

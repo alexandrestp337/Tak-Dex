@@ -9,7 +9,7 @@ const context=vm.createContext({window:{}});
 vm.runInContext(between('function movePowerRange','function accuracyLabel')+between('function td74StatEstimate','window.takDexBattleStatsV74')+between('function estimateDamage','function plannerDamageLabel')+read('battle-outcomes.js'),context);
 vm.runInContext(`const ALWAYS_HIT_MOVES=new Set(),td74TypeItems={};
 const TD74_STAT_KEYS=['hp','attack','defense','speed','special-attack','special-defense'];
-const td2ActualAbility=()=>null,moveKey=value=>String(value||'').toLowerCase().replaceAll(' ','-');
+const td2ActualAbility=mon=>mon.ability||null,td73MoveKey=value=>String(value||'').toLowerCase().replaceAll(' ','-');
 const td72AbilityReport=()=>({possibleImmune:[]}), defensiveEffect=m=>m.effect??1;
 const tdDev1Level=(n,f)=>Number(n)||f;`,context);
 const outcomes=context.window.takDexBattleOutcomes;
@@ -61,4 +61,11 @@ test('Imported stat deltas and underlying Challenge stat level preserve offsets'
  assert.equal(current.speed,104);
  assert.equal(next.speed-stats(base,{level:51,saveStats},{}).speed,4);
  assert.equal(stats(base,{level:60,challengeOffset:5,statAdjustments:{speed:4}}).speed,135);
+});
+test('Sturdy and Focus Sash can survive a full-HP hit to return a KO',()=>{
+ const a=mon(90,[move('Fire Punch',75,{effect:4})]);
+ const d=mon(115,[move('Close Combat',120,{effect:2.4})]);
+ assert.equal(outcomes.attacks({...a,ability:'sturdy'},d,5)[0].win,1);
+ assert.equal(outcomes.attacks({...a,heldItem:'Focus Sash'},d,5)[0].win,1);
+ assert.equal(outcomes.attacks({...a,currentHP:99,heldItem:'Focus Sash'},d,5)[0].win,0);
 });
