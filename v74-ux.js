@@ -25,13 +25,20 @@ function loaded(side,index){const src=roster(side)[index];if(!src?.name||!last)r
  const match=(side==='own'?last.own:last.opp)[present];
  if(!td73SamePokemon(match,src)||last.game&&last.game!==$('planGame').value||match.sourceMoves!==undefined&&match.sourceMoves!==td73MoveSignature(src.moves))return null;
  if(match.dataMissing||!match.baseStats)return match;
- return {...match,level:Number(src.level)||50,heldItem:src.item||'',statAdjustments:{...(src.statAdjustments||{})},battleStats:td74EntryStats(match.baseStats,src),selectedAbility:td2ResolveAbility(match,src.ability)||null};
+ return {...match,level:Number(src.level)||50,heldItem:src.item||'',statAdjustments:{...(src.statAdjustments||{})},battleStats:td74EntryStats(match.baseStats,src),currentHP:src.saveStats?.level===Number(src.level)?src.saveStats?.currentHP:undefined,friendship:src.saveStats?.friendship,selectedAbility:td2ResolveAbility(match,src.ability)||null};
 }
-function bestMove(a,d,gen){if(!a||!d)return null;return (a.moves||[]).map(m=>({m,damage:estimateDamage(a,d,m,gen)})).filter(x=>Number.isFinite(x.damage)&&x.damage>0&&td2Accuracy(x.m)!==null).sort((x,y)=>y.damage*(td2Accuracy(y.m)??0)/td2Turns(y.m,a,gen)-x.damage*(td2Accuracy(x.m)??0)/td2Turns(x.m,a,gen))[0]||null;}
+const outcomes=window.takDexBattleOutcomes;
+function bestMove(a,d,gen){return outcomes.attacks(a,d,gen)[0]||null;}
 function effText(m,d,gen,a){try{const n=a?td2Combined(m,a,d,gen):defensiveEffect(m,d,gen);return n===null?'Unknown':n===0?(m.name==='Synchronoise'&&a?.types?.length&&!a.types.some(t=>d?.types?.includes(t))?'Fails: no shared type':'Immune'):n===.25?'¼×':n===.5?'½×':n===1?'1×':n===2?'2×':n===4?'4×':n+'×';}catch{return 'Unknown';}}
 function moveSummary(attack,defend,gen){return (attack?.moves||[]).filter(m=>m?.name).map(m=>({m,damage:estimateDamage(attack,defend,m,gen)})).sort((a,b)=>(Number.isFinite(b.damage)?b.damage:-1)-(Number.isFinite(a.damage)?a.damage:-1));}
 function effectivenessClass(move,defender,gen,incoming=false,a){const mult=move&&defender?defensiveEffect(move,defender,gen,a):null;return !Number.isFinite(mult)?'unknown':mult===1?'neutral':(incoming?mult>1:mult<1)?'danger':'safe';}
-function matchupRanks(){const d=loaded('opp',oppSelection),gen=last?.gen||gameGeneration($('planGame').value);if(!d)return new Map();const list=roster('own').map((p,i)=>{const a=loaded('own',i),out=bestMove(a,d,gen),inc=bestMove(d,a,gen);return p?.name&&out?{i,score:out.damage*(td2Accuracy(out.m)??0)/td2Turns(out.m,a,gen)/Math.max(1,estimatedHP(d))-(inc?inc.damage*(td2Accuracy(inc.m)??0)/td2Turns(inc.m,d,gen)/Math.max(1,estimatedHP(a))*.9:0)}:null}).filter(Boolean).sort((a,b)=>b.score-a.score||a.i-b.i);return new Map(list.map((r,i)=>[r.i,i+1]));}
+function rankedMatchups(){
+ const defender=loaded('opp',oppSelection),gen=last?.gen||gameGeneration($('planGame').value);
+ if(!defender)return [];
+ return roster('own').map((_,i)=>({i,attack:bestMove(loaded('own',i),defender,gen)}))
+  .filter(row=>row.attack).sort((a,b)=>b.attack.win-a.attack.win||b.attack.score-a.attack.score||a.i-b.i);
+}
+function matchupRanks(){return new Map(rankedMatchups().map((row,i)=>[row.i,i+1]));}
 function teamChip(p,i,rank,active,attrs,disabled=false,level=null,showLevel=true){const name=p?.name?(p.nickname||td41PokemonLabel(p.name)):'Empty',best=rank===1,src=p?.name?art(p.id,p.name):'';return `<button type="button" class="td74-mon-chip ${active?'active':''} ${best?'td74-crowned':''}" ${attrs} ${disabled?'disabled':''} aria-pressed="${active}" aria-label="${escape(name)}" title="${escape(name)}${rank?' · matchup #'+rank:''}">${rank?`<span class="td74-corner-rank" aria-label="${best?'Best matchup':'Rank '+rank}">${best?'👑':'#'+rank}</span>`:''}<span class="td74-mon-art">${src?`<img src="${escape(src)}" alt="" loading="eager" decoding="async" data-td62-sprite="${escape(clean(p.name))}" draggable="false">`:'+'}</span><span class="td74-mon-name">${escape(name)}</span>${showLevel||!p?.name?`<small>${p?.name?(level?'Lv '+level:'Lv —'):'Slot '+(i+1)}</small>`:''}</button>`;}
 function renderChips(side){
  const rows=roster(side),chosen=side==='own'?ownSelection:oppSelection,ranks=side==='own'?matchupRanks():new Map();
@@ -62,7 +69,7 @@ function formatMoves(a,d,gen,incoming=false,baseOnly=false){const entries=baseOn
  if(!a||a.dataMissing)return '<p class="note">Pokémon reference unavailable.</p>';
  if(!entries.length)return '<p class="note">No moves entered.</p>';
  return entries.map(({m,damage})=>`<div class="td74-move-detail td74-effect-${effectivenessClass(m,d,gen,incoming,a)}">${moveNameWithType(m,m.damageClass!=='status'&&td2Stab(m,a,gen)>1)}<span class="td74-effect-number">${effText(m,d,gen,a)}</span>${baseOnly?'':`<span>${Number.isFinite(damage)?escape(plannerDamageLabel(a,d,m,gen)):'Damage unavailable'}</span>`}${knownMoveMeta(m,a,d,gen)}${!baseOnly&&damage>0&&td2Turns(m,a,gen)>1?`<small class="note">Est. ${Math.round(td2PerTurn(a,d,m,gen))} HP per turn (accuracy weighted)</small>`:''}</div>`).join('');}
-function threatBox(label,a,d,gen,incoming=false,estimated=false,baseOnly=false){const entry=baseOnly?td33BestBattleMove(a,d,gen):bestMove(a,d,gen),n=a?.moves?.filter(m=>m?.name).length||0;
+function threatBox(label,a,d,gen,incoming=false,estimated=false,baseOnly=false){const entry=baseOnly?td33BestBattleMove(a,d,gen):incoming?outcomes.threat(a,d,gen):bestMove(a,d,gen),n=a?.moves?.filter(m=>m?.name).length||0;
  const summary=entry?`${moveNameWithType(entry.m,td2Stab(entry.m,a,gen)>1)}<span class="td74-effect-number td74-effect-${effectivenessClass(entry.m,d,gen,incoming,a)}">${effText(entry.m,d,gen,a)}</span><span class="td32-damage">${escape(baseOnly?td33ScoreLabel(entry.m,a,d,gen):plannerDamageLabel(a,d,entry.m,gen))}</span>`:!a||a.dataMissing?'Pokémon reference unavailable':!d||d.dataMissing?'Target reference unavailable':n?((a.moves||[]).some(m=>m.unresolved||!m.type||!m.damageClass)?'Move data unavailable':(a.moves||[]).every(m=>m.damageClass==='status')?'No damaging moves':(a.moves||[]).filter(m=>m.damageClass!=='status').every(m=>defensiveEffect(m,d,gen,a)===0)?'All damaging moves ineffective':baseOnly?'No damaging move scored':'Damage metadata unavailable'):incoming?'Opponent moves unknown':'No moves entered';
  return `<section class="td74-clash-line"><span class="td74-clash-label">${label}</span>${summary}${turnOrder(a,d,gen,estimated,baseOnly)}</section>`;
 }
@@ -77,7 +84,9 @@ function renderFocus(){if(window.td3HoldActive?.())return;const own=roster('own'
  const opened=!!focus.querySelector('.td74-shared-expand')?.open;
  const a=loaded('own',ownSelection),d=loaded('opp',oppSelection),gen=last?.gen||gameGeneration($('planGame').value);
  const status=analysisError?`<p class="note td74-calc-error">${escape(analysisError)} <button type="button" data-td74-retry>Retry</button></p>`:updating?'<p class="note td74-calc-note">Recalculating…</p>':(!a||!d)?'<p class="note td74-calc-note">Matchup data not ready. Retry calculation if it does not load.</p>':'';
- focus.innerHTML=duelCard(own,foe,a,d,gen,opened,status);
+ const top=rankedMatchups()[0]?.attack;
+ const warning=top?.verifiedThreat&&top.win<.9?'<p class="td75-focus-warning">No safe counter in the entered matchups.</p>':'';
+ focus.innerHTML=duelCard(own,foe,a,d,gen,opened,warning+status);
 }
 let battleKey='',battleOwnIndex=null;
 window.td3RenderSingleBattle=function(team,target,ranked,gen){const host=$('matchups');if(window.td3HoldActive?.())return;const key=team.id+'|'+team.game+'|'+clean(target.name);const rows=team.pokemon||[];const ranks=new Map(ranked.map((r,i)=>[r.p,i+1]));if(key!==battleKey||!rows[battleOwnIndex]){battleKey=key;battleOwnIndex=rows.indexOf(ranked[0]?.p);}const selected=rows[battleOwnIndex];if(!selected){host.innerHTML='<p>Add Pokémon to your team to see recommendations.</p>';return;}const a=td33BaseBattleMon(selected,team,battleOwnIndex),d=td33BaseBattleMon(target);const expanded=!!host.querySelector('.td74-shared-expand')?.open;host.innerHTML=`<section class="td74-team-strip"><div class="td74-strip-heading"><strong>My Team</strong></div><div class="td74-mon-row">${Array.from({length:6},(_,i)=>{const p=rows[i],rank=ranks.get(p);return teamChip(p,i,rank,i===battleOwnIndex,`data-td3-battle-slot="${i}"`,!p,null,false);}).join('')}</div></section>${duelCard(selected,target,a,d,gen,expanded,'','battle',true)}`;};
@@ -85,11 +94,7 @@ $('matchups').addEventListener('click',e=>{const b=e.target.closest('[data-td3-b
 // Fill newly mounted opponent ability descriptions without watching their text updates.
 for(const id of ['foePreview','foePreview2']){const el=$(id);if(el)new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)if(n.nodeType===1){if(n.matches('[data-td3-ability-description]'))td3FillAbilityDescription(n);n.querySelectorAll('[data-td3-ability-description]').forEach(td3FillAbilityDescription);}}).observe(el,{childList:true,subtree:true});}
 function refresh(){renderChips('own');renderChips('opp');renderFocus();mountBattleStats();}
-function suggestedOwn(){const d=loaded('opp',oppSelection);if(!d)return ownSelection;const gen=last?.gen||gameGeneration($('planGame').value);
- const options=roster('own').map((p,i)=>{const a=loaded('own',i),out=bestMove(a,d,gen),inc=bestMove(d,a,gen);if(!p?.name||!out)return null;
- return {i,score:out.damage*(td2Accuracy(out.m)??0)/td2Turns(out.m,a,gen)/Math.max(1,estimatedHP(d))-(inc?inc.damage*(td2Accuracy(inc.m)??0)/td2Turns(inc.m,d,gen)/Math.max(1,estimatedHP(a))*.9:0)};}).filter(Boolean).sort((a,b)=>b.score-a.score);
- return options[0]?.i??ownSelection;
-}
+function suggestedOwn(){return rankedMatchups()[0]?.i??ownSelection;}
 function select(side,i){if(side==='own'){ownSelection=i;userChoseOwn=true;}else{oppSelection=i;userChoseOwn=false;ownSelection=suggestedOwn();}refresh();}
 function commitLevel(side,i,value){const row=roster(side)[i];if(!row?.name)return;const n=tdDev1Level(value,row.level||50);row.level=n;if(side==='own')td72SavePlannerLevels();const field=$(side==='own'?'planOwn':'planOpp').querySelector(`[data-td2-level="${side}:${i}"]`);if(field&&document.activeElement!==field)field.value=String(n);return n;}
 strip.addEventListener('focusin',e=>{if(e.target.matches('[data-td2-level]'))e.target.select()});
@@ -112,8 +117,8 @@ window.addEventListener('td75:active-game',()=>{last=null;analysisError='';updat
 function syncPlannerTeam(){if(syncing)return;const t=selectedTeam('planTeam');if(!t||t.game!==$('planGame').value)return;
  const latest=Array.from({length:6},(_,i)=>{const p=t.pokemon?.[i];if(!p)return {name:'',level:50,moves:[]};
  const name=td73IdentityKey(p),old=plannerOwn[i]||{},saved=td72SavedLevels(t.id)[i],prior=td73PlannerSourceTeam===t.id&&td73SamePokemon(old,p)?old:td73SamePokemon(saved,p)?saved:null;
- return {id:p.id||null,name,level:prior?.level||50,moves:(p.moves||[]).map(td73MoveKey),savedMoveMeta:(p.moves||[]).filter(m=>typeof m==='object'&&m),item:prior?.item??p.item??'',statAdjustments:prior?.statAdjustments||{},baseStats:p.baseStats||null,types:p.types||[],abilities:p.abilities||[],ability:p.ability||'',weight:p.weight??null};});
- const sig=a=>JSON.stringify(a.map(p=>[p.name,p.id,p.moves,p.savedMoveMeta,p.level,p.item,p.types,p.abilities,p.ability,p.baseStats,p.statAdjustments]));if(td73PlannerSourceTeam===t.id&&sig(latest)===sig(plannerOwn))return;
+ return {id:p.id||null,name,saveStats:p.saveStats,level:p.saveStats&&old.saveStats!==p.saveStats?p.saveStats.level:prior?.level||p.saveStats?.level||50,moves:(p.moves||[]).map(td73MoveKey),savedMoveMeta:(p.moves||[]).filter(m=>typeof m==='object'&&m),item:p.saveStats&&old.saveStats!==p.saveStats?p.item||'':prior?.item??p.item??'',statAdjustments:prior?.statAdjustments||{},baseStats:p.baseStats||null,types:p.types||[],abilities:p.abilities||[],ability:p.ability||'',weight:p.weight??null};});
+ const sig=a=>JSON.stringify(a.map(p=>[p.name,p.id,p.moves,p.savedMoveMeta,p.level,p.item,p.types,p.abilities,p.ability,p.baseStats,p.statAdjustments,p.saveStats]));if(td73PlannerSourceTeam===t.id&&sig(latest)===sig(plannerOwn))return;
  syncing=true;td73PlannerSourceTeam=t.id;plannerOwn=latest;renderPlannerSlots('planOwn',plannerOwn,true);td72SavePlannerLevels();syncing=false;scheduleAnalyze();
 }
 window.addEventListener('td74:team-saved',syncPlannerTeam);
