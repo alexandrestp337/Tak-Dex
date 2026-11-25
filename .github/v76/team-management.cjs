@@ -134,6 +134,41 @@ const base=process.argv[2]||'http://127.0.0.1:8795';
   const volcarona=page.locator('#td74Focus [data-td73-mon="volcarona" i]');
   assert.match(await volcarona.locator('.td3-ability-name').textContent(),/Flame Body/);
 
+  const comparison=await page.evaluate(async()=>{
+   const entries=[
+    {name:'darmanitan-standard',level:64,ability:'sheer-force',item:'Charcoal',moves:['rock-slide','fire-punch','flare-blitz','superpower']},
+    {name:'samurott',level:65,ability:'torrent',moves:['surf','waterfall','aqua-jet','revenge']}
+   ];
+   const opponent=plannerOpp[5], gen=5, game='Black';
+   const d=await loadPlannerPokemon(opponent,gen,game);
+   const own=await Promise.all(entries.map(entry=>loadPlannerPokemon(entry,gen,game)));
+   const outcomes=window.takDexBattleOutcomes;
+   const report=own.map(a=>{
+    const best=outcomes.attacks(a,d,gen)[0];
+    const hyper=d.moves.find(m=>m.name==='Hyper Beam');
+    const result=outcomes.against(a,d,best.m,hyper,gen);
+    return {name:a.name,move:best.m.name,reply:best.n.name,stats:a.battleStats,
+     incoming:best.incomingFirstKo,execute:best.acts,outgoing:best.firstKo,victory:best.win,
+     hyper:{incoming:result.incomingFirstKo,execute:result.acts,outgoing:result.firstKo,victory:result.win}};
+   });
+   plannerOwn=entries;
+   renderPlannerSlots('planOwn',plannerOwn,true);
+   document.getElementById('planAnalyze').click();
+   return {player:report,opponent:d.battleStats};
+  });
+  const [darmanitan,samurott]=comparison.player;
+  assert.equal(darmanitan.move,'Rock Slide');
+  assert.equal(samurott.move,'Waterfall');
+  assert.ok(darmanitan.hyper.incoming>.5&&darmanitan.hyper.execute<.5);
+  assert.equal(samurott.hyper.incoming,0);
+  assert.ok(samurott.victory>darmanitan.victory);
+  await page.locator('#td74OwnChips .td74-crowned.active').filter({hasText:'Samurott'}).waitFor();
+  await page.locator('#td74OwnChips [data-td74-i="0"]').click();
+  assert.match(await page.locator('#td74Focus .td76-battle-warning:not(.td76-battle-opportunity)').textContent(),/Hyper Beam can KO/);
+  assert.equal(await page.locator('#td74Focus .td76-battle-opportunity').count(),0);
+  assert.match(await page.locator('#td74OwnChips .td74-crowned').textContent(),/Samurott/);
+  console.log('Alder Volcarona estimated fixture:',JSON.stringify(comparison));
+
   const abilityChecks=await page.evaluate(()=>{
    const mon=(ability,types=['normal'])=>({
     level:50,types,abilities:[ability].filter(Boolean),

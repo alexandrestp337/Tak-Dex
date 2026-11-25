@@ -43,7 +43,7 @@ function rankedMatchups(){
  const defender=loaded('opp',oppSelection),gen=last?.gen||gameGeneration($('planGame').value);
  if(!defender)return [];
  return roster('own').map((_,i)=>({i,attack:bestMove(loaded('own',i),defender,gen)}))
-  .filter(row=>row.attack).sort((a,b)=>b.attack.win-a.attack.win||b.attack.score-a.attack.score||a.i-b.i);
+  .filter(row=>row.attack).sort((a,b)=>outcomes.compareAttacks(a.attack,b.attack)||a.i-b.i);
 }
 function matchupRanks(){return new Map(rankedMatchups().map((row,i)=>[row.i,i+1]));}
 function teamChip(p,i,rank,active,attrs,disabled=false,level=null,showLevel=true){const name=p?.name?(p.nickname||td41PokemonLabel(p.name)):'Empty',best=rank===1,src=p?.name?art(p.id,p.name):'';return `<button type="button" class="td74-mon-chip ${active?'active':''} ${best?'td74-crowned':''}" ${attrs} ${disabled?'disabled':''} aria-pressed="${active}" aria-label="${escape(name)}" title="${escape(name)}${rank?' · matchup #'+rank:''}">${rank?`<span class="td74-corner-rank" aria-label="${best?'Best matchup':'Rank '+rank}">${best?'👑':'#'+rank}</span>`:''}<span class="td74-mon-art">${src?`<img src="${escape(src)}" alt="" loading="eager" decoding="async" data-td62-sprite="${escape(clean(p.name))}" draggable="false">`:'+'}</span><span class="td74-mon-name">${escape(name)}${p?.shiny||p?.saveStats?.shiny?' <span aria-label="Shiny">✨</span>':''}</span>${showLevel||!p?.name?`<small>${p?.name?(level?'Lv '+level:'Lv —'):'Slot '+(i+1)}</small>`:''}</button>`;}

@@ -123,3 +123,36 @@ test('Preemptive recommendation distinguishes order, uncertainty and survival pr
  assert.equal(chance(fast,{...slow,moves:[reply,{...reply,priority:1}]}),0);
  assert.equal(chance(fast,{...slow,moves:[]}),0);
 });
+test('The worst reply is selected by victory probability before damage and survival tie-breakers',()=>{
+ // Controlled powers and accuracies isolate the comparator from cartridge move data.
+ const attack=move('Fire Punch',60,{effect:2.5,accuracy:70});
+ const recharge=move('Hyper Beam',80,{effect:3,accuracy:70});
+ const sustained=move('Scratch',50,{effect:2.5,accuracy:90});
+ const a=mon(120,[attack]),d=mon(130,[recharge,sustained]);
+ const softReply=outcomes.attacks(a,{...d,moves:[recharge]},5)[0];
+ const hardReply=outcomes.attacks(a,{...d,moves:[sustained]},5)[0];
+ assert.ok(softReply.score<hardReply.score&&softReply.win>hardReply.win);
+ const recommended=outcomes.attacks(a,d,5)[0];
+ assert.equal(recommended.n,sustained);
+ assert.equal(recommended.win,hardReply.win);
+ assert.equal(recommended.firstKo,hardReply.firstKo);
+ assert.equal(recommended.acts,hardReply.acts);
+ assert.ok(outcomes.compareAttacks(hardReply,softReply)>0);
+});
+
+test('Hyper Beam and Giga Impact gate first-turn execution and allow a counter during recharge',()=>{
+ for(const name of ['Hyper Beam','Giga Impact']){
+  const attack=move('Fire Punch',60,{effect:2.5});
+  const recharge=move(name,100,{effect:3,accuracy:90});
+  const d=mon(130,[recharge]);
+  const fragile=outcomes.attacks(mon(100,[attack]),d,5)[0];
+  assert.ok(Math.abs(fragile.incomingFirstKo-.9)<1e-10);
+  assert.ok(Math.abs(fragile.acts-.1)<1e-10);
+  assert.ok(fragile.win<=.1);
+  const durable=outcomes.attacks(mon(100,[attack],220),d,5)[0];
+  assert.equal(durable.incomingFirstKo,0);
+  assert.ok(Math.abs(durable.acts-1)<1e-10);
+  assert.ok(durable.win>fragile.win&&durable.twoHitKo>0);
+  assert.equal(durable.beforeReplyKo,0);
+ }
+});

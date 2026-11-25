@@ -28,12 +28,13 @@
  }
  function compare(a,d,m,n,gen) {
   const mons=[a,d], moves=[m,n], initial=mons.map(hp);
-  const result={win:0,firstKo:0,preemptiveKo:0,twoHitKo:0,survive:0,acts:0,progress:0,boost:0,damage:0,minimum:Infinity,maximum:0};
+  const result={win:0,firstKo:0,incomingFirstKo:0,preemptiveKo:0,twoHitKo:0,survive:0,acts:0,progress:0,boost:0,damage:0,minimum:Infinity,maximum:0};
   function simulate(turn,state,weight) {
    if (!weight) return;
    if (turn>2 || state.hp.some(value=>value===0)) {
     result.win+=state.hp[0]>0&&state.hp[1]===0?weight:0;
     result.firstKo+=state.hp[1]===0&&turn===2?weight:0;
+    result.incomingFirstKo+=state.hp[0]===0&&turn===2?weight:0;
     result.twoHitKo+=state.hp[1]===0&&state.landed===2?weight:0;
     result.survive+=state.hp[0]>0?weight:0;
     result.progress+=weight*(initial[1]-state.hp[1])/Math.max(1,initial[1]);
@@ -65,7 +66,7 @@
     const canHit=available && (move.name!=='Fake Out'||turn===1) &&
      (move.name!=='Focus Punch'||!hits[i]) &&
      (move.name!=='Sucker Punch'||!acted[j]&&['physical','special'].includes(moves[j].damageClass));
-    if (i===0 && turn===1 && available) {
+    if (i===0 && turn===1 && canHit) {
      result.acts+=chance;
      if (context && base && context.min>base.min) result.boost+=chance;
     }
@@ -117,12 +118,20 @@
  function attackScore(result) {
   return 5*result.win+result.survive+result.acts+result.progress;
  }
+ // The same ordering applies to moves, team members and the adversarial reply.
+ function compareAttacks(a,b){
+  const winDelta=b.win-a.win;
+  return Math.abs(winDelta)>1e-10?winDelta:b.score-a.score;
+ }
  function attacks(a,d,g) {
   if (!a || !d || !hp(a) || !hp(d)) return [];
   const threats=candidates(d,a,g);
   return candidates(a,d,g).map(m=>{
-   const results=(threats.length?threats:[idle]).map(n=>({n,...compare(a,d,m,n,g)}));
-   const worst=results.reduce((x,y)=>attackScore(x)<=attackScore(y)?x:y);
+   const results=(threats.length?threats:[idle]).map(n=>{
+    const result=compare(a,d,m,n,g);
+    return {n,...result,score:attackScore(result)};
+   });
+   const worst=results.reduce((x,y)=>compareAttacks(x,y)>=0?x:y);
    // Require a preemptive KO chance against every modeled damaging reply.
    let beforeReplyKo=threats.length?Math.min(...results.map(result=>result.preemptiveKo)):0;
    if(beforeReplyKo>0){
@@ -136,8 +145,8 @@
     const guards=['Protect','Detect','Endure','King’s Shield',"King's Shield",'Spiky Shield','Baneful Bunker','Obstruct','Silk Trap','Burning Bulwark'];
     if(d.moves?.some(reply=>guards.includes(reply?.name)&&reply.remainingPP!==0&&orderChance(d,a,reply,m,g)>0))beforeReplyKo=0;
    }
-   return {m,...worst,beforeReplyKo,score:attackScore(worst),verifiedThreat:!!threats.length};
-  }).sort((x,y)=>y.win-x.win||y.score-x.score);
+   return {m,...worst,beforeReplyKo,verifiedThreat:!!threats.length};
+  }).sort(compareAttacks);
  }
  function koLabel({firstKo,twoHitKo}){
   const label=(probability,kind)=>probability>=1-1e-10
@@ -148,5 +157,5 @@
   return reply&&hp(a)>0&&hp(d)>0&&td2Accuracy(move)>0&&estimateDamage(a,d,move,gen)>0
    ? {...compare(a,d,move,reply,gen),verifiedThreat:true}:null;
  }
- window.takDexBattleOutcomes={attacks,threat,orderChance,hp,koLabel,against};
+ window.takDexBattleOutcomes={attacks,compareAttacks,threat,orderChance,hp,koLabel,against};
 })();

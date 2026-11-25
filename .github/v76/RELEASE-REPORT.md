@@ -208,3 +208,24 @@ The 27 Node tests passed, including first-turn accuracy, damage rolls, Speed tie
 | Single-type defensive column | [412 px](screenshots/defense-single-412.png) | [1280 px](screenshots/defense-single-1280.png) |
 | Dual-type defensive column | [412 px](screenshots/defense-dual-412.png) | [1280 px](screenshots/defense-dual-1280.png) |
 | First-turn OHKO notice | [412 px](screenshots/first-turn-ohko-412.png) | [1280 px](screenshots/first-turn-ohko-1280.png) |
+
+## Final battle ranking correction
+
+The 6v6 team strip already sorted by modeled victory probability. Earlier in the calculation, the engine chose the opponent's worst reply using a composite score that combined victory, survival, attack execution and damage progress. If replies traded victory probability against those other factors, the score could select a reply with a higher player win rate. A controlled regression shows this inversion. The old reply yielded a 15.56% victory chance, while another legal test reply yielded 9.31%.
+
+The engine now prioritizes victory probability at all three decisions. It chooses the opponent reply that minimizes it, then chooses the move and the team member that maximize it. The other factors break ties. The crown and automatic selection use the same ranking. Move cards use the selected reply's outcome, while the red warning still identifies the specific move with the greatest preemptive KO risk. The green notice still checks all modeled damaging replies. A slower Pokémon gets credit when it survives to counter. A miss or a KO before execution lowers the modeled first-turn KO chance.
+
+### Alder rematch fixture
+
+Chromium loaded the Black postgame Alder preset and its level-77 Flame Body Volcarona. The exact user team export, HP, stat adjustments and moves were unavailable. This fixture uses the app's estimated stats at full HP. Darmanitan is level 64 with Sheer Force, Charcoal, Rock Slide, Fire Punch, Flare Blitz and Superpower. Samurott is level 65 with Torrent, no held item, Surf, Waterfall, Aqua Jet and Revenge. The fixture reproduces the warning and survival contrast, while the original ordering on the user's exact team remains unverified.
+
+| Team rank | Recommended move | Limiting reply | Incoming turn-one KO | Reaches attack attempt | Outgoing turn-one KO | Two-turn victory |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| 1. Samurott | Waterfall | Overheat | 0% | 100% | 16.88% | 34.19% |
+| 2. Darmanitan | Rock Slide | Hyper Beam | 67.50% | 32.50% | 29.25% | 31.57% |
+
+Against Hyper Beam specifically, Samurott's four figures are **0%, 100%, 67.50%, and 100%**. Darmanitan's Hyper Beam figures are the ones in the table. Rock Slide has 90% accuracy, so Darmanitan reaches the attempt 32.50% of the time and lands the first-turn KO 29.25% of the time. Samurott ranks first because its modeled win rate against its limiting reply is higher. Chromium confirmed that Samurott receives the crown and opens automatically, and that selecting Darmanitan preserves the crown on Samurott and shows the red Hyper Beam warning without a green notice.
+
+Verification passed with all 29 Node tests. Coverage includes the reply-selection inversion, both recharge moves, slower counters, preempted moves, misses, Speed ties, priority, current HP, Sturdy and Focus Sash. Chromium passed the 320, 412 and 1280 px correction suite, including the green OHKO notice, and the team-management, file-picker, map, offline and smoke regressions.
+
+These probabilities describe the existing two-turn model with sampled damage rolls and repeated entered moves. They do not predict Alder's AI, include all mechanics such as Overheat's stat drop, or verify the exact player team or native Android behavior.
