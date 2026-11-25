@@ -1,13 +1,9 @@
-# V76 fifth correction acceptance checklist
+# V76 final acceptance checklist
 
-Automated results are recorded below. User acceptance is pending.
-
-| Corrected area | Status | Acceptance check |
+| Correction | Automated status | Acceptance check |
 | --- | --- | --- |
-| Compact Team Builder settings | Pass | Expand a saved Pokémon. Check artwork, typing, level, ability, equipped item and all four attacks while Battle settings is closed. Open it and verify both subsections start closed. Try the level and stat controls, then the ability and item controls. |
-| Manual save-file reimport | Pass | Import a valid Gen V file, edit and save the team, then choose the same file twice. The first reimport restores the game data. The second leaves the matching team alone. An updated file at the same path imports, and a corrupt file leaves the valid party intact. |
-| Battle and 6v6 headers | Pass | Change who strikes first. Names, types, abilities, and applicable levels and items align. The indicator changes sides within its own row. The red KO warning appears directly below it when relevant. |
-| Regular Battle defense | Pass | Compare a single-type opponent with a dual-type opponent. Check independent weakness, resistance, neutral and immunity accents alongside base stats and attacking tendency. |
-| Galaxy S25 Ultra acceptance | Untested | Check these same four areas on the phone. |
+| Regular Battle defense alignment | Pass | Compare single- and dual-type opponents. Potential STAB lines up with Your attacks. Each type row has its own card and effectiveness accent. |
+| Opponent base stats | Pass | Check the separate two-column card. All six base stats appear in order, with the attacking tendency underneath. |
+| First-turn OHKO in 6v6 | Pass | Check that a faster guaranteed KO shows “will OHKO” in green. Uncertain cases show “can OHKO.” A faster opposing attack or a full-HP Focus Sash can suppress the notice. The red incoming warning remains available. |
 
-[Release report and screenshots](RELEASE-REPORT.md#fifth-correction-pass)
+Phone and Android WebView acceptance is untested. [Release report and screenshots](RELEASE-REPORT.md#final-refinements-in-the-fifth-pass)

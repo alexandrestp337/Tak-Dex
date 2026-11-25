@@ -194,3 +194,17 @@ The picker now compares the validated save-owned data against the current roster
 | Dual-type defense | [412 px](screenshots/defense-dual-412.png) | [1280 px](screenshots/defense-dual-1280.png) |
 
 The picker continues to support raw Generation V saves for supported games. Quick Battle turn order remains an estimate, and its defense panel shows potential STAB types using known abilities. Existing 6v6 simulation and trainer-data coverage limits still apply. Chromium verification used desktop and mobile viewports. Galaxy S25 Ultra, Android WebView and native automatic synchronization remain untested.
+
+### Final refinements in the fifth pass
+
+- Regular Battle aligns the two column headings and uses individual STAB cards with their existing type badges and incoming effectiveness colors. The separate Opponent base stats card shows HP, Attack, Defense, Sp. Atk, Sp. Def and Speed in three rows, with the attacking tendency underneath. Values come from the selected form and game's historical base-stat data.
+- The green 6v6 notice describes the recommended move when the model finds a first-turn KO before every modeled damaging reply. It distinguishes possible and certain outcomes, using current HP, damage rolls, accuracy, speed, priority, items and applicable abilities. The red warning, damage cards and recommendation ranks keep their existing behavior.
+- The notice is conservative when there are no modeled damaging replies, when a guard can act first, or when an unresolved ability can prevent the KO. It describes the matchup model and does not predict the opponent's actual move selection. The model still omits some battle mechanics and field states. Galaxy S25 Ultra and Android WebView remain untested.
+
+The 27 Node tests passed, including first-turn accuracy, damage rolls, Speed ties, priority, current HP, Sturdy, Focus Sash and Focus Band. Chromium correction tests passed at 320, 412 and 1280 px. They checked column alignment and border removal, all six stats and both STAB layouts, green notice wording, survival items and the red warning. A separate Chromium check verified the historical Defense and Sp. Def changes for Pikachu between Black and X and the six form-specific Rotom Wash values in Black. The file-picker, team-management, offline and smoke regressions also passed.
+
+| Screen | Mobile | Desktop |
+| --- | --- | --- |
+| Single-type defensive column | [412 px](screenshots/defense-single-412.png) | [1280 px](screenshots/defense-single-1280.png) |
+| Dual-type defensive column | [412 px](screenshots/defense-dual-412.png) | [1280 px](screenshots/defense-dual-1280.png) |
+| First-turn OHKO notice | [412 px](screenshots/first-turn-ohko-412.png) | [1280 px](screenshots/first-turn-ohko-1280.png) |

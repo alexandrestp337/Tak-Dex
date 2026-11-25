@@ -9,7 +9,7 @@ const context=vm.createContext({window:{}});
 vm.runInContext(between('function movePowerRange','function accuracyLabel')+between('function td74StatEstimate','window.takDexBattleStatsV74')+between('function estimateDamage','function plannerDamageLabel')+read('battle-outcomes.js'),context);
 vm.runInContext(`const ALWAYS_HIT_MOVES=new Set(),td74TypeItems={};
 const TD74_STAT_KEYS=['hp','attack','defense','speed','special-attack','special-defense'];
-const td2ActualAbility=mon=>mon.ability||null,td73MoveKey=value=>String(value||'').toLowerCase().replaceAll(' ','-');
+const td2ActualAbility=mon=>mon.ability||null,td2AllAbilities=mon=>mon.abilities||[],td73MoveKey=value=>String(value||'').toLowerCase().replaceAll(' ','-');
 const td72AbilityReport=()=>({possibleImmune:[]}), defensiveEffect=m=>m.effect??1;
 const tdDev1Level=(n,f)=>Number(n)||f;`,context);
 const outcomes=context.window.takDexBattleOutcomes;
@@ -100,4 +100,26 @@ test('Conditional power contributes to two hits without implying an OHKO',()=>{
  const result=outcomes.attacks(attacker,foe,5)[0];
  assert.equal(result.boost,1);
  assert.equal(outcomes.koLabel(result),'2HKO chance: 31%');
+});
+
+test('Preemptive recommendation distinguishes order, uncertainty and survival protection',()=>{
+ const shot=move('Fire Punch',75,{effect:4});
+ const reply=move('Scratch',20);
+ const fast=mon(120,[shot]), slow=mon(80,[reply]);
+ const chance=(a,d)=>outcomes.attacks(a,d,5)[0].beforeReplyKo;
+ assert.equal(chance(fast,slow),1);
+ assert.equal(chance({...fast,moves:[{...shot,accuracy:90}]},slow),.9);
+ const roll=move('Fire Punch',100,{effect:2.3});
+ assert.equal(chance({...fast,moves:[roll]},slow),.25);
+ assert.equal(chance(mon(70,[shot]),slow),0);
+ assert.equal(chance(mon(80,[shot]),slow),.5);
+ assert.equal(chance(mon(70,[{...shot,priority:1}]),slow),1);
+ assert.equal(chance(fast,{...slow,ability:'sturdy'}),0);
+ assert.equal(chance(fast,{...slow,heldItem:'Focus Sash'}),0);
+ assert.equal(chance(fast,{...slow,heldItem:'Focus Band'}),.99);
+ assert.equal(chance(fast,{...slow,abilities:['sturdy','rock-head']}),0);
+ assert.equal(chance(fast,{...slow,ability:'sturdy',currentHP:80}),1);
+ assert.equal(chance(fast,{...slow,moves:[reply,{name:'Endure',priority:4,damageClass:'status'}]}),0);
+ assert.equal(chance(fast,{...slow,moves:[reply,{...reply,priority:1}]}),0);
+ assert.equal(chance(fast,{...slow,moves:[]}),0);
 });

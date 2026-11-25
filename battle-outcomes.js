@@ -123,7 +123,20 @@
   return candidates(a,d,g).map(m=>{
    const results=(threats.length?threats:[idle]).map(n=>({n,...compare(a,d,m,n,g)}));
    const worst=results.reduce((x,y)=>attackScore(x)<=attackScore(y)?x:y);
-   return {m,...worst,score:attackScore(worst),verifiedThreat:!!threats.length};
+   // Require a preemptive KO chance against every modeled damaging reply.
+   let beforeReplyKo=threats.length?Math.min(...results.map(result=>result.preemptiveKo)):0;
+   if(beforeReplyKo>0){
+    const bypass=['mold-breaker','turboblaze','teravolt'].includes(td2ActualAbility(a));
+    const ability=td2ActualAbility(d);
+    const possible=ability?[ability]:td2AllAbilities(d);
+    if(!bypass&&((g>=7&&possible.includes('disguise'))||
+      (g>=8&&m.damageClass==='physical'&&possible.includes('ice-face'))||
+      (g>=5&&hp(d)===estimatedHP(d)&&possible.includes('sturdy'))))beforeReplyKo=0;
+    if(g>=2&&td73MoveKey(d.heldItem)==='focus-band')beforeReplyKo=Math.min(beforeReplyKo,.99);
+    const guards=['Protect','Detect','Endure','King’s Shield',"King's Shield",'Spiky Shield','Baneful Bunker','Obstruct','Silk Trap','Burning Bulwark'];
+    if(d.moves?.some(reply=>guards.includes(reply?.name)&&reply.remainingPP!==0&&orderChance(d,a,reply,m,g)>0))beforeReplyKo=0;
+   }
+   return {m,...worst,beforeReplyKo,score:attackScore(worst),verifiedThreat:!!threats.length};
   }).sort((x,y)=>y.win-x.win||y.score-x.score);
  }
  function koLabel({firstKo,twoHitKo}){

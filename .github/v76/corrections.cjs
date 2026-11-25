@@ -9,6 +9,13 @@ const roster=['raichu','basculin-red-striped','magikarp','golbat','pikachu'];
 const moveNames=['thunderbolt','volt-switch','focus-blast','thunder-wave'];
 const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
 
+async function capture(locator,options){
+ for(let attempt=0;attempt<3;attempt++){
+  try{return await locator.screenshot(options);}
+  catch(error){if(attempt===2||!/not attached/.test(error.message))throw error;}
+ }
+}
+
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try {
@@ -70,7 +77,13 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
     }),true);
     assert.equal(await badge.getAttribute('data-side'),side==='opponent'?'opp':'own');
     assert.ok(await badge.evaluate((el,side)=>el.classList.contains(side),side));
-    if(color)assert.equal(await badge.evaluate(el=>getComputedStyle(el).color),color);
+    if(color){
+     const selector=await host.evaluate(el=>el.closest('[id]').id);
+     await page.waitForFunction(({selector,color})=>{
+      const el=document.getElementById(selector)?.querySelector('.td76-turn-order');
+      return el&&getComputedStyle(el).color===color;
+     },{selector,color});
+    }
    };
    await orderCheck(battle,'Should strike first','player','rgb(71, 217, 145)');
    assert.notEqual((await thunder.evaluate(css))[0],'3px');
@@ -105,8 +118,18 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    const defensivePanel=battle.locator('.td76-defense');
    assert.equal(await defense.count(),1);
    assert.equal((await defense.evaluate(css))[0],'3px');
-   assert.ok(await defensivePanel.evaluate(panel=>panel.offsetHeight<panel.parentElement.offsetHeight));
-   assert.match(await defensivePanel.locator('.td76-defense-stats').textContent(),/Base Atk.+Sp\. Atk.+Spe.+tendency/);
+   assert.equal(await defensivePanel.evaluate(panel=>{
+    const heading=panel.querySelector('h4').getBoundingClientRect();
+    const attacks=panel.previousElementSibling.querySelector('h4').getBoundingClientRect();
+    const entries=[...panel.querySelectorAll('dl>div')].map(el=>el.getBoundingClientRect());
+    return heading.top===attacks.top&&getComputedStyle(panel).borderTopWidth==='0px'&&entries.length===6&&
+     entries.every((box,i)=>box.left===entries[i%2].left&&box.top===entries[i-i%2].top&&box.right<=panel.getBoundingClientRect().right);
+   }),true);
+   const baseCard=defensivePanel.locator('.td76-defense-stats');
+   assert.equal(await baseCard.locator('h5').textContent(),'Opponent base stats');
+   assert.deepEqual(await baseCard.locator('dt').allTextContents(),['HP','Attack','Defense','Sp. Atk','Sp. Def','Speed']);
+   assert.deepEqual(await baseCard.locator('dd').allTextContents(),['70','92','65','80','55','98']);
+   assert.match(await baseCard.locator('small').textContent(),/Physical tendency/);
    if(shots&&width!==320)await battle.screenshot({path:path.join(shots,'defense-single-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
    await page.evaluate(async()=>{
     const p=await api('pokemon/darmanitan');
@@ -173,12 +196,32 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    const electric=grid.locator('.td76-move-card').filter({has:page.locator('[data-td76-move="Thunderbolt"]')});
    assert.deepEqual(await electric.evaluate(css),approved.safe);
    assert.match(await electric.textContent(),/Guaranteed OHKO/);
+   const opportunity=page.locator('#td74Focus .td76-battle-opportunity');
+   assert.match(await opportunity.textContent(),/Thunderbolt will OHKO before the opponent attacks/);
+   assert.equal(await opportunity.evaluate(el=>{
+    const css=getComputedStyle(el);
+    return el.previousElementSibling.classList.contains('td77-turn-row')&&css.borderTopColor==='rgb(58, 171, 120)'&&css.fontWeight==='800';
+   }),true);
+   if(shots&&width!==320)await capture(page.locator('#td74Focus .td74-clash'),{path:path.join(shots,'first-turn-ohko-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
+
    const focusBlast=grid.locator('.td76-move-card').filter({has:page.locator('[data-td76-move="Focus Blast"]')});
    assert.match(await focusBlast.textContent(),/2HKO chance:/);
    await orderCheck(page.locator('#td74Focus'),'Strikes first','player','rgb(71, 217, 145)');
    const turnOffset=()=>page.locator('#td74Focus .td77-turn-row').evaluate(row=>row.getBoundingClientRect().top-row.previousElementSibling.getBoundingClientRect().top);
    const originalTurnOffset=await turnOffset();
-   if(shots&&width!==320)await page.locator('#td74Focus .td74-clash').screenshot({path:path.join(shots,'battle-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
+   assert.equal(await page.locator('#td74Focus .td76-defense-stats').count(),0);
+   const setOpponentItem=item=>page.evaluate(item=>{
+    plannerOpp[0].item=item;
+    document.getElementById('planAnalyze').click();
+   },item);
+   await setOpponentItem('Focus Band');
+   await opportunity.filter({hasText:'Thunderbolt can OHKO before the opponent attacks'}).waitFor();
+   await setOpponentItem('Focus Sash');
+   await page.locator('#td74Focus .td77-duel-side-opp .td77-duel-item').filter({hasText:'Focus Sash'}).waitFor();
+   await opportunity.waitFor({state:'hidden'});
+   await setOpponentItem('');
+   await opportunity.filter({hasText:'Thunderbolt will OHKO before the opponent attacks'}).waitFor();
+   if(shots&&width!==320)await capture(page.locator('#td74Focus .td74-clash'),{path:path.join(shots,'battle-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
    assert.equal(await page.locator('#td74EditorOwn').isVisible(),false);
    if(shots&&width!==320)await page.locator('#plannerPage').screenshot({path:path.join(shots,'saved-6v6-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
    await page.locator('#td74EditorOpp > summary').click();
@@ -200,13 +243,14 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    });
    await page.locator('#td74OwnChips [data-td74-i="1"].td74-crowned').waitFor();
    await page.locator('#td74OwnChips [data-td74-i="0"]').click();
-   const warning=page.locator('#td74Focus .td76-battle-warning');
+   const warning=page.locator('#td74Focus .td76-battle-warning:not(.td76-battle-opportunity)');
+   assert.equal(await opportunity.count(),0);
    assert.match(await warning.textContent(),/Hyper Beam can KO before you attack/);
    assert.equal(await warning.evaluate(el=>{
     const css=getComputedStyle(el);
     return css.borderTopWidth==='1px'&&css.fontWeight==='800'&&css.backgroundColor==='rgb(64, 30, 39)'&&css.color==='rgb(255, 138, 152)';
    }),true);
-   if(shots&&width!==320)await page.locator('#td74Focus .td74-clash').screenshot({path:path.join(shots,'incoming-ko-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
+   if(shots&&width!==320)await capture(page.locator('#td74Focus .td74-clash'),{path:path.join(shots,'incoming-ko-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
    assert.doesNotMatch(await warning.textContent(),/No safe|Opponent moves first|Better matchup/i);
    await orderCheck(page.locator('#td74Focus'),'Strikes first','opponent','rgb(255, 101, 117)');
    assert.ok(Math.abs(await turnOffset()-originalTurnOffset)<0.5);

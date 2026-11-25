@@ -69,7 +69,9 @@ function potentialThreat(a,d,gen){
  return `<section class="td76-defense"><h4>Potential STAB</h4>${plannerPotentialStab(d,a,gen).map(({type,mult})=>{
   const tone=mult<1?'safe':mult>1?'danger':'neutral';
   return `<div class="td76-defense-type td74-effect-${tone}">${pill(type)} <strong>${mult+'× '+(mult===0?'Immune':mult>1?'Weak':mult<1?'Resists':'Neutral')}</strong></div>`;
- }).join('')}<div class="td76-defense-stats"><small>Base Atk ${physical??'—'} · Sp. Atk ${special??'—'} · Spe ${stats.speed??'—'}</small>${physical&&special?`<small>${tendency}</small>`:''}</div></section>`;
+ }).join('')}<div class="td76-defense-stats"><h5>Opponent base stats</h5><dl>
+  ${Object.entries(STAT_NAMES).map(([key,label])=>`<div><dt>${label}</dt><dd>${escape(stats[key]??'—')}</dd></div>`).join('')}
+ </dl>${physical&&special?`<small>${tendency}</small>`:''}</div></section>`;
 }
 function moveCard(m,a,d,gen,{incoming=false,battle=false,outcome=null,standardOrder=null,comparison=null}={}){
  const report=td72AbilityReport(m,d,gen,a), status=m.damageClass==='status';
@@ -141,9 +143,11 @@ function duelCard(own,foe,a,d,gen,status,context='planner'){
  const incoming=moveCards(d,a,gen,{incoming:true,first:threat?.m,standardOrder:knownOrder===null?null:1-knownOrder,comparison:best?.m});
  const danger=best?.m&&outcomes.threat(d,a,gen,best.m);
  const warning=danger?.preemptiveKo>0?danger.m.name+(danger.preemptiveKo>=1-1e-10?' is predicted to KO before you attack':' can KO before you attack'):'';
+ const opportunity=best?.beforeReplyKo>0?best.m.name+
+  (best.beforeReplyKo>=1-1e-10?' will OHKO before the opponent attacks':' can OHKO before the opponent attacks'):'';
  const moves=battle?`<div class="td74-clash-columns td76-quick-grid"><section><h4>Your attacks</h4>${outgoing.join('')||'<small>No moves entered.</small>'}</section>${a&&d?potentialThreat(a,d,gen):''}</div>`:
  `<div class="td76-duel-grid"><h4>Your attacks</h4><h4>Incoming threats</h4>${Array.from({length:Math.max(1,outgoing.length,incoming.length)},(_,i)=>(outgoing[i]||`<div>${i===0?'<small>No moves entered.</small>':''}</div>`)+(incoming[i]||`<div>${i===0?'<small>No moves entered.</small>':''}</div>`)).join('')}</div>`;
- return `<article class="card td74-clash"><div class="td75-duel-title${battle?'':' td77-duel-six'}">${mon(own,a,'own')}<span class="td75-vs">vs</span>${mon(foe,d,'opp')}</div>${order}${warning?`<aside class="td76-battle-warning"><span aria-hidden="true">⚠</span> ${escape(warning)}</aside>`:''}${status||''}${moves}</article>`;
+ return `<article class="card td74-clash"><div class="td75-duel-title${battle?'':' td77-duel-six'}">${mon(own,a,'own')}<span class="td75-vs">vs</span>${mon(foe,d,'opp')}</div>${order}${warning?`<aside class="td76-battle-warning"><span aria-hidden="true">⚠</span> ${escape(warning)}</aside>`:''}${opportunity?`<aside class="td76-battle-warning td76-battle-opportunity"><span aria-hidden="true">✓</span> ${escape(opportunity)}</aside>`:''}${status||''}${moves}</article>`;
 }
 
 function renderFocus(){if(window.td3HoldActive?.())return;const own=roster('own')[ownSelection]||{},foe=roster('opp')[oppSelection]||{};
