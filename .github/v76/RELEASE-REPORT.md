@@ -50,9 +50,9 @@ Serve an untouched V75-STABLE checkout on port 8764 and the candidate on 8765 wi
 - The Emerald map is a schematic based on Hoenn map-section coordinates. Locations without matched coordinates remain encounter records. Existing Sinnoh and Unova visuals retain their original data. Extended mobile and visual acceptance remains necessary, especially long movesets, extreme text scaling, double Battle, and WebView keyboard behavior.
 - The web bridge entry point is `window.takDexSaveSync.synchronize({teamId, bytes, modifiedAt})`. A native provider should call it with a local raw byte buffer and the file timestamp after the user authorizes access. It resolves to `updated`, `unchanged`, `stale`, or `superseded`, and rejects invalid snapshots. Validate native timing, Android V8 identity and signing, storage-grant persistence, emulator switching, context menus, keyboard behavior, Hold to Compare, the floating bubble, export, and offline behavior on the Galaxy S25 Ultra.
 
-## Proposed unified Move Checker
+## Original Move Checker proposal
 
-Use a single result identity per move and resolve machine numbers within the selected game. Include All Moves, TM and HM filters. Keep the current move-detail and generation history views. Append the existing acquisition and map actions when verified records exist, and reuse the team strip with separate direct compatibility and after-evolution indicators. Retain both More menu entries during acceptance, with the TM/HM entry able to preselect its filter after approval. Compare all existing search, offline, acquisition, and compatibility flows before retiring the separate TM/HM Checker.
+The correction pass below supersedes this proposal. The original plan was to use a single result identity per move and resolve machine numbers within the selected game. Include All Moves, TM and HM filters. Keep the current move-detail and generation history views. Append the existing acquisition and map actions when verified records exist, and reuse the team strip with separate direct compatibility and after-evolution indicators. Retain both More menu entries during acceptance, with the TM/HM entry able to preselect its filter after approval. Compare all existing search, offline, acquisition, and compatibility flows before retiring the separate TM/HM Checker.
 
 ## References
 
@@ -63,3 +63,29 @@ Use a single result identity per move and resolve machine numbers within the sel
 - Hoenn map-section coordinates. [pret/pokeemerald at 8cf5188](https://github.com/pret/pokeemerald/blob/8cf518839e529eeb2477905ede1df7213ac134b8/src/data/region_map/region_map_sections.json)
 - English cartridge trainer, item and move evidence. [PokeDaisy Gen V guide generator at 717f4f4](https://github.com/lidor30/pokedaisy/blob/717f4f49979f4aa5c4c8f4cd64638a0fa935d844/scripts/gen_gen5_guide.py)
 - Trainer difficulty format and related investigation. [TrainerTyrant](https://github.com/ThirdLemon/TrainerTyrant) · [BW2 PWT research](https://github.com/DavidAGInnovation/bw2-pwt-research)
+
+## V76 correction pass
+
+The correction pass continues draft PR #1 on `v76-development`. The original acceptance recorded 3 Pass, 0 Fail and 5 Need work. Its installation, saved-data and import results carried forward into this pass.
+
+- Battle and 6v6 use the V75-STABLE gold treatment for selected and unselected recommendations and one move renderer. The renderer keeps pure type effectiveness for color and combines it with STAB for the displayed multiplier.
+- Regular Battle shows type-based threats, known ability immunities, base offensive stats and an estimated turn-order badge for clearly separated Speeds. 6v6 uses shared move rows, two-tone damage bars, and compact warnings for relevant modeled outcomes. Its underlying survival model remains the same.
+- The stat editor shares the level editor's horizontal controls. The Pokédex action buttons use matching dimensions and icon sizes. Team Builder and Team Planner use the same expanded-panel outline.
+- Move Checker retains its general search, game-specific details, effect text, historical data, and By Type workflow. The TM and HM catalogs mount the existing machine index, acquisition guide and compatibility workflows inside the same tool. The old menu entry was removed after the integrated flow passed. Compatibility retains exact game method labels, machine numbers and evolution indicators. The offline shell was versioned for the updated scripts and CSS.
+- Map controls stay inside their toolbar in regular and fullscreen layouts. The accepted Hoenn schematic and fullscreen location details remain available.
+
+### Correction regression results
+
+Chromium correction tests exercise 320, 412 and 1280 px with real layout geometry. They check baseline gold styling, 1.5×/3×/0.75× display and damage arithmetic, defensive tones, estimated Speed and close-match suppression, eight aligned move cards, a lethal Hyper Beam warning and alternative team recommendation, long labels beside badges, horizontal stat controls, expanded-panel border parity, name and machine number search, direct and evolution compatibility, contextual map return and normal/fullscreen toolbar bounds. The existing 21 Node checks and detailed 412 px browser suite were rerun for save, battle, persistence and offline regressions.
+
+```sh
+TAKDEX_REFERENCE_SAVES=/path/to/reference-saves node --test .github/v76/*.test.cjs
+node .github/v76/browser.cjs http://127.0.0.1:8775
+TAKDEX_SCREENSHOTS=.github/v76/screenshots node .github/v76/corrections.cjs http://127.0.0.1:8775
+```
+
+Screenshots from Chromium are available for [mobile 6v6](screenshots/battle-412.png), [desktop 6v6](screenshots/battle-1280.png) and the [fullscreen mobile map](screenshots/map-412.png).
+
+### Remaining limits
+
+The two-turn battle estimates, exact trainer stats, and Android V9 validation limits above still apply. Chromium tested representative machine and compatibility flows. Complete enumeration across every game, move, species, ROM and dataset is outside the tested matrix. When evolution data is incomplete, unresolved compatibility stays unknown. Quick Battle omits the Speed badge on close comparisons and estimates turn order at comparable levels and training. The accepted Emerald schematic remains. No phone or Android WebView was used.

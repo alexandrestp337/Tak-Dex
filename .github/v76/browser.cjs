@@ -51,7 +51,7 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   await attack.scrollIntoViewIfNeeded();
   const battleScroll=await page.evaluate(()=>scrollY);
   const battleMarkup=await page.locator('#matchups').textContent();
-  const matchNode=await page.locator('#matchups article').elementHandle();
+  const matchNode=await page.locator('#matchups .td74-clash').elementHandle();
   await attack.click();
   await page.locator('#td68MoveBack:visible,.td64-move-back:visible').first().click();
   await page.waitForFunction(y=>Math.abs(scrollY-y)<5,battleScroll);

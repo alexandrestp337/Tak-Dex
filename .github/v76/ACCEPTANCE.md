@@ -1,18 +1,16 @@
-# V76 acceptance checklist
+# V76 correction acceptance checklist
 
-**Pass** means the described scope passed automation. **Fail** marks a reproducible defect. **Untested** means the requested environment or scenario was unavailable. **Need work** identifies an incomplete requirement.
+The initial acceptance returned **3 Pass, 0 Fail and 5 Need work**. This checklist covers the changed web features. The statuses below describe automated coverage. Final user acceptance is pending.
 
-| User acceptance check | Status | What to check |
+| Check | Automated status | Acceptance check |
 | --- | --- | --- |
-| Import a Gen V party and preserve the original save | Pass | Four public raw saves matched the reference reader. Check your own melonDS export and team identity. |
-| Update a linked team without losing the current view | Pass | Chromium preserved Battle opponent and fullscreen map state. Check active edits and browser scroll with your team. |
-| Battle move order, survival and recharge | Pass | Mechanic-level tests passed. Enter your Cynthia/Lucario and Samurott/Milotic matchups and compare with known stats and HP. |
-| Capture every conditional move and verified opponent stat | Need work | Remaining move cases and exact trainer IV/EV/nature data need evidence. |
-| Battle, 6v6 and Pokédex move navigation | Pass | Chromium checked return state and scroll. Check the layouts on your display. |
-| Player and opponent stat adjustment | Pass | Chromium checked both step controls, player numeric selection and player persistence. Save custom opponent adjustments in its preset. |
-| Emerald encounter navigation and fullscreen Maps | Pass | Verified multi-pin framing and live detail selection. Check locations you use most. |
-| Offline cold start and legacy UI | Pass | Chromium opened the cached candidate and read its saved party and bundled data offline. |
-| All-screen mobile styling and device behavior | Untested | Use Galaxy S25 Ultra at your preferred display scaling. |
-| Android V9 integration | Untested | Requires approved V76, Android V8 source and native tests. |
-| Unified TM/HM and Move Checker | Untested | Proposal only. Both existing tools are available. |
-| Reproducible release-blocking failures in the final automated matrix | Pass | No cases remain with Fail status in that matrix. |
+| Battle and 6v6 gold recommendation | Pass | Select the best-ranked Pokémon. The approved bright gold border and glow remain visible with the crown. |
+| Shared move cards and combined STAB | Pass | Compare both Battle modes. Check the name and type badge, category, multiplier with STAB, power/accuracy and score. Neutral STAB reads 1.5×. |
+| Regular Battle defense and estimated Speed | Pass | Check weakness and resistance colors, immunities and the comparable-level “Should strike first” cue. Try a close Speed matchup. |
+| 6v6 aligned rows, damage bars and warnings | Pass | Check four distinct moves per column, aligned rows, HP and percentage text, and green/red roll bars. Try an immediate incoming KO and a better alternative. |
+| Stat steppers | Pass | Tap a value, change it with both adjacent controls, and change the level. Check that the manual offset persists. |
+| Pokédex actions and team editor outlines | Pass | Compare the size and alignment of both Pokédex buttons. Open a Pokémon in Team Builder and Team Planner and compare panel borders. |
+| Unified Move Checker | Pass for exercised flows | Search by name, TM number and HM number. Try team and individual compatibility, an evolution-only result, acquisition and return from Maps. |
+| Map toolbar | Pass | Check all controls and the percentage in normal and fullscreen views. Zoom, clear a selection and return to the previous tool. |
+
+Galaxy S25 Ultra WebView rendering remains untested. Android V9 stays in the subsequent development stage.

@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://alexandrestp337.github.io/Tak-Dex/icon-512.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tak-Dex","url":"https://alexandrestp337.github.io/Tak-Dex/","applicationCategory":"GameApplication","operatingSystem":"Web browser","description":"Pokémon team builder, battle planner, move checker, Pokédex and interactive region maps.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-<link rel="stylesheet" href="styles.css?v=76.0.0">
+<link rel="stylesheet" href="styles.css?v=76.0.1">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -155,7 +155,6 @@
 <section id="morePage" hidden>
   <div class="tool-card">
     <button type="button" id="openPlanner" class="tool-link">⚔ 6v6 Battle Planner ›</button>
-    <button type="button" id="openTM" class="tool-link">▣ TM / HM Compatibility ›</button>
     <button type="button" id="openMaps" class="tool-link">⌖ Interactive Maps ›</button>
     <button type="button" id="td7FeedbackOpen" class="tool-link">✉ Send feedback ›</button>
   </div>
@@ -224,11 +223,7 @@
   <div id="planResults" hidden aria-hidden="true"></div>
 </section>
 
-<section id="tmPage" hidden>
-  <div class="bar">
-    <h2>TM / HM Compatibility</h2>
-    <button type="button" id="backTM">← More</button>
-  </div>
+<section id="tmPage" hidden aria-label="Machine compatibility">
   <div class="tool-card">
     <label>Game<select id="tmGame"></select></label>
     <label>Saved team<select id="tmTeam"></select></label>
@@ -350,7 +345,7 @@
 <script src="unova-b2w2-v74.js?v=74.0.0"></script>
 <script src="db74.js?v=74.0.0"></script>
 <script src="gen5-save.js?v=76.0.0"></script>
-<script src="app.js?v=76.0.0"></script>
+<script src="app.js?v=76.0.1"></script>
 <script src="save-sync.js?v=76.0.0"></script>
 <script src="unova-v74.js?v=74.5.2.20261124"></script>
 <script src="bw-trainer-moves-v76.js?v=74.5.2.20261124"></script>
@@ -362,6 +357,6 @@
 <script src="maps.js?v=76.0.0"></script>
 <script src="feedback-config.js?v=74.0.0"></script>
 <script src="battle-outcomes.js?v=76.0.0"></script>
-<script src="v74-ux.js?v=76.0.0"></script>
+<script src="v74-ux.js?v=76.0.1"></script>
 </body>
 </html>

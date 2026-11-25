@@ -808,7 +808,6 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #plannerPage .td74-stat-field{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:.8rem;font-weight:700}
 #plannerPage .td74-stat-field>span{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
 #plannerPage .td74-stat-field small{font-size:.64rem;color:var(--muted);font-weight:400}
-#plannerPage .td74-stat-field input{width:100%;min-width:0;min-height:35px;padding:6px 8px;border:1px solid var(--edge);border-radius:7px;background:var(--card);color:var(--text)}
 #plannerPage .td74-battle-stats>button{margin-top:7px;font-size:.76rem}
 @media(min-width:650px){#plannerPage .td74-stat-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
@@ -845,7 +844,6 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #plannerPage .td74-stat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;margin:7px 0 5px}
 #plannerPage .td74-stat-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,62px);align-items:center;gap:3px;font-size:.72rem;line-height:1.2;font-weight:650;min-width:0}
 #plannerPage .td74-stat-field>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#plannerPage .td74-stat-field input{width:100%;height:29px;min-height:29px;padding:3px 4px;border-radius:6px;text-align:center;font-size:.80rem;font-weight:750;font-variant-numeric:tabular-nums}
 #plannerPage .td75-stat-footer{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:5px}
 #plannerPage .td75-stat-footer small{font-size:.63rem;color:var(--muted);line-height:1.25}
 #plannerPage .td74-battle-stats .td75-stat-footer button{flex:none;width:auto;min-height:25px;margin:0;padding:3px 7px;font-size:.68rem;border:1px solid var(--edge);border-radius:6px}
@@ -1400,12 +1398,9 @@ main .buttons,dialog .buttons{margin-top:8px;}
 .td76-move-link:focus-visible {outline:2px solid var(--accent)}
 .td76-damage {width:100%;height:6px;accent-color:var(--accent)}
 .td74-all-moves>small {display:block;margin-top:6px}
-.td76-stat-stepper {display:grid;grid-template-columns:36px minmax(36px,1fr) 36px;align-items:stretch}
-.td76-stat-stepper button, .td76-stat-stepper input {padding:4px;margin:0;text-align:center;min-height:40px}
-.td76-stat-stepper input {width:100%;min-width:0}
 #teams .td74-builder-tile.td74-builder-selected,
 #td4TeamPlannerPage #td4Slots>[data-td4-slot].td64-selected,
-.td74-mon-row .td74-mon-chip.active {
+.td74-mon-row .td74-mon-chip.active:not(.td74-crowned) {
  border-radius:var(--td76-selection-radius);
  outline:var(--td76-selection-width) solid var(--accent);
  outline-offset:calc(-1 * var(--td76-selection-width));
@@ -1416,8 +1411,6 @@ main .buttons,dialog .buttons{margin-top:8px;}
 .td76-save {display:grid;gap:4px;margin-block:8px}
 .td76-save input {max-width:100%;margin:4px 0 0}
 
-.td73-map-toolbar>span {gap:4px}
-.td73-map-toolbar>span>button {min-width:44px;min-height:44px;padding:4px 8px;white-space:nowrap}
 #td76FullMapDetails {
  position:absolute;z-index:3;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 58px);
  left:8px;right:8px;max-width:440px;border:1px solid var(--edge);
@@ -1432,3 +1425,51 @@ main .buttons,dialog .buttons{margin-top:8px;}
 .td76-hoenn-landmark rect {fill:#466754;stroke:#b8d19a}
 .td76-hoenn-place.selected rect,.td76-hoenn-place:focus rect {stroke:#fff;stroke-width:5}
 .td76-hoenn-place text {fill:white;font-size:23px;font-weight:700;pointer-events:none}
+
+.td76-duel-grid,.td74-clash-columns.td76-quick-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px;
+}
+.td76-duel-grid h4,.td76-quick-grid h4{margin:0 0 4px;font-size:.8rem}
+.td76-move-card{
+ display:grid;align-content:start;gap:3px;min-width:0;padding:6px 4px;
+ border:1px solid var(--edge);border-radius:8px;background:var(--card);
+}
+.td76-quick-grid .td76-move-card+.td76-move-card{margin-top:6px}
+.td76-move-head{display:flex;align-items:start;justify-content:space-between;gap:3px;min-width:0}
+.td76-move-head .pill{flex:none;margin:0;padding:2px 4px;font-size:.61rem;white-space:nowrap}
+.td76-move-head .td76-move-link{min-width:0;overflow-wrap:anywhere;font-size:clamp(.73rem,2.65vw,.92rem);line-height:1.15}
+.td76-move-card small{font-size:.72rem;line-height:1.3}
+.td76-move-effect{display:flex;align-items:center;gap:5px;font-weight:750}
+.td76-move-card .td76-move-effect,.td76-defense-type strong{color:var(--muted)}
+:is(.td76-move-card,.td76-defense-type).td74-effect-safe :is(.td76-move-effect,strong){color:#57ca92}
+:is(.td76-move-card,.td76-defense-type).td74-effect-danger :is(.td76-move-effect,strong){color:#ff7183}
+.td76-defense-type.td74-effect-immune strong{color:#83b9f6}
+body.light :is(.td76-move-card,.td76-defense-type).td74-effect-safe :is(.td76-move-effect,strong){color:#166b44}
+body.light :is(.td76-move-card,.td76-defense-type).td74-effect-danger :is(.td76-move-effect,strong){color:#aa1739}
+.td76-defense{display:grid;gap:4px;align-content:start}
+.td76-defense-type{display:flex;align-items:center;gap:4px;font-size:.74rem}
+.td76-turn-order{color:var(--text);font-weight:700;font-size:.68rem}
+.td76-damage-track{
+ height:8px;border-radius:5px;background:linear-gradient(to right,#219167 0 var(--low),#75d7ac var(--low) var(--high),#26323a var(--high) 100%);
+}
+.td76-damage-track.incoming{background:linear-gradient(to right,#bd314d 0 var(--low),#f18597 var(--low) var(--high),#26323a var(--high) 100%)}
+#plannerPage .td74-stat-field{display:flex;flex-direction:column;align-items:start;gap:4px}
+#plannerPage .td74-stat-field .td76-stat-stepper{display:inline-flex;overflow:visible}
+#plannerPage .td74-stat-field .td76-stat-stepper input{width:38px;height:32px;min-height:32px}
+#dexResult .td74-dex-actions{grid-template-columns:repeat(2,minmax(0,1fr));max-width:300px;margin:8px auto}
+#dexResult .td74-dex-actions>button{min-height:34px;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;padding:4px!important}
+#dexResult .td76-dex-icon{display:inline-grid;place-items:center;width:15px;height:15px;margin:0;object-fit:contain}
+#teams .td74-builder-inline,#td4TeamPlannerPage #td4Slots>#td4Edit{border:1px solid var(--accent);border-radius:12px}
+#mapsPage .td73-map-toolbar>span{max-width:100%;min-width:0;flex-wrap:wrap;gap:3px;align-items:center}
+#mapsPage .td73-map-toolbar>span>button{min-width:0;min-height:36px;padding:3px 5px;white-space:nowrap;font-size:.72rem}
+#mapsPage :is(#mapsZoomIn,#mapsZoomOut){width:36px;height:36px;padding:0}
+#mapsPage .td73-map-zoom-value{min-width:0;white-space:nowrap;padding-inline:2px}
+.td76-move-filters{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.td76-move-filters button{padding:5px 9px}
+#td68MovePage #td68MoveSuggest{position:static;margin-top:4px}
+#td68MovePage .tm-result.td5-tm-now b{color:#57ca92}
+#td68MovePage .tm-result.td5-tm-later b{color:#83b9f6}
+#td68MovePage .tm-result.td5-tm-never b{color:#ff7183}
+#td68MovePage #tmPokemonResults{position:static;margin-top:4px}
+.td76-move-head .pill{color:#fff}
+.td76-move-card:is([data-move-type=electric],[data-move-type=normal],[data-move-type=steel],[data-move-type=ice],[data-move-type=fairy]) .td76-move-head .pill{color:#161b22;text-shadow:none}

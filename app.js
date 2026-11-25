@@ -833,7 +833,7 @@ function showBattle(){
 
 
  const defense=r.worst>=4?'HIGH RISK':r.worst>=2?'WEAK DEFENSE':r.worst<1?'RESISTS ATTACKS':'NEUTRAL DEFENSE';
- const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${rep.offense.map(m=>`<div class="move-detail-row"><span class="td75-move-name"><span><button type="button" class="td76-move-link" data-td76-move="${safe(m.name)}">${safe(m.name)}</button> <small>${safe(pretty(m.damageClass))}</small></span><span class="td32-type-stab">${pill(m.type)}${td3Stab(m.damageClass!=='status'&&m.stab>1)}</span></span><div class="move-detail-numbers">${moveStats(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.total)} combined · ${safe(td72RiskLabel(m,opponents[k],gen,r.p)||effectivePowerLabel(m))}</b></div></div>`).join('')||'<p>No attacks saved</p>'}</div>`).join('');
+ const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${window.td76QuickMoveCards?.(td33BaseBattleMon(r.p,current,current.pokemon.indexOf(r.p)),opponents[k],gen)||'<p>No attacks saved</p>'}</div>`).join('');
  return `<article data-td76-battle-card="${current.pokemon.indexOf(r.p)}" class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div><details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
  }).join('')||'<p>Add Pokémon to your team to see recommendations.</p>';
 
@@ -1282,8 +1282,7 @@ $('dexSearch').onclick=async()=>{
 $('dexGame').onchange=()=>{refreshTeamMenus()};
 function openTool(page,nav){if($('td4TeamPlannerPage'))$('td4TeamPlannerPage').hidden=true;window.td4RememberExplorer?.(page==='dexPage'?2:nav);tdDev1RememberDexScroll();['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage'].forEach(id=>$(id).hidden=id!==page);['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===nav));window.scrollTo(0,0)}
 $('openPlanner').onclick=()=>{refreshTeamMenus();openTool('plannerPage',3);syncPlanner()};
-$('openTM').onclick=()=>{refreshTeamMenus();openTool('tmPage',3);syncTM()};
-$('backPlanner').onclick=$('backTM').onclick=()=>window.takActivate(3);
+$('backPlanner').onclick=()=>window.takActivate(3);
 // Verified Emerald League data (standard game, NOT ROM hacks). Five or six Pokémon per trainer.
 const emeraldLeague={
  Sidney:[['mightyena',46,'roar','double-edge','sand-attack','crunch'],['shiftry',48,'torment','double-team','swagger','extrasensory'],['cacturne',46,'leech-seed','feint-attack','needle-arm','cotton-spore'],['crawdaunt',48,'surf','swords-dance','strength','facade'],['absol',49,'aerial-ace','rock-slide','swords-dance','slash']],
@@ -1943,7 +1942,14 @@ function setMachineResults(open){
 }
 function machineMatches(q){
  const compact=q.toLowerCase().replace(/[\s-]/g,'');
- return machineEntries.map((m,i)=>({...m,i})).filter(m=>!compact||m.item.includes(compact)||m.move.replace(/-/g,'').includes(compact)||pretty(m.move).toLowerCase().replace(/\s+/g,'').includes(compact)||(/^\d+$/.test(compact)&&String(Number(m.item.replace(/\D/g,'')))===String(Number(compact))));
+ const mode=$('tmPage').dataset.machineFilter;
+ const number=compact.match(/^(tm|hm|tr)?(\d+)$/);
+ return machineEntries.map((m,i)=>({...m,i})).filter(m=>{
+  if(mode&&!m.item.startsWith(mode)&&!(mode==='tm'&&m.item.startsWith('tr')))return false;
+  if(!compact)return true;
+  if(number)return (!number[1]||m.item.startsWith(number[1]))&&Number(m.item.slice(2))===Number(number[2]);
+  return m.item.includes(compact)||m.move.replace(/-/g,'').includes(compact);
+ });
 }
 function showMachineResults(q='',all=false){
  const results=$('tmMoveResults');const found=machineMatches(q).slice(0,all?machineEntries.length:25);
@@ -1955,7 +1961,7 @@ function renderMachineOptions(){
  const chosen=(select.selectedIndex<0?null:machineEntries[Number(select.value)]);$('tmMoveSearch').value=chosen?machineLabel(chosen):'';
  setMachineResults(false);
 }
-function chooseMachine(i){if(!machineEntries[i])return;$('tmMove').value=String(i);$('tmMoveSearch').value=machineLabel(machineEntries[i]);setMachineResults(false);window.takDexMachineGuideV65?.update();$('tmCheck').click();}
+function chooseMachine(i){if(!machineEntries[i])return;$('tmMove').value=String(i);$('tmMoveSearch').value=machineLabel(machineEntries[i]);setMachineResults(false);window.takDexMachineGuideV65?.update();$('tmCheck').click();$('tmPage').dispatchEvent(new CustomEvent('td76:machine',{detail:machineEntries[i]}));}
 $('tmMoveSearch').addEventListener('focus',e=>e.target.select());
 $('tmMoveSearch').addEventListener('input',()=>showMachineResults($('tmMoveSearch').value));
 $('tmMoveBrowse').addEventListener('click',()=>{
@@ -1970,7 +1976,7 @@ $('tmMoveSearch').addEventListener('keydown',e=>{
 });
 $('tmMoveResults').addEventListener('keydown',e=>{if(e.key==='Escape'){setMachineResults(false);$('tmMoveSearch').focus()}});
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('.tm-combo'))setMachineResults(false)});
-search($('tmPokemon'),$('tmPokemonResults'),()=>{});
+search($('tmPokemon'),$('tmPokemonResults'),name=>{$('tmPokemon').value=name;$('tmCheck').click();});
 $('tmPokemon').addEventListener('focus',e=>{e.target.select()});
 const emeraldMachines=`focus-punch dragon-claw water-pulse calm-mind roar toxic hail bulk-up bullet-seed hidden-power sunny-day taunt ice-beam blizzard hyper-beam light-screen protect rain-dance giga-drain safeguard frustration solar-beam iron-tail thunderbolt thunder earthquake return dig psychic shadow-ball brick-break double-team reflect shock-wave flamethrower sludge-bomb sandstorm fire-blast rock-tomb aerial-ace torment facade secret-power rest attract thief steel-wing skill-swap snatch overheat`.split(' ');
 const emeraldHMs=`cut fly surf strength flash rock-smash waterfall dive`.split(' ');
@@ -2000,7 +2006,7 @@ async function syncTM(){
   machineEntries=[];renderMachineOptions();result.textContent='Choose a game to load TM/HM data.';return;
  }
  if(['Black 2','White 2'].includes(game)&&window.takDexB2W2?.machines?.length){machineEntries=window.takDexB2W2.machines.map(m=>({item:m.item,move:m.move}));renderMachineOptions();result.textContent='';return;}
- const cached=await window.takDexReferenceV58?.machinesFor(game);
+ const cached=await window.takDexReferenceV58?.machinesFor(game)||await window.takDexDB74?.machines(vg[game]).catch(()=>null);
  if(request!==td70TMRequest||game!==$('tmGame').value)return;
  if(cached?.length){machineEntries=cached;renderMachineOptions();result.textContent='Loaded game-specific TM/HM records from your offline pack.';return}
  if((game==='Black'||game==='White')&&window.takDexUnovaV74?.machines?.length){machineEntries=window.takDexUnovaV74.machines.map(m=>({item:m.item,move:m.move}));renderMachineOptions();result.textContent='Select a Black/White TM or HM and check compatibility.';return;}
@@ -2018,7 +2024,14 @@ async function syncTM(){
 }
 $('tmGame').onchange=syncTM;$('tmTeam').onchange=()=>{const t=selectedTeam('tmTeam');if(t)openTeam(t.id);syncTM()};
 let tak67TMCheckRequest=0;
-$('tmCheck').onclick=async()=>{const request=++tak67TMCheckRequest;const game=$('tmGame').value;if(!games.includes(game)){$('tmResults').textContent='Choose a game first.';return}const item=($('tmMove').selectedIndex<0?null:machineEntries[Number($('tmMove').value)]),t=selectedTeam('tmTeam'),individual=$('tmPokemon').value.trim().toLowerCase().replace(/\s+/g,'-');if(!item)return;const names=individual?[individual]:(t?.pokemon||[]).filter(Boolean).map(p=>p.name.toLowerCase().replace(/\s+/g,'-'));if(!names.length){$('tmResults').innerHTML='<h3>'+safe(item.item.toUpperCase())+' · '+safe(pretty(item.move))+'</h3><p class="note">Select a team or enter a Pokémon to check compatibility. Acquisition details are available above under Where to get it.</p>';return}const result=$('tmResults');if(t&&!individual){result.innerHTML='';const bar=$('td74TMTeamBar');if(!bar)return;bar.hidden=false;bar.dataset.team=String(t.id);bar.dataset.game=game;const mons=t.pokemon||[];const render=checks=>{bar.innerHTML='<div class="td74-strip-heading"><strong>Selected team</strong></div><div id="td5TMStrip" class="td74-mon-row">'+td51CompatTiles(mons,checks,item.move)+'</div>'};render([]);const values=await Promise.all(mons.map(m=>m?td51CompatCheck(m,game,true,true):null));if(request===tak67TMCheckRequest&&bar.isConnected&&game===$('tmGame').value&&selectedTeam('tmTeam')?.id===t.id&&!$('tmPokemon').value.trim())render(values);return}if($('td74TMTeamBar'))$('td74TMTeamBar').hidden=true;result.textContent='Checking exact game compatibility…';const checks=await Promise.all(names.map(async name=>{try{const p=await api('pokemon/'+encodeURIComponent(name));const yes=takMachineCompatible(p,item.move,game);return {name:pretty(p.name),yes}}catch{return {name:pretty(name),error:true}}}));if(request!==tak67TMCheckRequest||game!==$('tmGame').value)return;result.innerHTML=`<h3>${safe(item.item.toUpperCase())} · ${safe(pretty(item.move))}</h3>${checks.map(x=>`<div class="card tm-result"><strong>${safe(x.name)}</strong><b class="${x.yes?'good':'bad'}">${x.error?'Unknown':x.yes?'✓ Compatible':'✕ Cannot learn'}</b></div>`).join('')}`};
+$('tmCheck').onclick=async()=>{const request=++tak67TMCheckRequest;const game=$('tmGame').value;if(!games.includes(game)){$('tmResults').textContent='Choose a game first.';return}const item=($('tmMove').selectedIndex<0?null:machineEntries[Number($('tmMove').value)]),t=selectedTeam('tmTeam'),individual=$('tmPokemon').value.trim().toLowerCase().replace(/\s+/g,'-');if(!item)return;const names=individual?[individual]:(t?.pokemon||[]).filter(Boolean).map(p=>p.name.toLowerCase().replace(/\s+/g,'-'));if(!names.length){$('tmResults').innerHTML='<h3>'+safe(item.item.toUpperCase())+' · '+safe(pretty(item.move))+'</h3><p class="note">Select a team or enter a Pokémon to check compatibility. Acquisition details are available above under Where to get it.</p>';return}const result=$('tmResults');if(t&&!individual){result.innerHTML='';const bar=$('td74TMTeamBar');if(!bar)return;bar.hidden=false;bar.dataset.team=String(t.id);bar.dataset.game=game;const mons=t.pokemon||[];const render=checks=>{bar.innerHTML='<div class="td74-strip-heading"><strong>Selected team</strong></div><div id="td5TMStrip" class="td74-mon-row">'+td51CompatTiles(mons,checks,item.move,true,item.item)+'</div>'};render([]);const values=await Promise.all(mons.map(m=>m?td51CompatCheck(m,game,true,true):null));if(request===tak67TMCheckRequest&&bar.isConnected&&game===$('tmGame').value&&selectedTeam('tmTeam')?.id===t.id&&!$('tmPokemon').value.trim())render(values);return}if($('td74TMTeamBar'))$('td74TMTeamBar').hidden=true;result.textContent='Checking exact game compatibility…';const checks=await Promise.all(names.map(async name=>{
+ const check=await td51CompatCheck({name},game,true,true);
+ const status=check.direct.has(item.move)?'now':check.later.has(item.move)?'later':check.unknown?'unknown':'never';
+ return {name:pretty(name),status,method:(status==='now'?check.methods:check.laterMethods)?.get(item.move)};
+}));if(request!==tak67TMCheckRequest||game!==$('tmGame').value)return;
+ const labels={now:'✓ Compatible',later:'↑ After evolution',unknown:'Unknown',never:'✕ Cannot learn'};
+ result.innerHTML=`<h3>${safe(machineLabel(item))}</h3>${checks.map(x=>`<div class="card tm-result td5-tm-${x.status}"><strong>${safe(x.name)}</strong> <b>${labels[x.status]}</b>${x.method?` <small>${safe(x.method)}</small>`:''}</div>`).join('')}`;
+};
 refreshTeamMenus();
 // refresh after team creation/edit without changing existing behavior
 const previousShowTeams=showTeams;showTeams=function(){previousShowTeams();refreshTeamMenus()};
@@ -2172,7 +2185,7 @@ for(const id of ['foeInput','foeInput2']){
   render();
  });
  function hide(){page.hidden=true}
- ['teamsTab','battleTab','dexTab','moreTab','openPlanner','openTM','backPlanner','backTM'].forEach(id=>document.getElementById(id)?.addEventListener('click',hide,true));
+ ['teamsTab','battleTab','dexTab','moreTab','openPlanner','backPlanner'].forEach(id=>document.getElementById(id)?.addEventListener('click',hide,true));
  trigger.addEventListener('click',()=>{
   document.querySelectorAll('main > section').forEach(el=>el.hidden=el!==page);
   document.querySelectorAll('.main-tabs button').forEach(b=>b.classList.toggle('selected',b.id==='moreTab'));
@@ -2299,7 +2312,7 @@ for(const id of ['foeInput','foeInput2']){
  $('tmResults').parentNode.insertBefore(box,$('tmResults'));
  function update(){const game=$('tmGame').value,item=($('tmMove').selectedIndex<0?null:machineEntries[Number($('tmMove').value)]);if(!item){box.innerHTML='<summary>Where to get it</summary><div class="td66-section-body"><p class="note">Choose a TM/HM to see acquisition information.</p></div>';return}
   const source=reference[game],where=label(game,item.item),how=reuse(game,item.item);
-  const mapped=['Platinum','Black','White','Black 2','White 2'].includes(game)&&where?(window.takDexMapsV73?.resolveLocation?.(where,game)||where):null;
+  const mapped=['Emerald','Platinum','Black','White','Black 2','White 2'].includes(game)&&where?(window.takDexMapsV73?.resolveLocation?.(where,game)||where):null;
   box.innerHTML=`<summary>Where to get ${safe(String(item.item).toUpperCase())} · ${safe(pretty(item.move))} <span>⌄</span></summary><div class="td66-section-body"><p><b>${where?safe(where):'Location not yet verified for '+safe(game)}</b></p>${mapped?`<button type="button" class="td74-tm-map-link" data-td74-tm-map="${safe(mapped)}" data-td74-tm-game="${safe(game)}">⌖ Show on map</button>`:''}<p class="note">${safe(how)}</p>`+(source?`<p class="note"><a href="${safe(source)}" target="_blank" rel="noopener noreferrer">Location reference ↗</a> · Select another machine to update.</p>`:'<p class="note">Unverified location; no location is invented for this game.</p>')+'</div>';
  }
  box.addEventListener('click',e=>{const b=e.target.closest('[data-td74-tm-map]');if(!b)return;e.preventDefault();e.stopPropagation();window.takDexMapsV73?.open(b.dataset.td74TmGame||$('tmGame').value,b.dataset.td74TmMap);},true);
@@ -3241,8 +3254,6 @@ update();
  }
  const oldOpenPlanner=$('openPlanner').onclick;
  $('openPlanner').onclick=function(e){oldOpenPlanner?.call(this,e);const g=td66SavedGame();if(g&&$('planGame').value!==g){$('planGame').value=g;syncPlanner()}};
- const oldOpenTM=$('openTM').onclick;
- $('openTM').onclick=function(e){oldOpenTM?.call(this,e);const g=td66SavedGame();if(g&&$('tmGame').value!==g){$('tmGame').value=g;syncTM()}};
  // Each game selector is handled above; do not override New Team's uncommitted choice.
 })();
 // V66 — Matchup, planner and Pokédex presentation (uses existing type mechanics).
@@ -3360,11 +3371,16 @@ update();
 
 // DEV5.1 — a single compatibility tile renderer shared by both tools.
 function td51Methods(p,name,g){const ds=takMoveMethodsForGame(p,name,g);return [...new Set(ds.map(d=>{const m=d.move_learn_method?.name;return m==='level-up'?(d.level_learned_at===0?'Start / evolution':Number.isInteger(d.level_learned_at)?'LVL '+d.level_learned_at:'Level-up'):m==='machine'?'TM/HM':m==='tutor'?'Tutor':m==='egg'?'Egg':pretty(m)}).filter(Boolean))].join(' · ');}
-function td51CompatTiles(mons,checks,name,methods=false){return Array.from({length:6},(_,i)=>{const m=mons[i],c=checks[i],status=!m?'unknown':c?.direct?.has(name)?'now':c?.later?.has(name)?'later':c&&!c.unknown?'never':'unknown';const label=status==='now'?c?.methods?.get(name)||'':status==='later'?'↑ '+(c?.laterMethods?.get(name)||'Evolution'):status==='unknown'&&m?'?':'';return `<span class="td74-mon-chip td5-tm-${status}" title="${status==='now'?'Compatible now':status==='later'?'After evolution':status==='never'?'Incompatible':'Unknown'}"><span class="td74-mon-art">${m?`<img alt="" loading="lazy" src="${safe(m.image||'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+m.id+'.png')}">`:'+'}</span><span class="td74-mon-name">${safe(m?td41PokemonLabel(m.nickname||m.name):'Empty')}</span>${methods&&label?`<small class="td51-learn-method">${safe(label)}</small>`:status==='later'?'<small>↑</small>':''}</span>`}).join('')}
+function td51CompatTiles(mons,checks,name,methods=false,machine=''){return Array.from({length:6},(_,i)=>{const m=mons[i],c=checks[i],status=!m?'unknown':c?.direct?.has(name)?'now':c?.later?.has(name)?'later':c&&!c.unknown?'never':'unknown';const label=status==='now'?c?.methods?.get(name)||'':status==='later'?'↑ '+(c?.laterMethods?.get(name)||'Evolution'):status==='unknown'&&m?'?':'';return `<span class="td74-mon-chip td5-tm-${status}" title="${status==='now'?'Compatible now':status==='later'?'After evolution':status==='never'?'Incompatible':'Unknown'}"><span class="td74-mon-art">${m?`<img alt="" loading="lazy" src="${safe(m.image||'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+m.id+'.png')}">`:'+'}</span><span class="td74-mon-name">${safe(m?td41PokemonLabel(m.nickname||m.name):'Empty')}</span>${methods&&label?`<small class="td51-learn-method">${safe(machine?label.replace(/TM\/HM/g,machine.toUpperCase()):label)}</small>`:status==='later'?'<small>↑</small>':''}</span>`}).join('')}
 async function td51CompatCheck(mon,game,evolve=true,machineOnly=false){try{return await td5LearnRecords(mon,game,evolve,machineOnly)}catch{return {direct:new Set(),later:new Set(),unknown:true}}}
 // DEV5 — shared game-specific move compatibility. Evolution data is not a badge/progression guarantee.
 const td5LearnCache=new Map();
-async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key=game+':'+(mon.id||mon.name)+':'+evolve+':'+machineOnly;if(td5LearnCache.has(key))return td5LearnCache.get(key);const task=(async()=>{const moves=p=>new Set((p.moves||[]).filter(m=>(m.version_group_details||[]).some(d=>d.version_group?.name===vg[game]&&(!machineOnly||d.move_learn_method?.name==='machine'))).map(m=>m.move.name));const keyName=String(mon.name||'').toLowerCase().replace(/ /g,'-');let p;try{p=await api('pokemon/'+encodeURIComponent(mon.id||keyName))}catch(e){if(mon.id)throw e;const sp=await api('pokemon-species/'+encodeURIComponent(keyName));const ref=sp.varieties?.find(v=>v.is_default)?.pokemon?.name||sp.id;if(!ref)throw e;p=await api('pokemon/'+ref)}if(!td7PokemonAllowed(p.name,p.id,game))throw Error('Pokémon form unavailable in selected game');const direct=moves(p),later=new Set(),methods=new Map([...direct].map(n=>[n,td51Methods(p,n,game)])),laterMethods=new Map();let unknown=false;if(evolve){try{const queue=[{id:p.id}],seen=new Set([p.id]);while(queue.length){const x=queue.shift();for(const {candidate} of await tdDev1EvolutionOptions(x,game)){if(seen.has(candidate.id))continue;seen.add(candidate.id);queue.push({id:candidate.id});for(const m of moves(candidate))if(!direct.has(m)){later.add(m);const text=td51Methods(candidate,m,game);if(!laterMethods.has(m))laterMethods.set(m,td41PokemonLabel(candidate.name||'Evolution')+(text?' · '+text:''))}}}}catch{unknown=true}}return {direct,later,unknown,methods,laterMethods}})();td5LearnCache.set(key,task);try{const r=await task;if(r.unknown)td5LearnCache.delete(key);return r}catch(e){td5LearnCache.delete(key);throw e}}
+async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key=game+':'+(mon.id||mon.name)+':'+evolve+':'+machineOnly;if(td5LearnCache.has(key))return td5LearnCache.get(key);const task=(async()=>{const moves=p=>new Set((p.moves||[]).filter(m=>(m.version_group_details||[]).some(d=>d.version_group?.name===vg[game]&&(!machineOnly||d.move_learn_method?.name==='machine'))).map(m=>m.move.name));const keyName=String(mon.name||'').toLowerCase().replace(/ /g,'-');let p;try{p=await api('pokemon/'+encodeURIComponent(mon.id||keyName))}catch(e){if(mon.id)throw e;const sp=await api('pokemon-species/'+encodeURIComponent(keyName));const ref=sp.varieties?.find(v=>v.is_default)?.pokemon?.name||sp.id;if(!ref)throw e;p=await api('pokemon/'+ref)}if(!td7PokemonAllowed(p.name,p.id,game))throw Error('Pokémon form unavailable in selected game');const direct=moves(p),later=new Set(),methods=new Map([...direct].map(n=>[n,td51Methods(p,n,game)])),laterMethods=new Map();let unknown=false;if(evolve){try{const queue=[{id:p.id}],seen=new Set([p.id]);while(queue.length){const x=queue.shift();const evolutions=await tdDev1EvolutionOptions(x,game).catch(async()=>{
+  unknown=true;
+  const pack=await window.takDexDB74?.encounter(game);
+  const descendants=(pack?.mons||[]).filter(row=>row[4]===x.id);
+  return Promise.all(descendants.map(async ([id])=>({candidate:await api('pokemon/'+id)})));
+ });for(const {candidate} of evolutions){if(seen.has(candidate.id))continue;seen.add(candidate.id);queue.push({id:candidate.id});for(const m of moves(candidate))if(!direct.has(m)){later.add(m);const text=td51Methods(candidate,m,game);if(!laterMethods.has(m))laterMethods.set(m,td41PokemonLabel(candidate.name||'Evolution')+(text?' · '+text:''))}}}}catch{unknown=true}}return {direct,later,unknown,methods,laterMethods}})();td5LearnCache.set(key,task);try{const r=await task;if(r.unknown)td5LearnCache.delete(key);return r}catch(e){td5LearnCache.delete(key);throw e}}
 // V68 — Move Checker. Shared PokeAPI move database, with explicit cross-generation differences.
 (function installMoveCheckerV68(){
  const main=document.querySelector('main'),more=$('morePage');if(!main||!more)return;
@@ -3416,9 +3432,12 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const page=document.createElement('section');page.id='td68MovePage';page.hidden=true;
  page.innerHTML=`<div class="bar"><h2>Move Checker</h2><div class="td72-move-header-actions"><button type="button" id="td72MoveTypeToggle" aria-pressed="false">◈ By Type</button><button type="button" id="td68MoveBack">← Back</button></div></div>
  <p class="note">Full move effects and historical changes. Current stats appear first; your selected game's generation is highlighted below.</p>
+ <div class="td76-move-filters" aria-label="Move catalog"><button type="button" data-move-catalog="" aria-pressed="true">All Moves</button><button type="button" data-move-catalog="tm" aria-pressed="false">TM</button><button type="button" data-move-catalog="hm" aria-pressed="false">HM</button></div>
  <div id="td68MoveSearchPanel" class="tool-card"><label>Search any move<div class="search td68-search"><input type="text" id="td68MoveInput" placeholder="Future Sight, Rollout, Earthquake…" autocomplete="off"><div id="td68MoveSuggest" class="suggestions" hidden></div></div></label><button type="button" id="td68MoveGo">View move</button></div>
  <div id="td68MoveResult" aria-live="polite"><p class="note">Select a move to see its power, accuracy, PP, effect, and generation changes.</p></div>
  <div id="td72MoveTypePanel" hidden><label>Game<select id="td72MoveTypeGame"><option value="">Choose game…</option></select></label><div id="td72MoveTypeChoices" class="td72-move-types"></div><p id="td72MoveTypeStatus" class="note">Choose a game and type to browse moves.</p><div id="td72MoveTypeResults"></div></div>`;
+ const machinePanel=$('tmPage');
+ page.insertBefore(machinePanel,page.querySelector('#td68MoveResult'));
  main.appendChild(page);
  const report=document.createElement('section');report.id='td68CoveragePage';report.hidden=true;
  report.innerHTML=`<div class="bar"><h2>Database Coverage</h2><button type="button" id="td68CoverageBack">← About</button></div><p class="note">Actual coverage from built-in trainer rosters and locally downloaded data. A game with an indexed encounter list is not necessarily complete for gifts or special acquisitions. Unknown does not mean unobtainable.</p><div id="td68CoverageResults"></div>`;
@@ -3443,6 +3462,41 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  #plannerPage .td68-open-up.td65-move-options,#plannerPage .td68-open-up.td66-pokemon-options{top:auto!important;bottom:calc(100% + 4px)!important}
  `;document.head.appendChild(css);
  const query=$('td68MoveInput'),suggest=$('td68MoveSuggest'),res=$('td68MoveResult');let source='more',savedScroll=0,req=0,searchReq=0,list=null;
+ const catalog=page.querySelector('.td76-move-filters');
+ async function showCatalog(kind,byNumber=false){
+  const showMachines=Boolean(kind)||byNumber;
+  ++req;++searchReq;suggest.hidden=true;
+  machinePanel.dataset.machineFilter=kind;machinePanel.hidden=!showMachines;
+  catalog.querySelectorAll('button').forEach(b=>{
+   const selected=b.dataset.moveCatalog===kind;
+   b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));
+  });
+  td72SwitchMoveView(false);
+  $('td68MoveSearchPanel').hidden=showMachines;
+  $('td72MoveTypeToggle').hidden=showMachines;
+  res.innerHTML='';
+  if(!showMachines)return;
+  if(!$('tmGame').value)$('tmGame').value=td72MoveGameOverride||current?.game||td66SavedGame()||'';
+  refreshTeamMenus();
+  await syncTM();
+  if(!machinePanel.hidden&&machinePanel.dataset.machineFilter===kind)$('tmMoveSearch').value='';
+ }
+ catalog.addEventListener('click',e=>{const b=e.target.closest('[data-move-catalog]');if(b)showCatalog(b.dataset.moveCatalog);});
+ machinePanel.addEventListener('td76:machine',e=>{
+  td72MoveGameOverride=$('tmGame').value;
+  load(e.detail.move);
+ });
+ $('tmGame').addEventListener('change',()=>{++req;res.innerHTML='';});
+ async function submitMove(value){
+  const key=value.trim().replace(/[\s-]/g,'').toLowerCase();
+  if(/^(?:(?:tm|hm)?\d+)$/.test(key)){
+   const kind=/^\d/.test(key)?'':key.slice(0,2);
+   await showCatalog(kind,true);
+   $('tmMoveSearch').value=value.trim();
+   if($('tmGame').value)showMachineResults(value);
+   $('tmMoveSearch').focus();
+  }else load(value);
+ }
  // V72 — same view-toggle pattern as Pokédex By Type, within existing Move Checker.
  const td72TypeToggle=$('td72MoveTypeToggle'),td72TypePanel=$('td72MoveTypePanel'),td72Game=$('td72MoveTypeGame');
  const td72Types=$('td72MoveTypeChoices'),td72TypeStatus=$('td72MoveTypeStatus'),td72TypeResults=$('td72MoveTypeResults');
@@ -3557,6 +3611,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
   }else window.takActivate(3);
  }
  function launch(m,origin,gameOverride){
+  showCatalog('');
   source=origin||'more';$('td68MoveBack').hidden=false;if(source!=='more'){$('td5FilterMode').value='';$('td5FilterFields').hidden=true;}
   savedScroll=window.scrollY;
   td72DetailOrigin=null;td72DetailScroll=0;td72TypeToggle.hidden=false;
@@ -3583,12 +3638,12 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  $('dexResult').addEventListener('click',e=>{const b=e.target.closest('[data-td68-move]');if(!b)return;e.preventDefault();tak67CaptureDexSections();launch(b.dataset.td68Move,'dex',$('dexGame').value)});
  $('moveFields').addEventListener('click',e=>{const b=e.target.closest('[data-td74-builder-move]');if(b){e.preventDefault();launch(b.dataset.td74BuilderMove,'team',current?.game)}});$('slots').addEventListener('click',e=>{const b=e.target.closest('[data-td5-team-move]');if(b){e.preventDefault();launch(b.dataset.td5TeamMove,'team',current?.game)}});$('slots').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.matches('[data-td5-team-move]')){e.preventDefault();e.target.click()}});
  async function moveList(){if(!list){list=api('move?limit=2000').then(x=>(x.results||[]).map(v=>v.name)).catch(e=>{list=null;throw e});}return list}
- async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const compatible=await filterRecords();const values=(await moveList()).filter(n=>n.includes(q)&&filterNames(compatible,n)).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" class="${td52EvolutionOnly(compatible,n)?'td52-evo-only':''}" data-td68-select="${safe(n)}">${safe(pretty(n))}${filterLabel(compatible,n)?`<small class="td51-search-members">${td52FilterMarkup(compatible,n)}</small>`:''}</button>`).join('')||'<p class="note">No matching compatible move.</p>'}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
+ async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2||/^(?:(?:tm|hm)?-?\d+)$/.test(q)){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const compatible=await filterRecords();const values=(await moveList()).filter(n=>n.includes(q)&&filterNames(compatible,n)).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" class="${td52EvolutionOnly(compatible,n)?'td52-evo-only':''}" data-td68-select="${safe(n)}">${safe(pretty(n))}${filterLabel(compatible,n)?`<small class="td51-search-members">${td52FilterMarkup(compatible,n)}</small>`:''}</button>`).join('')||'<p class="note">No matching compatible move.</p>'}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
  query.addEventListener('click',()=>{if(query.value)query.select()});
  query.addEventListener('input',findSuggestions);query.addEventListener('focus',()=>{if(query.value.length>=2)findSuggestions()});
  suggest.addEventListener('click',e=>{const b=e.target.closest('[data-td68-select]');if(!b)return;query.value=pretty(b.dataset.td68Select);suggest.hidden=true;load(b.dataset.td68Select)});
- query.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=suggest.querySelector('[data-td68-select]');const name=!suggest.hidden&&first?first.dataset.td68Select:query.value;suggest.hidden=true;load(name)}if(e.key==='Escape')suggest.hidden=true});
- $('td68MoveGo').addEventListener('click',()=>{suggest.hidden=true;load(query.value)});
+ query.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=suggest.querySelector('[data-td68-select]');const name=!suggest.hidden&&first?first.dataset.td68Select:query.value;suggest.hidden=true;submitMove(name)}if(e.key==='Escape')suggest.hidden=true});
+ $('td68MoveGo').addEventListener('click',()=>{suggest.hidden=true;submitMove(query.value)});
  const generationNames=['','Red/Blue/Yellow','Gold/Silver/Crystal','Ruby/Sapphire/Emerald/FRLG','Diamond/Pearl/Platinum/HGSS','Black/White/B2W2','X/Y/ORAS','Sun/Moon/USUM','Sword/Shield/BDSP','Scarlet/Violet'];
  function statsAt(data,g,game){const hist=moveGenerationData(data,g,game),intro=generationFromName(data.generation?.name?.replace('generation-','')||'');return {...hist,pp:hist.pp??data.pp}}
  function statDesc(n){return Number.isFinite(n)?String(n):'—'}
@@ -3632,8 +3687,8 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
         <p class="note">Looking up acquisition information…</p>
       </div>`;
     res.appendChild(locationBox);if(['dex','team','maps','battle','planner'].includes(source)){const heading=res.querySelector('article h2');if(heading){const row=document.createElement('div');row.className='td64-move-heading';heading.before(row);row.append(heading);const backButton=document.createElement('button');backButton.type='button';backButton.className='td64-move-back';backButton.textContent='← Back';backButton.onclick=back;row.append(backButton);$('td68MoveBack').hidden=true;}}
-    requestAnimationFrame(()=>{if(mine===req&&!page.hidden)res.scrollIntoView({block:'start'})});
-    if(compatible){const mode=$('td5FilterMode').value,team=teams.find(t=>t.id===$('td5FilterTeam').value);if(mode==='team'&&team){const compat=document.createElement('section');compat.className='card td72-move-compat';compat.innerHTML=`<h3>Who can learn ${safe(pretty(name))} in my team?</h3><div class="td74-mon-row td51-compat-strip">${td51CompatTiles(team.pokemon||[],(team.pokemon||[]).map(m=>compatible.find(r=>r.mon===m)),name,true)}</div>`;res.appendChild(compat)}else if(compatible.some(r=>r.later.has(name)&&!r.direct.has(name))){const compat=document.createElement('section');compat.className='card';compat.textContent='↑ After evolution';res.appendChild(compat)}}else if(current?.id&&(!td72MoveGameOverride||td72MoveGameOverride===current.game)){const teamId=current.id,compat=document.createElement('section');compat.id='td72MoveCompatibility';compat.className='card td72-move-compat';compat.innerHTML='<h3>Who can learn it in my team?</h3><p class="note">Checking game-specific compatibility…</p>';res.appendChild(compat);td72RenderMoveTeamCompatibility(data.name,teamId,mine).catch(error=>{if(mine===req&&compat.isConnected)compat.textContent='Team compatibility data unavailable.';console.warn('Move compatibility unavailable',error)})}
+    requestAnimationFrame(()=>{if(mine===req&&!page.hidden&&machinePanel.hidden)res.scrollIntoView({block:'start'})});
+    if(!machinePanel.hidden){/* The machine panel already displays compatibility for the selected species or team. */}else if(compatible){const mode=$('td5FilterMode').value,team=teams.find(t=>t.id===$('td5FilterTeam').value);if(mode==='team'&&team){const compat=document.createElement('section');compat.className='card td72-move-compat';compat.innerHTML=`<h3>Who can learn ${safe(pretty(name))} in my team?</h3><div class="td74-mon-row td51-compat-strip">${td51CompatTiles(team.pokemon||[],(team.pokemon||[]).map(m=>compatible.find(r=>r.mon===m)),name,true)}</div>`;res.appendChild(compat)}else if(compatible.some(r=>r.later.has(name)&&!r.direct.has(name))){const compat=document.createElement('section');compat.className='card';compat.textContent='↑ After evolution';res.appendChild(compat)}}else if(current?.id&&(!td72MoveGameOverride||td72MoveGameOverride===current.game)){const teamId=current.id,compat=document.createElement('section');compat.id='td72MoveCompatibility';compat.className='card td72-move-compat';compat.innerHTML='<h3>Who can learn it in my team?</h3><p class="note">Checking game-specific compatibility…</p>';res.appendChild(compat);td72RenderMoveTeamCompatibility(data.name,teamId,mine).catch(error=>{if(mine===req&&compat.isConnected)compat.textContent='Team compatibility data unavailable.';console.warn('Move compatibility unavailable',error)})}
 
     // A loaded team limits the guide to its game. Without one, show every
     // game for which the existing acquisition guide has a verified location.
