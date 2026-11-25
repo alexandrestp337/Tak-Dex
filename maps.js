@@ -110,7 +110,8 @@ function pretty(name){return String(name||'').replace(/-/g,' ').replace(/\b[a-z]
 function escape(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 const page=$('mapsPage'),layout=$('mapsContent'),list=$('mapsList'),canvas=$('mapsCanvas'),game=$('mapsGame'),region=$('mapsRegion'),regionName=$('mapsRegionName'),filter=$('mapsCategory'),search=$('mapsSearch'),details=$('mapsDetails'),suggestions=$('mapsSuggestions');
 if(!page||!canvas||!game)return;
-let activeMapGame='',activeMapRevision=0;
+let activeMapGame='',activeMapRevision=0,fitEncounterGroup=false;
+const fullDetails=$('td76FullMapDetails'),regularDetails=details.parentElement;
 let selected='',available=[],zoom=1,panX=0,panY=0,returnFrom=null,detailRequest=0,activeSearch=null,encounterPack=null,encounterLoading=null,encounterSet=[],mapMachines=[],mapMachineLoading=null;
 const mapServices=[{name:'Move Deleter',place:'Canalave City',detail:'House south of the Pokémon Center',kind:'service',aliases:'forget moves remove hm deleter'}];
 // Black/White 1 service NPCs, sourced from Serebii and Smogon BW1 references.
@@ -125,7 +126,7 @@ const unovaServices=[
 let encounterAttempted=false, mapFull=false, fullScroll=0;
 let pointers=new Map(),dragging=false,suppressClick=false,lastPointerX=0,lastPointerY=0,animationId=0;
 // Other games remain in atlas/gameRegions, only Platinum appears here.
-game.innerHTML='<option value="">Choose your game</option><option value="Platinum">Platinum</option><option value="Black">Black</option><option value="White">White</option><option value="Black 2">Black 2</option><option value="White 2">White 2</option>';
+game.innerHTML='<option value="">Choose your game</option><option value="Emerald">Emerald</option><option value="Platinum">Platinum</option><option value="Black">Black</option><option value="White">White</option><option value="Black 2">Black 2</option><option value="White 2">White 2</option>';
 const isSequel=g=>g==='Black 2'||g==='White 2';
 const isUnovaGame=g=>['Black','White','Black 2','White 2'].includes(g);
 const isUnova=()=>isUnovaGame(game.value);
@@ -156,9 +157,9 @@ function td82PaintMapBitmap(){
  // Invert the exact mapTransform() applied to the interactive SVG layer,
  // then sample that visible source rectangle from the original full-size JPEG.
  const tx=CX*(1-zoom)+panX,ty=CY*(1-zoom)+panY;
- const scale=(mapFull?Math.max:Math.min)(area.width/MAP_W,area.height/MAP_H)||1;const dx=(area.width-MAP_W*scale)/2,dy=(area.height-MAP_H*scale)/2;
+ const scale=(useSlice()?Math.max:Math.min)(area.width/MAP_W,area.height/MAP_H)||1;const dx=(area.width-MAP_W*scale)/2,dy=(area.height-MAP_H*scale)/2;
  ctx.fillStyle=getComputedStyle(canvas).backgroundColor||'#101216';ctx.fillRect(0,0,w,h);
- ctx.save();ctx.scale(w/area.width,h/area.height);ctx.beginPath();ctx.rect(mapFull?0:dx,mapFull?0:dy,mapFull?area.width:MAP_W*scale,mapFull?area.height:MAP_H*scale);ctx.clip();
+ ctx.save();ctx.scale(w/area.width,h/area.height);ctx.beginPath();ctx.rect(useSlice()?0:dx,useSlice()?0:dy,useSlice()?area.width:MAP_W*scale,useSlice()?area.height:MAP_H*scale);ctx.clip();
  ctx.drawImage(img,dx+tx*scale,dy+ty*scale,MAP_W*zoom*scale,MAP_H*zoom*scale);ctx.restore();
  td82BitmapCanvas.dataset.ready='true';
 }
@@ -178,18 +179,24 @@ function td82InstallMapBitmap(){
 }
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{clampPan();updateViewport()}).observe(canvas);
 else window.addEventListener('resize',td82PaintMapBitmap,{passive:true});
-const supported=()=>game.value==='Platinum'||isUnova();
-function applyRegions(){region.value=game.value==='Platinum'?'sinnoh':isUnova()?'unova':'';MAP_W=isUnova()?1400:1254;MAP_H=isSequel(game.value)?1400*3579/4469:isUnova()?1078:1254;CX=MAP_W/2;CY=MAP_H/2;canvas.classList.toggle('td74-unova-canvas',isUnova());canvas.classList.toggle('td61-sequel-canvas',isSequel(game.value));if(regionName)regionName.textContent=region.value==='sinnoh'?'Sinnoh':region.value==='unova'?'Unova':'Choose a game';}
+const hoenn=()=>game.value==='Emerald';
+const hoennPlaces=(window.takDexHoennLocations||[]).map(([name,left,top,w,h,kind])=>({
+ name,kind,left:left*44+26,top:top*44+26,w:w*44,h:h*44,
+ x:(left+w/2)*44+26,y:(top+h/2)*44+26
+}));
+const supported=()=>hoenn()||game.value==='Platinum'||isUnova();
+const useSlice=()=>mapFull&&!fitEncounterGroup;
+function applyRegions(){region.value=hoenn()?'hoenn':game.value==='Platinum'?'sinnoh':isUnova()?'unova':'';MAP_W=hoenn()?1328:isUnova()?1400:1254;MAP_H=hoenn()?820:isSequel(game.value)?1400*3579/4469:isUnova()?1078:1254;CX=MAP_W/2;CY=MAP_H/2;canvas.classList.toggle('td74-unova-canvas',isUnova());canvas.classList.toggle('td61-sequel-canvas',isSequel(game.value));if(regionName)regionName.textContent=hoenn()?'Hoenn':region.value==='sinnoh'?'Sinnoh':region.value==='unova'?'Unova':'Choose a game';}
 function isTutor(place){return !!window.takDexTutorV73?.at(game.value,place)?.length;}
 function categoryFor(row){return isTutor(row.name)?'tutor':row.kind||'landmark';}
 function matched(row){return filter.value==='all'||categoryFor(row)===filter.value;}
 function getRow(name){const key=locKey(name);return available.find(r=>locKey(r.name)===key)||null;}
-function resetViewport(){stopAnimation();zoom=1;panX=0;panY=0;}
-function mapGeometry(){const b=(canvas.querySelector('svg')||canvas).getBoundingClientRect();const s=(mapFull?Math.max:Math.min)(b.width/MAP_W,b.height/MAP_H)||1;return {b,s};}
-function panLimits(z){const {b,s}=mapGeometry();return {x:Math.max(0,CX*z-(mapFull&&b.width?b.width/s/2:CX)),y:Math.max(0,CY*z-(mapFull&&b.height?b.height/s/2:CY))};}
+function resetViewport(){stopAnimation();fitEncounterGroup=false;zoom=1;panX=0;panY=0;}
+function mapGeometry(){const b=(canvas.querySelector('svg')||canvas).getBoundingClientRect();const s=(useSlice()?Math.max:Math.min)(b.width/MAP_W,b.height/MAP_H)||1;return {b,s};}
+function panLimits(z){const {b,s}=mapGeometry();return {x:Math.max(0,CX*z-(useSlice()&&b.width?b.width/s/2:CX)),y:Math.max(0,CY*z-(useSlice()&&b.height?b.height/s/2:CY))};}
 function clampPan(){const lim=panLimits(zoom);panX=Math.max(-lim.x,Math.min(lim.x,panX));panY=Math.max(-lim.y,Math.min(lim.y,panY));}
 function mapTransform(){return `translate(${(CX*(1-zoom)+panX).toFixed(3)},${(CY*(1-zoom)+panY).toFixed(3)}) scale(${zoom.toFixed(5)})`;}
-function updateViewport(){const svg=canvas.querySelector('svg');if(svg)svg.setAttribute('preserveAspectRatio',mapFull?'xMidYMid slice':'xMidYMid meet');clampPan();const el=canvas.querySelector('#td73MapLayer');if(el)el.setAttribute('transform',mapTransform());
+function updateViewport(){const svg=canvas.querySelector('svg');if(svg)svg.setAttribute('preserveAspectRatio',useSlice()?'xMidYMid slice':'xMidYMid meet');clampPan();const el=canvas.querySelector('#td73MapLayer');if(el)el.setAttribute('transform',mapTransform());
  const focus=canvas.querySelector('#td78MapFocusLabel');if(focus&&isUnova()){
   const row=available.find(r=>locKey(r.name)===selected);
   if(row&&row.kind!=='route'&&Number.isFinite(row.x)&&Number.isFinite(row.y)){
@@ -244,6 +251,9 @@ function showSelection(){
  const svg=canvas.querySelector('svg');if(svg)svg.dataset.selection=selected;
  const tag=$('mapsSelectionLabel');if(tag)tag.textContent=getRow(selected)?.name||'Select a destination';
  const clear=$('mapsClearSelection');if(clear)clear.disabled=!(selected||search.value.trim()||encounterSet.length);
+ fullDetails.hidden=!mapFull||!selected;
+ if(!selected)fullDetails.open=false;
+ fullDetails.querySelector('summary').textContent=getRow(selected)?.name||'Location details';
  listScrollToSelected();
 }
 function hideSuggestions(){if(suggestions)suggestions.hidden=true;search.setAttribute('aria-expanded','false');}
@@ -352,10 +362,10 @@ function showSuggestions(){
  activeSearch=hits;suggestions.hidden=false;search.setAttribute('aria-expanded','true');
 }
 async function selectSearch(index){const r=activeSearch?.[index];if(!r)return;
- search.value=r.name;hideSuggestions();search.blur();encounterSet=r.encounters||[];openLocation(r.place,'search');
+ search.value=r.name;hideSuggestions();search.blur();encounterSet=r.encounters||[];fitEncounterGroup=encounterSet.length>1;openLocation(r.place,'search');
  if(r.place!==r.name){details.insertAdjacentHTML('afterbegin',`<p class="td74-map-target"><strong>${escape(r.name)}</strong> · ${escape(r.detail)}</p>`);}
  if(r.encounters?.length>1)details.insertAdjacentHTML('beforeend','<div class="td74-encounter-places"><strong>Encounter locations</strong>'+r.encounters.map(p=>`<button type="button" data-td74-encounter-place="${escape(p.name)}">${escape(p.name)} · ${escape(p.detail)}</button>`).join('')+'</div>');
- const b=$('mapsCanvas');if(window.innerWidth<=720)b.scrollIntoView({behavior:'smooth',block:'nearest'});
+ const b=$('mapsCanvas');if(!mapFull&&window.innerWidth<=720)b.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function display(){
  if(activeMapGame!==game.value){loadDirectory();return;}
@@ -368,7 +378,7 @@ function display(){
  }).map(r=>`<button type="button" data-location="${escape(r.name)}" aria-pressed="${locKey(r.name)===selected}" class="${locKey(r.name)===selected?'selected':''}"><span>${escape(r.name)}</span><small>${r.kind==='route'?'Route':r.kind==='gym'?'Gym · Badge':categoryFor(r)==='tutor'?'Tutor':r.kind==='town'?'Town / city':'Landmark'}</small></button>`).join(''):'<p class="note">No locations match. Change your search or category.</p>';
  // Restore the original route-shaped click targets, but NEVER draw route dots or highlight strokes.
  // The SVG hit strokes themselves have no visible paint; map/list selection remains synchronized.
- const mtCoronetHit=isUnova()?'':`<g class="td73-map-mountain-hit" data-kind="landmark" data-map-place="Mt. Coronet" tabindex="0" role="button" aria-label="Mt. Coronet mountain range" aria-pressed="${selected==='mount-coronet'}"><title>Mt. Coronet</title><path class="td73-mountain-zone" d="M 536,439 L 566,439 L 581,462 L 578,487 L 594,510 L 616,547 L 637,580 L 630,609 L 631,638 L 641,674 L 634,703 L 617,735 L 616,771 L 604,805 L 553,819 L 528,799 L 527,769 L 541,735 L 555,715 L 549,683 L 529,651 L 544,613 L 535,573 L 543,547 L 530,512 L 532,478 Z"/></g>`;
+ const mtCoronetHit=game.value!=='Platinum'?'':`<g class="td73-map-mountain-hit" data-kind="landmark" data-map-place="Mt. Coronet" tabindex="0" role="button" aria-label="Mt. Coronet mountain range" aria-pressed="${selected==='mount-coronet'}"><title>Mt. Coronet</title><path class="td73-mountain-zone" d="M 536,439 L 566,439 L 581,462 L 578,487 L 594,510 L 616,547 L 637,580 L 630,609 L 631,638 L 641,674 L 634,703 L 617,735 L 616,771 L 604,805 L 553,819 L 528,799 L 527,769 L 541,735 L 555,715 L 549,683 L 529,651 L 544,613 L 535,573 L 543,547 L 530,512 L 532,478 Z"/></g>`;
  const mapRoads=isUnova()?unovaRoads():paths;
  const routes=plotted.filter(r=>r.kind==='route'&&mapRoads[locKey(r.name)]?.length>1).map(r=>{
   const chosen=locKey(r.name)===selected;
@@ -381,7 +391,7 @@ function display(){
   const routeFallback=r.kind==='route';
   return `<g class="td73-map-place td73-map-${r.kind} ${chosen?'selected':''}" data-kind="${r.kind}" data-map-place="${escape(r.name)}" tabindex="0" role="button" aria-label="${escape(r.name)}" aria-pressed="${chosen}" transform="translate(${r.x},${r.y})"><title>${escape(r.name)}</title><circle class="td73-pin-hit" r="${isUnova()?(r.kind==='gym'?12:16):(r.kind==='gym'?20:24)}"/>${routeFallback?'':r.kind==='gym'?'<path class="td73-badge-diamond" d="M0,-11 L11,0 L0,11 L-11,0 Z"/><circle class="td73-badge-center" r="2.5"/>':`<circle class="td73-pin-halo" r="11"/><circle class="td73-pin-core" r="${chosen?8:5.5}"/>`}</g>`;
  }).join('');
-const roadLabels=available.filter(r=>!isUnova()&&r.kind==='route').map(r=>{
+const roadLabels=available.filter(r=>game.value==='Platinum'&&r.kind==='route').map(r=>{
    // Separate route labels from junction badges and town dots on the illustration.
    const roadLabelOffsets={'route-209':[-36,25],'route-214':[-37,-31],'route-223':[-26,-39]};
    const pts=mapRoads[locKey(r.name)],mid=isUnova()?[r.x,r.y]:(pts?.length?pts[Math.floor((pts.length-1)/2)]:[r.x,r.y]).slice();
@@ -390,22 +400,23 @@ const roadLabels=available.filter(r=>!isUnova()&&r.kind==='route').map(r=>{
    const number=(r.name.match(/\d+/)||[])[0];if(!number)return '';
    return `<g class="td74-road-label ${locKey(r.name)===selected?'selected':''}" data-map-place="${escape(r.name)}" transform="translate(${mid[0]},${mid[1]})"><title>${escape(r.name)}</title><text text-anchor="middle" dominant-baseline="central">${number}</text></g>`;
  }).join('');
+const hoennRegions=hoenn()?plotted.map(r=>`<g class="td76-hoenn-place td76-hoenn-${r.kind}" data-map-place="${escape(r.name)}" role="button" tabindex="0" aria-label="${escape(r.name)}"><title>${escape(r.name)}</title><rect x="${r.left+2}" y="${r.top+2}" width="${r.w-4}" height="${r.h-4}" rx="4"/><text x="${r.x}" y="${r.y}" text-anchor="middle" dominant-baseline="central">${escape(r.kind==='route'?r.name.match(/\d+/)?.[0]||'':'•')}</text></g>`).join(''):'';
 const townLabels=''; // The supplied Black/White maps already contain precise printed city labels.
 const encounterPins=encounterSet.map(r=>getRow(r.name)).filter(Boolean).map(r=>`<g transform="translate(${r.x},${r.y})" class="td74-encounter-ring" data-map-place="${escape(r.name)}"><circle r="27"/></g>`).join('');
  // Selected destinations are indicated by their highlight and details panel.
  // No extra name callout: fixed-width bubbles clipped long labels and duplicated town names.
- canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}"><image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/><g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
+ canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${hoenn()?'Hoenn schematic':isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}">${hoenn()?`<rect class="td76-hoenn-water" width="${MAP_W}" height="${MAP_H}"/>${hoennRegions}`:`<image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/>`}<g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${hoenn()?'':pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
  td82InstallMapBitmap();
  updateViewport();
 }
 async function loadDirectory(){
  activeMapGame=game.value; ++activeMapRevision;applyRegions();
- ++detailRequest;selected='';encounterSet=[];encounterPack=null;encounterLoading=null;encounterAttempted=false;mapMachines=[];resetViewport();available=game.value==='Platinum'?[...rows.sinnoh]:isUnova()?unovaPlaces(game.value):[];
+ ++detailRequest;selected='';encounterSet=[];encounterPack=null;encounterLoading=null;encounterAttempted=false;mapMachines=[];resetViewport();available=hoenn()?hoennPlaces:game.value==='Platinum'?[...rows.sinnoh]:isUnova()?unovaPlaces(game.value):[];
  if(layout)layout.hidden=!supported();
  if(!supported()){
   list.replaceChildren();$('mapsCount').textContent='';$('mapsHeading').textContent='Region map';details.replaceChildren();noGame();return;
  }
- $('mapsHeading').textContent=isUnova()?'Unova · '+game.value:'Sinnoh · Platinum';details.innerHTML='<h3>Select a location</h3>';loadEncounters();
+ $('mapsHeading').textContent=hoenn()?'Hoenn · Emerald':isUnova()?'Unova · '+game.value:'Sinnoh · Platinum';details.innerHTML='<h3>Select a location</h3>';loadEncounters();
  display();
 }
 function locationExtras(name){const machines=mapMachineEntries().filter(x=>locKey(x.place)===locKey(name));const extras=[...(isSequel(game.value)?[]:isUnova()?unovaServices:mapServices),...extraLocations(game.value)].filter(x=>locKey(x.place)===locKey(name));const guide=game.value==='Platinum'?window.takDexMachineGuideV65?.platinumMachines?.()||[]:unovaMachines(game.value);return (machines.length?'<details><summary>TM / HM ('+machines.length+')</summary>'+machines.map(m=>{const item=m.name.split(' · ')[0],move=guide.find(x=>x.item.toUpperCase()===item)?.move;return `<div>${move?`<button type="button" class="td73-tutor-move" data-td73-move-checker="${escape(move)}">${escape(m.name.split(' — ')[0])}</button>`:escape(m.name)}<small>${escape(m.detail)}</small></div>`}).join('')+'</details>':'')+(extras.length?'<details><summary>Items, NPCs & services</summary>'+extras.map(x=>`<div><strong>${escape(x.name)}</strong><small>${escape(x.detail)}</small></div>`).join('')+'</details>':'');}
@@ -419,7 +430,9 @@ async function openLocation(name,origin='user'){
  selected=locKey(row.name);display();showSelection();
  if(origin==='list'&&window.innerWidth<=720)canvas.scrollIntoView({behavior:'smooth',block:'nearest'});
  if(origin==='move-checker')requestAnimationFrame(()=>canvas.scrollIntoView({behavior:'smooth',block:'center'}));
- if(selected==='mount-coronet'){
+ if(origin!=='search')fitEncounterGroup=false;
+ if(fitEncounterGroup)fitEncounters();
+ else if(selected==='mount-coronet'){
   // Frame the full mountain from Route 207/208 north to Route 216.
   focusPoint(577,627,2.0);
  }else if(origin==='move-checker'&&routeFocusOverrides[selected]){
@@ -438,14 +451,25 @@ async function openLocation(name,origin='user'){
  if(row.kind==='gym'){status.innerHTML='';return;}
  try{const pack=encounterPack||await window.takDexEncounterV55?.cached?.(detailGame);if(!valid())return;const cached=encounterRowsFor(row.name,pack);if(cached.length){status.innerHTML=encounterHTML(mergeLocal(cached,row.name,detailGame));return;}}catch{}
  if(navigator.onLine===false){if(valid()){if(!initial.length)status.textContent='Encounter data not downloaded for this location.';else status.insertAdjacentHTML('beforeend','<small>Local records · full coverage unverified.</small>');}return;}
- try{const key=locKey(row.name),prefix=isUnovaGame(detailGame)?'unova':'sinnoh';let data=null;for(const n of [prefix+'-'+key,key]){try{const d=await api('location/'+encodeURIComponent(n));if(d?.region?.name&&d.region.name!==prefix)continue;if(Array.isArray(d?.areas)){data=d;break;}}catch{}}if(!valid())return;const areas=data?.areas||[],version=detailGame.toLowerCase().replace(/ /g,'-'),found=new Map();let successful=0;
+ try{const key=locKey(row.name),prefix=isUnovaGame(detailGame)?'unova':detailGame==='Emerald'?'hoenn':'sinnoh';let data=null;for(const n of [prefix+'-'+key,key]){try{const d=await api('location/'+encodeURIComponent(n));if(d?.region?.name&&d.region.name!==prefix)continue;if(Array.isArray(d?.areas)){data=d;break;}}catch{}}if(!valid())return;const areas=data?.areas||[],version=detailGame.toLowerCase().replace(/ /g,'-'),found=new Map();let successful=0;
  for(let i=0;i<areas.length;i+=4){const batch=areas.slice(i,i+4);await Promise.all(batch.map(async a=>{try{const area=await api('location-area/'+encodeURIComponent(a.name));if(!Array.isArray(area?.pokemon_encounters))return;successful++;for(const p of area.pokemon_encounters||[]){const vv=(p.version_details||[]).find(v=>v.version?.name===version);if(!vv)continue;let entry=found.get(p.pokemon.name);if(!entry)found.set(p.pokemon.name,entry={name:p.pokemon.name,records:[]});for(const d of vv.encounter_details||[])entry.records.push([row.name+' · '+a.name.replace((data.name||'')+'-',''),d.method?.name,d.min_level,d.max_level,(d.condition_values||[]).map(c=>c.name)]);}}catch{}}));if(!valid())return;}
  if(!valid())return;const loaded=encounterRowsFor(row.name);const rows=mergeLocal(loaded.length?loaded:[...found.values()],row.name,detailGame);status.innerHTML=encounterHTML(rows)||(data&&areas.length&&successful===areas.length?'<small>No wild encounters recorded for this version in the checked source.</small>':'<small>Encounter records unavailable for this location.</small>');if(areas.length&&successful<areas.length)status.insertAdjacentHTML('beforeend','<small>Some subareas could not be checked.</small>');else if(rows.length&&!loaded.length&&!successful)status.insertAdjacentHTML('beforeend','<small>Local records · full coverage unverified.</small>');
  }catch{if(valid()&&!initial.length)status.textContent='Encounter records unavailable for this location.';}
 
 }
+async function openSpecies(g,name){
+ open(g);
+ const revision=activeMapRevision;
+ await loadEncounters();
+ if(page.hidden||revision!==activeMapRevision)return;
+ search.value=pretty(name);
+ showSuggestions();
+ const key=locKey(name);
+ const index=activeSearch?.findIndex(r=>r.kind==='encounter'&&locKey(r.name.split(' · ')[0])===key);
+ if(index>=0)selectSearch(index);
+}
 function setGame(g){
- const target=['Platinum','Black','White','Black 2','White 2'].includes(g)?g:'';
+ const target=['Emerald','Platinum','Black','White','Black 2','White 2'].includes(g)?g:'';
  if(game.value!==target||activeMapGame!==target){game.value=target;loadDirectory();}
  else if(supported()&&!canvas.querySelector('svg[data-map-game="'+target+'"]'))loadDirectory();
 }
@@ -456,7 +480,7 @@ function open(g,place){
  returnFrom={id:active?.id||'morePage',scroll:window.scrollY};
  for(const el of document.querySelectorAll('main > section'))el.hidden=el!==page;
  document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));
- if(target&&!['Platinum','Black','White','Black 2','White 2'].includes(target)){
+ if(target&&!['Emerald','Platinum','Black','White','Black 2','White 2'].includes(target)){
   game.value='';loadDirectory();if(layout)layout.hidden=true;
   details.innerHTML=`<h3>Interactive map not yet available</h3><p class="note">${escape(target)} map is not enabled yet.</p>`;
   window.scrollTo(0,0);return;
@@ -524,7 +548,16 @@ function zoomTo(next,px=CX,py=CY){
  moveViewport(z,px-CX*(1-z)-x*z,py-CY*(1-z)-y*z,false);
 }
 function clientToMap(e){const {b,s:scale}=mapGeometry();return {x:(e.clientX-b.left-(b.width-MAP_W*scale)/2)/scale,y:(e.clientY-b.top-(b.height-MAP_H*scale)/2)/scale};}
-function setFull(on,restoreScroll=true){if(on===mapFull)return;mapFull=on;const bar=$('mapsFullscreen');if(on){fullScroll=window.scrollY;page.classList.add('td63-map-full');document.body.classList.add('td63-map-full-body');page.scrollTop=0;}else{page.classList.remove('td63-map-full');document.body.classList.remove('td63-map-full-body');if(restoreScroll)requestAnimationFrame(()=>window.scrollTo(0,fullScroll));}bar.textContent=on?'Exit fullscreen':'Fullscreen';bar.setAttribute('aria-pressed',String(on));requestAnimationFrame(updateViewport);}
+function fitEncounters(){
+ const points=encounterSet.map(place=>getRow(place.name)).filter(Boolean);
+ if(points.length<2)return;
+ const left=Math.min(...points.map(p=>p.x)),right=Math.max(...points.map(p=>p.x));
+ const top=Math.min(...points.map(p=>p.y)),bottom=Math.max(...points.map(p=>p.y));
+ const {b,s}=mapGeometry(),padding=26/s+27;
+ const zoom=Math.min(MAP_W/(right-left+2*padding),MAP_H/(bottom-top+2*padding));
+ focusPoint((left+right)/2,(top+bottom)/2,zoom,false);
+}
+function setFull(on,restoreScroll=true){if(on===mapFull)return;mapFull=on;const bar=$('mapsFullscreen');if(on){fullScroll=window.scrollY;page.classList.add('td63-map-full');document.body.classList.add('td63-map-full-body');page.scrollTop=0;fullDetails.append(details);}else{regularDetails.prepend(details);fullDetails.open=false;page.classList.remove('td63-map-full');document.body.classList.remove('td63-map-full-body');if(restoreScroll)requestAnimationFrame(()=>window.scrollTo(0,fullScroll));}bar.textContent=on?'Exit fullscreen':'Fullscreen';bar.setAttribute('aria-pressed',String(on));showSelection();requestAnimationFrame(()=>fitEncounterGroup?fitEncounters():updateViewport());}
 $('mapsFullscreen').onclick=()=>setFull(!mapFull);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mapFull&&!page.hidden)setFull(false)});new MutationObserver(()=>{if(page.hidden&&mapFull)setFull(false,false)}).observe(page,{attributes:true,attributeFilter:['hidden']});
 $('mapsZoomIn').onclick=()=>zoomTo(zoom*1.35);
 $('mapsZoomOut').onclick=()=>zoomTo(zoom/1.35);
@@ -563,9 +596,9 @@ document.addEventListener('click',e=>{
  if(e.target.closest('#teamsTab,#battleTab,#dexTab,#moreTab,#openPlanner,#openTM,#td56OpenCompare,#td68OpenMove,#td59OpenOffline'))page.hidden=true;
 },true);
 applyRegions();noGame();
-window.takDexMapsV73={open,openLocation,mapAcquisition,setGameContext(g){setGame(g);},hasLocation:(name,g)=>{const ar=isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:[];return ar.some(r=>locKey(r.name)===locKey(name));},resolveLocation:(name,g='Platinum')=>{
+window.takDexMapsV73={open,openSpecies,openLocation,mapAcquisition,setGameContext(g){setGame(g);},hasLocation:(name,g)=>{const ar=isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:g==='Emerald'?hoennPlaces:[];return ar.some(r=>locKey(r.name)===locKey(name));},resolveLocation:(name,g='Platinum')=>{
  const raw=String(name||'').split(' · ')[0].trim(),route=raw.match(/route\s+\d{3}/i);
- const places=(isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:[]).filter(r=>r.kind!=='gym').sort((a,b)=>b.name.length-a.name.length);
+ const places=(isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:g==='Emerald'?hoennPlaces:[]).filter(r=>r.kind!=='gym').sort((a,b)=>b.name.length-a.name.length);
  if(route)return places.find(r=>locKey(r.name)===locKey(route[0]))?.name||null;
  const q=locKey(sequelAlias(raw,g));
  return places.find(r=>q===locKey(r.name)||q.startsWith(locKey(r.name)+'-')||q.includes('-'+locKey(r.name)+'-'))?.name||null;
