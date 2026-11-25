@@ -800,6 +800,7 @@ function td33BaseBattleMon(p,team=null,index=-1){
  return {...rest,baseStats,battleStats:{...baseStats},baseSpeed:baseStats.speed,heldItem:same?(saved.item??p.heldItem??p.item??''):(p.heldItem??p.item??'')};
 }
 function showBattle(){
+ if(!foe||doubleMode)window.td76RenderBattleStrip?.(current);
  if(!current){$('matchups').innerHTML='<p>Open a team first.</p>';return}
  if(!foe){$('matchups').innerHTML='<p>Select an opponent above.</p>';return}
  if(doubleMode&&!foe2){$('matchups').innerHTML='<p>Select the second opponent to compare both threats.</p>';return}
@@ -816,16 +817,16 @@ function showBattle(){
    const plan=pairPlan(members[i],members[k],opponents,gen);if(plan)plans.push(plan);
   }
   plans.sort((a,b)=>b.rank-a.rank);
-  pairSection='<h3 class="subheading">RECOMMENDED PAIRS</h3>'+(plans.length?plans.slice(0,5).map((p,i)=>pairCard(p,i,opponents)).join(''):'<p>Add two Pokémon with damaging attacks to see pair recommendations.</p>')+'<h3 class="subheading">INDIVIDUAL MATCHUPS</h3>';
+  pairSection='<h3 class="subheading">RECOMMENDED PAIRS</h3>'+(plans.length?plans.slice(0,5).map((p,i)=>pairCard(p,i,opponents)).join(''):'<p>Add two Pokémon with damaging attacks to see pair recommendations.</p>')+'';
  }
  if(!doubleMode&&window.td3RenderSingleBattle){window.td3RenderSingleBattle(current,foe,ranked,gen);return;}
  $('matchups').innerHTML=pairSection+
  ranked.map((r,i)=>{
- const top=r.reports[0],move=top.best;
- const headline=move?`<div class="recommended-move"><small>⚔ BEST MOVE${doubleMode?' VS '+safe(opponents[0].name).toUpperCase():''}</small><strong>${safe(move.name)} ${pill(move.type)} ${td3Stab(move.damageClass!=='status'&&move.stab>1)}</strong><span>${moveStats(move)} · ${effectText(move.total)} combined · ${effectivePowerLabel(move)}</span></div>`:`<div class="recommended-move"><small>BEST MOVE</small><strong>${r.p.moves?.length?"No damaging move scored":"No attacks saved"}</strong>${r.p.moves?.length?`<span>Saved attacks: ${r.p.moves.map(m=>safe(typeof m==='string'?m:m?.name||'Unknown move')).join(' · ')}</span>`:''}</div>`;
+
+
  const defense=r.worst>=4?'HIGH RISK':r.worst>=2?'WEAK DEFENSE':r.worst<1?'RESISTS ATTACKS':'NEUTRAL DEFENSE';
- const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${rep.offense.map(m=>`<div class="move-detail-row"><span class="td33-double-move">${safe(m.name)} ${pill(m.type)}${td3Stab(m.damageClass!=='status'&&m.stab>1)}</span><div class="move-detail-numbers">${moveStats(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.total)} combined · ${safe(td72RiskLabel(m,opponents[k],gen,r.p)||effectivePowerLabel(m))}</b></div></div>`).join('')||'<p>No attacks saved</p>'}</div>`).join('');
- return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div>${headline}${doubleMode?`<p class="note">Double battle: details against both opponents below.</p>`:''}<details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
+ const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${rep.offense.map(m=>`<div class="move-detail-row"><span class="td75-move-name"><span><button type="button" class="td76-move-link" data-td76-move="${safe(m.name)}">${safe(m.name)}</button> <small>${safe(pretty(m.damageClass))}</small></span><span class="td32-type-stab">${pill(m.type)}${td3Stab(m.damageClass!=='status'&&m.stab>1)}</span></span><div class="move-detail-numbers">${moveStats(m)}<b class="${m.total>1?'good':m.total===0?'zero':m.total<1?'bad':''}">${effectText(m.total)} combined · ${safe(td72RiskLabel(m,opponents[k],gen,r.p)||effectivePowerLabel(m))}</b></div></div>`).join('')||'<p>No attacks saved</p>'}</div>`).join('');
+ return `<article class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div><details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
  }).join('')||'<p>Add Pokémon to your team to see recommendations.</p>';
 
 }
@@ -3282,7 +3283,7 @@ update();
  const label=document.createElement('label');
  label.id='td681BattleTeamLabel';label.textContent='Choose your team';
  const select=document.createElement('select');select.id='td681BattleTeam';label.appendChild(select);
- opponent.before(label);
+ $('td76BattleStrip').before(label);
  const style=document.createElement('style');style.id='td681-style';style.textContent=`
  #td681BattleTeamLabel{display:block;margin:12px 0 14px}
  #td681BattleTeam{display:block;width:100%;margin-top:6px}
@@ -3508,7 +3509,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  }
 
  function normal(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,'-')}
- function openPage(which){['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage','mapsPage'].forEach(id=>$(id).hidden=true);aboutPage.hidden=true;page.hidden=which!=='move';report.hidden=which!=='coverage';['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===(source==='dex'?2:source==='team'?0:3)));window.scrollTo(0,0)}
+ function openPage(which){['teamsPage','battlePage','dexPage','morePage','plannerPage','tmPage','mapsPage'].forEach(id=>$(id).hidden=true);aboutPage.hidden=true;page.hidden=which!=='move';report.hidden=which!=='coverage';['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===(source==='dex'?2:source==='team'?0:source==='battle'?1:3)));window.scrollTo(0,0)}
  function back(){
   if(td72DetailOrigin==='type'){
    ++req;td72DetailOrigin=null;td72MoveGameOverride=$('td5FilterMode').value?$('td5FilterGame').value:null;
@@ -3525,7 +3526,11 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
   page.hidden=true;report.hidden=true;
   if(source==='dex'){$('dexPage').hidden=false;['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===2));requestAnimationFrame(()=>window.scrollTo(0,savedScroll))}
   else if(source==='team'){$('teamsPage').hidden=false;['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===0));requestAnimationFrame(()=>window.scrollTo(0,savedScroll))}
-  else if(source==='maps'){
+  else if(source==='battle'||source==='planner'){
+   $(source==='battle'?'battlePage':'plannerPage').hidden=false;
+   ['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===(source==='battle'?1:3)));
+   requestAnimationFrame(()=>window.scrollTo(0,savedScroll));
+  }else if(source==='maps'){
    $('mapsPage').hidden=false;
    ['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===3));
    requestAnimationFrame(()=>window.scrollTo(0,savedScroll));

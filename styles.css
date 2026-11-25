@@ -1382,3 +1382,37 @@ main .buttons,dialog .buttons{margin-top:8px;}
 #td70AboutPage .td70-about-card p{margin:5px 0!important;}
 #typeCheckerPage #typeCheckGrid.td72-move-types{margin:8px 0;}
 #morePage .td71-theme-control{margin-top:8px;}
+
+/* V76 battle controls and shared selection treatment */
+:root {
+ --td76-selection-width: 2px;
+ --td76-selection-radius: 10px;
+}
+#battlePage #foePreview, #battlePage #foePreview2 {display:none}
+#td681BattleTeamLabel {margin-top:4px}
+#td76BattleStrip {margin-bottom:10px}
+#battlePage .td74-clash-columns, #td74Focus .td74-clash-columns {margin-top:8px}
+.td75-move-name {display:grid;gap:3px}
+.td76-move-link {
+ border:0;background:none;padding:0;margin:0;box-shadow:none;color:var(--text);
+ text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;
+ text-align:left;font:inherit;font-weight:700;
+}
+.td76-move-link:focus-visible {outline:2px solid var(--accent)}
+.td76-damage {width:100%;height:6px;accent-color:var(--accent)}
+.td74-all-moves>small {display:block;margin-top:6px}
+.td76-stat-stepper {display:grid;grid-template-columns:36px minmax(36px,1fr) 36px;align-items:stretch}
+.td76-stat-stepper button, .td76-stat-stepper input {padding:4px;margin:0;text-align:center;min-height:40px}
+.td76-stat-stepper input {width:100%;min-width:0}
+#teams .td74-builder-tile.td74-builder-selected,
+#td4TeamPlannerPage #td4Slots>[data-td4-slot].td64-selected,
+.td74-mon-row .td74-mon-chip.active {
+ border-radius:var(--td76-selection-radius);
+ outline:var(--td76-selection-width) solid var(--accent);
+ outline-offset:calc(-1 * var(--td76-selection-width));
+ box-shadow:none;
+}
+#dexResult .td74-dex-actions {display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+#dexResult .td74-dex-actions>button {min-height:44px;margin:0;width:100%!important}
+.td76-save {display:grid;gap:4px;margin-block:8px}
+.td76-save input {max-width:100%;margin:4px 0 0}

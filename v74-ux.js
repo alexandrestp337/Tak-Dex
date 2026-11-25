@@ -49,10 +49,17 @@ function renderChips(side){
 }
 strip.addEventListener('error',e=>{const img=e.target;if(!img.matches?.('img[data-td62-sprite]')||img.dataset.td62Fallback)return;img.dataset.td62Fallback='1';const fallback='https://play.pokemonshowdown.com/sprites/gen5/'+encodeURIComponent(img.dataset.td62Sprite)+'.png';if(img.src!==fallback)img.src=fallback;},true);
 function typeBadges(p){const raw=p?.types||[];return raw.length?`<span class="td75-types">${raw.map(t=>pill(t)).join('')}</span>`:'<span class="td75-type-unknown">Types unavailable</span>';}
-function moveNameWithType(m,stab=false){return `<span class="td75-move-name"><span class="td31-move-name-group"><strong>${escape(m.name)}</strong><span class="td32-type-stab">${m.type?pill(m.type):''}${td3Stab(stab)}</span></span></span>`;}
-function knownMoveMeta(m,a,d,gen){const out=[];const power=td2Power(m,a,d,gen);if(power)out.push('PWR '+power.min+(power.max>power.min?'–'+power.max:''));if(Number.isFinite(m.accuracy))out.push('ACC '+m.accuracy+'%');const head=out.join(' · ');const tail=[];const score=expectedPower(m,a,d,gen),max=expectedPower(m,a,d,gen,'max');if(score!==null)tail.push('<strong class="td31-attack-score">'+escape('Score '+Math.round(score)+(max>score?'–'+Math.round(max):''))+'</strong>');if(td2Turns(m,a,gen)>1)tail.push('2 turns');const ability=td2OffensiveModifier(m,a,gen);if(ability!==1)tail.push(escape(pretty(td2ActualAbility(a))+' ×'+ability));return head||tail.length?`<span class="td75-move-meta">${escape(head)}${tail.length?`${head?' · ':''}${tail.join(' · ')}`:''}</span>`:'';}
+function moveNameWithType(m,stab=false){
+ return `<span class="td75-move-name"><span><button type="button" class="td76-move-link" data-td76-move="${escape(m.name)}">${escape(m.name)}</button> <small>${escape(pretty(m.damageClass||''))}</small></span><span class="td32-type-stab">${m.type?pill(m.type):''}${td3Stab(stab)}</span></span>`;
+}
+function knownMoveMeta(m,a,d,gen){const out=[];const power=td2Power(m,a,d,gen);if(power)out.push('PWR '+power.min+(power.max>power.min?'–'+power.max:''));if(Number.isFinite(m.accuracy))out.push('ACC '+m.accuracy+'%');const head=out.join(' · ');const tail=[];const score=expectedPower(m,a,d,gen),max=expectedPower(m,a,d,gen,'max');if(score!==null)tail.push('<strong class="td31-attack-score">'+escape('Score '+Math.round(score)+(max>score?'–'+Math.round(max):''))+'</strong>');if(TD2_RECHARGE.has(m.name))tail.push('Recharge after hit');else if(td2Turns(m,a,gen)>1)tail.push('Charges first');const ability=td2OffensiveModifier(m,a,gen);if(ability!==1)tail.push(escape(pretty(td2ActualAbility(a))+' ×'+ability));return head||tail.length?`<span class="td75-move-meta">${escape(head)}${tail.length?`${head?' · ':''}${tail.join(' · ')}`:''}</span>`:'';}
 
-function potentialThreat(a,d,gen){const potential=plannerPotentialStab(d,a,gen).filter(x=>Number.isFinite(x.mult));return `<span class="td32-threat-unknown">Opponent moves unknown</span>${potential.length?`<span class="td32-potential-label">Potential STAB effectiveness</span><span class="td32-potential-types">${potential.map(t=>`<span>${pill(t.type)} <b>${escape(effText({type:t.type},a,gen))}</b></span>`).join('')}</span>`:''}`;}
+function potentialThreat(a,d,gen){
+ const potential=plannerPotentialStab(d,a,gen);
+ const stats=d.baseStats||{}, physical=stats.attack, special=stats['special-attack'];
+ const tendency=physical===special?'Balanced offense':physical>special?'Physical tendency':'Special tendency';
+ return `<section class="td74-all-moves"><h4>Potential STAB</h4><div class="td32-potential-types">${potential.map(t=>`<span>${pill(t.type)} <b>${escape(effectText(t.mult))}</b></span>`).join('')}</div><small>Base Atk ${physical??'—'} · Sp. Atk ${special??'—'} · Speed ${stats.speed??'—'}</small>${physical&&special?`<small>${tendency}</small>`:''}</section>`;
+}
 function focusWarnings(a,d,gen,context='planner'){const out=[];if(!a||!d)return '';
  const hasDamaging=(d.moves||[]).some(m=>m?.name&&m.damageClass!=='status'&&Number(m.power)>0);
  if(!hasDamaging&&context!=='battle'){const potential=plannerPotentialStab(d,a,gen).filter(x=>Number.isFinite(x.mult));
@@ -63,34 +70,73 @@ function focusWarnings(a,d,gen,context='planner'){const out=[];if(!a||!d)return 
  return out.join('');
 }
 function td33BattleMoves(a,d,gen){return (a?.moves||[]).filter(m=>m?.name).map(m=>({m,score:expectedPower(m,a,d,gen)})).sort((x,y)=>(y.score??-1)-(x.score??-1));}
-function td33BestBattleMove(a,d,gen){return a&&d?td33BattleMoves(a,d,gen).find(x=>Number.isFinite(x.score)&&x.score>0)||null:null;}
-function td33ScoreLabel(m,a,d,gen){const score=expectedPower(m,a,d,gen),max=expectedPower(m,a,d,gen,'max');return score===null?'Score —':'Score '+Math.round(score)+(max>score?'–'+Math.round(max):'');}
-function formatMoves(a,d,gen,incoming=false,baseOnly=false){const entries=baseOnly?td33BattleMoves(a,d,gen):moveSummary(a,d,gen);
+function formatMoves(a,d,gen,incoming=false,baseOnly=false){
  if(!a||a.dataMissing)return '<p class="note">Pokémon reference unavailable.</p>';
- if(!entries.length)return '<p class="note">No moves entered.</p>';
- return entries.map(({m,damage})=>`<div class="td74-move-detail td74-effect-${effectivenessClass(m,d,gen,incoming,a)}">${moveNameWithType(m,m.damageClass!=='status'&&td2Stab(m,a,gen)>1)}<span class="td74-effect-number">${effText(m,d,gen,a)}</span>${baseOnly?'':`<span>${Number.isFinite(damage)?escape(plannerDamageLabel(a,d,m,gen)):'Damage unavailable'}</span>`}${knownMoveMeta(m,a,d,gen)}${!baseOnly&&damage>0&&td2Turns(m,a,gen)>1?`<small class="note">Est. ${Math.round(td2PerTurn(a,d,m,gen))} HP per turn (accuracy weighted)</small>`:''}</div>`).join('');}
-function threatBox(label,a,d,gen,incoming=false,estimated=false,baseOnly=false){const entry=baseOnly?td33BestBattleMove(a,d,gen):incoming?outcomes.threat(a,d,gen):bestMove(a,d,gen),n=a?.moves?.filter(m=>m?.name).length||0;
- const summary=entry?`${moveNameWithType(entry.m,td2Stab(entry.m,a,gen)>1)}<span class="td74-effect-number td74-effect-${effectivenessClass(entry.m,d,gen,incoming,a)}">${effText(entry.m,d,gen,a)}</span><span class="td32-damage">${escape(baseOnly?td33ScoreLabel(entry.m,a,d,gen):plannerDamageLabel(a,d,entry.m,gen))}</span>`:!a||a.dataMissing?'Pokémon reference unavailable':!d||d.dataMissing?'Target reference unavailable':n?((a.moves||[]).some(m=>m.unresolved||!m.type||!m.damageClass)?'Move data unavailable':(a.moves||[]).every(m=>m.damageClass==='status')?'No damaging moves':(a.moves||[]).filter(m=>m.damageClass!=='status').every(m=>defensiveEffect(m,d,gen,a)===0)?'All damaging moves ineffective':baseOnly?'No damaging move scored':'Damage metadata unavailable'):incoming?'Opponent moves unknown':'No moves entered';
- return `<section class="td74-clash-line"><span class="td74-clash-label">${label}</span>${summary}${turnOrder(a,d,gen,estimated,baseOnly)}</section>`;
+ const results=baseOnly?td33BattleMoves(a,d,gen):moveSummary(a,d,gen);
+ const ranked=baseOnly||incoming?[]:outcomes.attacks(a,d,gen);
+ const first=incoming?outcomes.threat(a,d,gen)?.m:ranked[0]?.m;
+ if(first)results.sort((x,y)=>Number(y.m===first)-Number(x.m===first));
+ const seen=new Set();
+ return results.filter(({m})=>{
+  const key=moveKey(m.name);
+  if(seen.has(key))return false;
+  seen.add(key);return true;
+ }).map(({m,damage})=>{
+  const outcome=ranked.find(row=>row.m===m);
+  const pct=Number.isFinite(damage)&&d?Math.round(100*damage/estimatedHP(d)):null;
+  const conditional=outcome?.boost>0&&Number.isFinite(outcome.minimum);
+  const text=conditional?`${outcome.minimum}–${outcome.maximum} HP across turn-one outcomes · Boost ${Math.round(outcome.boost*100)}%`:Number.isFinite(damage)?plannerDamageLabel(a,d,m,gen):'Damage unavailable';
+  const order=outcome?.n?.type?outcomes.orderChance(a,d,m,outcome.n,gen):null;
+  return `<div class="td74-move-detail td74-effect-${effectivenessClass(m,d,gen,incoming,a)}">${moveNameWithType(m,m.damageClass!=='status'&&td2Stab(m,a,gen)>1)}<span class="td74-effect-number">${effText(m,d,gen,a)}</span>${baseOnly||m.damageClass==='status'?'':`<span>${escape(text)}</span>${pct===null?'':`<progress class="td76-damage" value="${Math.min(100,pct)}" max="100" aria-label="Maximum estimated damage as a percentage of max HP"></progress>`}`}${knownMoveMeta(m,a,d,gen)}${order===null?'':`<small>${order===.5?'Speed tie':order?'Moves first':'Moves second'} · ${Math.round(outcome.win*100)}% estimated two-turn KO</small>`}</div>`;
+ }).join('')||'<p class="note">No moves entered.</p>';
 }
-function turnOrder(a,d,g,estimated=false,baseOnly=false){if(!a||!d)return '';if(baseOnly)return td4BattleFirst(a,d,g,false);const pick=bestMove;const x=pick(a,d,g),y=baseOnly?null:pick(d,a,g);if(!x||(!y&&!estimated))return '';if(td2Turns(x.m,a,g)>1&&TD2_CHARGE.has(x.m.name)||y&&td2Turns(y.m,d,g)>1&&TD2_CHARGE.has(y.m.name))return '';const p=x.m.priority,q=y?.m.priority??0;if(!Number.isFinite(p)||!Number.isFinite(q))return '';const speed=t=>Math.floor((t.battleStats?.speed||0)*(!baseOnly&&g>=4&&t.heldItem==='Choice Scarf'?1.5:1));const as=speed(a),ds=speed(d);if(p===q&&(!as||!ds||as===ds))return '';const first=p!==q?p>q:as>ds;return first?`<small class="td3-strikes-first" title="${baseOnly?'Based on species base Speed and move priority; assumes opponent uses a priority-zero move.':estimated?'Estimate assumes opponent uses a priority-zero move; opponent level and effects may differ.':'Estimated for these recommended moves; other battle effects can change order.'}">Strikes first</small>`:'';}
-function td4BattleFirst(a,d,g,opponent){if(!a||!d)return '';const x=td33BestBattleMove(a,d,g);const priority=x?.m?.priority??0;const as=a.baseStats?.speed,ds=d.baseStats?.speed;if(!Number.isFinite(as)||!Number.isFinite(ds)||!Number.isFinite(priority))return '';const winner=priority>0?1:priority<0?-1:Math.sign(as-ds);return winner===(opponent?-1:1)?'<small class="td3-strikes-first" title="Base Speed and recommended move priority; assumes opponent uses a priority-zero move.">Strikes first</small>':'';}
-function td4BattleOpponentFirst(a,d,g){return td4BattleFirst(a,d,g,true);}
-
-function duelCard(own,foe,a,d,gen,opened,status,context='planner',estimated=false){const mon=(p,stats)=>`<div class="td75-duel-mon td77-duel-mon td73-poke-link" role="button" tabindex="0" data-td73-mon="${escape(p.name)}" data-td73-context="${context}"><img class="td77-duel-art" src="${escape(p.image||art(p.id,p.name))}" alt="" draggable="false" onerror="if(!this.dataset.td7Fallback)this.hidden=true"><strong>${escape(td41PokemonLabel(p.name))}</strong>${td3AbilityText(stats||p)}${typeBadges(stats||p)}${context==='planner'?`<small class="td31-duel-level">Lv ${Number(stats?.level||p.level)||50}</small>`:''}</div>`;return `<article class="card td74-clash"><div class="td75-duel-title">${mon(own,a)}<span class="td75-vs">vs</span>${mon(foe,d)}</div><div class="td74-clash-columns td72-clash-preview">${threatBox('YOUR BEST ATTACK',a,d,gen,false,estimated,context==='battle')}${context==='battle'?`<section class="td74-clash-line"><span class="td74-clash-label">POTENTIAL THREAT</span>${a&&d?potentialThreat(a,d,gen)+td4BattleOpponentFirst(a,d,gen):''}</section>`:threatBox('STRONGEST ENTERED THREAT',d,a,gen,true,false)}</div><details class="td74-shared-expand" ${opened?'open':''}><summary class="td74-shared-more">${context==='battle'?'See all attacks':'All attacks & threats'}</summary><div class="td74-clash-columns td74-expanded-pair ${context==='battle'?'td32-attacks-only':''}"><section class="td74-all-moves"><h4>Your attacks</h4>${formatMoves(a,d,gen,false,context==='battle')}</section>${context==='battle'?'':`<section class="td74-all-moves"><h4>Incoming threats</h4>${formatMoves(d,a,gen,true)}</section>`}</div></details>${focusWarnings(a,d,gen,context)}${status||''}</article>`;}
+function duelCard(own,foe,a,d,gen,status,context='planner'){
+ const battle=context==='battle';
+ const mon=(p,stats)=>`<div class="td75-duel-mon td77-duel-mon td73-poke-link" role="button" tabindex="0" data-td73-mon="${escape(p.name)}" data-td73-context="${context}"><img class="td77-duel-art" src="${escape(p.image||art(p.id,p.name))}" alt="" draggable="false" onerror="if(!this.dataset.td7Fallback)this.hidden=true"><strong>${escape(td41PokemonLabel(p.name))}</strong>${typeBadges(stats||p)}${td3AbilityText(stats||p)}${battle?'':`<small class="td31-duel-level">Lv ${Number(stats?.level||p.level)||50}${p.saveStats?.shiny?' · ✨':''}</small>`}${stats?.heldItem?`<small>${escape(stats.heldItem)}</small>`:''}</div>`;
+ const defense=battle?(a&&d?potentialThreat(a,d,gen):''):`<section class="td74-all-moves"><h4>Incoming threats</h4>${formatMoves(d,a,gen,true)}</section>`;
+ return `<article class="card td74-clash"><div class="td75-duel-title">${mon(own,a)}<span class="td75-vs">vs</span>${mon(foe,d)}</div>${status||''}<div class="td74-clash-columns td74-expanded-pair"><section class="td74-all-moves"><h4>Your attacks</h4>${formatMoves(a,d,gen,false,battle)}</section>${defense}</div>${focusWarnings(a,d,gen,context)}</article>`;
+}
 
 function renderFocus(){if(window.td3HoldActive?.())return;const own=roster('own')[ownSelection]||{},foe=roster('opp')[oppSelection]||{};
  if(!own.name||!foe.name){focus.innerHTML='<div class="card"><h3>Select an opponent and a Pokémon</h3><p class="note">Select the opponent first to view your team rankings, then choose a matchup.</p></div>';return;}
- const opened=!!focus.querySelector('.td74-shared-expand')?.open;
  const a=loaded('own',ownSelection),d=loaded('opp',oppSelection),gen=last?.gen||gameGeneration($('planGame').value);
  const status=analysisError?`<p class="note td74-calc-error">${escape(analysisError)} <button type="button" data-td74-retry>Retry</button></p>`:updating?'<p class="note td74-calc-note">Recalculating…</p>':(!a||!d)?'<p class="note td74-calc-note">Matchup data not ready. Retry calculation if it does not load.</p>':'';
  const top=rankedMatchups()[0]?.attack;
  const warning=top?.verifiedThreat&&top.win<.9?'<p class="td75-focus-warning">No safe counter in the entered matchups.</p>':'';
- focus.innerHTML=duelCard(own,foe,a,d,gen,opened,warning+status);
+ focus.innerHTML=duelCard(own,foe,a,d,gen,warning+status);
 }
 let battleKey='',battleOwnIndex=null;
-window.td3RenderSingleBattle=function(team,target,ranked,gen){const host=$('matchups');if(window.td3HoldActive?.())return;const key=team.id+'|'+team.game+'|'+clean(target.name);const rows=team.pokemon||[];const ranks=new Map(ranked.map((r,i)=>[r.p,i+1]));if(key!==battleKey||!rows[battleOwnIndex]){battleKey=key;battleOwnIndex=rows.indexOf(ranked[0]?.p);}const selected=rows[battleOwnIndex];if(!selected){host.innerHTML='<p>Add Pokémon to your team to see recommendations.</p>';return;}const a=td33BaseBattleMon(selected,team,battleOwnIndex),d=td33BaseBattleMon(target);const expanded=!!host.querySelector('.td74-shared-expand')?.open;host.innerHTML=`<section class="td74-team-strip"><div class="td74-strip-heading"><strong>My Team</strong></div><div class="td74-mon-row">${Array.from({length:6},(_,i)=>{const p=rows[i],rank=ranks.get(p);return teamChip(p,i,rank,i===battleOwnIndex,`data-td3-battle-slot="${i}"`,!p,null,false);}).join('')}</div></section>${duelCard(selected,target,a,d,gen,expanded,'','battle',true)}`;};
-$('matchups').addEventListener('click',e=>{const b=e.target.closest('[data-td3-battle-slot]');if(b&&!b.disabled){battleOwnIndex=Number(b.dataset.td3BattleSlot);showBattle();}});
+const battleStrip=$('td76BattleStrip');
+window.td76RenderBattleStrip=function(team,ranked=[]){
+ battleStrip.hidden=!team;
+ if(!team)return;
+ const rows=team.pokemon||[],ranks=new Map(ranked.map((row,i)=>[row.p,i+1]));
+ battleStrip.innerHTML=`<div class="td74-strip-heading"><strong>My Team</strong></div><div class="td74-mon-row">${Array.from({length:6},(_,i)=>{
+  const p=rows[i];return teamChip(p,i,ranks.get(p),i===battleOwnIndex,`data-td3-battle-slot="${i}"`,!p,p?.saveStats?.level,!!p?.saveStats);
+ }).join('')}</div>`;
+};
+window.td3RenderSingleBattle=function(team,target,ranked,gen){
+ const host=$('matchups');
+ if(window.td3HoldActive?.())return;
+ const key=team.id+'|'+team.game+'|'+clean(target.name),rows=team.pokemon||[];
+ if(key!==battleKey||!rows[battleOwnIndex]){
+  battleKey=key;battleOwnIndex=rows.indexOf(ranked[0]?.p);
+ }
+ window.td76RenderBattleStrip(team,ranked);
+ const selected=rows[battleOwnIndex];
+ host.innerHTML=selected?duelCard(selected,target,td33BaseBattleMon(selected,team,battleOwnIndex),td33BaseBattleMon(target),gen,'','battle'):'<p>Add Pokémon to your team.</p>';
+};
+battleStrip.addEventListener('click',e=>{
+ const button=e.target.closest('[data-td3-battle-slot]');
+ if(!button||button.disabled)return;
+ battleOwnIndex=Number(button.dataset.td3BattleSlot);showBattle();battleStrip.querySelector(`[data-td3-battle-slot="${battleOwnIndex}"]`)?.focus({preventScroll:true});
+});
+for(const [id,source] of [['matchups','battle'],['td74Focus','planner']]){
+ $(id).addEventListener('click',event=>{
+  const button=event.target.closest('[data-td76-move]');
+  if(button)window.takDexMoveV68.open(button.dataset.td76Move,source,source==='battle'?current?.game:$('planGame').value);
+ });
+}
 // Fill newly mounted opponent ability descriptions without watching their text updates.
 for(const id of ['foePreview','foePreview2']){const el=$(id);if(el)new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)if(n.nodeType===1){if(n.matches('[data-td3-ability-description]'))td3FillAbilityDescription(n);n.querySelectorAll('[data-td3-ability-description]').forEach(td3FillAbilityDescription);}}).observe(el,{childList:true,subtree:true});}
 function refresh(){renderChips('own');renderChips('opp');renderFocus();mountBattleStats();}
@@ -137,13 +183,15 @@ function mountBattleStats(){
    if(!base)continue;
    let pane=slot.querySelector('.td74-battle-stats');
    if(!pane){pane=document.createElement('details');pane.className='td74-battle-stats';
-    pane.innerHTML='<summary>Battle stats · tap to adjust</summary><div class="td74-stat-fields"></div><div class="td75-stat-footer"><small>Level-based estimates · edit to match your game</small><button type="button" data-td74-stat-reset="'+side+'-'+i+'" aria-label="Reset battle stats to estimates">↺ Auto</button></div>';
+    pane.innerHTML='<summary>Battle stats · tap to adjust</summary><div class="td74-stat-fields"></div><div class="td75-stat-footer"><small data-td76-stat-source></small><button type="button" data-td74-stat-reset="'+side+'-'+i+'" aria-label="Reset manual battle stat adjustments">↺ Auto</button></div>';
     slot.querySelector('.td63-slot-fields')?.appendChild(pane);
    }
+   const provenance=entry.saveStats&&!entry.saveStats.egg?(entry.level===entry.saveStats.level?'Imported from save':'Calculated from imported IVs, EVs and nature'):entry.challengeOffset?'Challenge Mode stat level · estimated':'Estimated · 15 IV / 0 EV / neutral';
+   pane.querySelector('[data-td76-stat-source]').textContent=provenance+(Object.values(entry.statAdjustments||{}).some(Boolean)?' · Manually adjusted':'');
    const box=pane.querySelector('.td74-stat-fields'),values=td74EntryStats(base,entry);
    for(const key of window.takDexBattleStatsV74.keys){
     let field=box.querySelector('input[data-td74-stat="'+key+'"]');
-    if(!field){const label=document.createElement('label');label.className='td74-stat-field';label.title='Species base '+STAT_NAMES[key]+': '+(base[key]??'unknown');label.innerHTML='<span class="td76-stat-name">'+STAT_NAMES[key]+'<small class="td76-base-stat">Base '+(Number.isFinite(Number(base[key]))?base[key]:'—')+'</small></span><input type="number" min="1" max="999" inputmode="numeric" data-td74-stat="'+key+'" data-td74-side="'+side+'" data-td74-i="'+i+'" aria-label="'+STAT_NAMES[key]+' battle stat" />';box.appendChild(label);field=label.querySelector('input');}
+    if(!field){const label=document.createElement('label');label.className='td74-stat-field';label.title='Species base '+STAT_NAMES[key]+': '+(base[key]??'unknown');label.innerHTML='<span class="td76-stat-name">'+STAT_NAMES[key]+'<small class="td76-base-stat">Base '+(Number.isFinite(Number(base[key]))?base[key]:'—')+'</small></span><span class="td76-stat-stepper"><button type="button" data-td76-stat-step="-1" aria-label="Decrease ' +STAT_NAMES[key]+'">−</button><input type="text" maxlength="3" inputmode="numeric" data-td74-stat="'+key+'" data-td74-side="'+side+'" data-td74-i="'+i+'" aria-label="'+STAT_NAMES[key]+' battle stat" /><button type="button" data-td76-stat-step="1" aria-label="Increase '+STAT_NAMES[key]+'">+</button></span>';box.appendChild(label);field=label.querySelector('input');}
     const baseTag=field.closest('.td74-stat-field')?.querySelector('.td76-base-stat');if(baseTag)baseTag.textContent='Base '+(Number.isFinite(Number(base[key]))?base[key]:'—');
     if(document.activeElement!==field)field.value=String(Math.round(values[key]));
    }
@@ -151,13 +199,24 @@ function mountBattleStats(){
  }
 }
 for(const id of ['planOwn','planOpp']){
- $(id).addEventListener('change',e=>{
-  const input=e.target.closest('input[data-td74-stat]');if(!input)return;
-  const side=input.dataset.td74Side,i=Number(input.dataset.td74I),entry=roster(side)[i],base=loaded(side,i)?.baseStats||entry?.baseStats;if(!entry||!base)return;
+ const host=$(id);
+ const commitStat=input=>{
+  const side=input.dataset.td74Side,i=Number(input.dataset.td74I),entry=roster(side)[i],base=loaded(side,i)?.baseStats||entry?.baseStats;
+  if(!entry||!base||!/^\d{1,3}$/.test(input.value)||Number(input.value)<1)return;
   const key=input.dataset.td74Stat,value=Number(input.value);
-  if(!Number.isInteger(value)||value<1||value>999)return;
   entry.statAdjustments={...(entry.statAdjustments||{}),[key]:value-td74EntryStats(base,entry,{})[key]};
-  if(side==='own')td72SavePlannerLevels();scheduleAnalyze();
+  if(side==='own')td72SavePlannerLevels();
+  refresh();
+ };
+ host.addEventListener('focusin',e=>{if(e.target.matches('[data-td74-stat]'))e.target.select();});
+ host.addEventListener('input',e=>{if(e.target.matches('[data-td74-stat]'))commitStat(e.target);});
+ host.addEventListener('focusout',e=>{if(e.target.matches('[data-td74-stat]'))requestAnimationFrame(mountBattleStats);});
+ host.addEventListener('click',e=>{
+  const step=e.target.closest('[data-td76-stat-step]');
+  if(!step)return;
+  const input=step.parentElement.querySelector('input');
+  input.value=String(Math.max(1,Math.min(999,(Number(input.value)||1)+Number(step.dataset.td76StatStep))));
+  commitStat(input);
  });
  $(id).addEventListener('click',e=>{
   const b=e.target.closest('[data-td74-stat-reset]');if(!b)return;

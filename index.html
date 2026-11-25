@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://alexandrestp337.github.io/Tak-Dex/icon-512.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tak-Dex","url":"https://alexandrestp337.github.io/Tak-Dex/","applicationCategory":"GameApplication","operatingSystem":"Web browser","description":"Pokémon team builder, battle planner, move checker, Pokédex and interactive region maps.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-<link rel="stylesheet" href="styles.css?v=74.0.0">
+<link rel="stylesheet" href="styles.css?v=76.0.0">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -106,11 +106,11 @@
 </section>
 
 <section id="battlePage" hidden>
-  <h2 class="section-label">◉ OPPONENT</h2>
   <div class="mode-switch">
     <button type="button" id="singleMode" class="selected">Single battle</button>
     <button type="button" id="doubleMode">Double battle</button>
   </div>
+  <section id="td76BattleStrip" class="td74-team-strip" hidden></section>
   <label>Opponent Pokémon
     <div class="search battle-search">
       <input id="foeInput" autocomplete="off" placeholder="Start typing…">
@@ -129,7 +129,6 @@
     </label>
     <div id="foePreview2"></div>
   </div>
-  <h2 class="section-label results-label">▥ TEAM RECOMMENDATIONS</h2>
   <div id="matchups"></div>
 </section>
 
