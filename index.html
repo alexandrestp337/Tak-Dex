@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://alexandrestp337.github.io/Tak-Dex/icon-512.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tak-Dex","url":"https://alexandrestp337.github.io/Tak-Dex/","applicationCategory":"GameApplication","operatingSystem":"Web browser","description":"Pokémon team builder, battle planner, move checker, Pokédex and interactive region maps.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-<link rel="stylesheet" href="styles.css?v=76.0.3">
+<link rel="stylesheet" href="styles.css?v=76.0.4">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -325,8 +325,18 @@
     <label>Nickname (optional)
       <input id="pokeNickname" maxlength="30" placeholder="Leave blank to use Pokémon name">
     </label>
-    <div id="td31TeamAbilityHost"></div>
-    <div id="td77BuilderBattle" hidden></div>
+    <details id="td77BuilderBattle" hidden>
+      <summary>Battle settings</summary>
+      <details class="td74-battle-stats">
+        <summary>Level &amp; battle stats</summary>
+        <div id="td77BuilderLevelHost"></div>
+      </details>
+      <details class="td77-builder-equipment">
+        <summary>Ability &amp; held item</summary>
+        <div id="td31TeamAbilityHost"></div>
+        <div id="td77BuilderItemHost"></div>
+      </details>
+    </details>
     <h3>Attacks</h3>
     <div id="moveFields"></div>
     <p class="note" id="moveNote">Select a Pokémon to load its moves.</p>
@@ -346,8 +356,8 @@
 <script src="unova-b2w2-v74.js?v=74.0.0"></script>
 <script src="db74.js?v=74.0.0"></script>
 <script src="gen5-save.js?v=76.0.0"></script>
-<script src="app.js?v=76.0.3"></script>
-<script src="save-sync.js?v=76.0.3"></script>
+<script src="app.js?v=76.0.4"></script>
+<script src="save-sync.js?v=76.0.4"></script>
 <script src="unova-v74.js?v=74.5.2.20261124"></script>
 <script src="bw-trainer-moves-v76.js?v=74.5.2.20261124"></script>
 <script src="unova-trainer-reference.js?v=76.0.0"></script>
@@ -359,6 +369,6 @@
 <script src="maps.js?v=76.0.0"></script>
 <script src="feedback-config.js?v=74.0.0"></script>
 <script src="battle-outcomes.js?v=76.0.3"></script>
-<script src="v74-ux.js?v=76.0.3"></script>
+<script src="v74-ux.js?v=76.0.4"></script>
 </body>
 </html>

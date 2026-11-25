@@ -159,3 +159,38 @@ TAKDEX_BASELINE=http://127.0.0.1:8784 TAKDEX_SCREENSHOTS=.github/v76/screenshots
 | Incoming KO warning | [412 px](screenshots/incoming-ko-412.png) | [1280 px](screenshots/incoming-ko-1280.png) |
 
 The two-turn estimate and trainer stat limitations from earlier passes still apply. Intimidate models a fresh encounter with the entered opponent and applicable immunity, so it does not track prior switches or stat-stage changes. Quick Battle uses a comparable-training Speed estimate. The suite did not exercise every trainer, item or generation. Galaxy S25 Ultra touch behavior and Android WebView remain untested. Android V9 was outside this pass.
+
+## Fifth correction pass
+
+This pass starts from `1cfd662` on `v76-development`. The fourth acceptance approved cross-tool synchronization, read-only saved 6v6, the incoming KO warning and preset abilities. This pass addresses the three remaining items and the requested regular Battle defense panel.
+
+- Expanded Team Builder slots show artwork, typing, level, ability, held item when equipped, and the existing shiny cue. Battle settings and its two subsections start closed. The four attacks stay outside the collapsible settings. Level and stat edits reuse the shared steppers, base and source labels, and Auto reset.
+- Battle and 6v6 align corresponding information using shared grid rows. Turn order occupies a dedicated 32 px row and uses the existing colors and wording. The 6v6 KO warning appears immediately below it only when applicable.
+- Regular Battle places potential opponent STAB types in independent boxed rows. Incoming weaknesses use red, resistance and immunity use green, and neutral matchups use the neutral edge. Opponent base attack stats, Speed and attacking tendency share the panel. The rows use defensive effectiveness and applicable known abilities. The 6v6 threat cards retain their existing model and presentation.
+
+### Manual save reimport root cause
+
+The browser already reset the file input after each selection. The shared synchronization function returned early when the parsed party matched the last snapshot signature. It checked neither the current saved roster nor manual overrides. It also applied automatic sequence and timestamp freshness checks to the explicit picker.
+
+The picker now compares the validated save-owned data against the current roster, including forms, levels, moves and PP, ability, items, HP and stat offsets. A difference restores the imported party inside the same team. When the roster already matches, the picker completes without saving or rerendering it. Cosmetic fields and reference metadata do not trigger a restore on their own. The automatic bridge retains its existing unchanged and stale snapshot rules.
+
+### Verification
+
+| Gate | Result |
+| --- | --- |
+| Node | 26 passed, including the four PKTool reference saves, battle outcomes, roster data and offline assets. |
+| Chromium correction suite, 320, 412 and 1280 px | Passed nested default collapse and selector placement, move visibility, shared header alignment, fixed turn row, red KO warning, single- and dual-type defense, all four defensive outcomes and independent accents. Also checked prior move styling against V75-STABLE and exercised prior layout, navigation and map regressions. |
+| Chromium file picker and integration, 412 px | Passed a same-path external save update with identical size and timestamp, same-file restore after manual level, Attack, Speed, ability and item edits, repeated picks without reload, invalid-file preservation, unchanged-render preservation, Battle and 6v6 synchronization, map continuity and offline cold reload. |
+| Chromium team management and smoke | Passed migration, held-item and ability effects, stat offsets, reload, JSON round trip and hypothetical editors. The 412 and 1280 px smoke checks passed navigation, branding, historical move and type data, and map layout. |
+
+| Screen | Mobile | Desktop |
+| --- | --- | --- |
+| Team Builder settings collapsed | [412 px](screenshots/settings-collapsed-412.png) | [1280 px](screenshots/settings-collapsed-1280.png) |
+| Team Builder settings expanded | [412 px](screenshots/settings-expanded-412.png) | [1280 px](screenshots/settings-expanded-1280.png) |
+| Regular Battle header | [412 px](screenshots/quick-battle-412.png) | [1280 px](screenshots/quick-battle-1280.png) |
+| 6v6 header | [412 px](screenshots/battle-412.png) | [1280 px](screenshots/battle-1280.png) |
+| 6v6 incoming KO | [412 px](screenshots/incoming-ko-412.png) | [1280 px](screenshots/incoming-ko-1280.png) |
+| Single-type defense | [412 px](screenshots/defense-single-412.png) | [1280 px](screenshots/defense-single-1280.png) |
+| Dual-type defense | [412 px](screenshots/defense-dual-412.png) | [1280 px](screenshots/defense-dual-1280.png) |
+
+The picker continues to support raw Generation V saves for supported games. Quick Battle turn order remains an estimate, and its defense panel shows potential STAB types using known abilities. Existing 6v6 simulation and trainer-data coverage limits still apply. Chromium verification used desktop and mobile viewports. Galaxy S25 Ultra, Android WebView and native automatic synchronization remain untested.

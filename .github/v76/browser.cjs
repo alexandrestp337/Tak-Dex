@@ -1,5 +1,8 @@
 const { chromium } = require('playwright-core');
 const assert = require('node:assert/strict');
+const fs=require('node:fs/promises');
+const os=require('node:os');
+const path=require('node:path');
 const {makeSave} = require('./fixtures.cjs');
 const base=process.argv[2]||'http://127.0.0.1:8765';
 const team={id:'v76-test',name:'Regression Team',game:'Black',pokemon:Array(6).fill(null)};
@@ -7,6 +10,8 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  const context=await browser.newContext({viewport:{width:412,height:860},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'takdex-saves-'));
+ const selectedFile=path.join(temp,'party.sav');
  try{
   await context.addInitScript(t=>{
    if(localStorage.getItem('v76-test-loaded'))return;
@@ -20,7 +25,12 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   page.on('pageerror',e=>{errors.push(e.message);console.error(e.stack);});
   await page.goto(base,{waitUntil:'domcontentloaded'});
   const picker=page.locator('[data-save-file]');
-  await picker.setInputFiles(save());
+  const writeSnapshot=async bytes=>{
+   await fs.writeFile(selectedFile,bytes);
+   await fs.utimes(selectedFile,1700000000,1700000000);
+  };
+  await writeSnapshot(save().buffer);
+  await picker.setInputFiles(selectedFile);
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('poketact-teams'))[0].pokemon[0]?.saveStats?.level===38);
   assert.match(await page.locator('[data-save-status]').textContent(),/Saved-game snapshot/);
   const stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('poketact-teams'))[0]);
@@ -60,8 +70,10 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   assert.equal(await input.inputValue(),'Lucario');
   console.log('Battle ordering, selected matchup and Move Checker return passed');
 
-  const updated=await page.evaluate(data=>takDexSaveSync.synchronize({teamId:'v76-test',bytes:Uint8Array.from(atob(data),c=>c.charCodeAt(0))}),makeSave(21,42,42).toString('base64'));
-  assert.equal(updated,'updated');
+  await writeSnapshot(makeSave(21,42,42));
+  await picker.setInputFiles(selectedFile);
+  await page.waitForFunction(()=>current.pokemon[0].level===42);
+  const imported42=await stored();
   assert.equal(await input.inputValue(),'Lucario');
   assert.equal(await page.locator('#battlePage').isVisible(),true);
   assert.equal((await stored()).pokemon[0].saveStats.level,42);
@@ -94,6 +106,7 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   await page.locator('#teamsTab').click();
   await page.locator('[data-td74-builder-team="v76-test"][data-td74-builder-slot="0"]').click();
   const profile=page.locator('#td77BuilderBattle');
+  await profile.locator(':scope > summary').click();
   await profile.locator('.td74-battle-stats > summary').click();
   const speed=profile.locator('[data-td74-stat="speed"]');
   assert.equal(await speed.inputValue(),'88');
@@ -102,13 +115,48 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   await speed.locator('..').locator('[data-td76-stat-step="1"]').click();
   assert.equal(await speed.inputValue(),'89');
   await profile.locator('#td77BuilderLevel').fill('43');
+  await profile.locator('[data-td74-stat="attack"]').fill('199');
+  await profile.locator('.td77-builder-equipment > summary').click();
+  const chosenAbility=profile.locator('#td2TeamAbility');
+  const alternative=await chosenAbility.evaluate(select=>[...select.options].find(option=>option.value&&option.value!==select.value)?.value);
+  assert.ok(alternative);
+  await chosenAbility.selectOption(alternative);
+  await profile.locator('#td77BuilderItem').fill('Life Orb');
+  await profile.locator('[data-td74-item-choice="Life Orb"]').click();
   await page.locator('#savePoke').click();
   assert.equal((await stored()).pokemon[0].statAdjustments.speed,1);
-  await page.reload({waitUntil:'domcontentloaded'});
-  assert.equal((await stored()).pokemon[0].statAdjustments.speed,1);
+  assert.equal((await stored()).pokemon[0].ability,alternative);
+  assert.equal((await stored()).pokemon[0].item,'Life Orb');
   assert.equal((await stored()).pokemon[0].level,43);
   assert.equal((await stored()).pokemon[0].saveStats.level,42);
-  console.log('6v6 imported stats, expanded attacks, Move Checker return, both steppers and reload persistence passed');
+  console.log('6v6 imported stats, expanded attacks, Move Checker return, both steppers and saved stat offsets passed');
+
+  await page.locator('#battleTab').click();
+  await input.fill('lucario');
+  await page.locator('#foeResults button').filter({hasText:'Lucario'}).first().click();
+  await page.locator('#matchups [data-td76-move]').first().waitFor();
+  await page.locator('#td76BattleStrip [data-td3-battle-slot="0"]').click();
+  assert.match(await page.locator('#matchups .td77-duel-side-own').textContent(),/Life Orb/);
+  await picker.setInputFiles(selectedFile);
+  await page.waitForFunction(()=>current.pokemon[0].level===42&&!current.pokemon[0].statAdjustments);
+  assert.deepEqual((await stored()).pokemon,imported42.pokemon);
+  assert.equal(await input.inputValue(),'Lucario');
+  assert.doesNotMatch(await page.locator('#matchups .td77-duel-side-own').textContent(),/Life Orb/);
+  const matched=await stored();
+  // Wait for a completed no-op through the actual picker and verify the matchup node survives.
+  await page.locator('[data-save-status]').evaluate(el=>el.textContent='Checking snapshot');
+  const unchangedMatch=await page.locator('#matchups .td74-clash').elementHandle();
+  await picker.setInputFiles(selectedFile);
+  await page.waitForFunction(()=>document.querySelector('[data-save-status]').textContent.startsWith('Saved-game snapshot'));
+  assert.deepEqual(await stored(),matched);
+  assert.equal(await unchangedMatch.evaluate(el=>el.isConnected),true);
+  assert.equal(await picker.inputValue(),'');
+  assert.deepEqual(await fs.readFile(selectedFile),makeSave(21,42,42));
+  await page.locator('#moreTab').click();
+  await page.locator('#openPlanner').click();
+  await page.locator('#planTeam').selectOption(team.id);
+  await page.waitForFunction(()=>plannerOwn[0].level===42&&plannerOwn[0].saveStats.currentHP===29&&!plannerOwn[0].statAdjustments);
+  console.log('Same-path modified and identical save reimports, restored party, Battle and 6v6 updates, and no-op rendering passed');
 
   await page.locator('#dexTab').click();
   await page.evaluate(()=>takDexBattleNavigationV73.showDex('zigzagoon','dex',{game:'Emerald',id:263}));
@@ -169,5 +217,5 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   assert.equal(await page.evaluate(async()=> (await takDexDB74.encounter('Emerald')).hasSource),true);
   console.log('Offline cold reload, imported party and bundled move/encounter data passed');
   assert.deepEqual(errors,[]);
- } finally {await browser.close();}
+ } finally {await browser.close();await fs.rm(temp,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1443,16 +1443,22 @@ main .buttons,dialog .buttons{margin-top:8px;}
 .td76-move-card .td76-move-effect,.td76-defense-type strong{color:var(--muted)}
 :is(.td76-move-card,.td76-defense-type).td74-effect-safe :is(.td76-move-effect,strong){color:#57ca92}
 :is(.td76-move-card,.td76-defense-type).td74-effect-danger :is(.td76-move-effect,strong){color:#ff7183}
-.td76-defense-type.td74-effect-immune strong{color:#83b9f6}
 body.light :is(.td76-move-card,.td76-defense-type).td74-effect-safe :is(.td76-move-effect,strong){color:#166b44}
 body.light :is(.td76-move-card,.td76-defense-type).td74-effect-danger :is(.td76-move-effect,strong){color:#aa1739}
-.td76-defense{display:grid;gap:4px;align-content:start}
-.td76-defense-type{display:flex;align-items:center;gap:4px;font-size:.74rem}
-:is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order{color:var(--muted);font-weight:800;font-size:.73rem}
-:is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.player{color:#47d991}
-:is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.opponent{color:#ff6575}
-body.light :is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.player{color:#166b44}
-body.light :is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.opponent{color:#aa1739}
+.td76-defense{display:grid;gap:5px;align-self:start;align-content:start;min-width:0;border:1px solid var(--edge);border-radius:8px;background:var(--card);padding:6px 4px}
+.td76-defense-type{display:flex;flex-wrap:wrap;align-items:center;gap:3px 5px;min-width:0;padding:4px;border:1px solid var(--edge);border-inline-start:3px solid var(--edge);border-radius:8px;font-size:.74rem}
+.td76-defense-type .pill{margin:0;color:#fff!important;text-shadow:0 1px 2px #0009}
+.td76-defense-type.td74-effect-safe{border-inline-start-color:#57ca92}
+.td76-defense-type.td74-effect-danger{border-inline-start-color:#ff7183}
+body.light .td76-defense-type.td74-effect-safe{border-inline-start-color:#166b44}
+body.light .td76-defense-type.td74-effect-danger{border-inline-start-color:#aa1739}
+.td76-defense-stats{display:grid;gap:2px;padding:4px 2px 0;border-top:1px solid var(--edge)}
+.td76-defense-stats small{font-size:.71rem;line-height:1.3}
+:is(#battlePage,#plannerPage) .td77-turn-row .td76-turn-order{color:var(--muted);font-weight:800;font-size:.73rem}
+:is(#battlePage,#plannerPage) .td77-turn-row .td76-turn-order.player{color:#47d991}
+:is(#battlePage,#plannerPage) .td77-turn-row .td76-turn-order.opponent{color:#ff6575}
+body.light :is(#battlePage,#plannerPage) .td77-turn-row .td76-turn-order.player{color:#166b44}
+body.light :is(#battlePage,#plannerPage) .td77-turn-row .td76-turn-order.opponent{color:#aa1739}
 .td76-damage-track{
  height:8px;border-radius:5px;background:linear-gradient(to right,#219167 0 var(--low),#75d7ac var(--low) var(--high),#26323a var(--high) 100%);
 }
@@ -1481,10 +1487,29 @@ body.light :is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.opponen
 }
 
 #pokeForm .td77-builder-level{display:flex;align-items:center;gap:10px;margin-block:4px}
-#pokeForm .td74-battle-stats{border:1px solid var(--edge);border-radius:8px;padding:6px;margin-top:8px}
-#pokeForm .td74-battle-stats>summary{cursor:pointer;font-size:.8rem;font-weight:700}
+#pokeForm #td77BuilderBattle{border:1px solid var(--edge);border-radius:8px;padding:6px 8px}
+#pokeForm #td77BuilderBattle details{border-top:1px solid var(--edge);padding-top:5px;margin-top:5px}
+#pokeForm #td77BuilderBattle summary{cursor:pointer;font-size:.8rem;font-weight:700}
+#pokeForm #pokePreview{display:flex;align-items:center;gap:8px;min-width:0}
+#pokeForm #pokePreview:empty{display:none}
+#pokeForm .td77-builder-art{width:42px;height:42px;object-fit:contain;flex:none}
+#pokeForm .td77-builder-summary{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;color:var(--muted);font-size:.78rem}
 #pokeForm .td74-stat-field{margin:0}
 #pokeForm .td74-item-options{z-index:150}
 .td76-battle-warning{display:flex;gap:6px;align-items:baseline;margin:7px 0;padding:6px 8px;border:1px solid #df5769;border-radius:8px;background:#401e27;color:#ff8a98;font-size:.8rem;font-weight:800}
 body.light .td76-battle-warning{background:#fff1f2;color:#a41d36}
-:is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order{width:fit-content;max-width:100%;line-height:1.15}
+:is(#battlePage,#plannerPage) .td77-turn-row .td76-turn-order{width:fit-content;max-width:100%;line-height:1.15}
+
+
+:is(#plannerPage,#battlePage) .td75-duel-title{
+ grid-template-rows:repeat(4,auto);align-items:stretch;row-gap:4px;margin-bottom:0;
+}
+:is(#plannerPage,#battlePage) .td75-duel-title.td77-duel-six{grid-template-rows:repeat(5,auto)}
+:is(#plannerPage,#battlePage) .td77-duel-mon{display:grid;grid-template-rows:subgrid;grid-row:1/-1;align-items:start;align-content:start}
+:is(#plannerPage,#battlePage) .td77-duel-side-own{grid-column:1}
+:is(#plannerPage,#battlePage) .td77-duel-side-opp{grid-column:3}
+:is(#plannerPage,#battlePage) .td75-vs{grid-column:2;grid-row:1/-1;align-self:center}
+.td77-duel-types{min-height:1.2em}
+.td77-duel-ability,.td77-duel-item{min-height:1em;font-size:.72rem;color:var(--muted);overflow-wrap:anywhere}
+.td77-turn-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center;height:2rem}
+.td77-turn-row [data-side="opp"]{grid-column:2}

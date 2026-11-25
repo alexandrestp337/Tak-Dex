@@ -44,7 +44,29 @@
    if (node.dataset.saveStatus===teamId) node.textContent=message;
   }
  }
- async function synchronize({teamId,bytes,modifiedAt}={}) {
+ // Compare save-owned fields. Cosmetic labels and cached lookup metadata can differ.
+ function partyMatches(current,next){
+  const sameData=(a,b)=>{
+   if(a===b)return true;
+   if(!a||!b||typeof a!=='object'||typeof b!=='object')return false;
+   return Object.keys(a).length===Object.keys(b).length&&Object.keys(a).every(key=>sameData(a[key],b[key]));
+  };
+  return next.every((mon,i)=>{
+   const old=current[i];
+   if(!mon||!old)return !mon&&!old;
+   const {evolutions:oldEvolutions,...oldStats}=old.saveStats||{};
+   const {evolutions,...actualStats}=mon.saveStats;
+   return old.id===mon.id&&td73IdentityKey(old)===td73IdentityKey(mon)&&
+    (old.level??oldStats.level)===mon.level&&old.shiny===mon.shiny&&
+    old.ability===mon.ability&&old.item===mon.item&&
+    !Object.values(old.statAdjustments||{}).some(Boolean)&&sameData(oldStats,actualStats)&&
+    sameData((old.moves||[]).map(moveIdentity),mon.moves.map(moveIdentity));
+  });
+ }
+ function moveIdentity(move){
+  return [td73MoveKey(move),move?.id,move?.type,move?.ppUps,move?.remainingPP,move?.pp];
+ }
+ async function synchronize({teamId,bytes,modifiedAt,manual=false}={}) {
   const team=teams.find(t=>t.id===teamId);
   if (!team) throw Error('Choose a saved team.');
   const token=Symbol();
@@ -53,16 +75,18 @@
    const parsed=window.takDexGen5Save.parse(bytes);
    if (parsed.game!==team.game) throw Error('This save is for '+parsed.game+'.');
    const previous=team.saveLink;
-   if (previous?.trainerKey===parsed.trainerKey && ((parsed.sequence-previous.sequence)&0xffff)>=0x8000) return 'stale';
-   if (previous && modifiedAt && previous.modifiedAt && modifiedAt<previous.modifiedAt) return 'stale';
+   if (!manual && previous?.trainerKey===parsed.trainerKey && ((parsed.sequence-previous.sequence)&0xffff)>=0x8000) return 'stale';
+   if (!manual && previous && modifiedAt && previous.modifiedAt && modifiedAt<previous.modifiedAt) return 'stale';
    const signature=JSON.stringify(parsed.pokemon);
-   if (previous?.signature===signature) return 'unchanged';
+   if (!manual && previous?.signature===signature) return 'unchanged';
    const lookup=await names();
    const encounters=await window.takDexDB74.encounter(team.game).catch(()=>null);
    const pokemon=await Promise.all(parsed.pokemon.map(p=>hydrate(p,team.game,lookup,encounters)));
    if (pending.get(teamId)!==token || !teams.includes(team) || team.game!==parsed.game) return 'superseded';
+   const nextParty=Array.from({length:6},(_,i)=>pokemon[i]||null);
+   if (manual && previous && partyMatches(team.pokemon,nextParty)) return 'unchanged';
    const oldParty=team.pokemon;
-   team.pokemon=Array.from({length:6},(_,i)=>pokemon[i]||null);
+   team.pokemon=nextParty;
    team.saveLink={signature,trainerKey:parsed.trainerKey,sequence:parsed.sequence,modifiedAt:modifiedAt||null,syncedAt:Date.now()};
    try { save(); }
    catch(error) {team.pokemon=oldParty;team.saveLink=previous;throw error;}
@@ -97,9 +121,8 @@
   const teamId=input.dataset.saveFile;
   try {
    if (file.size!==0x80000) throw Error('Choose a 512 KiB raw Generation V save.');
-   const result=await synchronize({teamId,bytes:await file.arrayBuffer(),modifiedAt:file.lastModified});
+   const result=await synchronize({teamId,bytes:await file.arrayBuffer(),modifiedAt:file.lastModified,manual:true});
    if (result==='unchanged') status(teamId,description(teams.find(t=>t.id===teamId)));
-   if (result==='stale') status(teamId,'A newer snapshot is already linked.');
   } catch(error) { status(teamId,error.message); }
  });
 })();

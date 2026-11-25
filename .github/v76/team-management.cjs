@@ -58,6 +58,8 @@ const base=process.argv[2]||'http://127.0.0.1:8795';
   };
   const save=()=>page.locator('#savePoke').click();
   let profile=await edit();
+  await profile.locator(':scope > summary').click();
+  await profile.locator('.td77-builder-equipment > summary').click();
   await profile.locator('#td77BuilderItem').fill('life orb');
   await profile.locator('[data-td74-item-choice="Life Orb"]').click();
   await save();
@@ -67,6 +69,8 @@ const base=process.argv[2]||'http://127.0.0.1:8795';
   assert.equal(await page.evaluate(()=>plannerOwn[0].item),'Life Orb');
 
   profile=await edit();
+  await profile.locator(':scope > summary').click();
+  await profile.locator('.td77-builder-equipment > summary').click();
   await profile.locator('.td74-item-clear').click();
   await save();
   await analyze();
@@ -75,6 +79,7 @@ const base=process.argv[2]||'http://127.0.0.1:8795';
   assert.equal(await page.evaluate(()=>plannerOwn[0].item),'');
 
   profile=await edit();
+  await profile.locator(':scope > summary').click();
   await profile.locator('.td74-battle-stats > summary').click();
   await profile.locator('[data-td74-stat="attack"]').fill('250');
   await profile.locator('[data-td74-stat="speed"]').fill('240');
@@ -88,6 +93,8 @@ const base=process.argv[2]||'http://127.0.0.1:8795';
   assert.equal(await page.locator('#td74OwnChips .td74-crowned').count(),1);
 
   profile=await edit();
+  await profile.locator(':scope > summary').click();
+  await profile.locator('.td77-builder-equipment > summary').click();
   await page.locator('#td2TeamAbility').selectOption('sheer-force');
   await save();
   await analyze();

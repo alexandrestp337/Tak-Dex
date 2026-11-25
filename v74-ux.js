@@ -67,9 +67,9 @@ function potentialThreat(a,d,gen){
  const stats=d.baseStats||{}, physical=stats.attack, special=stats['special-attack'];
  const tendency=physical===special?'Balanced offense':physical>special?'Physical tendency':'Special tendency';
  return `<section class="td76-defense"><h4>Potential STAB</h4>${plannerPotentialStab(d,a,gen).map(({type,mult})=>{
-  const tone=mult===0?'immune':mult<1?'safe':mult>1?'danger':'neutral';
-  return `<div class="td76-defense-type td74-effect-${tone}">${pill(type)} <strong>${mult===0?'Immune':mult+'× '+(mult>1?'Weak':mult<1?'Resists':'Neutral')}</strong></div>`;
- }).join('')}<small>Atk ${physical??'—'} · Sp. Atk ${special??'—'} · Spe ${stats.speed??'—'}</small><small>${physical&&special?tendency:''}</small></section>`;
+  const tone=mult<1?'safe':mult>1?'danger':'neutral';
+  return `<div class="td76-defense-type td74-effect-${tone}">${pill(type)} <strong>${mult+'× '+(mult===0?'Immune':mult>1?'Weak':mult<1?'Resists':'Neutral')}</strong></div>`;
+ }).join('')}<div class="td76-defense-stats"><small>Base Atk ${physical??'—'} · Sp. Atk ${special??'—'} · Spe ${stats.speed??'—'}</small>${physical&&special?`<small>${tendency}</small>`:''}</div></section>`;
 }
 function moveCard(m,a,d,gen,{incoming=false,battle=false,outcome=null,standardOrder=null,comparison=null}={}){
  const report=td72AbilityReport(m,d,gen,a), status=m.damageClass==='status';
@@ -124,14 +124,26 @@ function duelCard(own,foe,a,d,gen,status,context='planner'){
   battle&&first===0?'Speed too close to call':knownOrder===.5?'Speed tie':'Turn order uncertain';
  const orderSide=first||1;
  const orderClass=first>0?'player':first<0?'opponent':'neutral';
- const mon=(p,stats,side)=>`<div class="td75-duel-mon td77-duel-mon td73-poke-link" role="button" tabindex="0" data-td73-mon="${escape(p.name)}" data-td73-context="${context}"><img class="td77-duel-art" src="${escape(p.image||art(p.id,p.name))}" alt="" draggable="false" onerror="if(!this.dataset.td7Fallback)this.hidden=true"><strong>${escape(td41PokemonLabel(p.name))}</strong>${typeBadges(stats||p)}${td3AbilityText(stats||p)}${a&&d&&orderSide===side?`<small class="td76-turn-order ${orderClass}" title="${battle?'Estimate at comparable levels and training':'For the modeled move pair'}">${indicator}</small>`:''}${battle?'':`<small class="td31-duel-level">Lv ${Number(stats?.level||p.level)||50}${p.shiny||p.saveStats?.shiny?' · ✨':''}</small>`}${(stats?.heldItem||p.item)?`<small>${escape(stats?.heldItem||p.item)}</small>`:''}</div>`;
+ const mon=(p,stats,side)=>{
+  const profile=stats||p;
+  const shiny=p.shiny||p.saveStats?.shiny;
+  const item=stats?.heldItem||p.item;
+  return `<div class="td75-duel-mon td77-duel-mon td77-duel-side-${side} td73-poke-link" role="button" tabindex="0" data-td73-mon="${escape(p.name)}" data-td73-context="${context}">
+   <img class="td77-duel-art" src="${escape(p.image||art(p.id,p.name))}" alt="" draggable="false" onerror="if(!this.dataset.td7Fallback)this.hidden=true">
+   <strong>${escape(td41PokemonLabel(p.name))}</strong><div class="td77-duel-types">${typeBadges(profile)}</div>
+   <div class="td77-duel-ability">${td3AbilityText(profile)}</div>
+   ${battle?'':`<small class="td31-duel-level">Lv ${Number(stats?.level||p.level)||50}${shiny?' · ✨':''}</small>`}<small class="td77-duel-item">${escape(item||'')}</small>
+  </div>`;
+ };
+ const order=a&&d?`<div class="td77-turn-row"><small class="td76-turn-order ${orderClass}" data-side="${orderSide===1?'own':'opp'}" title="${battle?'Estimate at comparable levels and training':'For the modeled move pair'}">${indicator}</small></div>`:'';
+
  const outgoing=moveCards(a,d,gen,{battle,ranked:attacks,first:best?.m,standardOrder:knownOrder,comparison:best?.n?.type?best.n:null});
  const incoming=moveCards(d,a,gen,{incoming:true,first:threat?.m,standardOrder:knownOrder===null?null:1-knownOrder,comparison:best?.m});
  const danger=best?.m&&outcomes.threat(d,a,gen,best.m);
  const warning=danger?.preemptiveKo>0?danger.m.name+(danger.preemptiveKo>=1-1e-10?' is predicted to KO before you attack':' can KO before you attack'):'';
  const moves=battle?`<div class="td74-clash-columns td76-quick-grid"><section><h4>Your attacks</h4>${outgoing.join('')||'<small>No moves entered.</small>'}</section>${a&&d?potentialThreat(a,d,gen):''}</div>`:
  `<div class="td76-duel-grid"><h4>Your attacks</h4><h4>Incoming threats</h4>${Array.from({length:Math.max(1,outgoing.length,incoming.length)},(_,i)=>(outgoing[i]||`<div>${i===0?'<small>No moves entered.</small>':''}</div>`)+(incoming[i]||`<div>${i===0?'<small>No moves entered.</small>':''}</div>`)).join('')}</div>`;
- return `<article class="card td74-clash"><div class="td75-duel-title">${mon(own,a,1)}<span class="td75-vs">vs</span>${mon(foe,d,-1)}</div>${warning?`<aside class="td76-battle-warning"><span aria-hidden="true">⚠</span> ${escape(warning)}</aside>`:''}${status||''}${moves}</article>`;
+ return `<article class="card td74-clash"><div class="td75-duel-title${battle?'':' td77-duel-six'}">${mon(own,a,'own')}<span class="td75-vs">vs</span>${mon(foe,d,'opp')}</div>${order}${warning?`<aside class="td76-battle-warning"><span aria-hidden="true">⚠</span> ${escape(warning)}</aside>`:''}${status||''}${moves}</article>`;
 }
 
 function renderFocus(){if(window.td3HoldActive?.())return;const own=roster('own')[ownSelection]||{},foe=roster('opp')[oppSelection]||{};
@@ -207,8 +219,17 @@ function syncPlannerTeam(){
  scheduleAnalyze();
 }
 window.addEventListener('td74:team-saved',()=>{syncPlannerTeam();if(!$('battlePage').hidden)showBattle();});
-window.addEventListener('td76:save-synced',event=>{if(event.detail.teamId===td73PlannerSourceTeam)preserveSyncedMatchup=true;
- if(event.detail.teamId===current?.id&&($('pokeDialog').open||td74InlineTeam===current.id)&&(!draft||window.td77BuilderProfile.stale(current.pokemon[slotIndex])))editSlot(slotIndex);});
+window.addEventListener('td76:save-synced',event=>{
+ const {teamId}=event.detail;
+ if(teamId===td73PlannerSourceTeam)preserveSyncedMatchup=true;
+ if(teamId!==current?.id||!($('pokeDialog').open||td74InlineTeam===teamId))return;
+ if(!draft||window.td77BuilderProfile.stale(current.pokemon[slotIndex])){
+  const settings=[builder,...builder.querySelectorAll('details')];
+  const expanded=settings.map(section=>section.open);
+  editSlot(slotIndex);
+  settings.forEach((section,i)=>{section.open=expanded[i];});
+ }
+});
 for(const id of ['planOwn','planOpp']){const node=$(id),obs=new MutationObserver(()=>{refresh();scheduleAnalyze();});obs.observe(node,{childList:true,subtree:false});
  node.addEventListener('input',e=>{if(e.target.matches('[data-field="level"][data-plan]'))scheduleAnalyze();});
  node.addEventListener('change',e=>{if(e.target.closest('[data-plan]'))scheduleAnalyze();});}
@@ -219,8 +240,11 @@ function renderStatEditor(host,entry,base){
  let pane=host.querySelector('.td74-battle-stats');
  if(!pane){
   pane=document.createElement('details');pane.className='td74-battle-stats';
-  pane.innerHTML=`<summary>Battle stats</summary><div class="td74-stat-fields">${Object.entries(STAT_NAMES).map(([key,name])=>`<label class="td74-stat-field"><span class="td76-stat-name">${name}<small class="td76-base-stat"></small></span><span class="td3-header-level td76-stat-stepper"><button type="button" data-td76-stat-step="-1" aria-label="Decrease ${name}">−</button><input type="text" maxlength="3" inputmode="numeric" data-td74-stat="${key}" aria-label="${name} battle stat"><button type="button" data-td76-stat-step="1" aria-label="Increase ${name}">+</button></span></label>`).join('')}</div><div class="td75-stat-footer"><small data-td76-stat-source></small><button type="button" data-td74-stat-reset aria-label="Reset manual battle stat adjustments">↺ Auto</button></div>`;
+  pane.innerHTML='<summary>Battle stats</summary>';
   host.appendChild(pane);
+ }
+ if(!pane.querySelector('.td74-stat-fields')){
+  pane.insertAdjacentHTML('beforeend',`<div class="td74-stat-fields">${Object.entries(STAT_NAMES).map(([key,name])=>`<label class="td74-stat-field"><span class="td76-stat-name">${name}<small class="td76-base-stat"></small></span><span class="td3-header-level td76-stat-stepper"><button type="button" data-td76-stat-step="-1" aria-label="Decrease ${name}">−</button><input type="text" maxlength="3" inputmode="numeric" data-td74-stat="${key}" aria-label="${name} battle stat"><button type="button" data-td76-stat-step="1" aria-label="Increase ${name}">+</button></span></label>`).join('')}</div><div class="td75-stat-footer"><small data-td76-stat-source></small><button type="button" data-td74-stat-reset aria-label="Reset manual battle stat adjustments">↺ Auto</button></div>`);
  }
  const provenance=entry.saveStats&&!entry.saveStats.egg?(entry.level===entry.saveStats.level?'Imported from save':'Calculated from imported IVs, EVs and nature'):entry.challengeOffset?'Challenge Mode stat level · estimated':'Estimated · 15 IV / 0 EV / neutral';
  pane.querySelector('[data-td76-stat-source]').textContent=provenance+(Object.values(entry.statAdjustments||{}).some(Boolean)?' · Manually adjusted':'');
@@ -278,12 +302,12 @@ const renderBuilderStats=()=>{if(draft)renderStatEditor(builder,draft,draft.base
 bindStatEditor(builder,()=>draft?{entry:draft,base:draft.baseStats}:null,renderBuilderStats,()=>{td74DraftDirty=true;renderBuilderStats();});
 td77ItemAutocomplete(builder,()=>current?.game,()=>draft?.item||'');
 builder.addEventListener('change',e=>{
- if(draft&&e.target.dataset.field==='item'&&e.target.dataset.td31Commit==='1'){draft.item=e.target.value;td74DraftDirty=true;}
+ if(draft&&e.target.dataset.field==='item'&&e.target.dataset.td31Commit==='1'){draft.item=e.target.value;td74DraftDirty=true;window.td77BuilderProfile.summary();}
 });
 function commitBuilderLevel(input){
  if(!draft||!/^\d{1,3}$/.test(input.value)||+input.value<1||+input.value>100)return;
  draft.level=+input.value;
- renderBuilderStats();
+ renderBuilderStats();window.td77BuilderProfile.summary();
 }
 builder.addEventListener('focusin',e=>{if(e.target.id==='td77BuilderLevel')e.target.select();});
 builder.addEventListener('input',e=>{if(e.target.id==='td77BuilderLevel')commitBuilderLevel(e.target);});
@@ -301,10 +325,22 @@ window.td77BuilderProfile={
   const same=td73SamePokemon(mon,previous);
   draft={baseStats:mon.baseStats,level:tdDev1Level(previous?.level,previous?.saveStats?.level||50),
    item:previous?.item??'',statAdjustments:same?{...previous.statAdjustments}:{},saveStats:same?previous.saveStats:undefined};
-  builder.innerHTML=`<label class="td77-builder-level">Level <span class="td3-header-level"><button type="button" data-builder-level-step="-1" aria-label="Decrease level">−</button><input id="td77BuilderLevel" inputmode="numeric" type="text" maxlength="3" value="${draft.level}"><button type="button" data-builder-level-step="1" aria-label="Increase level">+</button></span></label><div class="td31-item-field"><label for="td77BuilderItem">Held item</label><div class="search battle-search td74-item-search"><input id="td77BuilderItem" data-field="item" role="combobox" aria-expanded="false" autocomplete="off" placeholder="Search held item…" value="${escape(draft.item)}"><button type="button" class="battle-clear td74-item-clear" aria-label="Unequip held item" ${draft.item?'':'hidden'}>×</button><div class="suggestions td74-item-options" hidden></div></div></div>`;
+  $('td77BuilderLevelHost').innerHTML=`<label class="td77-builder-level">Level <span class="td3-header-level"><button type="button" data-builder-level-step="-1" aria-label="Decrease level">−</button><input id="td77BuilderLevel" inputmode="numeric" type="text" maxlength="3" value="${draft.level}"><button type="button" data-builder-level-step="1" aria-label="Increase level">+</button></span></label>`;
+  $('td77BuilderItemHost').innerHTML=`<div class="td31-item-field"><label for="td77BuilderItem">Held item</label><div class="search battle-search td74-item-search"><input id="td77BuilderItem" data-field="item" role="combobox" aria-expanded="false" autocomplete="off" placeholder="Search held item…" value="${escape(draft.item)}"><button type="button" class="battle-clear td74-item-clear" aria-label="Unequip held item" ${draft.item?'':'hidden'}>×</button><div class="suggestions td74-item-options" hidden></div></div></div>`;
   builder.hidden=false;renderBuilderStats();
  },
- clear(){draft=null;original=null;builder.replaceChildren();builder.hidden=true;},
+ clear(){
+  draft=null;original=null;builder.open=false;builder.hidden=true;
+  for(const section of builder.querySelectorAll('details'))section.open=false;
+  $('td77BuilderLevelHost').replaceChildren();$('td77BuilderItemHost').replaceChildren();
+ },
+ summary(){
+  if(!draft||!chosen)return;
+  const ability=td2ResolveAbility(chosen,$('td2TeamAbility')?.value);
+  const shiny=td73SamePokemon(chosen,original)&&(original?.shiny||original?.saveStats?.shiny);
+  const source=td71StoredArt(chosen);
+  $('pokePreview').innerHTML=`${source?`<img class="td77-builder-art" src="${escape(source)}" alt="" onerror="this.hidden=true">`:''}<div><div class="pills">${typeBadges(chosen)}</div><div class="td77-builder-summary"><strong>Lv ${draft.level}</strong>${shiny?'<span aria-label="Shiny">✨</span>':''}${ability?`<span>${escape(pretty(ability))}</span>`:''}${draft.item?`<span>${escape(draft.item)}</span>`:''}</div></div>`;
+ },
  stale(member){return !!draft&&member!==original&&member?.saveStats!==original?.saveStats;},
  read(){return draft?{level:draft.level,item:draft.item,statAdjustments:draft.statAdjustments}:{};}
 };
