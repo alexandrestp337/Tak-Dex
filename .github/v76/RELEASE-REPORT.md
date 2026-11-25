@@ -108,3 +108,54 @@ This pass starts at `8b7a975`. The second acceptance approved the gold recommend
 [Battle at 412 px](screenshots/quick-battle-412.png) · [Battle at 1280 px](screenshots/quick-battle-1280.png) · [6v6 at 412 px](screenshots/battle-412.png) · [6v6 at 1280 px](screenshots/battle-1280.png)
 
 The probability labels describe the modeled moves and damage rolls. The earlier trainer-stat and battle-model limits still apply. Native Android V9 and hardware validation remain a subsequent stage.
+
+## Fourth correction pass
+
+The pass starts from `060573e` on `v76-development` for draft PR #1. Team Builder now saves levels, held items and stat offsets alongside species, moves and ability. The stat editor starts collapsed and reuses the 6v6 steppers, numeric selection, base stats, stat source and Auto reset. A one-time migration folds matching legacy 6v6 values into the saved team. The existing team JSON format retains the new fields. A newer valid Gen V snapshot replaces stale adjustments for that party, and an unchanged snapshot skips the update.
+
+Saved-team 6v6 shows read-only player details, including the held item and the turn-order indicator. The hypothetical player and opponent editors remain available. The red warning identifies the move with the highest modeled chance of KOing the player before it acts. Accuracy, damage rolls, current HP and turn order can each make a KO uncertain. The ranked strip retains the crown and gold highlight.
+
+### Preset ability coverage
+
+The audit enumerated the preset party slots exposed in 6v6, including rematch and difficulty variants. These counts report exact lookup matches from the new table before the historical legality check and existing fallbacks. Multiple slots can use the same table entry.
+
+| Games | Matched preset slots per game |
+| --- | ---: |
+| Black, White | 78 of 90 |
+| Black 2, White 2 | 160 of 171 |
+| Diamond, Pearl | 49 of 52 |
+| Platinum | 108 of 118 |
+| HeartGold, SoulSilver | 49 of 55 |
+| Ruby, Sapphire, Emerald, FireRed, LeafGreen | No new encounter-specific records verified in this pass |
+| Generation I and II | No abilities |
+| Generation VI onward | No preset trainer rosters exposed in this candidate |
+
+The offline table contains 497 distinct encounter records. Ability lookup uses game group, trainer, Challenge Mode, species and displayed level. Conflicting lookups and unmatched form records were omitted. The application checks the selected ability against historical species legality, retains earlier verified data and can resolve a sole legal ability. Other unresolved choices remain unknown. The exact lookup and in-app display both confirmed Flame Body for Alder's level-77 Volcarona. [Level-77 Volcarona trainer data](https://www.serebii.net/pokedex-bw/trainers/637.shtml) · [Alder's teams](https://bulbapedia.bulbagarden.net/wiki/Alder_(Champion))
+
+Unova data includes gym, league, rematch and rival records with documented abilities. Sinnoh and Johto records use the extracted Generation IV trainer dataset at the linked revision. [BW gyms](https://www.serebii.net/blackwhite/gyms.shtml) · [BW league](https://www.serebii.net/blackwhite/elitefour.shtml) · [B2W2 gyms](https://www.serebii.net/black2white2/gyms.shtml) · [B2W2 league](https://www.serebii.net/black2white2/elitefour.shtml) · [B2W2 rival](https://www.serebii.net/black2white2/rival.shtml) · [Extracted Generation IV trainers](https://github.com/OttoTonsorialist/pkmn_gen_four_trainer_data/tree/4abd408fec9af86dcddf01e72e1401f95cb86b1b)
+
+### Automated and visual verification
+
+| Gate | Result |
+| --- | --- |
+| Node | 26 passed, including four PKTool reference saves, Challenge Mode underlying levels, known and unknown trainer ability keys, Sturdy, preemptive damage and offline shell assets. |
+| Team management in Chromium at 412 px | Passed legacy migration, item selection and clear, level and ranks, offensive and Speed changes, ability-dependent damage, reload, JSON export and import, both hypothetical editors and Alder's ability rendering. Verified Levitate, Mold Breaker, Intimidate, Flash Fire and Sheer Force against the battle functions. |
+| Save and offline integration in Chromium | Passed valid, invalid, stale and unchanged save paths. Passed imported stat authority, live Battle and 6v6, Move Checker returns, Emerald map framing and fullscreen details, background synchronization and offline cold reload. |
+| Correction suite in Chromium at 320, 412 and 1280 px | Passed direct V75-STABLE computed-style comparisons, turn order, KO labels and warning, saved 6v6, compact Team Builder editor, card layout, gold ranking, Move Checker, Pokédex and map regressions. |
+| Chromium smoke at 412 and 1280 px | Passed navigation, branding, historical move and type data and map layout. |
+
+```sh
+TAKDEX_REFERENCE_SAVES=../retail-saves node --test .github/v76/*.test.cjs
+node .github/v76/team-management.cjs http://127.0.0.1:8795
+node .github/v76/browser.cjs http://127.0.0.1:8795
+node .github/v76/smoke.cjs http://127.0.0.1:8795
+TAKDEX_BASELINE=http://127.0.0.1:8784 TAKDEX_SCREENSHOTS=.github/v76/screenshots node .github/v76/corrections.cjs http://127.0.0.1:8795
+```
+
+| Screen | Mobile | Desktop |
+| --- | --- | --- |
+| Expanded Team Builder editor | [412 px](screenshots/team-builder-412.png) | [1280 px](screenshots/team-builder-1280.png) |
+| Saved-team 6v6 | [412 px](screenshots/saved-6v6-412.png) | [1280 px](screenshots/saved-6v6-1280.png) |
+| Incoming KO warning | [412 px](screenshots/incoming-ko-412.png) | [1280 px](screenshots/incoming-ko-1280.png) |
+
+The two-turn estimate and trainer stat limitations from earlier passes still apply. Intimidate models a fresh encounter with the entered opponent and applicable immunity, so it does not track prior switches or stat-stage changes. Quick Battle uses a comparable-training Speed estimate. The suite did not exercise every trainer, item or generation. Galaxy S25 Ultra touch behavior and Android WebView remain untested. Android V9 was outside this pass.

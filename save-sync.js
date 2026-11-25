@@ -33,7 +33,7 @@
    return {...historical,name:pretty(m.name),...move};
   }));
   const evolutions=encounters?.mons.filter(row=>row[4]===record.species).map(row=>({id:row[0],name:row[1]}))??null;
-  return {id,name:pretty(p.name),canonicalName:p.name,image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,
+  return {id,level:record.level,name:pretty(p.name),canonicalName:p.name,image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default,
    types:historicalTypes(p,game),baseStats:Object.fromEntries(td76HistoricalStats(p,game).map(s=>[s.stat.name,s.base_stat])),
    abilities:historicalAbilities(p,game),ability:lookup.abilities[record.abilityId]||'',weight:p.weight,
    moves:moves.filter(Boolean),item:lookup.items[record.itemId]||'',shiny:record.shiny,
@@ -76,7 +76,6 @@
    }
    const body=[...document.querySelectorAll('[data-td71-team-body]')].find(node=>node.dataset.td71TeamBody===teamId);
    if (body) body.firstElementChild.textContent=pokemon.length+'/6 Pokémon';
-   if (current===team && !$('battlePage').hidden) showBattle();
    status(teamId,description(team));
    return 'updated';
   } catch(error) {

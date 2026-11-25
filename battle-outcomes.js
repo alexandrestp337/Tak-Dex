@@ -28,7 +28,7 @@
  }
  function compare(a,d,m,n,gen) {
   const mons=[a,d], moves=[m,n], initial=mons.map(hp);
-  const result={win:0,firstKo:0,twoHitKo:0,survive:0,acts:0,progress:0,boost:0,damage:0,minimum:Infinity,maximum:0};
+  const result={win:0,firstKo:0,preemptiveKo:0,twoHitKo:0,survive:0,acts:0,progress:0,boost:0,damage:0,minimum:Infinity,maximum:0};
   function simulate(turn,state,weight) {
    if (!weight) return;
    if (turn>2 || state.hp.some(value=>value===0)) {
@@ -87,6 +87,7 @@
       remaining[j]=1;
       if(!sturdy)usedItems[j]=true;
      }else remaining[j]=Math.max(0,remaining[j]-outcome.damage);
+     if(i===0&&turn===1&&!acted[j]&&remaining[j]===0)result.preemptiveKo+=chance*outcome.weight;
      const landed=current.landed+Number(i===0&&outcome.damage>0);
      if(move.name==='Fake Out'&&outcome.damage>0&&!acted[j]&&td2ActualAbility(mons[j])!=='inner-focus'){
       next({hp:remaining,mode:modes,usedItems,landed},[true,true],newHits,chance*outcome.weight);
@@ -106,12 +107,12 @@
  function candidates(a,d,g) {
   return (a?.moves||[]).filter(m=>m?.name&&m.remainingPP!==0&&td2Accuracy(m)>0&&estimateDamage(a,d,m,g)>0);
  }
- function threat(a,d,g) {
+ function threat(a,d,g,reply) {
   if (!a || !d || !hp(d)) return null;
   return candidates(a,d,g).map(m=>{
-   const result=compare(a,d,m,idle,g);
+   const result=compare(a,d,m,reply||idle,g);
    return {m,damage:estimateDamage(a,d,m,g),...result};
-  }).sort((x,y)=>y.firstKo-x.firstKo||y.damage/td2Turns(y.m,a,g)-x.damage/td2Turns(x.m,a,g))[0]||null;
+  }).sort((x,y)=>(reply?y.preemptiveKo-x.preemptiveKo:0)||y.firstKo-x.firstKo||y.damage/td2Turns(y.m,a,g)-x.damage/td2Turns(x.m,a,g))[0]||null;
  }
  function attackScore(result) {
   return 5*result.win+result.survive+result.acts+result.progress;

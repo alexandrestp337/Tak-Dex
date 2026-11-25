@@ -36,3 +36,14 @@ test('Every local script and stylesheet in the page is available in the offline 
   assert.ok(fs.existsSync(new URL(file,root)),file);
  }
 });
+test('Preset ability lookup distinguishes games, challenges and unknown encounters',()=>{
+ const context={window:{}};
+ vm.runInNewContext(read('trainer-abilities-v76.js'),context);
+ const lookup=context.window.takDexVerifiedTrainerAbility;
+ assert.equal(lookup('Black','Alder (postgame)','v2','volcarona',77),'flame-body');
+ assert.equal(lookup('White 2','Grimsley','v1','liepard',56),'limber');
+ assert.equal(lookup('White 2','Grimsley','v3','liepard',60),'unburden');
+ assert.equal(lookup('White 2','Grimsley','v1','liepard',60),'');
+ assert.equal(lookup('Platinum','Roark','v1','cranidos',14),'mold-breaker');
+ assert.equal(lookup('Emerald','Unindexed','v1','volcarona',77),'');
+});

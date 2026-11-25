@@ -804,12 +804,12 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #plannerPage .td74-readonly-moves .td74-saved-move small{font-weight:700;font-size:.66rem;color:var(--text);opacity:.82}
 #plannerPage .td74-battle-stats{border:1px solid var(--edge);border-radius:10px;padding:9px;margin-top:7px}
 #plannerPage .td74-battle-stats>summary{cursor:pointer;font-weight:800}
-#plannerPage .td74-stat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
-#plannerPage .td74-stat-field{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:.8rem;font-weight:700}
-#plannerPage .td74-stat-field>span{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
-#plannerPage .td74-stat-field small{font-size:.64rem;color:var(--muted);font-weight:400}
+:is(#plannerPage,#pokeForm) .td74-stat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+:is(#plannerPage,#pokeForm) .td74-stat-field{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:.8rem;font-weight:700}
+:is(#plannerPage,#pokeForm) .td74-stat-field>span{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+:is(#plannerPage,#pokeForm) .td74-stat-field small{font-size:.64rem;color:var(--muted);font-weight:400}
 #plannerPage .td74-battle-stats>button{margin-top:7px;font-size:.76rem}
-@media(min-width:650px){#plannerPage .td74-stat-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:650px){:is(#plannerPage,#pokeForm) .td74-stat-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* DEV5: label actual Unova town markers at the Pokémon Center visual anchor. */
 #mapsCanvas.td74-unova-canvas .td75-unova-town-label{pointer-events:none}
@@ -841,13 +841,13 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
    and continue to feed the existing battle-stat override calculations. */
 #plannerPage .td74-battle-stats{padding:7px 9px;margin-top:5px}
 #plannerPage .td74-battle-stats>summary{font-size:.78rem;line-height:1.25}
-#plannerPage .td74-stat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;margin:7px 0 5px}
-#plannerPage .td74-stat-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,62px);align-items:center;gap:3px;font-size:.72rem;line-height:1.2;font-weight:650;min-width:0}
-#plannerPage .td74-stat-field>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(#plannerPage,#pokeForm) .td74-stat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;margin:7px 0 5px}
+:is(#plannerPage,#pokeForm) .td74-stat-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,62px);align-items:center;gap:3px;font-size:.72rem;line-height:1.2;font-weight:650;min-width:0}
+:is(#plannerPage,#pokeForm) .td74-stat-field>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #plannerPage .td75-stat-footer{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:5px}
 #plannerPage .td75-stat-footer small{font-size:.63rem;color:var(--muted);line-height:1.25}
 #plannerPage .td74-battle-stats .td75-stat-footer button{flex:none;width:auto;min-height:25px;margin:0;padding:3px 7px;font-size:.68rem;border:1px solid var(--edge);border-radius:6px}
-@media(min-width:650px){#plannerPage .td74-stat-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:650px){:is(#plannerPage,#pokeForm) .td74-stat-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* DEV5: Team Builder saved moves use the same type-colored tag treatment as 6v6.
    Move power/accuracy labels and editing remain unchanged. */
@@ -871,8 +871,8 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
  color:#ffffff!important; opacity:1!important; text-shadow:0 1px 2px #0009;
 }
 /* Show immutable species base stats beneath each editable in-game value label. */
-#plannerPage .td74-stat-field .td76-stat-name{display:flex;flex-direction:column;gap:1px;min-width:0}
-#plannerPage .td74-stat-field .td76-base-stat{font-size:.60rem;color:var(--muted);font-weight:500;letter-spacing:0;line-height:1.15}
+:is(#plannerPage,#pokeForm) .td74-stat-field .td76-stat-name{display:flex;flex-direction:column;gap:1px;min-width:0}
+:is(#plannerPage,#pokeForm) .td74-stat-field .td76-base-stat{font-size:.60rem;color:var(--muted);font-weight:500;letter-spacing:0;line-height:1.15}
 /* Hide old toolbars that previously belonged to the removed 36-matchup results. */
 #plannerPage [data-td63-controls="planResults"]{display:none!important}
 /* Avoid duplicate oversized town names obscuring route numbers. */
@@ -939,9 +939,9 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 
 /* DEV3: reused planner controls and compact editor summary; sprites-only selector. */
 #plannerPage .td63-slot-summary .td74-slot-meta:has(.td3-header-level){max-width:none;flex:none;}
-#plannerPage .td3-header-level{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;}
-#plannerPage .td3-header-level button{width:27px;min-width:27px;min-height:32px;padding:0!important;margin:0!important;background:transparent;color:var(--text);border:1px solid var(--edge);box-shadow:none;border-radius:7px;}
-#plannerPage .td3-header-level input{width:38px;min-width:38px;min-height:32px;padding:0!important;margin:0!important;text-align:center;font-size:.86rem;font-weight:750;box-sizing:border-box;}
+:is(#plannerPage,#pokeForm) .td3-header-level{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;}
+:is(#plannerPage,#pokeForm) .td3-header-level button{width:27px;min-width:27px;min-height:32px;padding:0!important;margin:0!important;background:transparent;color:var(--text);border:1px solid var(--edge);box-shadow:none;border-radius:7px;}
+:is(#plannerPage,#pokeForm) .td3-header-level input{width:38px;min-width:38px;min-height:32px;padding:0!important;margin:0!important;text-align:center;font-size:.86rem;font-weight:750;box-sizing:border-box;}
 :is(#plannerPage,#battlePage) .td74-mon-row .td74-mon-art{margin:0 auto;}
 .td3-ability-name,.td3-ability-description{display:block;color:var(--muted);font-size:.78rem;font-weight:400;line-height:1.35;}
 .td3-ability-description{margin-top:4px;white-space:normal;}.td3-ability-description:empty{display:none;}
@@ -960,8 +960,8 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 :is(#plannerPage,#battlePage) .td75-move-meta .td31-attack-score{font-size:inherit;font-weight:800;color:var(--text);}
 :is(#plannerPage,#battlePage) .td77-duel-art{max-width:100%;max-height:100%;}
 #plannerPage .td74-item-search.battle-search{display:block;position:relative;}
-#plannerPage .td31-item-field:has(.suggestions:not([hidden])){position:relative;z-index:10060;}
-#plannerPage .td31-item-field>label{margin:0 0 6px;}
+:is(#plannerPage,#pokeForm) .td31-item-field:has(.suggestions:not([hidden])){position:relative;z-index:10060;}
+:is(#plannerPage,#pokeForm) .td31-item-field>label{margin:0 0 6px;}
 
 /* DEV3.2 — identical team tiles and typography in both matchups. */
 :is(#plannerPage,#battlePage) .td74-clash-line>.td32-damage{font-size:.85rem;font-weight:750;line-height:1.4;}
@@ -1457,9 +1457,9 @@ body.light :is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.opponen
  height:8px;border-radius:5px;background:linear-gradient(to right,#219167 0 var(--low),#75d7ac var(--low) var(--high),#26323a var(--high) 100%);
 }
 .td76-damage-track.incoming{background:linear-gradient(to right,#bd314d 0 var(--low),#f18597 var(--low) var(--high),#26323a var(--high) 100%)}
-#plannerPage .td74-stat-field{display:flex;flex-direction:column;align-items:start;gap:4px}
-#plannerPage .td74-stat-field .td76-stat-stepper{display:inline-flex;overflow:visible}
-#plannerPage .td74-stat-field .td76-stat-stepper input{width:38px;height:32px;min-height:32px}
+:is(#plannerPage,#pokeForm) .td74-stat-field{display:flex;flex-direction:column;align-items:start;gap:4px}
+:is(#plannerPage,#pokeForm) .td74-stat-field .td76-stat-stepper{display:inline-flex;overflow:visible}
+:is(#plannerPage,#pokeForm) .td74-stat-field .td76-stat-stepper input{width:38px;height:32px;min-height:32px}
 #dexResult .td74-dex-actions{grid-template-columns:repeat(2,minmax(0,1fr));max-width:300px;width:100%;grid-column:1/-1;justify-self:center;margin:8px auto}
 #dexResult .td74-dex-actions>button{min-height:34px;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;padding:4px!important}
 #dexResult .td76-dex-icon{display:inline-grid;place-items:center;width:15px;height:15px;margin:0;object-fit:contain}
@@ -1479,3 +1479,12 @@ body.light :is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order.opponen
 @media(max-width:480px){
  :is(#plannerPage,#battlePage) .td77-duel-mon>strong{font-size:clamp(.76rem,3.3vw,.95rem)}
 }
+
+#pokeForm .td77-builder-level{display:flex;align-items:center;gap:10px;margin-block:4px}
+#pokeForm .td74-battle-stats{border:1px solid var(--edge);border-radius:8px;padding:6px;margin-top:8px}
+#pokeForm .td74-battle-stats>summary{cursor:pointer;font-size:.8rem;font-weight:700}
+#pokeForm .td74-stat-field{margin:0}
+#pokeForm .td74-item-options{z-index:150}
+.td76-battle-warning{display:flex;gap:6px;align-items:baseline;margin:7px 0;padding:6px 8px;border:1px solid #df5769;border-radius:8px;background:#401e27;color:#ff8a98;font-size:.8rem;font-weight:800}
+body.light .td76-battle-warning{background:#fff1f2;color:#a41d36}
+:is(#battlePage,#plannerPage) .td77-duel-mon .td76-turn-order{width:fit-content;max-width:100%;line-height:1.15}

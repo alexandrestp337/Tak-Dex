@@ -1,16 +1,17 @@
-# V76 correction acceptance checklist
+# V76 fourth correction acceptance checklist
 
-The second acceptance approved gold recommendations, compact stat editors, the unified Move Checker, and the fullscreen map toolbar. This checklist covers the third correction pass. The statuses below describe automated coverage. Final user acceptance is pending.
+The third acceptance recorded five passes and marked the turn-order indicator as Need work. The statuses below reflect automated checks for the fourth pass. Final user acceptance is pending.
 
-| Check | Automated status | Acceptance check |
+| Check | Status | What to check |
 | --- | --- | --- |
-| Battle and 6v6 gold recommendation | Pass | Select the best-ranked Pokémon. The approved bright gold border and glow remain visible with the crown. |
-| Shared move cards and combined STAB | Pass | Compare both Battle modes. Check the name and type badge, category, multiplier with STAB, power/accuracy and score. Neutral STAB reads 1.5× and has a neutral left edge. Type badges use white text and the V75 shadow. |
-| Regular Battle defense and estimated Speed | Pass | Check weakness and resistance colors, immunities and the comparable-level “Should strike first” cue. Try a close Speed matchup. The single indicator sits below types and ability in both modes. |
-| 6v6 aligned rows, damage bars and warnings | Pass | Check four distinct moves per column, aligned rows, HP and percentage text, and green/red roll bars. Compare OHKO and 2HKO labels. Try an immediate incoming KO and a better alternative. The warning box shows the specific threat. |
-| Stat steppers | Pass | Tap a value, change it with both adjacent controls, and change the level. Check that the manual offset persists. |
-| Pokédex actions and team editor outlines | Pass | Check that both Pokédex buttons center together inside the card. Compare expanded editor outlines. Team Builder retains its shortcut and Team Planner omits it. |
-| Unified Move Checker | Pass for exercised flows | Search by name, TM number and HM number. Try team and individual compatibility, an evolution-only result, acquisition and return from Maps. |
-| Map toolbar | Pass | Check all controls and the percentage in normal and fullscreen views. Zoom, clear a selection and return to the previous tool. |
+| Team Builder as the saved-team editor | Pass | Open a saved Pokémon. Check the level and held-item controls and the collapsed Battle stats section. Expand it and try the steppers, tap-to-select and Auto. Clear the item and save. |
+| Battle and 6v6 synchronization | Pass | Save a change to level, Speed, attack, ability, moves or item. Check damage, turn order and ranks in the corresponding matchup. Check the green or red indicator below the Pokémon's types and ability. |
+| Saved 6v6 and hypothetical editors | Pass | Select a saved team and review its read-only matchup. Switch to custom My Team and try both player and opponent editors. |
+| Existing teams and Gen V saves | Pass | Reload a migrated team and round-trip its JSON. Import the same save twice, then import a newer valid copy. Confirm the new party data takes priority and the existing battle or map stays open. |
+| Incoming KO warning and ranking | Pass | Check that a fast, potentially lethal Hyper Beam shows a red warning. The separate gold crown and team strip still identify the best-ranked Pokémon. |
+| Opponent abilities | Pass for tested encounters | Check Flame Body on Alder's level-77 Volcarona and confirm known abilities use the player label style. |
+| Preset ability coverage | Need work | Some multi-ability encounters are still unresolved. See the per-game preset audit in the release report. |
+| Prior approved web workflows | Pass for tested flows | Check move styling and combined STAB, gold highlight, OHKO and 2HKO, Unified Move Checker, Pokédex alignment, Team Planner, fullscreen maps and offline reload. |
+| Galaxy S25 Ultra and native Android | Untested | Verify rendering and touch behavior on the phone during acceptance. Native save access and emulator switching belong to Android V9. |
 
-Galaxy S25 Ultra WebView rendering remains untested. Android V9 stays in the subsequent development stage.
+No automated checks are currently marked Fail. [Release report](RELEASE-REPORT.md) · [Screenshots](screenshots)

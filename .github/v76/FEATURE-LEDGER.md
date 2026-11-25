@@ -1,10 +1,10 @@
 # Tak-Dex master feature ledger
 
-V76 corrected web candidate for acceptance. Approved baseline `V75-STABLE` at `3a97d5acbc4d434e3fb24aaced1dad5534188531` reports V74 in the app. V76 reports V76 in About.
+V76 fourth correction candidate for acceptance. Approved baseline `V75-STABLE` at `3a97d5acbc4d434e3fb24aaced1dad5534188531` reports V74 in the app. V76 reports V76 in About.
 
 | Feature | V76 status | Evidence or remaining work |
 | --- | --- | --- |
-| Team Builder and saved teams | Retained | Existing localStorage keys, team JSON flow, manual editor, and Team Planner entry. Team Builder retains its Pokédex shortcut. Save import replaces the party of the selected team. |
+| Team Builder and saved teams | Consolidated | Team Builder owns species, level, moves, ability, held item and offsets. Legacy 6v6 values migrate into the same slot. Team JSON round-trips the fields and Team Planner and Battle use the same team records. |
 | Generation V save parsing | Implemented | Read-only 512 KiB snapshots for all four games. CRC and mirrored checksum validation, bank fallback, Pokémon checksum, and source immutability checks. |
 | Party data | Implemented with partial form and evolution presentation | Stats, current HP, level, move IDs and PP, item, ability, IVs, EVs, nature, shiny state, raw form and egg state. Mapped PokéAPI forms have distinct identities. Cosmetic and unsupported form indexes are retained. Bundled parent links supply evolution candidates. Evolution requirements still use the existing reference lookup. |
 | Save synchronization | Web bridge ready | Changed snapshots update the same team. Wrong-game, invalid, stale and identical snapshots retain existing data. Team Builder shows saved-game timestamp. Chromium covered background updates in Battle and fullscreen Maps. |
@@ -12,7 +12,9 @@ V76 corrected web candidate for acceptance. Approved baseline `V75-STABLE` at `3
 | Survival-aware 6v6 | Implemented with bounded model | Immediate KO threat, priority, effective Speed and ties, accuracy, current HP, conditional power, Sturdy and Focus Sash. The recommendation considers two turns of entered attacks. Move cards prioritize first-turn OHKO and genuine two-hit KO probabilities, with separate damage-potential wording for blocked or uncertain execution. |
 | Conditional moves | Partial | Revenge, Avalanche, Payback, Assurance, Hidden Power, and several context-dependent moves use known inputs. Full mechanics and every move across all generations remain open. |
 | Battle and 6v6 interfaces | Implemented | Team strip above opponent search, restored V75 gold crown treatment, shared move cards, combined STAB display, aligned 6v6 moves and roll bars, actionable matchup warnings, V75-STABLE effectiveness accents and badge contrast, shared color-coded turn-order placement, Move Checker links and return state. Double Battle retains its existing pairing flow. |
-| Stat editor | Implemented | Both sides reuse the horizontal level step controls with tap-to-select. Saved player team offsets persist. Custom opponent offsets can be stored with the existing saved-opponent presets. |
+| Stat editor | Implemented | Saved-team controls live in a collapsed Team Builder section. Hypothetical player and opponent controls remain in 6v6. Steppers, tap-to-select, Auto, base stats and source labels are shared. |
+| Preset opponent abilities | Partial coverage | 497 verified encounter records cover supported Gen IV and Unova presets with legal-ability checks. Existing records and sole legal abilities remain available. Other multi-ability encounters stay unknown. |
+| Incoming KO warning | Implemented | Red warning shows a specific modeled preemptive KO, with separate wording for possible and certain outcomes. The ranked strip retains the gold outline and crown. |
 | Visual consistency | Partial | Battle move cards, expanded editor borders, compact controls, and centered equal Pokédex actions with matching icons received targeted updates. Full visual parity across every tool and on-device rendering remain open. |
 | Pokédex | Implemented | Move Checker return restores learnset scroll. Bundled Pokémon and learnsets render when evolution details are unavailable. |
 | Maps | Implemented with partial Emerald coverage | Accepted Hoenn schematic, Pokédex encounter navigation, fitting all plotted encounter pins, live collapsible fullscreen details, and compact toolbar with contained zoom readout. Existing Sinnoh and Unova artwork and data remain in place. |
