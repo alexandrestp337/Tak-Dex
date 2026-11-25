@@ -2984,7 +2984,7 @@ update();
    for(const option of select.options){const name=option.dataset.td59Game||option.value;
     if(!games.includes(name))continue;
     if(!option.dataset.td59Game){option.value=name;option.dataset.td59Game=name}
-    const label=iconFor[statusMap.get(name)||'missing']+' '+name;
+    const label=id==='td59Game'?iconFor[statusMap.get(name)||'missing']+' '+name:name;
     if(option.textContent!==label)option.textContent=label;
    }
   }
@@ -3358,7 +3358,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V74</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "V8 native update pending"}</p>
+ <p><strong>Web version:</strong> V76</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "V8 native update pending"}</p>
  <p><strong>Build:</strong> 2026-11-24</p>
  
 </div>

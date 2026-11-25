@@ -1416,3 +1416,20 @@ main .buttons,dialog .buttons{margin-top:8px;}
 #dexResult .td74-dex-actions>button {min-height:44px;margin:0;width:100%!important}
 .td76-save {display:grid;gap:4px;margin-block:8px}
 .td76-save input {max-width:100%;margin:4px 0 0}
+
+.td73-map-toolbar>span {gap:4px}
+.td73-map-toolbar>span>button {min-width:44px;min-height:44px;padding:4px 8px;white-space:nowrap}
+#td76FullMapDetails {
+ position:absolute;z-index:3;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 58px);
+ left:8px;right:8px;max-width:440px;border:1px solid var(--edge);
+ border-radius:10px;background:var(--card);color:var(--text)
+}
+#td76FullMapDetails>summary {padding:8px;min-height:40px;cursor:pointer}
+#td76FullMapDetails>#mapsDetails {max-height:24dvh;overflow:auto;overscroll-behavior:contain;margin:0}
+.td76-hoenn-water {fill:#244a68}
+.td76-hoenn-place {cursor:pointer}
+.td76-hoenn-place rect {fill:#51875a;stroke:#96c788;stroke-width:2}
+.td76-hoenn-town rect {fill:#b37840;stroke:#f5c882}
+.td76-hoenn-landmark rect {fill:#466754;stroke:#b8d19a}
+.td76-hoenn-place.selected rect,.td76-hoenn-place:focus rect {stroke:#fff;stroke-width:5}
+.td76-hoenn-place text {fill:white;font-size:23px;font-weight:700;pointer-events:none}

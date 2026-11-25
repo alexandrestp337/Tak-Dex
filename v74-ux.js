@@ -278,7 +278,7 @@ function linkDexEncounters(){const region=dexRecords.querySelector('#td56DexEnco
 function linkDexActions(){const hero=dexRecords.querySelector('.td71-dex-hero'),name=hero?.querySelector('[data-td71-quick-compare]')?.dataset.td71QuickCompare||hero?.querySelector('h3')?.textContent.trim(),game=$('dexGame').value;
  if(!hero||!name||hero.querySelector('.td74-dex-actions'))return;
  const bar=document.createElement('div');bar.className='td74-dex-actions';
- bar.innerHTML=(['Platinum','Black','White','Black 2','White 2'].includes(game)?`<button type="button" data-td74-dex-map-search="${escape(name)}">⌖ Encounter map</button>`:'')+`<button type="button" data-td74-dex-battle="${escape(name)}"><img src="takdex-battle-nav.png" alt="" class="td74-mini-battle-icon"> Battle</button>`;
+ bar.innerHTML=(['Emerald','Platinum','Black','White','Black 2','White 2'].includes(game)?`<button type="button" data-td74-dex-map-search="${escape(name)}" data-td76-species-map>⌖ Encounter map</button>`:'')+`<button type="button" data-td74-dex-battle="${escape(name)}"><img src="takdex-battle-nav.png" alt="" class="td74-mini-battle-icon"> Battle</button>`;
  hero.appendChild(bar);
 }
 const debouncedDex=new MutationObserver(()=>{linkDexEncounters();linkDexActions();});debouncedDex.observe(dexRecords,{childList:true,subtree:true});
@@ -290,6 +290,10 @@ document.addEventListener('click',e=>{
  const name=loc.dataset.td74DexMap||loc.dataset.td74TmMap;
  if(name){window.takDexMapsV73?.open(loc.dataset.td74TmGame||$('dexGame').value||$('tmGame').value||'Platinum',name);return;}
  if(loc.hasAttribute('data-td74-dex-map-search')){
+  if(loc.hasAttribute('data-td76-species-map')){
+   window.takDexMapsV73?.openSpecies($('dexGame').value,loc.dataset.td74DexMapSearch);
+   return;
+  }
   window.takDexMapsV73?.open($('dexGame').value);const field=$('mapsSearch');field.value=loc.dataset.td74DexMapSearch;field.dispatchEvent(new Event('input',{bubbles:true}));field.focus();return;
  }
  const mon=loc.dataset.td74DexBattle;
