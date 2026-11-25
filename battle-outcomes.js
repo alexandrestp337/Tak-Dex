@@ -28,12 +28,13 @@
  }
  function compare(a,d,m,n,gen) {
   const mons=[a,d], moves=[m,n], initial=mons.map(hp);
-  const result={win:0,firstKo:0,survive:0,acts:0,progress:0,boost:0,damage:0,minimum:Infinity,maximum:0};
+  const result={win:0,firstKo:0,twoHitKo:0,survive:0,acts:0,progress:0,boost:0,damage:0,minimum:Infinity,maximum:0};
   function simulate(turn,state,weight) {
    if (!weight) return;
    if (turn>2 || state.hp.some(value=>value===0)) {
     result.win+=state.hp[0]>0&&state.hp[1]===0?weight:0;
     result.firstKo+=state.hp[1]===0&&turn===2?weight:0;
+    result.twoHitKo+=state.hp[1]===0&&state.landed===2?weight:0;
     result.survive+=state.hp[0]>0?weight:0;
     result.progress+=weight*(initial[1]-state.hp[1])/Math.max(1,initial[1]);
     return;
@@ -86,18 +87,19 @@
       remaining[j]=1;
       if(!sturdy)usedItems[j]=true;
      }else remaining[j]=Math.max(0,remaining[j]-outcome.damage);
+     const landed=current.landed+Number(i===0&&outcome.damage>0);
      if(move.name==='Fake Out'&&outcome.damage>0&&!acted[j]&&td2ActualAbility(mons[j])!=='inner-focus'){
-      next({hp:remaining,mode:modes,usedItems},[true,true],newHits,chance*outcome.weight);
+      next({hp:remaining,mode:modes,usedItems,landed},[true,true],newHits,chance*outcome.weight);
       continue;
      }
      newActed[i]=true;
      newHits[j]=outcome.damage>0;
      if (outcome.damage>0 && TD2_RECHARGE.has(move.name)) modes[i]='recharge';
-     next({hp:remaining,mode:modes,usedItems},newActed,newHits,chance*outcome.weight);
+     next({hp:remaining,mode:modes,usedItems,landed},newActed,newHits,chance*outcome.weight);
     }
    }
   }
-  simulate(1,{hp:initial,mode:[null,null],usedItems:[false,false]},1);
+  simulate(1,{hp:initial,mode:[null,null],usedItems:[false,false],landed:0},1);
   return result;
  }
  const idle={name:'No entered attack',priority:0};
@@ -123,5 +125,14 @@
    return {m,...worst,score:attackScore(worst),verifiedThreat:!!threats.length};
   }).sort((x,y)=>y.win-x.win||y.score-x.score);
  }
- window.takDexBattleOutcomes={attacks,threat,orderChance,hp};
+ function koLabel({firstKo,twoHitKo}){
+  const label=(probability,kind)=>probability>=1-1e-10
+   ? 'Guaranteed '+kind : kind+' chance: '+(probability>=.995?'>99':Math.max(1,Math.round(probability*100)))+'%';
+  return firstKo>0?label(firstKo,'OHKO'):twoHitKo>0?label(twoHitKo,'2HKO'):'';
+ }
+ function against(a,d,move,reply,gen){
+  return reply&&hp(a)>0&&hp(d)>0&&td2Accuracy(move)>0&&estimateDamage(a,d,move,gen)>0
+   ? {...compare(a,d,move,reply,gen),verifiedThreat:true}:null;
+ }
+ window.takDexBattleOutcomes={attacks,threat,orderChance,hp,koLabel,against};
 })();

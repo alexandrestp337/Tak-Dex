@@ -4,6 +4,7 @@ const path=require('node:path');
 
 const base=process.argv[2]||'http://127.0.0.1:8775';
 const shots=process.env.TAKDEX_SCREENSHOTS;
+const baseline=process.env.TAKDEX_BASELINE;
 const roster=['raichu','basculin-red-striped','magikarp','golbat','pikachu'];
 const moveNames=['thunderbolt','volt-switch','focus-blast','thunder-wave'];
 const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
@@ -11,6 +12,23 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try {
+  const css=el=>{const style=getComputedStyle(el);return [style.borderLeftWidth,style.borderLeftColor];};
+  const badgeCss=el=>{const style=getComputedStyle(el);return [style.color,style.textShadow,style.fontWeight,style.backgroundColor];};
+  let approved={safe:['3px','rgb(59, 189, 131)'],danger:['3px','rgb(226, 74, 97)']};
+  if(baseline){
+   const reference=await browser.newPage();
+   await reference.goto(baseline,{waitUntil:'domcontentloaded'});
+   await reference.evaluate(()=>{
+    document.querySelector('#battlePage').insertAdjacentHTML('beforeend',`<div class="td74-clash td74-expanded-pair" id="baseline-style-probe"><article class="td74-move-detail td74-effect-safe"><span class="td75-move-name">${pill('electric')}</span></article><article class="td74-move-detail td74-effect-danger"></article></div>`);
+   });
+   approved={
+    safe:await reference.locator('#baseline-style-probe .td74-effect-safe').evaluate(css),
+    danger:await reference.locator('#baseline-style-probe .td74-effect-danger').evaluate(css),
+    badge:await reference.locator('#baseline-style-probe .pill').evaluate(badgeCss)
+   };
+   await reference.close();
+   console.log('Read V75-STABLE computed move accents and Electric badge styles');
+  }
   for(const width of [320,412,1280]){
    const page=await browser.newPage({viewport:{width,height:900},isMobile:width<500,hasTouch:width<500,ignoreHTTPSErrors:true});
    page.setDefaultTimeout(12000);
@@ -36,7 +54,26 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    assert.match(await thunder.locator('.td76-move-effect').textContent(),/1\.5×STAB/);
    assert.equal(await thunder.getAttribute('data-type-effect'),'1');
    assert.equal(await thunder.evaluate(node=>node.classList.contains('td74-effect-neutral')),true);
-   assert.match(await battle.locator('.td76-turn-order').textContent(),/Should strike first/);
+   const orderCheck=async(host,label,side,color)=>{
+    const badge=host.locator('.td76-turn-order');
+    assert.equal(await badge.count(),1);
+    assert.equal(await badge.textContent(),label);
+    assert.equal(await badge.evaluate(el=>{
+     const types=el.parentElement.querySelector('.td75-types');
+     const ability=el.parentElement.querySelector('.td3-ability-name');
+     return !!types&&(types.compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING)>0&&
+      (!ability||(ability.compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING)>0);
+    }),true);
+    assert.ok(await badge.evaluate((el,side)=>el.classList.contains(side),side));
+    if(color)assert.equal(await badge.evaluate(el=>getComputedStyle(el).color),color);
+   };
+   await orderCheck(battle,'Should strike first','player','rgb(71, 217, 145)');
+   assert.notEqual((await thunder.evaluate(css))[0],'3px');
+   const typeBadge=await thunder.locator('.pill').evaluate(badgeCss);
+   assert.equal(typeBadge[0],'rgb(255, 255, 255)');
+   assert.match(typeBadge[1],/rgba\(0, 0, 0/);
+   if(approved.badge)assert.deepEqual(typeBadge,approved.badge);
+   if(shots&&width!==320)await battle.screenshot({path:path.join(shots,'quick-battle-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
    const crown=page.locator('#td76BattleStrip .td74-crowned.active');
    const gold=async locator=>{
     assert.equal(await locator.evaluate(node=>getComputedStyle(node).borderTopColor),'rgb(255, 224, 123)');
@@ -71,7 +108,16 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    assert.match(await defense.textContent(),/0\.5× Resists/);
    assert.equal(await defense.evaluate(node=>node.classList.contains('td74-effect-safe')),true);
    await page.evaluate(()=>{current.pokemon[0].types=['electric'];showBattle();});
-   assert.equal(await battle.locator('.td76-turn-order').count(),0);
+   await orderCheck(battle,'Speed too close to call','neutral');
+   await page.evaluate(()=>td74OpenBattleOpponent('jolteon','Black'));
+   await orderCheck(battle,'Should strike first','opponent','rgb(255, 101, 117)');
+   assert.deepEqual(await thunder.evaluate(css),approved.danger);
+   const immunity=await page.evaluate(async()=>{
+    const m={name:'Earthquake',type:'ground',power:100,accuracy:100,damageClass:'physical'};
+    const markup=td76QuickMoveCards({types:['ground'],moves:[m]},{types:['electric'],abilities:['levitate']},5);
+    return /td74-effect-danger/.test(markup)&&/Immune/.test(markup);
+   });
+   assert.equal(immunity,true);
 
    await page.locator('#moreTab').click();
    await page.locator('#openPlanner').click();
@@ -95,6 +141,12 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    }));
    assert.equal(aligned,true);
    assert.equal(await grid.locator('.td76-damage-track.incoming').count(),4);
+   const electric=grid.locator('.td76-move-card').filter({has:page.locator('[data-td76-move="Thunderbolt"]')});
+   assert.deepEqual(await electric.evaluate(css),approved.safe);
+   assert.match(await electric.textContent(),/Guaranteed OHKO/);
+   const focusBlast=grid.locator('.td76-move-card').filter({has:page.locator('[data-td76-move="Focus Blast"]')});
+   assert.match(await focusBlast.textContent(),/2HKO chance:/);
+   await orderCheck(page.locator('#td74Focus'),'Strikes first','player','rgb(71, 217, 145)');
    if(shots&&width!==320)await page.locator('#td74Focus .td74-clash').screenshot({path:path.join(shots,'battle-'+width+'.png'),style:'.main-tabs{visibility:hidden}'});
    await page.locator('#td74EditorOwn > summary').click();
    const slot=page.locator('#planOwn details.td63-slot').first();
@@ -118,6 +170,17 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    const warning=page.locator('#td74Focus .td76-battle-warning');
    assert.match(await warning.textContent(),/Hyper Beam can KO before you attack/);
    assert.match(await warning.textContent(),/Better matchup: Basculin/);
+   assert.doesNotMatch(await warning.textContent(),/No safe|Opponent moves first/i);
+   await orderCheck(page.locator('#td74Focus'),'Strikes first','opponent','rgb(255, 101, 117)');
+   const lethalMove=grid.locator('.td76-move-card').filter({has:page.locator('[data-td76-move="Thunderbolt"]')});
+   assert.match(await lethalMove.textContent(),/OHKO chance: 10%/);
+   await page.evaluate(()=>{
+    plannerOpp[0].moves=['ice-beam'];
+    document.getElementById('planAnalyze').click();
+   });
+   await grid.locator('[data-td76-move="Ice Beam"]').waitFor();
+   assert.match(await lethalMove.textContent(),/OHKO damage · may be KO’d before attacking/);
+   assert.doesNotMatch(await lethalMove.textContent(),/Guaranteed|OHKO chance:/);
 
    await page.locator('#moreTab').click();
    assert.equal(await page.locator('#openTM').count(),0);
@@ -166,10 +229,22 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
     const css=getComputedStyle(el);
     return [css.borderTopColor,css.borderTopWidth,css.borderTopLeftRadius];
    };
+   assert.equal(await page.locator('#td74BuilderDex').isVisible(),true);
    const builderOutline=await page.locator('.td74-builder-inline').evaluate(panelStyle);
    await page.locator('[data-td41-team-plan="correction-check"]').click();
    await page.locator('#td4Slots [data-td4-slot="0"]').click();
    assert.deepEqual(await page.locator('#td4Edit').evaluate(panelStyle),builderOutline);
+   assert.equal(await page.locator('#td4TeamPlannerPage button').filter({hasText:/^Pokédex$/}).count(),0);
+
+   await page.evaluate(()=>takDexBattleNavigationV73.showDex('zigzagoon','dex',{game:'Emerald',id:263}));
+   const dexActions=page.locator('#dexResult .td74-dex-actions');
+   await dexActions.waitFor();
+   assert.equal(await dexActions.evaluate(el=>{
+    const card=el.closest('.td66-pokemon-card').getBoundingClientRect();
+    const [left,right]=[...el.querySelectorAll('button')].map(node=>node.getBoundingClientRect());
+    return Math.abs((left.left+right.right)-(card.left+card.right))<=2&&
+     Math.abs(left.width-right.width)<=1&&left.height===right.height&&left.y===right.y;
+   }),true);
 
    await page.locator('#moreTab').click();
    await page.locator('#openMaps').click();
@@ -187,7 +262,7 @@ const enemyMoves=['hydro-pump','aqua-tail','chip-away','double-edge'];
    assert.equal(await toolbarFits(),true);
    if(shots&&width===412)await page.screenshot({path:path.join(shots,'map-412.png')});
    assert.deepEqual(errors,[]);
-   console.log(width+'px: gold, STAB, defensive tones, estimated order, eight aligned move cards, stat steppers, unified checker and toolbar passed');
+   console.log(width+'px: V75 accents and badge, turn order, KO labels, aligned cards, team editor, centered Pokédex actions and prior regression checks passed');
    await page.close();
   }
  } finally {await browser.close();}

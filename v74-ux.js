@@ -31,7 +31,10 @@ function loaded(side,index){const src=roster(side)[index];if(!src?.name||!last)r
 const outcomes=window.takDexBattleOutcomes;
 function bestMove(a,d,gen){return outcomes.attacks(a,d,gen)[0]||null;}
 function moveSummary(attack,defend,gen){return (attack?.moves||[]).filter(m=>m?.name).map(m=>({m,damage:estimateDamage(attack,defend,m,gen)})).sort((a,b)=>(Number.isFinite(b.damage)?b.damage:-1)-(Number.isFinite(a.damage)?a.damage:-1));}
-function effectivenessClass(move,defender,gen,incoming=false,a){const mult=move&&defender?td72AbilityReport(move,defender,gen,a).base:null;return !Number.isFinite(mult)?'unknown':mult===1?'neutral':(incoming?mult>1:mult<1)?'danger':'safe';}
+function effectivenessClass(mult,incoming){
+ if(!Number.isFinite(mult)||mult===1)return 'neutral';
+ return (incoming?mult<1:mult>1)?'safe':'danger';
+}
 function rankedMatchups(){
  const defender=loaded('opp',oppSelection),gen=last?.gen||gameGeneration($('planGame').value);
  if(!defender)return [];
@@ -52,7 +55,8 @@ function typeBadges(p){const raw=p?.types||[];return raw.length?`<span class="td
 function quickOrder(a,d,gen){
  const speed=p=>p?.baseStats?.speed*(gen>=4&&p.heldItem==='Choice Scarf'?1.5:1);
  const first=speed(a),second=speed(d);
- return first>0&&second>0&&Math.abs(first-second)>=Math.max(5,Math.max(first,second)*.05)?Math.sign(first-second):0;
+ if(!(first>0&&second>0))return null;
+ return Math.abs(first-second)>=Math.max(5,Math.max(first,second)*.05)?Math.sign(first-second):0;
 }
 function potentialThreat(a,d,gen){
  const stats=d.baseStats||{}, physical=stats.attack, special=stats['special-attack'];
@@ -81,13 +85,20 @@ function moveCard(m,a,d,gen,{incoming=false,battle=false,outcome=null,standardOr
   if(TD2_RECHARGE.has(m.name))notes.push('Recharge after hit');
   else if(td2Turns(m,a,gen)>1)notes.push('Charges first');
   if(boosted)notes.push('Boost '+Math.round(outcome.boost*100)+'%');
-  if(outcome?.win>0)notes.push(Math.round(outcome.win*100)+'% two-turn KO');
+  if(outcome){
+   const knockout=outcome.verifiedThreat?outcomes.koLabel(outcome):'';
+   if(knockout)notes.push(knockout);
+   else if(high>=outcomes.hp(d)&&!TD2_CHARGE.has(m.name)){
+    if(!outcome.verifiedThreat)notes.push('OHKO damage · turn order unknown');
+    else if(outcome.acts===0)notes.push('OHKO damage · may be KO’d before attacking');
+   }
+  }
   if(order!==null&&standardOrder!==null&&order!==standardOrder)notes.push(order===.5?'Speed tie':order?'Moves first':'Moves second');
   const ability=td2OffensiveModifier(m,a,gen);
   if(ability!==1)notes.push(pretty(td2ActualAbility(a))+' ×'+ability);
  }
  if(report.possibleImmune.length)notes.push('Possible immunity: '+report.possibleImmune.map(pretty).join(' / '));
- return `<article class="td74-move-detail td76-move-card td74-effect-${effectivenessClass(m,d,gen,incoming,a)}" data-type-effect="${report.base??''}" data-move-type="${escape(m.type||'')}"><div class="td76-move-head"><button type="button" class="td76-move-link" data-td76-move="${escape(m.name)}">${escape(m.name)}</button>${m.type?pill(m.type):''}</div><small class="td76-move-category">${escape(pretty(m.damageClass||''))}</small><span class="td76-move-effect">${status?'—':multiplier===null?'—':multiplier===0?'Immune':multiplier+'×'}${td3Stab(stab>1)}</span><small>PWR ${power?(power.min===power.max?power.min:power.min+'–'+power.max):'—'} · ACC ${escape(accuracyLabel(m))}</small><small class="td76-move-score">Score ${score===null?'—':Math.round(score)+(highScore>score?'–'+Math.round(highScore):'')}</small>${high===null?'':`<small class="td76-damage-text">Est. ${low}–${high} HP · ${percent(low)}–${percent(high)}%</small><div class="td76-damage-track ${incoming?'incoming':''}" style="--low:${bound(low)}%;--high:${bound(high)}%" aria-hidden="true"></div>`}${notes.length?`<small>${escape(notes.join(' · '))}</small>`:''}</article>`;
+ return `<article class="td74-move-detail td76-move-card td74-effect-${effectivenessClass(status?null:report.effective,incoming)}" data-type-effect="${report.base??''}" data-move-type="${escape(m.type||'')}"><div class="td76-move-head"><button type="button" class="td76-move-link" data-td76-move="${escape(m.name)}">${escape(m.name)}</button>${m.type?pill(m.type):''}</div><small class="td76-move-category">${escape(pretty(m.damageClass||''))}</small><span class="td76-move-effect">${status?'—':multiplier===null?'—':multiplier===0?'Immune':multiplier+'×'}${td3Stab(stab>1)}</span><small>PWR ${power?(power.min===power.max?power.min:power.min+'–'+power.max):'—'} · ACC ${escape(accuracyLabel(m))}</small><small class="td76-move-score">Score ${score===null?'—':Math.round(score)+(highScore>score?'–'+Math.round(highScore):'')}</small>${high===null?'':`<small class="td76-damage-text">Est. ${low}–${high} HP · ${percent(low)}–${percent(high)}%</small><div class="td76-damage-track ${incoming?'incoming':''}" style="--low:${bound(low)}%;--high:${bound(high)}%" aria-hidden="true"></div>`}${notes.length?`<small>${escape(notes.join(' · '))}</small>`:''}</article>`;
 }
 function moveCards(a,d,gen,{incoming=false,battle=false,ranked=[],first=null,standardOrder=null,comparison=null}={}){
  if(!a?.moves||!d)return [];
@@ -95,7 +106,7 @@ function moveCards(a,d,gen,{incoming=false,battle=false,ranked=[],first=null,sta
  const score=m=>expectedPower(m,a,d,gen)??-1;
  if(battle)moves.sort((x,y)=>score(y)-score(x));
  else if(first)moves.sort((x,y)=>Number(y===first)-Number(x===first));
- return [...new Map(moves.map(m=>[td73MoveKey(m.name),m])).values()].map(m=>moveCard(m,a,d,gen,{incoming,battle,outcome:ranked.find(row=>row.m===m),standardOrder,comparison}));
+ return [...new Map(moves.map(m=>[td73MoveKey(m.name),m])).values()].map(m=>moveCard(m,a,d,gen,{incoming,battle,outcome:incoming?outcomes.against(a,d,m,comparison,gen):ranked.find(row=>row.m===m),standardOrder,comparison}));
 }
 window.td76QuickMoveCards=(a,d,gen)=>moveCards(a,d,gen,{battle:true}).join('');
 function duelCard(own,foe,a,d,gen,status,context='planner',recommendation=null){
@@ -104,17 +115,17 @@ function duelCard(own,foe,a,d,gen,status,context='planner',recommendation=null){
  const best=attacks[0], threat=battle?null:outcomes.threat(d,a,gen);
  const knownOrder=best?.n?.type?outcomes.orderChance(a,d,best.m,best.n,gen):null;
  const first=battle?quickOrder(a,d,gen):knownOrder===null||knownOrder===.5?0:knownOrder?1:-1;
- const indicator=battle?'Should strike first':'Moves first';
- const mon=(p,stats,side)=>`<div class="td75-duel-mon td77-duel-mon td73-poke-link" role="button" tabindex="0" data-td73-mon="${escape(p.name)}" data-td73-context="${context}"><img class="td77-duel-art" src="${escape(p.image||art(p.id,p.name))}" alt="" draggable="false" onerror="if(!this.dataset.td7Fallback)this.hidden=true"><strong>${escape(td41PokemonLabel(p.name))}</strong>${first===side?`<small class="td76-turn-order" title="${battle?'Estimate at comparable levels and training':'For the modeled move pair'}">${indicator}</small>`:''}${typeBadges(stats||p)}${td3AbilityText(stats||p)}${battle?'':`<small class="td31-duel-level">Lv ${Number(stats?.level||p.level)||50}${p.saveStats?.shiny?' · ✨':''}</small>`}${stats?.heldItem?`<small>${escape(stats.heldItem)}</small>`:''}</div>`;
+ const indicator=first?(battle?'Should strike first':'Strikes first'):
+  battle&&first===0?'Speed too close to call':knownOrder===.5?'Speed tie':'Turn order uncertain';
+ const orderSide=first||1;
+ const orderClass=first>0?'player':first<0?'opponent':'neutral';
+ const mon=(p,stats,side)=>`<div class="td75-duel-mon td77-duel-mon td73-poke-link" role="button" tabindex="0" data-td73-mon="${escape(p.name)}" data-td73-context="${context}"><img class="td77-duel-art" src="${escape(p.image||art(p.id,p.name))}" alt="" draggable="false" onerror="if(!this.dataset.td7Fallback)this.hidden=true"><strong>${escape(td41PokemonLabel(p.name))}</strong>${typeBadges(stats||p)}${td3AbilityText(stats||p)}${a&&d&&orderSide===side?`<small class="td76-turn-order ${orderClass}" title="${battle?'Estimate at comparable levels and training':'For the modeled move pair'}">${indicator}</small>`:''}${battle?'':`<small class="td31-duel-level">Lv ${Number(stats?.level||p.level)||50}${p.saveStats?.shiny?' · ✨':''}</small>`}${stats?.heldItem?`<small>${escape(stats.heldItem)}</small>`:''}</div>`;
  const outgoing=moveCards(a,d,gen,{battle,ranked:attacks,first:best?.m,standardOrder:knownOrder,comparison:best?.n?.type?best.n:null});
  const incoming=moveCards(d,a,gen,{incoming:true,first:threat?.m,standardOrder:knownOrder===null?null:1-knownOrder,comparison:best?.m});
  const warnings=[];
  if(!battle&&a&&d){
   const opposed=best?.m&&threat?.m?outcomes.orderChance(a,d,best.m,threat.m,gen):null;
   if(threat?.firstKo>0&&opposed!==null&&opposed<1)warnings.push(threat.m.name+(opposed===0&&threat.firstKo>=1?' is predicted to KO before you attack':' can KO before you attack'));
-  else if(knownOrder===0)warnings.push('Opponent moves first');
-  else if(knownOrder===.5)warnings.push('Speed tie for the modeled moves');
-  if(recommendation?.attack.verifiedThreat&&recommendation.attack.win<.9)warnings.push('No safe counter under modeled conditions');
   if(recommendation&&recommendation.i!==ownSelection&&recommendation.attack.win>(best?.win??0))warnings.push('Better matchup: '+td41PokemonLabel(roster('own')[recommendation.i].name));
  }
  const moves=battle?`<div class="td74-clash-columns td76-quick-grid"><section><h4>Your attacks</h4>${outgoing.join('')||'<small>No moves entered.</small>'}</section>${a&&d?potentialThreat(a,d,gen):''}</div>`:

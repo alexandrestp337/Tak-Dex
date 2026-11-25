@@ -69,3 +69,35 @@ test('Sturdy and Focus Sash can survive a full-HP hit to return a KO',()=>{
  assert.equal(outcomes.attacks({...a,heldItem:'Focus Sash'},d,5)[0].win,1);
  assert.equal(outcomes.attacks({...a,currentHP:99,heldItem:'Focus Sash'},d,5)[0].win,0);
 });
+test('Knockout labels distinguish first-turn certainty, rolls and move accuracy',()=>{
+ const target=mon(80,[move('Scratch',20)]);
+ const prediction=attack=>outcomes.attacks(mon(120,[attack]),target,5)[0];
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',75,{effect:4}))),'Guaranteed OHKO');
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',100,{effect:2.3}))),'OHKO chance: 25%');
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',75,{effect:4,accuracy:90}))),'OHKO chance: 90%');
+});
+test('A faster lethal opponent prevents a guaranteed OHKO label',()=>{
+ const attacker=mon(80,[move('Fire Punch',75,{effect:4})]);
+ const foe=mon(130,[move('Close Combat',120,{effect:4})]);
+ const prediction=outcomes.attacks(attacker,foe,5)[0];
+ assert.equal(prediction.acts,0);
+ assert.equal(prediction.firstKo,0);
+ assert.equal(outcomes.koLabel(prediction),'');
+});
+test('Two-hit labels require two landed attacks and distinguish charge and recharge moves',()=>{
+ const target=mon(80,[move('Scratch',20)]);
+ const prediction=attack=>outcomes.attacks(mon(120,[attack]),target,5)[0];
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',50,{effect:2.5}))),'Guaranteed 2HKO');
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',50,{effect:2.5,accuracy:75}))),'2HKO chance: 56%');
+ assert.equal(outcomes.koLabel(prediction(move('Hyper Beam',150,{effect:3,accuracy:90}))),'OHKO chance: 90%');
+ const charge=prediction(move('Solar Beam',120,{effect:3}));
+ assert.equal(charge.win,1);
+ assert.equal(outcomes.koLabel(charge),'');
+});
+test('Conditional power contributes to two hits without implying an OHKO',()=>{
+ const foe=mon(95,[move('Scratch',20)]);
+ const attacker=mon(110,[move('Revenge',60,{priority:-4})]);
+ const result=outcomes.attacks(attacker,foe,5)[0];
+ assert.equal(result.boost,1);
+ assert.equal(outcomes.koLabel(result),'2HKO chance: 31%');
+});

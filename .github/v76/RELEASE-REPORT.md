@@ -89,3 +89,22 @@ Screenshots from Chromium are available for [mobile 6v6](screenshots/battle-412.
 ### Remaining limits
 
 The two-turn battle estimates, exact trainer stats, and Android V9 validation limits above still apply. Chromium tested representative machine and compatibility flows. Complete enumeration across every game, move, species, ROM and dataset is outside the tested matrix. When evolution data is incomplete, unresolved compatibility stays unknown. Quick Battle omits the Speed badge on close comparisons and estimates turn order at comparable levels and training. The accepted Emerald schematic remains. No phone or Android WebView was used.
+
+## Third correction pass
+
+This pass starts at `8b7a975`. The second acceptance approved the gold recommendation highlight, stat steppers, unified Move Checker, and fullscreen map controls. The changes target the remaining four acceptance areas.
+
+- Battle and 6v6 show one turn-order indicator below the types and ability. Green identifies the player's Pokémon, red identifies the opponent, and neutral text describes close comparisons, ties or uncertain order. The warning box keeps specific threats and better team alternatives.
+- The approved move card layout and aligned 6v6 rows use the original V75-STABLE 3 px effectiveness edges and white type badges with black shadow. Effectiveness colors use the ability-adjusted multiplier before STAB.
+- Battle rankings still use the two-turn model. Move cards use first-turn KO probability and the probability of a KO after two landed attacks. First-turn OHKO labels take precedence, and charged moves are distinguished from two-hit sequences. Incomplete opponent information or a lethal hit before execution can limit the display to damage potential.
+- Team Planner omits the Pokédex shortcut. Team Builder keeps its button. The Pokédex action pair spans the hero grid and centers within the card with its prior button and icon dimensions.
+
+### Verification
+
+- All 25 Node checks passed, including the four public save reference cases. The new KO assertions cover guaranteed and probabilistic OHKOs, damage rolls, misses, preemptive KOs, genuine 2HKOs, charge, recharge and conditional power.
+- Chromium ran the targeted correction suite at 320, 412 and 1280 px. The browser compared computed effect-edge width/color and the Electric badge's foreground, shadow, weight and background directly against V75-STABLE. It also checked turn-order placement and tone, neutral STAB, an ability immunity, aligned move rows, a lethal Thunderbolt at 10% actual OHKO odds, the zero-execution case, and the edited shortcut and button positions.
+- The existing save-import, synchronization, offline and mobile/desktop smoke checks were rerun. The acceptance matrix continues to cover gold highlighting, the unified checker, stat steppers and fullscreen map toolbar.
+
+[Battle at 412 px](screenshots/quick-battle-412.png) · [Battle at 1280 px](screenshots/quick-battle-1280.png) · [6v6 at 412 px](screenshots/battle-412.png) · [6v6 at 1280 px](screenshots/battle-1280.png)
+
+The probability labels describe the modeled moves and damage rolls. The earlier trainer-stat and battle-model limits still apply. Native Android V9 and hardware validation remain a subsequent stage.
