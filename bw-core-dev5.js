@@ -13,7 +13,7 @@ const ids={
  blitzle:522,zebstrika:523,roggenrola:524,boldore:525,gigalith:526,woobat:527,swoobat:528,drilbur:529,excadrill:530,
  timburr:532,gurdurr:533,conkeldurr:534,seismitoad:537,throh:538,sawk:539,sewaddle:540,swadloon:541,leavanny:542,
  venipede:543,whirlipede:544,scolipede:545,sandile:551,krokorok:552,krookodile:553,dwebble:557,crustle:558,scraggy:559,scrafty:560,sigilyph:561,yamask:562,cofagrigus:563,
- carracosta:565,archeops:567,trubbish:568,garbodor:569,zoroark:571,minccino:572,cinccino:573,gothitelle:576,solosis:577,duosion:578,reuniclus:579,
+ darmanitan:555,'darmanitan-standard':555,carracosta:565,archeops:567,trubbish:568,garbodor:569,zoroark:571,minccino:572,cinccino:573,gothitelle:576,solosis:577,duosion:578,reuniclus:579,
  vanilluxe:584,deerling:585,sawsbuck:586,escavalier:589,foongus:590,amoonguss:591,frillish:592,jellicent:593,alomomola:594,joltik:595,galvantula:596,
  ferroseed:597,ferrothorn:598,klink:599,klang:600,klinklang:601,tynamo:602,eelektrik:603,eelektross:604,elgyem:605,beheeyem:606,litwick:607,lampent:608,chandelure:609,
  axew:610,fraxure:611,haxorus:612,cubchoo:613,beartic:614,cryogonal:615,shelmet:616,accelgor:617,stunfisk:618,mienfoo:619,mienshao:620,druddigon:621,golett:622,golurk:623,pawniard:624,bisharp:625,bouffalant:626,
@@ -50,5 +50,10 @@ for(const [name,type,power,damageClass,accuracy] of [
  ['body-slam','normal',85,'physical',100],['water-pulse','water',60,'special',100],['dragon-claw','dragon',80,'physical',100],['dragon-pulse','dragon',90,'special',100],
  ['swords-dance','normal',null,'status',null],['tail-whip','normal',null,'status',100],['growl','normal',null,'status',100],['thunder-wave','electric',null,'status',100],['will-o-wisp','fire',null,'status',75],['calm-mind','psychic',null,'status',null]
 ])add(name,type,power,damageClass,accuracy);
+// DEV7.3: verified Gen V reference additions. Keep alternate forms separate.
+species['darmanitan-standard']={id:555,types:['fire'],baseStats:{hp:105,attack:140,defense:55,'special-attack':30,'special-defense':55,speed:95},abilities:['sheer-force','zen-mode'],weight:929};
+add('fire-punch','fire',75,'physical',100);moves['fire-punch'].pp=15;
+add('assurance','dark',50,'physical',100);moves.assurance.pp=10;
+add('synchronoise','psychic',70,'special',100);moves.synchronoise.pp=15;
 window.takDexBWCoreV75={ids,species,moves};
 })();

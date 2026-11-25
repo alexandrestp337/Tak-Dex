@@ -17,77 +17,58 @@ plannerButton.onclick=function(e){
   window.td73PlannerPreserveGame=true;
  }else openTool('plannerPage',3);
 };
-function showDex(name,context){
- const game=context==='planner'?$('planGame').value:(current?.game||td66SavedGame()||'');
+// DEV7.5: one result-local contextual Back for every external Pokédex origin.
+function parkBack(){
+ const result=$('dexResult');result.before(dexReturn);dexReturn.hidden=!previousDexScreen;
+}
+function mountBack(){
+ const card=$('dexResult').querySelector('.td66-pokemon-card');
+ if(!card||!previousDexScreen){parkBack();return;}
+ let row=card.querySelector('.td75-dex-back-row');
+ if(!row){row=document.createElement('div');row.className='td75-dex-back-row';card.prepend(row);}
+ row.append(dexReturn);dexReturn.hidden=false;
+}
+function clearBack(origin){if(origin&&previousDexScreen?.origin!==origin)return;previousDexScreen=null;parkBack();}
+function setBack(origin,restore){previousDexScreen={origin,restore};dexReturn.textContent='← Back';parkBack();}
+function showDex(name,context,options={}){
+ const game=options.game||(context==='maps'?$('mapsGame').value:context==='planner'?$('planGame').value:context==='comparison'?$('td56Game').value:context==='team-planner'?$('td4Game').value:(current?.game||td66SavedGame()||''));
  if(!game||!games.includes(game))return;
- const origin=context==='planner'?'planner':'battle';
- previousDexScreen={origin,scroll:window.scrollY};
- $('dexGame').value=game;
- td66RememberGame(game,'battle');
- refreshTeamMenus();
- $('dexTeamPoke').value='';
- $('dexInput').value=pretty(name);
- $('dexResults').hidden=true;
- syncDexClear();
- if(typeof td70TeamDexBack!=='undefined')td70TeamDexBack.style.display='none';
- dexSelector.open=false;
- window.takActivate(2);
- dexReturn.textContent=origin==='planner'?'← Back to 6v6 Battle':'← Back to Battle';
- dexReturn.hidden=false;
- $('dexSearch').click();
+ const sections=[...document.querySelectorAll('main > section')],visible=sections.filter(el=>!el.hidden),tabs=['teamsTab','battleTab','dexTab','moreTab'],selected=tabs.findIndex(id=>$(id).classList.contains('selected')),scroll=window.scrollY;
+ setBack(context,()=>{for(const el of sections)el.hidden=!visible.includes(el);tabs.forEach((id,i)=>{$(id).classList.toggle('selected',i===selected);$(id).setAttribute('aria-current',i===selected?'page':'false')});requestAnimationFrame(()=>window.scrollTo(0,scroll));});
+ $('dexGame').value=game;refreshTeamMenus();$('dexTeamPoke').value='';$('dexInput').value=td41PokemonLabel(name);$('dexResults').hidden=true;syncDexClear();dexSelector.open=false;
+ window.takActivate(2);for(const el of sections)el.hidden=el.id!=='dexPage';
+ if(Number(options.id)>0)$('dexInput').dataset.evolutionId=String(options.id);else $('dexInput').value=String(name).replace(/-/g,' ');
+ $('dexSearch').click();delete $('dexInput').dataset.evolutionId;
 }
-function goBack(){
- const old=previousDexScreen;previousDexScreen=null;dexReturn.hidden=true;
- if(old?.origin==='planner')openTool('plannerPage',3);
- else window.takActivate(1);
- requestAnimationFrame(()=>window.scrollTo(0,old?.scroll||0));
-}
+function goBack(){const old=previousDexScreen;if(!old)return;clearBack();old.restore?.();}
 dexReturn.addEventListener('click',goBack);
-// Main tab uses the simple start state: search open only when nothing is loaded.
-$('dexTab').addEventListener('click',()=>{
- previousDexScreen=null;dexReturn.hidden=true;
- dexSelector.open=!$('dexResult').querySelector('.td66-pokemon-card');
-});
-for(const id of ['teamsTab','battleTab','moreTab'])$(id).addEventListener('click',()=>{previousDexScreen=null;dexReturn.hidden=true});
+$('dexTab').addEventListener('click',()=>{clearBack();dexSelector.open=!$('dexResult').querySelector('.td66-pokemon-card');});
+for(const id of ['teamsTab','battleTab','moreTab'])$(id).addEventListener('click',()=>clearBack());
 $('dexSearch').addEventListener('click',()=>{if($('dexTeamPoke').value||$('dexInput').value.trim())dexSelector.open=false});
-// Team Builder can also deep-link into Pokédex: close selector for those results.
-document.addEventListener('click',e=>{if(e.target.closest('[data-td70-dex],[data-td72-team-dex],[data-td70-team-dex]'))dexSelector.open=false});
 
-let timer=null,start=null,lastHold=null;
-function cancelHold(){if(timer!==null)clearTimeout(timer);timer=null;start=null;}
-function targetOf(e){const el=e.target?.closest?.('.td73-poke-link[data-td73-mon]');return el?.dataset.td73Mon?.trim()?el:null}
-function metadata(el){return {name:el.dataset.td73Mon,context:el.dataset.td73Context||'battle'};}
-function comparison(el){const {name,context}=metadata(el);const game=context==='planner'?$('planGame').value:(current?.game||td66SavedGame());
- if(!game||!games.includes(game))return;
- try{window.takDexCompareV71?.openForBattle?.(name,game,context)?.catch?.(err=>console.warn('V73 comparison failed',err));}
- catch(err){console.warn('V73 comparison navigation failed',err)}
-}
-document.addEventListener('pointerdown',e=>{
- const el=targetOf(e);if(!el||e.button!==0)return;
- cancelHold();start={x:e.clientX,y:e.clientY,el};
- timer=setTimeout(()=>{
-  if(start?.el!==el)return;
-  timer=null;lastHold={el,at:Date.now()};comparison(el);
- },550);
-},true);
-document.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>12)cancelHold()},true);
-for(const event of ['pointerup','pointercancel'])document.addEventListener(event,cancelHold,true);
-document.addEventListener('contextmenu',e=>{const el=targetOf(e);if(!el)return;e.preventDefault();cancelHold();if(lastHold?.el===el&&Date.now()-lastHold.at<1500)return;lastHold={el,at:Date.now()};comparison(el)},true);
-document.addEventListener('click',e=>{
- const el=targetOf(e);
- if(lastHold){
-  const suppress=lastHold.el===el&&Date.now()-lastHold.at<1200;lastHold=null;
-  if(suppress){e.preventDefault();e.stopImmediatePropagation();return;}
- }
- if(!el)return;
- // The Pokemon link inside a <summary> must not toggle its parent details.
- e.preventDefault();e.stopImmediatePropagation();
- const {name,context}=metadata(el);showDex(name,context);
-},true);
-document.addEventListener('keydown',e=>{
- const el=targetOf(e);if(!el||!['Enter',' '].includes(e.key))return;
- e.preventDefault();e.stopImmediatePropagation();
- if(e.shiftKey)comparison(el);else{const {name,context}=metadata(el);showDex(name,context)}
-},true);
-window.takDexBattleNavigationV73={showDex,returnToBattle:goBack};
+// DEV3.2: Dex-only hold. Arm during press; open on release after the originating click.
+// No modal is placed underneath the finger while it is still down.
+let active=null,release=null;
+window.td3HoldActive=()=>!!active;
+const selector='#dexPage [data-td71-quick-compare],#dexPage [data-dex-evolution],#typeExplorerPage [data-explore-pokemon]';
+function targetOf(e){return e.target?.closest?.(selector)||null;}
+function metadata(el){const name=el?.dataset.td71QuickCompare||el?.dataset.dexEvolution||el?.dataset.explorePokemon;const game=el?.closest('#typeExplorerPage')?$('typeExplorerGame').value:$('dexGame').value;return name?{name,game:game||td66SavedGame()}:null;}
+function clear(){if(active?.timer)clearTimeout(active.timer);active=null;}
+function begin(el,x,y){const data=metadata(el);if(!data||active||$('td71CompareQuick')?.open)return;release=null;active={...data,el,x,y,armed:false};active.timer=setTimeout(()=>{if(active)active.armed=true;},500);}
+function moved(x,y){if(active&&Math.hypot(x-active.x,y-active.y)>12)clear();}
+function finish(){if(!active)return;const held=active;clear();if(!held.armed)return;release={el:held.el,at:Date.now()};setTimeout(()=>{window.tdDev2QuickCompare?.(held.name,held.game);},60);}
+const capture=true;
+document.addEventListener('pointerdown',e=>{const el=targetOf(e);if(el&&e.button===0&&e.isPrimary!==false)begin(el,e.clientX,e.clientY);},capture);
+document.addEventListener('pointermove',e=>moved(e.clientX,e.clientY),capture);
+document.addEventListener('pointerup',finish,capture);
+document.addEventListener('pointercancel',e=>{if(e.pointerType!=='touch')clear();},capture);
+document.addEventListener('touchstart',e=>{const t=e.touches[0],el=targetOf(e);if(e.touches.length===1&&el&&t)begin(el,t.clientX,t.clientY);else if(e.touches.length>1)clear();},{capture:true,passive:true});
+document.addEventListener('touchmove',e=>{const t=e.touches[0];if(t)moved(t.clientX,t.clientY);},{capture:true,passive:true});
+document.addEventListener('touchend',finish,capture);
+document.addEventListener('touchcancel',()=>{if(active?.armed)finish();else clear();},capture);
+document.addEventListener('contextmenu',e=>{const el=targetOf(e);if(!el)return;e.preventDefault();if(active){active.armed=true;return;}if(e.button===2){const data=metadata(el);if(data)window.tdDev2QuickCompare?.(data.name,data.game);}},capture);
+document.addEventListener('dragstart',e=>{if(targetOf(e))e.preventDefault();},capture);
+document.addEventListener('click',e=>{const el=targetOf(e);if(release&&Date.now()-release.at<1000&&el===release.el){release=null;e.preventDefault();e.stopImmediatePropagation();return;}const link=e.target?.closest?.('.td73-poke-link[data-td73-mon]');if(link){e.preventDefault();e.stopImmediatePropagation();showDex(link.dataset.td73Mon,link.dataset.td73Context,{id:link.dataset.td73Id});}},capture);
+document.addEventListener('keydown',e=>{if(!['Enter',' '].includes(e.key))return;const data=metadata(targetOf(e));if(e.shiftKey&&data){e.preventDefault();e.stopImmediatePropagation();window.tdDev2QuickCompare?.(data.name,data.game);return;}const link=e.target?.closest?.('.td73-poke-link[data-td73-mon]');if(link&&!e.shiftKey){e.preventDefault();e.stopImmediatePropagation();showDex(link.dataset.td73Mon,link.dataset.td73Context,{id:link.dataset.td73Id});}},capture);
+window.takDexBattleNavigationV73={showDex,returnToBattle:goBack,setBack,clearBack,mountBack,parkBack};
 })();

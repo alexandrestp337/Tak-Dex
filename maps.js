@@ -122,16 +122,25 @@ const unovaServices=[
  {name:'Happiness Checker',place:'Nacrene City',detail:'Girl in house with version-specific in-game trader',kind:'service',aliases:'friendship happiness checker'},
  {name:'Heart Scale Lady',place:'Driftveil City',detail:'Requests a Pokémon with a specified TM move daily',kind:'service',aliases:'heart scale daily challenge'},
 ];
+let encounterAttempted=false, mapFull=false, fullScroll=0;
 let pointers=new Map(),dragging=false,suppressClick=false,lastPointerX=0,lastPointerY=0,animationId=0;
 // Other games remain in atlas/gameRegions, only Platinum appears here.
-game.innerHTML='<option value="">Choose your game</option><option value="Platinum">Platinum</option><option value="Black">Black</option><option value="White">White</option>';
-const isUnova=()=>game.value==='Black'||game.value==='White';
+game.innerHTML='<option value="">Choose your game</option><option value="Platinum">Platinum</option><option value="Black">Black</option><option value="White">White</option><option value="Black 2">Black 2</option><option value="White 2">White 2</option>';
+const isSequel=g=>g==='Black 2'||g==='White 2';
+const isUnovaGame=g=>['Black','White','Black 2','White 2'].includes(g);
+const isUnova=()=>isUnovaGame(game.value);
+const atlasFor=g=>isSequel(g)?window.takDexB2W2:window.takDexUnovaV74;
+const unovaPlaces=g=>(atlasFor(g)?.places||[]).filter(r=>g.startsWith('Black')?r.name!=='White Forest':r.name!=='Black City');
+const unovaMachines=g=>atlasFor(g)?.machines||[];
+const sequelAlias=(name,g)=>isSequel(g)?Object.entries(window.takDexB2W2?.aliases||{}).find(([n,v])=>v&&locKey(n)===locKey(name))?.[1]||name:name;
+const unovaRoads=()=>atlasFor(game.value)?.routePaths||{};
+const mapImageFor=g=>isSequel(g)?'./unova-'+(g.startsWith('White')?'white':'black')+'-2-v74.jpg?v=74.6.1':g==='White'?'./unova-white-v78.jpg?v=74.8.3':'./unova-black-v78.jpg?v=74.8.3';
 // DEV8.2: paint Unova JPEG source pixels directly onto a high-DPI raster
 // matching the final viewport. The separate SVG keeps exact click targets,
 // markers and label positions. SVG <image> remains as a safe loading fallback.
 const td82BitmapImages=Object.create(null);
 let td82BitmapCanvas=null;
-const td82BitmapSource=()=>game.value==='White'?'./unova-white-v78.jpg?v=74.8.3':'./unova-black-v78.jpg?v=74.8.3';
+const td82BitmapSource=()=>mapImageFor(game.value);
 function td82PaintMapBitmap(){
  if(!td82BitmapCanvas||!td82BitmapCanvas.isConnected||!isUnova())return;
  const img=td82BitmapImages[td82BitmapSource()];
@@ -147,10 +156,10 @@ function td82PaintMapBitmap(){
  // Invert the exact mapTransform() applied to the interactive SVG layer,
  // then sample that visible source rectangle from the original full-size JPEG.
  const tx=CX*(1-zoom)+panX,ty=CY*(1-zoom)+panY;
- const srcW=img.naturalWidth/zoom,srcH=img.naturalHeight/zoom;
- const srcX=Math.max(0,Math.min(img.naturalWidth-srcW,-tx/zoom/MAP_W*img.naturalWidth));
- const srcY=Math.max(0,Math.min(img.naturalHeight-srcH,-ty/zoom/MAP_H*img.naturalHeight));
- ctx.drawImage(img,srcX,srcY,srcW,srcH,0,0,w,h);
+ const scale=(mapFull?Math.max:Math.min)(area.width/MAP_W,area.height/MAP_H)||1;const dx=(area.width-MAP_W*scale)/2,dy=(area.height-MAP_H*scale)/2;
+ ctx.fillStyle=getComputedStyle(canvas).backgroundColor||'#101216';ctx.fillRect(0,0,w,h);
+ ctx.save();ctx.scale(w/area.width,h/area.height);ctx.beginPath();ctx.rect(mapFull?0:dx,mapFull?0:dy,mapFull?area.width:MAP_W*scale,mapFull?area.height:MAP_H*scale);ctx.clip();
+ ctx.drawImage(img,dx+tx*scale,dy+ty*scale,MAP_W*zoom*scale,MAP_H*zoom*scale);ctx.restore();
  td82BitmapCanvas.dataset.ready='true';
 }
 function td82InstallMapBitmap(){
@@ -167,24 +176,26 @@ function td82InstallMapBitmap(){
  }
  td82PaintMapBitmap();
 }
-if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>td82PaintMapBitmap()).observe(canvas);
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{clampPan();updateViewport()}).observe(canvas);
 else window.addEventListener('resize',td82PaintMapBitmap,{passive:true});
 const supported=()=>game.value==='Platinum'||isUnova();
-function applyRegions(){region.value=game.value==='Platinum'?'sinnoh':isUnova()?'unova':'';MAP_W=isUnova()?1400:1254;MAP_H=isUnova()?1078:1254;CX=MAP_W/2;CY=MAP_H/2;canvas.classList.toggle('td74-unova-canvas',isUnova());if(regionName)regionName.textContent=region.value==='sinnoh'?'Sinnoh':region.value==='unova'?'Unova':'Choose a game';}
+function applyRegions(){region.value=game.value==='Platinum'?'sinnoh':isUnova()?'unova':'';MAP_W=isUnova()?1400:1254;MAP_H=isSequel(game.value)?1400*3579/4469:isUnova()?1078:1254;CX=MAP_W/2;CY=MAP_H/2;canvas.classList.toggle('td74-unova-canvas',isUnova());canvas.classList.toggle('td61-sequel-canvas',isSequel(game.value));if(regionName)regionName.textContent=region.value==='sinnoh'?'Sinnoh':region.value==='unova'?'Unova':'Choose a game';}
 function isTutor(place){return !!window.takDexTutorV73?.at(game.value,place)?.length;}
 function categoryFor(row){return isTutor(row.name)?'tutor':row.kind||'landmark';}
 function matched(row){return filter.value==='all'||categoryFor(row)===filter.value;}
 function getRow(name){const key=locKey(name);return available.find(r=>locKey(r.name)===key)||null;}
 function resetViewport(){stopAnimation();zoom=1;panX=0;panY=0;}
-function clampPan(){panX=Math.max(-CX*(zoom-1),Math.min(CX*(zoom-1),panX));panY=Math.max(-CY*(zoom-1),Math.min(CY*(zoom-1),panY));}
+function mapGeometry(){const b=(canvas.querySelector('svg')||canvas).getBoundingClientRect();const s=(mapFull?Math.max:Math.min)(b.width/MAP_W,b.height/MAP_H)||1;return {b,s};}
+function panLimits(z){const {b,s}=mapGeometry();return {x:Math.max(0,CX*z-(mapFull&&b.width?b.width/s/2:CX)),y:Math.max(0,CY*z-(mapFull&&b.height?b.height/s/2:CY))};}
+function clampPan(){const lim=panLimits(zoom);panX=Math.max(-lim.x,Math.min(lim.x,panX));panY=Math.max(-lim.y,Math.min(lim.y,panY));}
 function mapTransform(){return `translate(${(CX*(1-zoom)+panX).toFixed(3)},${(CY*(1-zoom)+panY).toFixed(3)}) scale(${zoom.toFixed(5)})`;}
-function updateViewport(){const el=canvas.querySelector('#td73MapLayer');if(el)el.setAttribute('transform',mapTransform());
+function updateViewport(){const svg=canvas.querySelector('svg');if(svg)svg.setAttribute('preserveAspectRatio',mapFull?'xMidYMid slice':'xMidYMid meet');clampPan();const el=canvas.querySelector('#td73MapLayer');if(el)el.setAttribute('transform',mapTransform());
  const focus=canvas.querySelector('#td78MapFocusLabel');if(focus&&isUnova()){
   const row=available.find(r=>locKey(r.name)===selected);
-  if(row&&Number.isFinite(row.x)&&Number.isFinite(row.y)){
+  if(row&&row.kind!=='route'&&Number.isFinite(row.x)&&Number.isFinite(row.y)){
    // Match the same geometrical center used by route framing. The label must
    // remain at the focused destination, not at a separate legacy route pin.
-   const routePoints=row.kind==='route'?window.takDexUnovaV74?.routePaths?.[selected]:null;
+   const routePoints=row.kind==='route'?unovaRoads()?.[selected]:null;
    const anchor=routePoints?.length?{
     x:(Math.min(...routePoints.map(p=>p[0]))+Math.max(...routePoints.map(p=>p[0])))/2,
     y:(Math.min(...routePoints.map(p=>p[1]))+Math.max(...routePoints.map(p=>p[1])))/2
@@ -199,8 +210,8 @@ function updateViewport(){const el=canvas.querySelector('#td73MapLayer');if(el)e
 function stopAnimation(){if(animationId){cancelAnimationFrame(animationId);animationId=0;}}
 function moveViewport(newZoom,newPanX,newPanY,smooth=true){
  stopAnimation();const z=Math.max(1,Math.min(isUnova()?14:4.4,newZoom));
- const px=Math.max(-CX*(z-1),Math.min(CX*(z-1),newPanX));
- const py=Math.max(-CY*(z-1),Math.min(CY*(z-1),newPanY));
+ const lim=panLimits(z);const px=Math.max(-lim.x,Math.min(lim.x,newPanX));
+ const py=Math.max(-lim.y,Math.min(lim.y,newPanY));
  if(!smooth||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches){zoom=z;panX=px;panY=py;updateViewport();return;}
  const start=performance.now(),from=[zoom,panX,panY];
  const tick=now=>{let t=Math.min(1,(now-start)/350);t=1-Math.pow(1-t,3);
@@ -210,7 +221,7 @@ function moveViewport(newZoom,newPanX,newPanY,smooth=true){
 }
 function focusPoint(x,y,z=2.35,smooth=true){moveViewport(z,z*(CX-x),z*(CY-y),smooth);}
 function focusRoute(name){
- const key=locKey(name),pts=(isUnova()?window.takDexUnovaV74?.routePaths:paths)?.[key];
+ const key=locKey(name),pts=(isUnova()?unovaRoads():paths)?.[key];
  if(!pts?.length){const row=getRow(name);if(row)focusPoint(row.x,row.y,isUnova()?8:2.6);return;}
  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
  const x=(Math.min(...xs)+Math.max(...xs))/2,y=(Math.min(...ys)+Math.max(...ys))/2;
@@ -236,39 +247,38 @@ function showSelection(){
  listScrollToSelected();
 }
 function hideSuggestions(){if(suggestions)suggestions.hidden=true;search.setAttribute('aria-expanded','false');}
+// Verified supplementary encounters: Bulbapedia Unova Route 8, Serebii Sigilyph locations.
+// Local records are used when the downloaded catalog is missing a matching location.
+function localEncounters(g){if(!isUnovaGame(g))return [];const seq=isSequel(g),black=g.startsWith('Black'),r='Route 8',out=[];const add=(name,method,min,max,conditions=[],place=r)=>out.push({name,place,records:[[place,method,min,max,conditions]]});const warm=['Spring','Summer','Autumn'];if(seq){add('croagunk','puddle',55,56,warm);add('palpitoad','puddle',54,57,warm);add('karrablast','puddle',black?57:54,black?57:54,warm);add('shelmet','puddle',black?54:57,black?54:57,warm);add('stunfisk','puddle',55,56,warm);add('palpitoad','surf',45,60);add('stunfisk','surf',45,60);add('palpitoad','surf-spots',45,60);add('seismitoad','surf-spots',60,60);add('stunfisk','surf-spots',45,60);add('barboach','super-rod',45,60);add('stunfisk','super-rod',45,60);add('barboach','super-rod-spots',45,60);add('whiscash','super-rod-spots',60,60);add('stunfisk','super-rod-spots',45,60);add('quagsire','puddle',40,55,[...warm,'Swarm']);}else{add('palpitoad','puddle',30,33,warm);add('shelmet','puddle',30,33,warm);add('stunfisk','puddle',31,32,warm);add('stunfisk','surf',15,35);add('seismitoad','surf-spots',15,40);add('stunfisk','surf-spots',15,40);add('barboach','super-rod',35,55);add('stunfisk','super-rod',35,55);add('barboach','super-rod-spots',35,60);add('whiscash','super-rod-spots',35,70);add('stunfisk','super-rod-spots',35,60);add('croagunk','puddle',15,55,[...warm,'Swarm']);}add('sigilyph','walk',seq?19:20,seq?19:20,[],'Desert Resort');
+// Verified supplemental B2W2 encounter tables: https://bulbapedia.bulbagarden.net/wiki/Unova_Route_19 , /Unova_Route_20 , /Floccesy_Ranch. Preserve version-specific stripe conditions and encounter methods.
+if(seq){const land=(place,method,rows)=>rows.forEach(([n,min,max])=>add(n,method,min,max,[],place));const water=(place,min=5)=>{add('basculin','surf',min,15,[black?'Red-striped':'Blue-striped'],place);add('basculin','surf-spots',5,15,[black?'Blue-striped':'Red-striped'],place);add('poliwag','super-rod',40,70,[],place);add('basculin','super-rod',40,60,[black?'Red-striped':'Blue-striped'],place);add('poliwhirl','super-rod-spots',40,70,[],place);add('politoed','super-rod-spots',50,70,[],place);add('basculin','super-rod-spots',40,60,[black?'Blue-striped':'Red-striped'],place)};
+land('Route 19','walk',[['patrat',2,4],['purrloin',2,4]]);land('Route 19','rustling-grass',[['patrat',2,4]]);water('Route 19');
+land('Route 20','walk',[['sunkern',2,4],['patrat',2,3],['purrloin',2,4],['pidove',2,4],['sewaddle',2,4]]);land('Route 20','dark-grass',[['sunkern',9,11],['patrat',10,10],['purrloin',10,11],['pidove',9,10],['sewaddle',10,11],['venipede',10,10]]);land('Route 20','rustling-grass',[['dunsparce',3,3],['audino',2,4]]);water('Route 20',7);add('azurill','surf',5,15,[],'Route 20');land('Route 20','surf-spots',[['marill',5,15],['azumarill',5,15]]);add(black?'sudowoodo':'mr-mime','walk',40,55,['Swarm'],'Route 20');
+land('Floccesy Ranch','walk',[['psyduck',5,5],['mareep',5,5],['azurill',5,5],['riolu',4,7],['patrat',5,5],['lillipup',4,7],['pidove',7,7]]);land('Floccesy Ranch','rustling-grass',[['dunsparce',5,5],['audino',4,7]]);water('Floccesy Ranch');add('azurill','surf',5,15,[],'Floccesy Ranch');land('Floccesy Ranch','surf-spots',[['marill',5,15],['azumarill',5,15]]);land('Floccesy Ranch','hidden-grotto',[['marill',10,15],['dunsparce',10,15],['herdier',10,15]]);
+}return out;}
+function placeMatches(raw,name){const a=locKey(String(raw||'').split(' · ')[0]),k=locKey(name);if(a===k||a.startsWith(k+'-'))return true;return locKey(sequelAlias(a,activeMapGame))===k;}
+function encounterRowsFor(place,pack=encounterPack){const found=[];for(const mon of pack?.mons||[]){const rec=(pack.entries?.[mon[0]]||[]).filter(r=>placeMatches(r[0],place));if(rec.length)found.push({name:mon[1],records:rec});}return found;}
+function mergeLocal(found,place,g){const m=new Map(found.map(x=>[x.name,x]));const existing=new Set(m.keys());for(const x of localEncounters(g).filter(r=>r.place===place)){if(existing.has(x.name))continue;if(!m.has(x.name))m.set(x.name,{name:x.name,records:[]});m.get(x.name).records.push(...x.records);}return [...m.values()];}
 function loadEncounters(){
- if(encounterPack||encounterLoading)return encounterLoading;
- const requested=activeMapGame,revision=activeMapRevision;
- encounterLoading=window.takDexEncounterV55?.cached?.(requested).then(p=>{
-  if(revision!==activeMapRevision||requested!==activeMapGame)return;
-  encounterPack=p?.hasSource?p:null;
-  if(search.value&&page.hidden===false)showSuggestions();
- }).catch(()=>{}).finally(()=>{if(requested===activeMapGame&&revision===activeMapRevision)encounterLoading=null;});
- return encounterLoading;
+ if(encounterPack||encounterLoading||encounterAttempted)return encounterLoading;
+ const requested=activeMapGame,revision=activeMapRevision;encounterAttempted=true;
+ encounterLoading=(async()=>{let p=await window.takDexEncounterV55?.get?.(requested);if(revision!==activeMapRevision||requested!==activeMapGame)return;encounterPack=p?.hasSource?p:null;const row=selected&&getRow(selected),host=$('td73-location-record');if(row&&host&&encounterPack&&row.kind!=='gym'){const records=encounterRowsFor(row.name);if(records.length)host.innerHTML=encounterHTML(mergeLocal(records,row.name,requested));}if(search.value&&page.hidden===false)showSuggestions();return encounterPack;})().catch(()=>null).finally(()=>{if(requested===activeMapGame&&revision===activeMapRevision)encounterLoading=null;});return encounterLoading;
 }
-function encounteredPlaces(mon){
- if(!encounterPack)return [];
- const records=encounterPack.entries?.[mon[0]]||[],out=new Map();
- for(const row of records){const place=normalize(row[0]?.split(' · ')[0]||'');
-  const loc=available.slice().sort((a,b)=>b.name.length-a.name.length).find(r=>{const k=locKey(r.name);return place===k||place.startsWith(k+'-')||place.endsWith('-'+k)||place.includes('-'+k+'-');});
-  if(!loc)continue;
-  const method=pretty(row[1]||'Encounter'),lvl=Number(row[2]);
-  const desc=method+(Number.isFinite(lvl)?' · Lv '+lvl+(row[3]!==row[2]?'–'+row[3]:''):'')+(row[4]?.length?' · '+row[4].map(pretty).join(', '):'');
-  if(!out.has(loc.name))out.set(loc.name,{name:loc.name,detail:desc});
- }
- return [...out.values()];
-}
+function encounteredPlaces(mon){const records=encounterPack?.entries?.[mon[0]]||[],out=new Map();for(const row of records){const loc=available.filter(r=>r.kind!=='gym').slice().sort((a,b)=>b.name.length-a.name.length).find(r=>placeMatches(row[0],r.name));if(!loc)continue;const detail=recordDescription(row);if(!out.has(loc.name))out.set(loc.name,{name:loc.name,detail});}for(const local of localEncounters(activeMapGame).filter(x=>x.name===mon[1]))if(!out.has(local.place)&&getRow(local.place))out.set(local.place,{name:local.place,detail:recordDescription(local.records[0])});return [...out.values()];}
+function recordDescription(r){const sub=String(r[0]||'').split(' · ')[1],lvl=Number(r[2]);return (sub?pretty(sub)+' · ':'')+pretty(r[1]||'Encounter')+(Number.isFinite(lvl)&&lvl>0?' · Lv '+lvl+(r[3]!==r[2]?'–'+r[3]:''):'')+(r[4]?.length?' · '+r[4].map(pretty).join(', '):'');}
+function encounterHTML(found){return found.length?'<details class="td63-map-encounters"><summary>Wild encounters ('+found.length+')</summary>'+found.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`<div><button type="button" class="td73-tutor-move" data-td63-map-mon="${escape(x.name)}">${escape(pretty(x.name))}</button><small>${[...new Set(x.records.map(recordDescription))].map(escape).join(' · ')}</small></div>`).join('')+'</details>':'';}
 function mapAcquisition(raw,requestedGame=activeMapGame){
  const text=String(raw||'').toLowerCase();
  const lookup=String(requestedGame||'');
- const places=lookup==='Platinum'?rows.sinnoh:lookup==='Black'||lookup==='White'?(window.takDexUnovaV74?.places||[]).filter(r=>lookup==='Black'?r.name!=='White Forest':r.name!=='Black City'):[];
+ const places=lookup==='Platinum'?rows.sinnoh:isUnovaGame(lookup)?unovaPlaces(lookup):[];
  const rowAt=name=>places.find(p=>locKey(p.name)===locKey(name));
  // Machine names must resolve inside the requested game's TM/HM catalog.
  // Never use the machine location associated with the previously rendered map.
  const slug=normalize(text),guide=window.takDexMachineGuideV65;
- const entries=lookup==='Platinum'?guide?.platinumMachines?.()||[]:lookup==='Black'||lookup==='White'?window.takDexUnovaV74?.machines||[]:[];
+ const entries=lookup==='Platinum'?guide?.platinumMachines?.()||[]:isUnovaGame(lookup)?unovaMachines(lookup):[];
  const hit=entries.find(m=>normalize(m.move)===slug||normalize(m.item)===slug||normalize(m.item+' '+m.move)===slug);
  if(hit){
+  if(isSequel(lookup)&&hit.place&&rowAt(hit.place))return hit.place;
   const rawLocation=lookup==='Platinum'?guide?.label?.('Platinum',hit.item):hit.location;
   if(rawLocation){
    const fragments=String(rawLocation).split(';');
@@ -288,6 +298,7 @@ function mapAcquisition(raw,requestedGame=activeMapGame){
   ['amity square','Hearthome City'],['ruin maniac tunnel','Route 214'],
   ['prof. rowan','Sandgem Town'],['et erna condominiums','Eterna City'],
  ];
+ if(isSequel(lookup)){for(const [a,b] of Object.entries(window.takDexB2W2?.aliases||{})){if(b&&text.includes(a.toLowerCase())&&rowAt(b))return b;}}
  const direct=places.filter(r=>r.kind!=='gym'&&r.name&&text.includes(r.name.toLowerCase())).sort((a,b)=>b.name.length-a.name.length);
  if(direct.length)return direct[0].name;
  for(const [term,place] of aliases){if(text.includes(term)&&rowAt(place))return place;}
@@ -295,7 +306,7 @@ function mapAcquisition(raw,requestedGame=activeMapGame){
  return null;
 }
 function mapMachineEntries(){
- if(isUnova()){return (window.takDexUnovaV74?.machines||[]).map(m=>{const place=mapAcquisition(m.place||m.location);return place?{name:m.item.toUpperCase()+' · '+pretty(m.move)+' — '+place,place,detail:m.location,kind:'item',aliases:'tm hm machine '+m.item+' '+m.move}:null}).filter(Boolean);}
+ if(isUnova()){return unovaMachines(game.value).map(m=>{const place=isSequel(game.value)&&!m.place?null:mapAcquisition(m.place||m.location);return place?{name:m.item.toUpperCase()+' · '+pretty(m.move)+' — '+place,place,detail:m.location,kind:'item',aliases:'tm hm machine '+m.item+' '+m.move}:null}).filter(Boolean);}
  const guide=window.takDexMachineGuideV65;
  const destinations=guide?.allLocations?.('Platinum')||[];
  const lookup=new Map((guide?.platinumMachines?.()||mapMachines).map(m=>[String(m.item).toLowerCase(),String(m.move||'')]));
@@ -320,23 +331,24 @@ function loadMapMachines(){
  })().catch(()=>{}).finally(()=>{mapMachineLoading=null;});
  return mapMachineLoading;
 }
+function extraLocations(g){const a=[];const add=(name,place,detail,kind,aliases='')=>a.push({name,place,detail,kind,aliases});if(isUnovaGame(g)){for(const place of ['Driftveil City','Opelucid City','Route 9','Pokémon League',...(isSequel(g)?['Icirrus City','Lentimas Town','Victory Road']:[])])add('Dusk Ball',place,place==='Route 9'?'Purchase · Shopping Mall Nine':place==='Icirrus City'?'Purchase · postgame':'Purchase · shop','item','pokeball dusk ball shop');add('Dusk Ball','Striaton City',isSequel(g)?'Found item · postgame':'Found item','item','pokeball dusk ball');if(isSequel(g)){add('Dusk Ball','Mistralton Cave','Found item · 1F · Surf to enter and Strength to reach','item','pokeball dusk ball');add('Dusk Ball','Twist Mountain','Found item · spring, summer or autumn · postgame','item','pokeball dusk ball');}if(isSequel(g)){add('Potion','Route 19','Near the ledge shortcut','item');add('Rocky Helmet','Castelia City','Relic Passage · east chamber via Castelia Sewers · Strength required','item','held item rocky helmet relic passage');add('Amulet Coin','Castelia City','Building on street toward Route 4 · NPC gift','item','held item money');add('Rare Candy','Castelia City','Oceanfront Road · Harlequin Hunt reward','item','rare candy level');add('Yellow Shard','Mistralton Cave','1F · Strength required','item','shard tutor');add('Blue Shard','Mistralton Cave','2F · northeast of entrance','item','shard tutor');add(g==='Black 2'?'Toxic Orb':'Flame Orb','Reversal Mountain','B1F near entrance to 1F · version-specific','item','held item orb');add(g==='Black 2'?'Magmarizer':'Electirizer','Route 21','Plasma Frigate · B1F '+(g==='Black 2'?'northeast room':'southwest room')+' · story boarding after badge 8','item','evolution held item plasma frigate');add('Oran Berry','Route 19','Alder gift on second meeting','item');add('Water Stone','Route 19','Northern area · Surf required (normally after badge 5)','item');add('Nest Ball','Route 19','Northeast · Surf required (normally after badge 5)','item');add('Expert Belt','Route 19','Hidden · Surf required (normally after badge 5)','item');add('Alder','Route 19','Early story meeting','story');add('Hugh','Floccesy Ranch','Rival battle · starter Lv 8','story','rival starter battle');add('Move Deleter','Pokémon World Tournament','Service stall','service','forget remove hm moves npc');add('Move Reminder','Pokémon World Tournament','Heart Scale service','service','relearner relearn remember move npc');add('Cheren · HM Surf','Route 6','After the Plasma Frigate incident at the PWT · after badge 5','story','surf hm story cheren');}else{add('Bianca · rival battle','Route 8','After receiving the Light / Dark Stone','story','bianca rival story battle');add('Parasol Lady','Route 8','Weather rocks by time of day','npc','heat rock damp rock smooth rock icy rock weather npc');add('Professor Juniper · starter','Nuvema Town','Starter Pokémon at the beginning of the game','story','starter snivy tepig oshawott story');add('Looker · Super Rod','Nuvema Town','Postgame gift','npc','fishing super rod looker story');}}return a.map(x=>({...x,place:getRow(x.place)?.name||mapAcquisition(x.place)})).filter(x=>x.place&&getRow(x.place));}
 function searchIndex(){
  const entries=available.map(r=>({name:r.name,place:r.name,detail:r.kind==='route'?'Route':r.kind==='town'?'Town / city':r.kind==='gym'?'Gym & Badge':'Landmark',kind:r.kind,aliases:''}));
- for(const svc of (isUnova()?unovaServices:mapServices))entries.push(svc);
+ for(const svc of (isSequel(game.value)?[]:isUnova()?unovaServices:mapServices))entries.push(svc);entries.push(...extraLocations(game.value));
  const tutor=window.takDexTutorV73;
- if(tutor&&!isUnova())for(const place of available){for(const m of tutor.at(game.value,place.name))entries.push({name:pretty(m.move)+' · Move Tutor',place:place.name,detail:m.detail+' · '+m.cost,kind:'tutor',aliases:'move '+m.move+' shard '+m.place});}
+ if(tutor)for(const place of available){for(const m of tutor.at(game.value,place.name))entries.push({name:pretty(m.move)+' · Move Tutor',place:place.name,detail:m.detail+' · '+m.cost,kind:'tutor',aliases:'move '+m.move+' shard '+m.place});}
  // Search all mapped TM/HM acquisitions. The full move names come from
  // the selected game's offline pack or its version-specific machine index.
  entries.push(...mapMachineEntries());
- if(encounterPack){for(const mon of encounterPack.mons||[]){const places=encounteredPlaces(mon);if(!places.length)continue;
+ {const mons=new Map((encounterPack?.mons||[]).map(x=>[x[1],x]));for(const x of localEncounters(game.value))if(!mons.has(x.name))mons.set(x.name,[0,x.name]);for(const mon of mons.values()){const places=encounteredPlaces(mon);if(!places.length)continue;
   entries.push({name:pretty(mon[1])+' · '+places.length+' encounter location'+(places.length===1?'':'s'),place:places[0].name,detail:places.map(p=>p.name).join(' · '),kind:'encounter',aliases:mon[1]+' encounter catch find pokemon',encounters:places});
  }}
  return entries;
 }
 function showSuggestions(){
  if(!suggestions)return;loadEncounters();
- const q=normalize(search.value),all=searchIndex(),hits=(q?all.filter(r=>normalize(r.name+' '+r.place+' '+r.aliases).includes(q)):all.filter(r=>r.kind==='route'||r.kind==='town')).slice(0,q?25:12);
- suggestions.innerHTML=hits.length?hits.map((r,i)=>`<button type="button" role="option" data-map-result="${i}" aria-selected="false"><span>${escape(r.name)}</span><small>${escape(r.detail)}</small></button>`).join(''):'<p class="note">No verified locations match. Try a route, city, item, or move.</p>';
+ const q=normalize(search.value),all=searchIndex(),tokens=q.split('-').filter(Boolean),hits=(q?all.filter(r=>{const hay=normalize(r.name+' '+r.place+' '+r.aliases+' '+r.kind);return hay.includes(q)||tokens.every(t=>hay.includes(t))}).sort((a,b)=>Number(normalize(b.name).startsWith(q))-Number(normalize(a.name).startsWith(q))):all.filter(r=>r.kind==='route'||r.kind==='town')).slice(0,q?40:12);
+ suggestions.innerHTML=hits.length?hits.map((r,i)=>`<button type="button" role="option" data-map-result="${i}" aria-selected="false"><span>${escape(r.name)}</span><small>${escape(r.place!==r.name&&!r.encounters&&!r.name.includes(r.place)?r.place+' · '+r.detail:r.detail)}</small></button>`).join(''):'<p class="note">No verified locations match. Try a route, city, item, or move.</p>';
  activeSearch=hits;suggestions.hidden=false;search.setAttribute('aria-expanded','true');
 }
 async function selectSearch(index){const r=activeSearch?.[index];if(!r)return;
@@ -347,7 +359,7 @@ async function selectSearch(index){const r=activeSearch?.[index];if(!r)return;
 }
 function display(){
  if(activeMapGame!==game.value){loadDirectory();return;}
- if(!supported()){noGame();$('mapsCount').textContent='Choose Platinum, Black or White.';return;}
+ if(!supported()){noGame();$('mapsCount').textContent='Choose Platinum, Black, White, Black 2 or White 2.';return;}
  const displayed=available.filter(matched),plotted=available.filter(r=>Number.isFinite(r.x)&&Number.isFinite(r.y));
  $('mapsCount').textContent=displayed.length+' locations · '+plotted.filter(p=>p.kind==='route').length+' routes';
  list.innerHTML=displayed.length?displayed.slice().sort((a,b)=>{
@@ -357,7 +369,7 @@ function display(){
  // Restore the original route-shaped click targets, but NEVER draw route dots or highlight strokes.
  // The SVG hit strokes themselves have no visible paint; map/list selection remains synchronized.
  const mtCoronetHit=isUnova()?'':`<g class="td73-map-mountain-hit" data-kind="landmark" data-map-place="Mt. Coronet" tabindex="0" role="button" aria-label="Mt. Coronet mountain range" aria-pressed="${selected==='mount-coronet'}"><title>Mt. Coronet</title><path class="td73-mountain-zone" d="M 536,439 L 566,439 L 581,462 L 578,487 L 594,510 L 616,547 L 637,580 L 630,609 L 631,638 L 641,674 L 634,703 L 617,735 L 616,771 L 604,805 L 553,819 L 528,799 L 527,769 L 541,735 L 555,715 L 549,683 L 529,651 L 544,613 L 535,573 L 543,547 L 530,512 L 532,478 Z"/></g>`;
- const mapRoads=isUnova()?window.takDexUnovaV74?.routePaths||{}:paths;
+ const mapRoads=isUnova()?unovaRoads():paths;
  const routes=plotted.filter(r=>r.kind==='route'&&mapRoads[locKey(r.name)]?.length>1).map(r=>{
   const chosen=locKey(r.name)===selected;
   const points=mapRoads[locKey(r.name)].map(p=>p.join(',')).join(' ');
@@ -382,13 +394,13 @@ const townLabels=''; // The supplied Black/White maps already contain precise pr
 const encounterPins=encounterSet.map(r=>getRow(r.name)).filter(Boolean).map(r=>`<g transform="translate(${r.x},${r.y})" class="td74-encounter-ring" data-map-place="${escape(r.name)}"><circle r="27"/></g>`).join('');
  // Selected destinations are indicated by their highlight and details panel.
  // No extra name callout: fixed-width bubbles clipped long labels and duplicated town names.
- canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}"><image class="td82-map-fallback" href="${isUnova()?(activeMapGame==='White'?'./unova-white-v78.jpg?v=74.8.3':'./unova-black-v78.jpg?v=74.8.3'):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/><g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
+ canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}"><image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/><g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
  td82InstallMapBitmap();
  updateViewport();
 }
 async function loadDirectory(){
  activeMapGame=game.value; ++activeMapRevision;applyRegions();
- ++detailRequest;selected='';encounterSet=[];encounterPack=null;encounterLoading=null;mapMachines=[];resetViewport();available=game.value==='Platinum'?[...rows.sinnoh]:isUnova()?(window.takDexUnovaV74?.places||[]).filter(r=>game.value==='Black'?r.name!=='White Forest':r.name!=='Black City'):[];
+ ++detailRequest;selected='';encounterSet=[];encounterPack=null;encounterLoading=null;encounterAttempted=false;mapMachines=[];resetViewport();available=game.value==='Platinum'?[...rows.sinnoh]:isUnova()?unovaPlaces(game.value):[];
  if(layout)layout.hidden=!supported();
  if(!supported()){
   list.replaceChildren();$('mapsCount').textContent='';$('mapsHeading').textContent='Region map';details.replaceChildren();noGame();return;
@@ -396,6 +408,7 @@ async function loadDirectory(){
  $('mapsHeading').textContent=isUnova()?'Unova · '+game.value:'Sinnoh · Platinum';details.innerHTML='<h3>Select a location</h3>';loadEncounters();
  display();
 }
+function locationExtras(name){const machines=mapMachineEntries().filter(x=>locKey(x.place)===locKey(name));const extras=[...(isSequel(game.value)?[]:isUnova()?unovaServices:mapServices),...extraLocations(game.value)].filter(x=>locKey(x.place)===locKey(name));const guide=game.value==='Platinum'?window.takDexMachineGuideV65?.platinumMachines?.()||[]:unovaMachines(game.value);return (machines.length?'<details><summary>TM / HM ('+machines.length+')</summary>'+machines.map(m=>{const item=m.name.split(' · ')[0],move=guide.find(x=>x.item.toUpperCase()===item)?.move;return `<div>${move?`<button type="button" class="td73-tutor-move" data-td73-move-checker="${escape(move)}">${escape(m.name.split(' — ')[0])}</button>`:escape(m.name)}<small>${escape(m.detail)}</small></div>`}).join('')+'</details>':'')+(extras.length?'<details><summary>Items, NPCs & services</summary>'+extras.map(x=>`<div><strong>${escape(x.name)}</strong><small>${escape(x.detail)}</small></div>`).join('')+'</details>':'');}
 function tutorList(name){return (window.takDexTutorV73?.at(game.value,name)||[]).slice(0,50);}
 function viewTutorRows(tutors){return tutors.length?'<details class="td74-tutor-disclosure"><summary>Move Tutor moves ('+tutors.length+')</summary><div class="td73-tutor-list">'+tutors.map(t=>`<div><button type="button" class="td73-tutor-move" data-td73-move-checker="${escape(t.move)}">${escape(pretty(t.move))}</button> · ${escape(t.cost)}${t.condition?' · '+escape(t.condition):''}</div>`).join('')+'</div></details>':'';}
 async function openLocation(name,origin='user'){
@@ -414,26 +427,25 @@ async function openLocation(name,origin='user'){
  }else if(row.kind==='route')focusRoute(row.name);
  else focusPoint(row.x,row.y,isUnova()?(row.kind==='gym'?10:row.kind==='town'?7.4:9):2.5);
  const tutors=tutorList(row.name),mine=++detailRequest,detailGame=activeMapGame;
- const gymDetail=row.kind==='gym'?`<p><b>Gym leader / badge:</b> ${escape(gymNames[selected]||'Gym Badge')}</p>`:'';
- const trainer=row.kind==='gym'?(gymNames[selected]||'').split(' · ')[0]:'';
+ const sequelGymNames={'aspertia-gym-basic-badge':'Cheren · Basic Badge','virbank-gym-toxic-badge':'Roxie · Toxic Badge','castelia-gym-insect-badge':'Burgh · Insect Badge','nimbasa-gym-bolt-badge':'Elesa · Bolt Badge','driftveil-gym-quake-badge':'Clay · Quake Badge','mistralton-gym-jet-badge':'Skyla · Jet Badge','opelucid-gym-legend-badge':'Drayden · Legend Badge','humilau-gym-wave-badge':'Marlon · Wave Badge'};
+ const gymLabel=(isSequel(game.value)?sequelGymNames:gymNames)[selected]||'';
+ const gymDetail=row.kind==='gym'?`<p><b>Gym leader / badge:</b> ${escape(gymLabel||'Gym Badge')}</p>`:'';
+ const trainer=row.kind==='gym'?gymLabel.split(' · ')[0]:'';
  const gymButton=trainer&&!trainer.includes('/')?`<button type="button" class="td73-gym-battle-button" data-td73-gym-trainer="${escape(trainer)}">⚔ Open in 6v6 Battle</button>`:'';
- details.innerHTML=`<h3>${escape(row.name)}</h3>${gymDetail}${gymButton}${tutors.length?`<p><b>Move Tutor:</b> ${escape(tutors[0].detail)}</p>`:''}${viewTutorRows(tutors)}<div id="td73-location-record"></div>`;
- const status=$('td73-location-record');
- if(navigator.onLine===false)return;
- try{
-  const n=row.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-  const data=await api('location/'+encodeURIComponent(n));
-  if(mine!==detailRequest||detailGame!==activeMapGame||!status?.isConnected)return;
-  const areas=(data.areas||[]).map(a=>({name:pretty(a.name),apiName:a.name}));
-  status.innerHTML=areas.length?`<p><b>Subareas:</b> ${areas.slice(0,14).map(a=>escape(a.name)).join(' · ')}${areas.length>14?' …':''}</p>`:'';
-  if(areas.length){const area=await api('location-area/'+encodeURIComponent(areas[0].apiName));if(mine!==detailRequest||detailGame!==activeMapGame||!status?.isConnected)return;
-   const names=(area.pokemon_encounters||[]).filter(p=>(p.version_details||[]).some(v=>v.version?.name===game.value.toLowerCase())).map(x=>pretty(x.pokemon.name));
-   if(names.length)status.insertAdjacentHTML('beforeend',`<p><b>Recorded wild encounters (${escape(areas[0].name)}):</b> ${names.slice(0,12).map(escape).join(' · ')}${names.length>12?' …':''}</p>`);
-  }
- }catch(e){if(mine===detailRequest&&detailGame===activeMapGame&&status?.isConnected)status.textContent='';}
+ details.innerHTML=`<h3>${escape(row.name)}</h3>${gymDetail}${gymButton}${tutors.length?`<p><b>Move Tutor:</b> ${escape(tutors[0].detail)}</p>`:''}${viewTutorRows(tutors)}${locationExtras(row.name)}<div id="td73-location-record"></div>`;
+ const status=$('td73-location-record'),valid=()=>mine===detailRequest&&detailGame===activeMapGame&&status?.isConnected;
+ const initial=mergeLocal(encounterRowsFor(row.name),row.name,detailGame);status.innerHTML=encounterHTML(initial)||'<small>Checking encounter records…</small>';
+ if(row.kind==='gym'){status.innerHTML='';return;}
+ try{const pack=encounterPack||await window.takDexEncounterV55?.cached?.(detailGame);if(!valid())return;const cached=encounterRowsFor(row.name,pack);if(cached.length){status.innerHTML=encounterHTML(mergeLocal(cached,row.name,detailGame));return;}}catch{}
+ if(navigator.onLine===false){if(valid()){if(!initial.length)status.textContent='Encounter data not downloaded for this location.';else status.insertAdjacentHTML('beforeend','<small>Local records · full coverage unverified.</small>');}return;}
+ try{const key=locKey(row.name),prefix=isUnovaGame(detailGame)?'unova':'sinnoh';let data=null;for(const n of [prefix+'-'+key,key]){try{const d=await api('location/'+encodeURIComponent(n));if(d?.region?.name&&d.region.name!==prefix)continue;if(Array.isArray(d?.areas)){data=d;break;}}catch{}}if(!valid())return;const areas=data?.areas||[],version=detailGame.toLowerCase().replace(/ /g,'-'),found=new Map();let successful=0;
+ for(let i=0;i<areas.length;i+=4){const batch=areas.slice(i,i+4);await Promise.all(batch.map(async a=>{try{const area=await api('location-area/'+encodeURIComponent(a.name));if(!Array.isArray(area?.pokemon_encounters))return;successful++;for(const p of area.pokemon_encounters||[]){const vv=(p.version_details||[]).find(v=>v.version?.name===version);if(!vv)continue;let entry=found.get(p.pokemon.name);if(!entry)found.set(p.pokemon.name,entry={name:p.pokemon.name,records:[]});for(const d of vv.encounter_details||[])entry.records.push([row.name+' · '+a.name.replace((data.name||'')+'-',''),d.method?.name,d.min_level,d.max_level,(d.condition_values||[]).map(c=>c.name)]);}}catch{}}));if(!valid())return;}
+ if(!valid())return;const loaded=encounterRowsFor(row.name);const rows=mergeLocal(loaded.length?loaded:[...found.values()],row.name,detailGame);status.innerHTML=encounterHTML(rows)||(data&&areas.length&&successful===areas.length?'<small>No wild encounters recorded for this version in the checked source.</small>':'<small>Encounter records unavailable for this location.</small>');if(areas.length&&successful<areas.length)status.insertAdjacentHTML('beforeend','<small>Some subareas could not be checked.</small>');else if(rows.length&&!loaded.length&&!successful)status.insertAdjacentHTML('beforeend','<small>Local records · full coverage unverified.</small>');
+ }catch{if(valid()&&!initial.length)status.textContent='Encounter records unavailable for this location.';}
+
 }
 function setGame(g){
- const target=['Platinum','Black','White'].includes(g)?g:'';
+ const target=['Platinum','Black','White','Black 2','White 2'].includes(g)?g:'';
  if(game.value!==target||activeMapGame!==target){game.value=target;loadDirectory();}
  else if(supported()&&!canvas.querySelector('svg[data-map-game="'+target+'"]'))loadDirectory();
 }
@@ -444,7 +456,7 @@ function open(g,place){
  returnFrom={id:active?.id||'morePage',scroll:window.scrollY};
  for(const el of document.querySelectorAll('main > section'))el.hidden=el!==page;
  document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));
- if(target&&!['Platinum','Black','White'].includes(target)){
+ if(target&&!['Platinum','Black','White','Black 2','White 2'].includes(target)){
   game.value='';loadDirectory();if(layout)layout.hidden=true;
   details.innerHTML=`<h3>Interactive map not yet available</h3><p class="note">${escape(target)} map is not enabled yet.</p>`;
   window.scrollTo(0,0);return;
@@ -464,10 +476,11 @@ function open(g,place){
  window.scrollTo(0,0);
 }
 details.addEventListener('click',e=>{
+ const mon=e.target.closest('[data-td63-map-mon]');if(mon){window.takDexBattleNavigationV73?.showDex(mon.dataset.td63MapMon,'maps');return;}
  const move=e.target.closest('[data-td73-move-checker]');
- if(move){window.takDexOpenMoveFromMapsV73?.(move.dataset.td73MoveChecker,'Platinum');return;}
+ if(move){window.takDexOpenMoveFromMapsV73?.(move.dataset.td73MoveChecker,game.value);return;}
  const gym=e.target.closest('[data-td73-gym-trainer]');
- if(gym){if(window.takDexOpenGymFromMapV73?.(gym.dataset.td73GymTrainer)){
+ if(gym){if(window.takDexOpenGymFromMapV73?.(gym.dataset.td73GymTrainer,game.value)){
   gymReturnPending=true;gymReturnScroll=window.scrollY;$('backPlanner').textContent='← Maps';page.hidden=true;
  }}
 });
@@ -510,7 +523,9 @@ function zoomTo(next,px=CX,py=CY){
  const x=(px-(CX*(1-zoom)+panX))/zoom,y=(py-(CY*(1-zoom)+panY))/zoom;
  moveViewport(z,px-CX*(1-z)-x*z,py-CY*(1-z)-y*z,false);
 }
-function clientToMap(e){const b=canvas.getBoundingClientRect();return {x:(e.clientX-b.left)/b.width*MAP_W,y:(e.clientY-b.top)/b.height*MAP_H};}
+function clientToMap(e){const {b,s:scale}=mapGeometry();return {x:(e.clientX-b.left-(b.width-MAP_W*scale)/2)/scale,y:(e.clientY-b.top-(b.height-MAP_H*scale)/2)/scale};}
+function setFull(on,restoreScroll=true){if(on===mapFull)return;mapFull=on;const bar=$('mapsFullscreen');if(on){fullScroll=window.scrollY;page.classList.add('td63-map-full');document.body.classList.add('td63-map-full-body');page.scrollTop=0;}else{page.classList.remove('td63-map-full');document.body.classList.remove('td63-map-full-body');if(restoreScroll)requestAnimationFrame(()=>window.scrollTo(0,fullScroll));}bar.textContent=on?'Exit fullscreen':'Fullscreen';bar.setAttribute('aria-pressed',String(on));requestAnimationFrame(updateViewport);}
+$('mapsFullscreen').onclick=()=>setFull(!mapFull);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mapFull&&!page.hidden)setFull(false)});new MutationObserver(()=>{if(page.hidden&&mapFull)setFull(false,false)}).observe(page,{attributes:true,attributeFilter:['hidden']});
 $('mapsZoomIn').onclick=()=>zoomTo(zoom*1.35);
 $('mapsZoomOut').onclick=()=>zoomTo(zoom/1.35);
 $('mapsClearSelection').onclick=()=>{
@@ -534,12 +549,12 @@ canvas.addEventListener('pointermove',e=>{
  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(others.length){
   const other=others[0][1],d0=Math.hypot(prev.x-other.x,prev.y-other.y),d1=Math.hypot(e.clientX-other.x,e.clientY-other.y);
-  const box=canvas.getBoundingClientRect(),px=((e.clientX+other.x)/2-box.left)/box.width*MAP_W,py=((e.clientY+other.y)/2-box.height*MAP_H);
-  if(d0>4&&d1>4){zoomTo(zoom*d1/d0,px,py);dragging=true;}return;
+  const oldMid=clientToMap({clientX:(prev.x+other.x)/2,clientY:(prev.y+other.y)/2}),mid=clientToMap({clientX:(e.clientX+other.x)/2,clientY:(e.clientY+other.y)/2});
+  if(d0>4&&d1>4){const z=Math.max(1,Math.min(isUnova()?14:4.4,zoom*d1/d0)),x=(oldMid.x-CX*(1-zoom)-panX)/zoom,y=(oldMid.y-CY*(1-zoom)-panY)/zoom;moveViewport(z,mid.x-CX*(1-z)-x*z,mid.y-CY*(1-z)-y*z,false);dragging=true;}return;
  }
  const dx=e.clientX-prev.x,dy=e.clientY-prev.y;
  if(Math.hypot(e.clientX-lastPointerX,e.clientY-lastPointerY)>5&&!dragging){dragging=true;try{canvas.setPointerCapture(e.pointerId);}catch(_){} }
- if(dragging){suppressClick=true;panX+=dx*MAP_W/Math.max(1,canvas.clientWidth);panY+=dy*MAP_H/Math.max(1,canvas.clientHeight);clampPan();updateViewport();}
+ if(dragging){suppressClick=true;const {s}=mapGeometry();panX+=dx/s;panY+=dy/s;clampPan();updateViewport();}
 });
 function endPointer(e){pointers.delete(e.pointerId);if(!pointers.size)dragging=false;try{canvas.releasePointerCapture(e.pointerId);}catch(_){} }
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
@@ -548,11 +563,11 @@ document.addEventListener('click',e=>{
  if(e.target.closest('#teamsTab,#battleTab,#dexTab,#moreTab,#openPlanner,#openTM,#td56OpenCompare,#td68OpenMove,#td59OpenOffline'))page.hidden=true;
 },true);
 applyRegions();noGame();
-window.takDexMapsV73={open,openLocation,mapAcquisition,setGameContext(g){setGame(g);},hasLocation:(name,g)=>{const ar=g==='Black'||g==='White'?window.takDexUnovaV74?.places||[]:rows.sinnoh;return ar.some(r=>locKey(r.name)===locKey(name));},resolveLocation:(name,g='Platinum')=>{
+window.takDexMapsV73={open,openLocation,mapAcquisition,setGameContext(g){setGame(g);},hasLocation:(name,g)=>{const ar=isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:[];return ar.some(r=>locKey(r.name)===locKey(name));},resolveLocation:(name,g='Platinum')=>{
  const raw=String(name||'').split(' · ')[0].trim(),route=raw.match(/route\s+\d{3}/i);
- const places=(g==='Black'||g==='White'?window.takDexUnovaV74?.places||[]:rows.sinnoh).filter(r=>r.kind!=='gym').sort((a,b)=>b.name.length-a.name.length);
+ const places=(isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:[]).filter(r=>r.kind!=='gym').sort((a,b)=>b.name.length-a.name.length);
  if(route)return places.find(r=>locKey(r.name)===locKey(route[0]))?.name||null;
- const q=locKey(raw);
+ const q=locKey(sequelAlias(raw,g));
  return places.find(r=>q===locKey(r.name)||q.startsWith(locKey(r.name)+'-')||q.includes('-'+locKey(r.name)+'-'))?.name||null;
 },gameRegions,regions:()=>Object.keys(atlas),legacySinnoh:originalSinnoh,platinumRoads:paths};
 })();
