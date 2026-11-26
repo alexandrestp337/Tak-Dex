@@ -84,7 +84,7 @@ async function compareHead(page){
     }
     const improvements=page.locator('#td77Improvements');
     await improvements.locator('xpath=..').locator(':scope > summary').click();
-    await improvements.locator(':scope > div, :scope > details').first().waitFor();
+    await improvements.getByText('More improvements',{exact:true}).waitFor();
     assert.equal(await improvements.evaluate(el=>[...el.children].filter(row=>row.matches('div, details')&&row.querySelector(':scope > summary')?.textContent!=='More improvements').length),3);
     await improvements.getByText('More improvements',{exact:true}).click();
     assert.ok(await improvements.locator(':scope > details[open] button').count()>0);
@@ -130,7 +130,7 @@ async function compareHead(page){
    const encounters=page.locator('#td56DexEncounters');
    await encounters.waitFor();
    if(!await encounters.evaluate(el=>el.open))await encounters.locator('summary').click();
-   const acquisition=encounters.locator('p.note [data-td74-dex-map="Marvelous Bridge"]').first();
+   const acquisition=encounters.locator('.td77-acquisition-entry [data-td74-dex-map="Marvelous Bridge"]').first();
    await acquisition.waitFor();
    assert.doesNotMatch(await encounters.textContent(),/Recorded encounter:|intentionally incomplete|unknown.area/i);
    await acquisition.click();

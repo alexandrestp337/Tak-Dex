@@ -131,7 +131,12 @@ const isSequel=g=>g==='Black 2'||g==='White 2';
 const isUnovaGame=g=>['Black','White','Black 2','White 2'].includes(g);
 const isUnova=()=>isUnovaGame(game.value);
 const atlasFor=g=>isSequel(g)?window.takDexB2W2:window.takDexUnovaV74;
-const unovaPlaces=g=>(atlasFor(g)?.places||[]).filter(r=>g.startsWith('Black')?r.name!=='White Forest':r.name!=='Black City');
+const naturePreserve={name:'Nature Preserve',kind:'landmark',offAtlas:true,
+ access:'Travel from Mistralton City with Skyla. Professor Juniper gives the Permit after seeing all non-mythical Pokémon in the Unova Pokédex.'};
+const unovaPlaces=g=>[
+ ...(atlasFor(g)?.places||[]).filter(r=>g.startsWith('Black')?r.name!=='White Forest':r.name!=='Black City'),
+ ...(isSequel(g)?[naturePreserve]:[])
+];
 const unovaMachines=g=>atlasFor(g)?.machines||[];
 const sequelAlias=(name,g)=>isSequel(g)?Object.entries(window.takDexB2W2?.aliases||{}).find(([n,v])=>v&&locKey(n)===locKey(name))?.[1]||name:name;
 const unovaRoads=()=>atlasFor(game.value)?.routePaths||{};
@@ -402,10 +407,10 @@ const roadLabels=available.filter(r=>game.value==='Platinum'&&r.kind==='route').
  }).join('');
 const hoennRegions=hoenn()?plotted.map(r=>`<g class="td76-hoenn-place td76-hoenn-${r.kind}" data-map-place="${escape(r.name)}" role="button" tabindex="0" aria-label="${escape(r.name)}"><title>${escape(r.name)}</title><rect x="${r.left+2}" y="${r.top+2}" width="${r.w-4}" height="${r.h-4}" rx="4"/><text x="${r.x}" y="${r.y}" text-anchor="middle" dominant-baseline="central">${escape(r.kind==='route'?r.name.match(/\d+/)?.[0]||'':'•')}</text></g>`).join(''):'';
 const townLabels=''; // The supplied Black/White maps already contain precise printed city labels.
-const encounterPins=encounterSet.map(r=>getRow(r.name)).filter(Boolean).map(r=>`<g transform="translate(${r.x},${r.y})" class="td74-encounter-ring" data-map-place="${escape(r.name)}"><circle r="27"/></g>`).join('');
+const encounterPins=encounterSet.map(r=>getRow(r.name)).filter(r=>r&&!r.offAtlas).map(r=>`<g transform="translate(${r.x},${r.y})" class="td74-encounter-ring" data-map-place="${escape(r.name)}"><circle r="27"/></g>`).join('');
  // Selected destinations are indicated by their highlight and details panel.
  // No extra name callout: fixed-width bubbles clipped long labels and duplicated town names.
- canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${hoenn()?'Hoenn schematic':isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}">${hoenn()?`<rect class="td76-hoenn-water" width="${MAP_W}" height="${MAP_H}"/>${hoennRegions}`:`<image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/>`}<g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${hoenn()?'':pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
+ canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${hoenn()?'Hoenn schematic':isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}">${hoenn()?`<rect class="td76-hoenn-water" width="${MAP_W}" height="${MAP_H}"/>${hoennRegions}`:`<image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/>`}<g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${hoenn()?'':pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected&&!getRow(selected)?.offAtlas?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
  td82InstallMapBitmap();
  updateViewport();
 }
@@ -432,6 +437,7 @@ async function openLocation(name,origin='user'){
  if(origin==='move-checker')requestAnimationFrame(()=>canvas.scrollIntoView({behavior:'smooth',block:'center'}));
  if(origin!=='search')fitEncounterGroup=false;
  if(fitEncounterGroup)fitEncounters();
+ else if(row.offAtlas)resetViewport();
  else if(selected==='mount-coronet'){
   // Frame the full mountain from Route 207/208 north to Route 216.
   focusPoint(577,627,2.0);
@@ -445,7 +451,7 @@ async function openLocation(name,origin='user'){
  const gymDetail=row.kind==='gym'?`<p><b>Gym leader / badge:</b> ${escape(gymLabel||'Gym Badge')}</p>`:'';
  const trainer=row.kind==='gym'?gymLabel.split(' · ')[0]:'';
  const gymButton=trainer&&!trainer.includes('/')?`<button type="button" class="td73-gym-battle-button" data-td73-gym-trainer="${escape(trainer)}">⚔ Open in 6v6 Battle</button>`:'';
- details.innerHTML=`<h3>${escape(row.name)}</h3>${gymDetail}${gymButton}${tutors.length?`<p><b>Move Tutor:</b> ${escape(tutors[0].detail)}</p>`:''}${viewTutorRows(tutors)}${locationExtras(row.name)}<div id="td73-location-record"></div>`;
+ details.innerHTML=`<h3>${escape(row.name)}</h3>${row.offAtlas?`<p class="note">${escape(row.access)}</p>`:''}${gymDetail}${gymButton}${tutors.length?`<p><b>Move Tutor:</b> ${escape(tutors[0].detail)}</p>`:''}${viewTutorRows(tutors)}${locationExtras(row.name)}<div id="td73-location-record"></div>`;
  const status=$('td73-location-record'),valid=()=>mine===detailRequest&&detailGame===activeMapGame&&status?.isConnected;
  const initial=mergeLocal(encounterRowsFor(row.name),row.name,detailGame);status.innerHTML=encounterHTML(initial)||'<small>Checking encounter records…</small>';
  if(row.kind==='gym'){status.innerHTML='';return;}
@@ -556,7 +562,7 @@ function zoomTo(next,px=CX,py=CY){
 }
 function clientToMap(e){const {b,s:scale}=mapGeometry();return {x:(e.clientX-b.left-(b.width-MAP_W*scale)/2)/scale,y:(e.clientY-b.top-(b.height-MAP_H*scale)/2)/scale};}
 function fitEncounters(){
- const points=encounterSet.map(place=>getRow(place.name)).filter(Boolean);
+ const points=encounterSet.map(place=>getRow(place.name)).filter(p=>p&&!p.offAtlas);
  if(points.length<2)return;
  const left=Math.min(...points.map(p=>p.x)),right=Math.max(...points.map(p=>p.x));
  const top=Math.min(...points.map(p=>p.y)),bottom=Math.max(...points.map(p=>p.y));
