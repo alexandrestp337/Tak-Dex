@@ -1322,7 +1322,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  function moveReminder(game){
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
   const sequel=game.endsWith(' 2'),place=sequel?'Pokémon World Tournament':'Mistralton City';
-  const gate=sequel?'After Clay; visit the kiosks south of Driftveil City':'After Clay; reach Mistralton through Chargestone Cave';
+  const gate=sequel?'After Clay, visit the kiosks south of Driftveil City':'After Clay, reach Mistralton through Chargestone Cave';
   return {rank:5,place,text:'Move Reminder · '+place+' · One Heart Scale · '+gate};
  }
  function evolutionTrainingLevel(id){return auditedLevelEvolutions[id]||1;}
