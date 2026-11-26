@@ -570,3 +570,9 @@ Candidate rows place acquisition details in independent disclosures with visible
 
 1. **Move editor** — Open a planned move and check the red borders and taller list. Use Keep on a retained actual move, then compare the Actual and planned Checker destinations.
 2. **Candidates** — Expand one direct encounter and one evolution route. Check the map links, return to the list and review the grouped coverage badges.
+
+## Correction Round 11
+
+From `07c549f`. Move Checker return restores the selected Pokémon's open editor, query and suggestion scroll without focusing search. The search field shares the red border. Keep and Clear confirm the move and intended change before applying it. Locked cards show a small top-right padlock without changing their size.
+
+Syntax checks for `app.js` and `sw.js` and inspection of the modified code passed. Automated tests and rendered checks were deferred for manual preview acceptance.

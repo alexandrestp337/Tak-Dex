@@ -4217,12 +4217,25 @@ document.addEventListener('keydown',event=>{
   p.duringMoves=moveSlots({plannedMoves:p.duringMoves??moveSlots(p).map(m=>({...m,purpose:'keep',replacement:''}))});
   p.milestoneId=milestoneOptions(g).find(x=>x[1]===p.milestone)?.[0]||'';
   return p;});if(!saved&&actual())state.slots=Array.from({length:6},(_,i)=>fromTeam(actual().pokemon[i],i));migrateMoves();$('td41MoveSlots').innerHTML='';$('td41TeamTitle').textContent=(actual()?.name||'')+' · '+g;setDeadlineOptions(g);updateTypeFilter();state.progressId=milestoneOptions(g).find(x=>x[1]===state.progress)?.[0]||'';movesetView=state.mode==='during'?'during':'final';say('');persist();render();if(Number.isInteger(state.editorSlot)&&state.editorSlot>=0&&state.editorSlot<6)$('td4Slots').querySelector('[data-td4-slot="'+state.editorSlot+'"]')?.click();refreshMoveInfo();if(g)hydrate();}
- let plannerActive=false,plannerScroll=0,plannerDirty=false;
+ let plannerActive=false,plannerScroll=0,plannerDirty=false,checkerEditor=null;
  window.td77RememberPlan=()=>{if(plannerActive&&!page.hidden)plannerScroll=window.scrollY;};
  window.td77RestorePlan=()=>{
   if(!plannerActive||!state)return;
   $('teamsPage').hidden=true;page.hidden=false;
   if(plannerDirty){plannerDirty=false;render();if(!$('td4Edit').hidden){renderMoveSlots();if(settings.open)findCandidates();}refreshMoveInfo();}
+  const saved=checkerEditor;
+  checkerEditor=null;
+  if(saved?.token===token&&saved.slot===chosenSlot&&!$('td4Edit').hidden){
+   const input=$('td41MoveSlots').querySelector(`[data-td45-move="${saved.field}"]`);
+   if(input){
+    const box=input.nextElementSibling;
+    if(box.hidden||input.value!==saved.search){
+     input.value=saved.search;
+     showMoveOptions(input,clean(saved.search));
+    }
+    box.querySelector('.td78-move-results').scrollTop=saved.scroll;
+   }
+  }
   requestAnimationFrame(()=>{if(!page.hidden)window.scrollTo(0,plannerScroll);});
  };
  function open(id){
@@ -4230,7 +4243,7 @@ document.addEventListener('keydown',event=>{
   if(current?.id!==id)openTeam(id);
   plannerActive=false;window.takActivate(0);$('teamsPage').hidden=true;page.hidden=false;
   $('td4Game').value=t.game;teamMenu();$('td4Team').value=t.id;load();
-  plannerActive=true;plannerScroll=0;plannerDirty=false;window.scrollTo(0,0);
+  plannerActive=true;plannerScroll=0;plannerDirty=false;checkerEditor=null;window.scrollTo(0,0);
  }
  window.td5ReturnTeamPlanner=scroll=>{
   plannerActive=true;window.takActivate(0);plannerScroll=scroll;window.td77RestorePlan();
@@ -4397,7 +4410,14 @@ document.addEventListener('keydown',event=>{
   const link=e.target.closest('[data-td74-dex-map]');
   if(link){e.preventDefault();window.takDexMapsV73?.open(state.game,link.dataset.td74DexMap);}
   const move=e.target.closest('[data-td77-plan-move]');
-  if(move){e.preventDefault();window.takDexMoveV68?.open(move.dataset.td77PlanMove,'team-planner',state.game,move.dataset.td77Reminder);}
+  if(move){
+   e.preventDefault();
+   const box=$('td41MoveSlots').querySelector('.suggestions:not([hidden])');
+   const input=box?.previousElementSibling;
+   checkerEditor=input?{token,slot:chosenSlot,field:input.dataset.td45Move,search:input.value,
+    scroll:box.querySelector('.td78-move-results').scrollTop}:null;
+   window.takDexMoveV68?.open(move.dataset.td77PlanMove,'team-planner',state.game,move.dataset.td77Reminder);
+  }
  });
  function plannerMoveTiming(p,name){
   const game=state.game,methods=p.learnMethods?.[name]||[],data=window.takDexAcquisitionV77;
@@ -4685,7 +4705,7 @@ document.addEventListener('keydown',event=>{
     {...learner,ability:member.ability,baseStats:learner.baseStats||member.baseStats}:learner];
   });
  }
- function render(){if(!state)return;renderActualProgress();for(const button of $('td77MoveViews').querySelectorAll('button'))button.setAttribute('aria-selected',String(button.dataset.view===movesetView));const edit=$('td4Edit');$('td4Slots').after(edit);const locked=false;$('td4Seed').disabled=!actual();$('td4Slots').innerHTML=state.slots.map((p,i)=>{const owned=ownedFor(p,i),transition=owned&&p&&!sameMon(owned,p),route=p?chosenRoute(p):null;return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}" ${p?'data-td77-hold':''}>${p?`<div class="td42-mon-pair">${transition?`<span><img alt="" src="${safe(sprite(owned))}"><strong>${safe(td41PokemonLabel(owned.name))}</strong><span class="pills">${(owned.types||[]).map(pill).join('')}</span></span><span class="td42-arrow">→</span>`:''}<span><img alt="" src="${safe(sprite(p))}"><strong>${safe(td41PokemonLabel(p.name))}</strong><span class="pills">${(p.types||[]).map(pill).join('')}</span></span></div><small>${transition?(lineage(p.id).has(Number(owned.id))?'Planned evolution':'Planned replacement'):safe(progressFor(p))}</small>${route?.steps.length&&route.initial.kind!=='owned'?`<small>Obtain ${safe(td41PokemonLabel(route.startName))}</small>`:''}${acquisition(p).rank>(deadlineRank()??10)?'<small class="td63-danger">After planning deadline</small>':''}<div class="td42-tile-moves">${alignedMoves(p,i).map(tileMove).join('')}</div>`:'<strong>＋ Slot '+(i+1)+'</strong>'}</button>`}).join(''); const filled=state.slots.filter(Boolean);
+ function render(){if(!state)return;renderActualProgress();for(const button of $('td77MoveViews').querySelectorAll('button'))button.setAttribute('aria-selected',String(button.dataset.view===movesetView));const edit=$('td4Edit');$('td4Slots').after(edit);const locked=false;$('td4Seed').disabled=!actual();$('td4Slots').innerHTML=state.slots.map((p,i)=>{const owned=ownedFor(p,i),transition=owned&&p&&!sameMon(owned,p),route=p?chosenRoute(p):null;return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}" ${p?'data-td77-hold':''}>${p?`${p.locked?'<svg class="td81-plan-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Locked"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>':''}<div class="td42-mon-pair">${transition?`<span><img alt="" src="${safe(sprite(owned))}"><strong>${safe(td41PokemonLabel(owned.name))}</strong><span class="pills">${(owned.types||[]).map(pill).join('')}</span></span><span class="td42-arrow">→</span>`:''}<span><img alt="" src="${safe(sprite(p))}"><strong>${safe(td41PokemonLabel(p.name))}</strong><span class="pills">${(p.types||[]).map(pill).join('')}</span></span></div><small>${transition?(lineage(p.id).has(Number(owned.id))?'Planned evolution':'Planned replacement'):safe(progressFor(p))}</small>${route?.steps.length&&route.initial.kind!=='owned'?`<small>Obtain ${safe(td41PokemonLabel(route.startName))}</small>`:''}${acquisition(p).rank>(deadlineRank()??10)?'<small class="td63-danger">After planning deadline</small>':''}<div class="td42-tile-moves">${alignedMoves(p,i).map(tileMove).join('')}</div>`:'<strong>＋ Slot '+(i+1)+'</strong>'}</button>`}).join(''); const filled=state.slots.filter(Boolean);
  const count=filled.filter((p)=>progressFor(p)==='On team').length;
  const acquired=filled.filter(p=>progressFor(p)!=='Planned').length;
  const learned=state.slots.reduce((n,p,i)=>n+(p?alignedMoves(p,i).filter(row=>row.retained).length:0),0);
@@ -4836,7 +4856,7 @@ document.addEventListener('keydown',event=>{
  $('td77Lock').onclick=()=>{
   const p=state?.slots[chosenSlot];
   if(!p)return;
-  p.locked=!p.locked;persist();renderMoveSlots();
+  p.locked=!p.locked;persist();render();renderMoveSlots();
   if(settings.open)findCandidates();
  };
  let movesetView='final';
@@ -5184,8 +5204,12 @@ document.addEventListener('keydown',event=>{
   if(clear){
    const field=clear.closest('.search').querySelector('input');
    const [index,mode]=field.dataset.td45Move.split(':');
+   const p=state.slots[chosenSlot];
+   const name=goal((mode==='during'?p.duringMoves:p.plannedMoves)[+index]);
+   if(!name)return;
+   if(!confirm('Clear '+pretty(name)+' from this planned slot?')){clear.focus({preventScroll:true});return;}
    if(mode==='during'){applyDuring(field,'');return;}
-   const p=state.slots[chosenSlot],i=Number(index);
+   const i=Number(index);
    p.plannedMoves[i]={move:'',purpose:'keep',replacement:''};
    (p.finalManualSlots??=[])[i]=true;
    delete p.autoOwnedPending;
@@ -5217,16 +5241,16 @@ document.addEventListener('keydown',event=>{
   if(!container||container.contains(e.relatedTarget))return;
   const input=container.querySelector('[data-td45-move]');
   if(!input)return;
-  const box=input.nextElementSibling;
+  const box=input.nextElementSibling,contents=box.firstElementChild;
   setTimeout(()=>{
-   if(!input.isConnected||container.contains(document.activeElement))return;
+   if(checkerEditor||contents!==box.firstElementChild||!input.isConnected||container.contains(document.activeElement))return;
    box.hidden=true;box.moveObserver?.disconnect();
    const [i,k]=input.dataset.td45Move.split(':'),p=state?.slots[chosenSlot];
    const m=k==='during'?p?.duringMoves[+i]:p?.plannedMoves[+i];
    if(m)input.value=pretty(k==='goal'?goal(m):m.move);
   },150);
  });
- page.addEventListener('pointerdown',e=>{if(!e.target.closest('.td77-edit-move'))for(const box of moveHost.querySelectorAll('.suggestions:not([hidden])'))box.hidden=true;});
+ page.addEventListener('pointerdown',e=>{if(!e.target.closest('.td77-edit-move,[data-td77-plan-move]'))for(const box of moveHost.querySelectorAll('.suggestions:not([hidden])'))box.hidden=true;});
  function applyDuring(input,name,retained=false){
   const p=state.slots[chosenSlot],i=Number(input.dataset.td77During);
   if(!p?.duringMoves||name&&!retained&&!legalOptions(p,i,'during',name).includes(name))return;
@@ -5238,6 +5262,8 @@ document.addEventListener('keydown',event=>{
  moveHost.addEventListener('click',async e=>{const b=e.target.closest('[data-td45-pick],[data-td45-restore]'),p=state?.slots[chosenSlot];if(!b||!p)return;e.preventDefault();const input=b.closest('.td45-move-search').querySelector('input'),[i,k]=input.dataset.td45Move.split(':'),n=b.dataset.td45Pick||b.dataset.td45Restore,m=p.plannedMoves[+i];if(b.hasAttribute('data-td45-restore')){
   const actualMove=input.closest('[data-td77-actual-move]')?.dataset.td77ActualMove;
   if(n!==actualMove||!canKeepActual(p,+i,k,n))return;
+  const previous=goal((k==='during'?p.duringMoves:p.plannedMoves)[+i]);
+  if(!confirm(previous&&previous!==n?'Replace '+pretty(previous)+' with '+pretty(n)+'?':'Keep '+pretty(n)+' in this planned slot?')){b.focus({preventScroll:true});return;}
   if(k==='during'){applyDuring(input,n,true);return;}
   p.plannedMoves[+i]={move:n,purpose:'keep',replacement:''};
   (p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;

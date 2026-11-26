@@ -1714,3 +1714,6 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td41MoveSlots .td78-move-results{max-height:min(38vh,260px)}
 #td4Candidates .td80-candidate-acquisition>summary{font-size:.82rem;padding-block:4px}
 #td4Candidates .td80-candidate-acquisition>small{display:block;margin:2px 0}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{border:1px solid var(--accent)}
+#td4Slots>.td4-planned-slot{position:relative}
+.td81-plan-lock{position:absolute;top:6px;right:6px;width:13px;height:13px;color:var(--muted);pointer-events:none}
