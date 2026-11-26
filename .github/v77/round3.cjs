@@ -18,7 +18,7 @@ async function openPlan(page){
  await page.locator('#td4Slots [data-td4-slot="0"]').click();
 }
 async function openOptions(page){
- const fold=page.locator('#td4Edit details.td42-settings').first();
+ const fold=page.locator('#td4Edit > details.td42-settings').first();
  if(!await fold.evaluate(el=>el.open))await fold.locator(':scope > summary').click();
  await page.locator('[data-td4-candidate]').first().waitFor();
 }
@@ -47,7 +47,7 @@ async function compareHead(page){
    },width===1280?fullTeam:team);
    await openPlan(page);
    await page.locator('[data-view="during"]').click();
-   await page.locator('[data-td77-during]').first().waitFor();
+   await page.locator('[data-td77-during]').first().waitFor({state:'attached'});
    assert.equal(await page.locator('[data-td77-during]').count(),4);
    await page.waitForFunction(()=>{
     const names=['Scratch','Tail Whip','Water Sport'];
@@ -86,11 +86,14 @@ async function compareHead(page){
     }
     const improvements=page.locator('#td77Improvements');
     await improvements.locator('xpath=..').locator(':scope > summary').click();
-    await improvements.getByText('More improvements',{exact:true}).waitFor();
-    assert.equal(await improvements.evaluate(el=>[...el.children].filter(row=>row.matches('div, details')&&row.querySelector(':scope > summary')?.textContent!=='More improvements').length),3);
-    await improvements.getByText('More improvements',{exact:true}).click();
-    assert.ok(await improvements.locator(':scope > details[open] button').count()>0);
-    console.log('Complete team changed the ranked list; both modes retained four slots for 0–4 actual moves; three ranked improvements visible.');
+    const categories=improvements.locator(':scope > details');
+    assert.equal(await categories.count(),3);
+    assert.equal(await improvements.getByText('More improvements',{exact:true}).count(),0);
+    const pokemon=categories.filter({hasText:'Pokémon improvements'});
+    await pokemon.locator(':scope > summary').click();
+    await pokemon.locator('details summary').first().click();
+    await pokemon.locator('details[open] button').first().waitFor();
+    console.log('Three separate recommendation categories and individual Pokémon preview actions passed');
    }
    if(width===412){
     const prepare=async name=>{

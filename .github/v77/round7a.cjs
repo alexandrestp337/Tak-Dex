@@ -86,17 +86,16 @@ async function open(page){
   assert.deepEqual(await rowData(),expectedRows);
   assert.equal(await progress.locator('strong').textContent(),'7/9');
   await switchMode(page,'final');
-  const scratch=rows.filter({has:page.locator('.td41-good',{hasText:'Keep'})}).filter({has:page.getByRole('textbox',{name:'Goal move 2',exact:true})});
-  const editScratch=scratch.locator('input');
-  await editScratch.click();
+  const scratch=rows.filter({has:page.locator('.td41-good',{hasText:'Keep'})}).filter({has:page.locator('[data-td45-move="1:goal"]')});
+  await scratch.locator('[data-td78-open-move]').click();
   await scratch.getByRole('button',{name:'Clear planned move',exact:true}).click();
   assert.equal(await progress.locator('strong').textContent(),'6/8');
-  const empty=page.getByRole('textbox',{name:'Goal move 2',exact:true});
-  await empty.click();
-  await empty.fill('scratch');
-  await empty.press('Enter');
+  const empty=page.locator('[data-td45-move="1:goal"]');
+  await empty.locator('..').locator('[data-td78-open-move]').click();
+  await empty.locator('..').locator('[data-td45-restore="scratch"]').click();
   await page.waitForFunction(()=>document.querySelector('#td4PlanProgress').textContent.includes('7/9'));
-  const target=page.getByRole('combobox',{name:'Final moveset target'});
+  await switchMode(page,'during');
+  const target=page.getByRole('combobox',{name:'Planned evolution'});
   await target.selectOption('55');
   await waitSpecies(page,0,55);
   let plan=await read(page);
@@ -140,6 +139,7 @@ async function open(page){
   await downgrade.locator('[data-td77-cancel-preview]').click();
   const improve=page.locator('#td77Improvements').locator('..');
   await improve.locator(':scope > summary').click();
+  await page.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
   await page.locator('[data-td77-resource="Fire Stone"]').waitFor();
   assert.deepEqual((await stats(page)).slice(0,3),['2','1','1']);
 
@@ -207,7 +207,7 @@ async function open(page){
   await duringButton.waitFor({state:'attached'});
   const duringOffer=await openOffer(duringButton);
   assert.doesNotMatch(duringOffer,/Golduck|Ninetales/);
-  const teammate=duringOffer.split(':')[0].trim();
+  const teammate=duringOffer.split(' · ')[0].trim();
   const display=after.slots.findIndex(p=>p&&new RegExp(p.name,'i').test(teammate));
   await setSlot(page,display);
   await page.locator('#td77SuggestMoves').click();

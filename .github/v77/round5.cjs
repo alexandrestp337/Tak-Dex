@@ -145,6 +145,7 @@ async function dexSearch(page, name) {
     await preview(page, 'flygon');
     assert.match(await page.locator('[data-td77-preview-route]').textContent(), /Trapinch.*Vibrava.*35.*Flygon.*45/);
     const location = page.locator('[data-td77-preview-route] [data-td74-dex-map="Desert Resort"]');
+    await page.locator("[data-td77-preview-route] details > summary").click();
     await location.scrollIntoViewIfNeeded();
     const originScroll = await page.evaluate(() => scrollY);
     await location.click();
@@ -158,7 +159,7 @@ async function dexSearch(page, name) {
     for (const mode of ['during', 'final']) {
      await page.locator(`[data-view="${mode}"]`).click();
      const field = page.locator(`${mode === 'during' ? '[data-td77-during="0"]' : '[data-td45-move="0:goal"]'}`);
-     await field.click();
+     await field.locator('..').locator('[data-td78-open-move]').click();
      assert.equal(await field.evaluate(input => input.selectionEnd - input.selectionStart), (await field.inputValue()).length);
      await field.fill('fly');
      await field.locator('..').locator('[data-td45-pick="fly"]').waitFor();
@@ -187,6 +188,7 @@ async function dexSearch(page, name) {
     await choose(page, 5, 'ninetales');
     await page.locator('#td77Improvements').locator('..').locator('summary').first().click();
     const warning = page.locator('#td77Improvements [data-td77-resource="Fire Stone"]');
+    await page.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
     await warning.waitFor();
     assert.deepEqual(await warning.locator('dd').allTextContents(),['2','1','1','2']);
     await page.reload({ waitUntil: 'domcontentloaded' });
@@ -202,6 +204,8 @@ async function dexSearch(page, name) {
     await page.waitForFunction(key => JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[5].acquisitionRoute.startId === 38, planKey);
     const resource = page.locator('#td77Improvements');
     if (!await resource.locator('..').evaluate(el => el.open)) await resource.locator('..').locator('summary').first().click();
+    await resource.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
+    await resource.locator('[data-td77-resource="Fire Stone"] > summary').click();
     await resource.locator('[data-td77-resource="Fire Stone"]').getByText("Arcanine").waitFor();
     assert.deepEqual(await resource.locator('[data-td77-resource="Fire Stone"] dd').allTextContents(),['1','1','0','2']);
     console.log('Flygon routes, map return, future Fly, held touch, stone warning and refresh passed');

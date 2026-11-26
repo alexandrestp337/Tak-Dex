@@ -504,3 +504,26 @@ Physical Samsung and Android WebView behavior remain untested.
 - **Pass** · Shared V76 and V77 Chromium suites and the Round 4 planner regression. They covered Battle, 6v6, offline cold reload, file import, synchronization, JSON export and import, Pokédex, Maps, Move Checker and comparison return.
 
 The Round 5 browser regression also passed its five viewport checks, map returns and Quick Compare. The Round 3 test counts both the empty placeholder and the new non-interactive × as an empty actual move.
+
+## Correction Round 8
+
+This checkpoint starts at `e5d7630`. Team Planner now uses compact acquisition and move timing summaries with the route, map links and supporting requirements in disclosures. Material deadline restrictions remain visible. Replacement previews show concise comparisons without a duplicate suggested moveset.
+
+Recommended improvements has three independent disclosures for Pokémon, moves and resources. Each category keeps its own ranking and all entries from the existing recommendation engine. Preview and Apply remain contextual. Resource rows keep projected, before-deadline and after-deadline demand separate from documented supply.
+
+The move editor now opens from a button so opening it does not focus the input. It presents the search field and contextual Restore, Clear and Move Checker actions above the scrolling list. The shared Planned evolution selector is available in both modes and uses the same saved endpoint and route. The collapsed Change Pokémon header is more compact and retains the original grid.
+
+### Manual acceptance
+
+1. **Information hierarchy** — Open acquisition and move requirements. Check the map links and expand each of the three recommendation categories.
+2. **Move editor and evolution** — Open a Keep row, browse before typing, then try Restore, Clear and Move Checker. Select a planned evolution in During game and confirm the same endpoint in Final.
+3. **Compact layouts** — Check the empty-slot editor, full-height grid cards, collapsed replacement summary and expanded resource row on the phone.
+
+Physical Samsung keyboard and Android WebView behavior remain unverified.
+
+### Verification evidence
+
+- **Pass** · 59 Node tests, including four public retail save comparisons.
+- **Pass** · Chromium responsive exercises at 320, 360, 390, 412 and 1280 CSS px. The planner checks compare editor and dropdown bounds, active focus, contextual actions, row heights and adjacent team tiles.
+- **Pass** · Black 2 retained move clear and restore, learned counter, shared evolution route, resource totals, move suggestion confirmation and legacy migration. The retail import left the save bytes unchanged.
+- **Pass** · Route disclosure opened the Desert Resort map and returned to the same planner position. Pokémon recommendations and resource restrictions use the existing verified paths. The route disclosures received a separate selector from Change Pokémon so slot switches and recommendation previews open the intended section.

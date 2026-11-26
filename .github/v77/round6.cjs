@@ -92,7 +92,7 @@ function tileGeometry(){
    await page.locator('#td77TypeFilter').click();
    await slot(page,0,false);
    const row=page.locator('#td41MoveSlots .td77-move-comparison').first();
-   await row.locator('.td77-edit-move input').waitFor();
+   await row.locator('.td77-edit-move input').waitFor({state:'attached'});
    const cards=await row.evaluate(el=>{
     const cards=el.querySelectorAll('.td77-planner-move-info');
     return [...cards].map(node=>{const b=node.getBoundingClientRect(),css=getComputedStyle(node);return {width:b.width,height:b.height,padding:css.padding,radius:css.borderRadius};});
@@ -102,7 +102,10 @@ function tileGeometry(){
    assert.equal(cards[0].height,cards[1].height);
    assert.equal(cards[0].radius,cards[1].radius);
    const field=row.locator('input');
-   await field.click();
+   await row.locator('[data-td78-open-move]').click();
+   assert.equal(await field.evaluate(el=>el===document.activeElement),false);
+   assert.ok(await row.locator('.td78-move-results button').count()>0);
+   assert.ok(await row.locator('.td78-move-actions').evaluate(el=>el.getBoundingClientRect().bottom<=el.parentElement.querySelector('.td78-move-results').getBoundingClientRect().top));
    await field.fill('water');
    const dropdown=row.locator('.suggestions');
    await dropdown.waitFor();
@@ -165,6 +168,7 @@ function tileGeometry(){
      const i=existing>=0?existing:rows.findIndex(move=>!rockMoves.includes(move.move)&&!rockMoves.includes(move.replacement));
      assert.ok(i>=0);
      const editor=page.locator(`[data-td45-move="${i}:goal"]`);
+     await editor.locator('..').locator('[data-td78-open-move]').click();
      await editor.fill(name.replace('-',' '));
      await editor.locator('..').locator('[data-td45-pick="'+name+'"]').click();
      await page.waitForFunction(([key,i,name])=>{
@@ -194,13 +198,14 @@ function tileGeometry(){
     const route=page.locator('[data-td77-route="preview"]');
     const vulpix=await route.locator('option').filter({hasText:'Obtain Vulpix'}).first().getAttribute('value');
     await route.selectOption(vulpix);
-    await candidate(page).getByText(/Use a Fire Stone/).waitFor();
+    await candidate(page).locator('[data-td77-preview-route] summary').filter({hasText:'Use a Fire Stone'}).waitFor();
     await choice(page).click();await waitSpecies(page,5,38);
     assert.equal(moves((await getPlan(page)).slots[5]).length,4);
     await page.getByText('Theoretical Final moves · after planning deadline').waitFor();
     const resources=page.locator('#td77Improvements').locator('..');
     if(!await resources.evaluate(el=>el.open))await resources.locator(':scope > summary').click();
     const stone=resources.locator('[data-td77-resource="Fire Stone"]');
+    await page.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
     await stone.waitFor();
     assert.deepEqual(await stone.locator('dd').allTextContents(),['2','1','1','2']);
     await page.locator('#td77Availability').selectOption('postgame');
