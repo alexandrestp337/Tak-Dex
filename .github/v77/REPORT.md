@@ -343,3 +343,62 @@ The resource review counts documented field copies of evolution items, currency 
 2. Compare Golduck and Starmie on the current team. Check that both retain meaningful strengths and that the recommendation explains the practical trade-off.
 3. Check that Black 2 Golduck has two-line individual entries. Open Nature Preserve from Magikarp’s Pokédex, read the Permit requirement, then return to the same entry.
 4. Set a Black 2 plan with two Fire Stone evolutions. Check that the early deadline shows one field copy and a renewable source, and that changing the deadline updates the count while preserving both choices.
+
+## Correction Round 5
+
+### Acquisition paths, resources and preserved data
+
+The Team Planner stores a selected route key and starting species with the planned slot. The key identifies a version-specific source and survives leveling an owned Pokémon. Older plans keep their moves, locks and legacy temporary notes. The existing export includes the route and older exports still import. A route can begin with a wild encounter, a gift, an in-game trade or an owned Pokémon where the evidence supports it. The editor identifies later routes separately and retains the user’s choice when a deadline changes.
+
+Flygon through Trapinch includes both the Lv 35 Vibrava step and the Lv 45 Flygon step. A Black 2 direct Golduck caught at Village Bridge starts at Lv 36–38 and uses Golduck’s learnset. Its recommendation does not borrow Psyduck’s moves. The resource budget counts the Fire Stone for a selected Growlithe or Vulpix evolution and excludes it for a direct Ninetales encounter. It shows how much documented supply is available by the deadline, any repeatable source and projected demand for blocked routes. This is the documented world supply. Bag inventory remains unverified by save import. The planning engine retains reusable Generation V machines and prior single-use machine accounting. [Black 2 and White 2 walkthrough](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Black_2_and_White_2) · [Village Bridge encounters](https://bulbapedia.bulbagarden.net/wiki/Village_Bridge_(location)) · [Desert Resort encounters](https://bulbapedia.bulbagarden.net/wiki/Desert_Resort) · [Fire Stone sources](https://bulbapedia.bulbagarden.net/wiki/Fire_Stone)
+
+The Round 4 audited acquisition cohorts and denominators are retained. This round adds planner consumption of encounter levels and verified alternate routes without promoting a catalog row to verified acquisition. Archive status and Kanto and Johto data are unchanged.
+
+| Game | Verified before and after | Machine timing before and after |
+| --- | ---: | --- |
+| Black 2 | 406/410 | 101/101 story gates |
+| White 2 | 403/407 | 101/101 story gates |
+| Black | 332/340 | 97 story gates, three Pokédex-count rewards, one unavailable event route |
+| White | 424/432 | 97 story gates, three Pokédex-count rewards, one unavailable event route |
+
+The prior [Unova exception ledger](round4-unova-ledger.jsonl) lists acquisition cases excluded from the verified cohort. For the Black 2 Emboar example, Hammer Arm appears as **Move Reminder**, with PWT, one Heart Scale and the first tournament prerequisite. The original games use Mistralton City. Level-one entries on basic forms retain normal starting-move handling. Exact egg, distribution and alternate-form inheritance remain subject to the documented exceptions. [Emboar’s Generation V learnset](https://pokemondb.net/pokedex/emboar/moves/5) · [Move Reminder](https://bulbapedia.bulbagarden.net/wiki/Move_Reminder) · [Pokémon World Tournament](https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_World_Tournament)
+
+### Ranking evidence
+
+Round 4 selected moves greedily, so one Pokémon could receive high scores for several attacks covering the same types. Round 5 evaluates candidate sets of up to four moves. It uses game-specific power, accuracy, category, offensive stats, STAB, priority, effects and battle drawbacks. Each type and trainer matchup credits the strongest attack in the combination. Moves that duplicate a teammate’s strong answer or another attack in the set earn less. The search tests evolution and move-learning schedules before accepting a combination. Reserved one-use machines and stage access are checked separately.
+
+Defensive suitability adjusts offensive coverage using incoming type multipliers, known abilities, bulk, priority and historic Speed where available. Named trainer types contribute where roster data exists. The model treats opposing STAB as a likely matchup consideration. A Water-resistant Golduck earns more credit for taking on Water opponents than a Water-weak Growlithe with an Electric attack. Shared weaknesses are classified by resistant and immune teammates, concentration, severity and bulk. No type-coverage score certifies a safe switch or battle result.
+
+The Black 2 browser comparison used three badges, Psyduck Lv 22, Growlithe Lv 26, Magnemite Lv 22, Scraggy Lv 22 and two empty slots. The candidate index was unfiltered. Both evolutions used the owned pre-evolution. The following were observed on the Round 4 baseline and a Round 5 browser checkpoint.
+
+| Pokémon and mode | Round 4 observed | Round 5 observed |
+| --- | --- | --- |
+| Golduck During game | Water Pulse, Zen Headbutt, Strength, Water Gun | Strength, Water Pulse, Zen Headbutt, Rock Smash |
+| Golduck Final | Hydro Pump, Surf, Ice Beam, Scald | Surf, Ice Beam, Psychic, Brick Break |
+| Arcanine During game | Flame Burst, Strength, Bite, Flame Wheel | Flame Burst, Strength, Bite, Rock Smash |
+| Arcanine Final | Flare Blitz, Fire Blast, Flamethrower, Outrage | Flare Blitz, Crunch, Thunder Fang, Bulldoze |
+
+Golduck retains Surf for reliable STAB and field access. Ice Beam covers Grass, Flying, Ground and Dragon. Psychic and Brick Break offer Fighting, Poison, Normal, Dark, Rock, Ice or Steel coverage depending on opponent typing. A strong Psychic or fighting alternative can displace the redundant Water attack. Arcanine retains Fire STAB, adds Dark coverage with Crunch and Ground coverage with Bulldoze, and can use Thunder Fang as secondary coverage with the Move Reminder gate. A Water-weak attacker receives reduced value for Electric coverage against Water opponents. Strength can still fill an early slot as a dependable attack while a target move is gated. The executed full-pool examples filled all four slots. The separate browser fixtures also covered owned Psyduck with zero, one, two and four recorded moves. Manual imported team entries with missing move names are treated as incomplete evidence of known moves.
+
+### Interface and testing
+
+Replacement recommendations rank the eligible catalog and render it progressively. Historical type filters apply to typed search and ranked results. Both moveset modes use the same searchable editor, with full-selection on focus and keyboard navigation. The planner restores the active editor slot, exposes valid map links and shows separate team progress and defensive coverage indicators. Contextual Pokémon actions open when the hold threshold is reached. Pokédex Quick Compare keeps both choices open while a slot changes. Move Checker retains its More destination, offers a separate contextual Back and combines the machine tabs.
+
+The V76 and V77 Node suites include four independent PKTool comparisons against public retail saves. Chromium tests cover the selected branch’s save import and synchronization, ordinary Battle, 6v6, navigation, offline cold reload, older V77 planning cases and Round 5. The Round 5 browser script exercises normal UI flows at 320, 360, 390, 412 and 1280 CSS px. See the [requirement checklist](ROUND5-CHECKLIST.md) for evidence and remaining limits. Physical Android testing remains open for V10.
+
+### Isolated development preview
+
+[Open the Tak-Dex V77 development preview](https://tak-dex-v77-development.freeclout8.chatgpt.site) in the phone browser. Sign in with the ChatGPT account that owns the preview if prompted. The page shows the exact development checkpoint at the top. The preview has its own HTTPS origin and service worker cache. Import a team JSON in the preview to use a copy of production data.
+
+The preview uses an allowlisted static package from a reviewed `v77-development` commit. The build script stages the website in the isolated hosting checkout, writes a development badge and `preview-build.json`, and uses a commit-scoped service worker cache. GitHub Pages continues to serve production from `main`. Site publication currently runs at review checkpoints. There is no continuously linked GitHub-to-Sites publication pipeline. No production hosting or Android change is required for web acceptance. [Preview packaging script](build-preview.py)
+
+### Minimal manual acceptance
+
+| Group | User status | Representative check |
+| --- | --- | --- |
+| Acquisition, maps and resources | Not tested | Set Flygon to Trapinch, open Desert Resort and return. Check the independent Fire Stone warning when Arcanine and Ninetales use their earlier forms. |
+| Pokémon ranking and filters | Not tested | Open a replacement or an empty slot. Combine Ground and Dragon, switch between any and all, clear the filters and scroll through the ranks. |
+| Movesets and move statistics | Not tested | Confirm Golduck or Arcanine, review both four-slot sets and type part of a move name to edit it. |
+| Plan cards and summaries | Not tested | Compare the two sprites and move rows, confirm the editor title after reopening and review the separately colored coverage and progress metrics. |
+| Hold and contextual navigation | Not tested | Hold a planned card or candidate, release without triggering an action and return from Pokédex or Compare. |
+| Move Checker and phone preview | Not tested | Open the hosted preview on the phone, identify its build, search a machine and check the separate More and Back controls. |
