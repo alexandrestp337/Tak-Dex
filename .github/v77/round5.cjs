@@ -141,7 +141,7 @@ async function dexSearch(page, name) {
     assert.equal(await menu.getByRole('button', { name: 'Compare', exact: true }).count(), 0);
     await release();
     await menu.getByRole('button', { name: 'Open Pokédex' }).click();
-    await page.locator('#dexResult [data-td71-quick-compare="flygon"]').waitFor();
+    await page.locator('#dexResult .dex-entry[data-td71-quick-compare="flygon"]').waitFor();
     await page.locator('#td73DexReturn').click();
     await page.locator('#td72MoveTitle').filter({ hasText: 'Flygon' }).waitFor();
     await openEditor(page, 5);
@@ -189,10 +189,10 @@ async function dexSearch(page, name) {
     await quick.locator('[data-td71-quick-side="B"]').click();
     assert.match(await quick.textContent(), /Emboar.*Golduck/);
     await quick.locator('#td77QuickOpen').click();
-    await page.locator('#td56ComparePage .td56-cards').waitFor();
+    await page.locator('#td56ComparePage .td56-cards').first().waitFor();
     await page.waitForFunction(() => Math.abs(document.querySelector('#td56ComparePage .td56-cards').getBoundingClientRect().top) < 100);
     await page.locator('#td56Back').click();
-    await page.locator('#dexResult [data-td71-quick-compare="golduck"]').waitFor();
+    await page.locator('#dexResult .dex-entry[data-td71-quick-compare="golduck"]').waitFor();
     await page.locator('#moreTab').click();
     await page.locator('#td68OpenMove').click();
     await page.getByRole('tab', { name: 'TM / HM' }).click();

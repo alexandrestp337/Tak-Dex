@@ -1628,3 +1628,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .td77-quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .td77-quick-actions #td77QuickOpen{background:var(--accent);color:#fff}
 .td77-pokemon-actions{display:grid;gap:5px}
+#td41MoveSlots .td42-move-flow .td77-planner-move-info>small:last-child{grid-column:1/-1;text-align:left}
+#td41MoveSlots .td42-move-flow .td77-planner-move-info>strong{grid-column:1/-1}
+#td41MoveSlots .td42-move-flow .td77-planner-move-info>small:first-of-type{grid-area:2/1/3/2}
+.td77-candidate-search{position:relative}
+#td77TypeOptions{position:absolute;z-index:30;top:100%;left:0;right:0;padding:8px;background:var(--card);border:1px solid var(--edge);border-radius:9px;box-shadow:0 9px 22px #0006}

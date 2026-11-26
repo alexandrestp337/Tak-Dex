@@ -1299,7 +1299,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
     const requirement=level?'Level '+level:specialMatch?note.requirement:stone?'Use a Fire Stone':'';
     const resource=specialMatch?evolutionItem({path:note}):stone?'fire-stone':null;
     return requirement?{id:nextId,name:nextName,requirement,level,resource,
-     rank:specialMatch&&!level?audited[start+i+1].rank:0}:null;
+     rank:specialMatch&&!level?audited[start+i+1].rank:stone?game.endsWith(' 2')?3:1:0}:null;
    });
    if(steps.includes(null))continue;
    const sources=direct(row,record);
