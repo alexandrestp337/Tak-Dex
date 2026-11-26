@@ -4791,7 +4791,7 @@ document.addEventListener('keydown',event=>{
   if(during)for(const n of finalLearner(p).legalMoves||[])names.add(n);
   return [...names].filter(n=>!used.has(n)&&n.includes(q)).sort((a,b)=>Number(b.startsWith(q))-Number(a.startsWith(q))||a.localeCompare(b));
  }
- const moveHost=$('td41MoveSlots');
+ const moveHost=$('td41MoveSlots'),freshMoveFocus=new WeakSet();
  function showMoveOptions(input,q=''){
   const p=state?.slots[chosenSlot];
   if(!p)return;
@@ -4819,16 +4819,17 @@ document.addEventListener('keydown',event=>{
  }
  moveHost.addEventListener('focusin',e=>{
   if(!e.target.matches('[data-td45-move]'))return;
-  e.target.select();showMoveOptions(e.target);
+  freshMoveFocus.add(e.target);e.target.select();showMoveOptions(e.target);
  });
  moveHost.addEventListener('click',e=>{
   const input=e.target.closest('[data-td45-move]');
-  if(input&&input.nextElementSibling.hidden){input.select();showMoveOptions(input);}
+  if(input&&freshMoveFocus.delete(input))input.select();
+  if(input&&input.nextElementSibling.hidden)showMoveOptions(input);
   const clear=e.target.closest('[data-td77-clear-move]');
   if(clear)applyDuring(clear.closest('.search').querySelector('input'),'');
  });
  moveHost.addEventListener('input',e=>{
-  if(e.target.matches('[data-td45-move]'))showMoveOptions(e.target,clean(e.target.value));
+  if(e.target.matches('[data-td45-move]')){freshMoveFocus.delete(e.target);showMoveOptions(e.target,clean(e.target.value));}
  });
  moveHost.addEventListener('keydown',e=>{
   const input=e.target.closest('[data-td45-move]')||e.target.closest('.suggestions')?.previousElementSibling;
