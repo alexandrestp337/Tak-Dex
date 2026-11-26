@@ -1279,7 +1279,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    const encounters=(pack.entries?.[id]||[]).filter(()=>!record||!['trade','event'].includes(record.kind))
     .map(e=>{
      const place=placeName(e[0],game);
-     const fallback=included.find(r=>r.method===e[1]&&area(r.place)===area(place));
+     const fallback=!e[4]?.length&&included.find(r=>r.method===e[1]&&area(r.place)===area(place));
      const route=encounterRoute(game,e)||fallback;
      return route&&{...route,place,minLevel:e[2],maxLevel:e[3],conditions:e[4]||[]};
     }).filter(Boolean);

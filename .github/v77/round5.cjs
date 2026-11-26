@@ -84,12 +84,16 @@ async function dexSearch(page, name) {
    const geometry = await page.evaluate(() => {
     const progress = [...document.querySelectorAll('#td4PlanProgress>div')].map(row => [...row.children].map(x => x.getBoundingClientRect().width));
     const action = ['td77Lock', 'td4Clear'].map(id => document.getElementById(id).getBoundingClientRect());
-    return { width: document.documentElement.clientWidth, overflow: document.documentElement.scrollWidth, progress, buttonAlignment: [
+    const search = document.getElementById('td4Search').getBoundingClientRect();
+    const filter = document.getElementById('td77TypeFilter').getBoundingClientRect();
+    return { width: document.documentElement.clientWidth, overflow: document.documentElement.scrollWidth, progress,
+     filterAlignment: search.right <= filter.left && Math.abs(search.top - filter.top) < 2, buttonAlignment: [
       action[0].right < action[1].left, Math.abs((action[0].top + action[0].height / 2) - (action[1].top + action[1].height / 2))
     ] };
    });
    assert.equal(geometry.width, width);
    assert.equal(geometry.overflow, width);
+   assert.equal(geometry.filterAlignment, true);
    assert.deepEqual(geometry.progress.map(row => row.length), [3, 2]);
    assert.ok(geometry.progress.every(row => Math.max(...row) - Math.min(...row) < 1));
    assert.equal(geometry.buttonAlignment[0], true);
@@ -108,6 +112,13 @@ async function dexSearch(page, name) {
      output[name] = { during: moves(slot.duringMoves), final: moves(slot.plannedMoves), route: slot.acquisitionRoute.id };
     }
     console.log('Full pool, four filled planned slots with two team slots empty', JSON.stringify(output));
+    await openEditor(page, 0);
+    const currentRoute = page.locator('[data-td77-route="slot"]');
+    const direct = await currentRoute.locator('option').filter({ hasText: /Obtain Golduck directly.*Village Bridge.*Walk/ }).first().getAttribute('value');
+    await currentRoute.selectOption(direct);
+    await page.waitForFunction(key => JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[0].acquisitionRoute.startId === 55, planKey);
+    assert.match(await page.locator('#td77SlotRoute').textContent(), /Village Bridge.*Lv 36–38/);
+    assert.equal(Object.keys((await selected(page, 0)).finalLearnset.learnBefore).length, 0);
     await openEditor(page, 4);
     await preview(page, 'flygon');
     assert.match(await page.locator('[data-td77-preview-route]').textContent(), /Trapinch.*Vibrava.*35.*Flygon.*45/);

@@ -19,3 +19,24 @@ test('Different teams change the marginal value of Golduck and Magnezone',()=>{
  assert.ok(score([...waterHeavy,magnezone],'Black 2')>score([...waterHeavy,golduck],'Black 2'));
  assert.ok(score([...steelHeavy,golduck],'Black 2')>score([...steelHeavy,magnezone],'Black 2'));
 });
+
+test('Defensive compensation distinguishes an uncovered weakness from a practical switch-in',()=>{
+ const party=[pokemon(58,['fire']),pokemon(59,['fire']),pokemon(54,['water'])];
+ const read=(team,type)=>context.metrics(team,'Black 2').weak.find(row=>row.type===type);
+ const ground=read(party,'ground');
+ assert.equal(ground.severity,'uncovered');
+ assert.equal(ground.weak,2);
+ assert.equal(read(party,'water').severity,'partial');
+ const withImmune=[...party,pokemon(169,['poison','flying'])];
+ assert.equal(read(withImmune,'ground').immune,1);
+ assert.ok(read(withImmune,'ground').gap<ground.gap);
+});
+
+test('Offensive suitability favors a Water-resistant switch-in over a vulnerable Pokémon',()=>{
+ vm.runInContext(part(' function plannerSuitability(', ' function td5CandidateScore('),context);
+ const electric={type:'electric',priority:0};
+ assert.ok(context.plannerSuitability(pokemon(54,['water']),['water'],electric,5)>
+  context.plannerSuitability(pokemon(58,['fire']),['water'],electric,5));
+ assert.ok(context.plannerSuitability(pokemon(169,['poison','flying']),['water','ground'],electric,5)>
+  context.plannerSuitability(pokemon(59,['fire']),['water','ground'],electric,5));
+});
