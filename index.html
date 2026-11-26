@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://alexandrestp337.github.io/Tak-Dex/icon-512.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tak-Dex","url":"https://alexandrestp337.github.io/Tak-Dex/","applicationCategory":"GameApplication","operatingSystem":"Web browser","description":"Pokémon team builder, battle planner, move checker, Pokédex and interactive region maps.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-<link rel="stylesheet" href="styles.css?v=77.0.2">
+<link rel="stylesheet" href="styles.css?v=77.1.0">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -132,13 +132,10 @@
 
 <section id="dexPage" hidden>
   <h2>Pokédex</h2>
-  <details id="td73DexSelector" class="td73-dex-selector" open>
-    <summary><strong>Find a Pokémon</strong><span aria-hidden="true">⌄</span></summary>
+  <div id="td73DexSelector">
     <div class="tool-card">
     <label>Game<select id="dexGame"></select></label>
-    <label>Saved team<select id="dexTeam"></select></label>
-    <label>Team Pokémon<select id="dexTeamPoke"></select></label>
-    <label>Or search Pokémon
+    <label>Search Pokémon
       <div class="search dex-search">
         <input id="dexInput" placeholder="Start typing…" autocomplete="off">
         <button type="button" class="battle-clear" id="dexClear" aria-label="Clear Pokédex search" hidden>×</button>
@@ -147,7 +144,7 @@
     </label>
     <button type="button" id="dexSearch">View Pokémon</button>
     </div>
-  </details>
+  </div>
   <button type="button" id="td73DexReturn" class="td73-back-button" hidden>← Back</button>
   <div id="dexResult" aria-live="polite"></div>
 </section>
@@ -356,20 +353,20 @@
 <script src="unova-b2w2-v74.js?v=74.0.0"></script>
 <script src="db74.js?v=74.0.0"></script>
 <script src="gen5-save.js?v=77.0.0"></script>
-<script src="acquisition-v77.js?v=77.0.2"></script>
-<script src="app.js?v=77.0.2"></script>
-<script src="save-sync.js?v=77.0.0"></script>
+<script src="acquisition-v77.js?v=77.1.0"></script>
+<script src="app.js?v=77.1.0"></script>
+<script src="save-sync.js?v=77.1.0"></script>
 <script src="unova-v74.js?v=74.5.2.20261124"></script>
 <script src="bw-trainer-moves-v76.js?v=74.5.2.20261124"></script>
 <script src="unova-trainer-reference.js?v=76.0.0"></script>
 <script src="trainer-abilities-v76.js?v=76.0.3"></script>
 <script src="platinum-league-v77.js?v=74.5.2.20261124"></script>
 <script src="tutor-locations.js?v=74.0.0"></script>
-<script src="v73-ui.js?v=74.0.0"></script>
+<script src="v73-ui.js?v=77.1.0"></script>
 <script src="hoenn-map.js?v=76.0.0"></script>
-<script src="maps.js?v=77.0.0"></script>
+<script src="maps.js?v=77.1.0"></script>
 <script src="feedback-config.js?v=74.0.0"></script>
 <script src="battle-outcomes.js?v=76.0.6"></script>
-<script src="v74-ux.js?v=77.0.2"></script>
+<script src="v74-ux.js?v=77.1.0"></script>
 </body>
 </html>

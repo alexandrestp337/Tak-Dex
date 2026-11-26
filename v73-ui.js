@@ -2,8 +2,8 @@
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
-const dexSelector=$('td73DexSelector'),dexReturn=$('td73DexReturn');
-if(!dexSelector||!dexReturn)return;
+const dexReturn=$('td73DexReturn');
+if(!dexReturn)return;
 let previousDexScreen=null;
 // The underlying planner keeps the same arrays and DOM while hidden. V72's
 // openPlanner called syncPlanner() on every return, which rebuilt both sides.
@@ -35,16 +35,15 @@ function showDex(name,context,options={}){
  if(!game||!games.includes(game))return;
  const sections=[...document.querySelectorAll('main > section')],visible=sections.filter(el=>!el.hidden),tabs=['teamsTab','battleTab','dexTab','moreTab'],selected=tabs.findIndex(id=>$(id).classList.contains('selected')),scroll=window.scrollY;
  setBack(context,()=>{for(const el of sections)el.hidden=!visible.includes(el);tabs.forEach((id,i)=>{$(id).classList.toggle('selected',i===selected);$(id).setAttribute('aria-current',i===selected?'page':'false')});requestAnimationFrame(()=>window.scrollTo(0,scroll));});
- $('dexGame').value=game;refreshTeamMenus();$('dexTeamPoke').value='';$('dexInput').value=td41PokemonLabel(name);$('dexResults').hidden=true;syncDexClear();dexSelector.open=false;
+ $('dexGame').value=game;refreshTeamMenus();$('dexInput').value=td41PokemonLabel(name);$('dexResults').hidden=true;syncDexClear();
  window.takActivate(2);for(const el of sections)el.hidden=el.id!=='dexPage';
  if(Number(options.id)>0)$('dexInput').dataset.evolutionId=String(options.id);else $('dexInput').value=String(name).replace(/-/g,' ');
  $('dexSearch').click();delete $('dexInput').dataset.evolutionId;
 }
 function goBack(){const old=previousDexScreen;if(!old)return;clearBack();old.restore?.();}
 dexReturn.addEventListener('click',goBack);
-$('dexTab').addEventListener('click',()=>{clearBack();dexSelector.open=!$('dexResult').querySelector('.td66-pokemon-card');});
+$('dexTab').addEventListener('click',()=>clearBack());
 for(const id of ['teamsTab','battleTab','moreTab'])$(id).addEventListener('click',()=>clearBack());
-$('dexSearch').addEventListener('click',()=>{if($('dexTeamPoke').value||$('dexInput').value.trim())dexSelector.open=false});
 
 // DEV3.2: Dex-only hold. Arm during press; open on release after the originating click.
 // No modal is placed underneath the finger while it is still down.

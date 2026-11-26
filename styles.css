@@ -1526,3 +1526,14 @@ body.light .td76-battle-warning.td76-battle-opportunity{background:#ecfaf2;color
 #dexResult .td77-dex-ability{grid-column:1/-1;display:grid;gap:4px;max-width:34rem}
 #dexResult .td77-encounter-access{display:block;color:var(--muted)}
 #typeExplorerResults .td61-entry{scroll-margin-top:16px}
+
+#td73DexSelector{overflow:visible;position:relative;z-index:8}
+#td73DexSelector>.tool-card{overflow:visible;border-top:0;border-radius:inherit}
+#dexResults{max-height:min(42vh,19rem);overflow:auto;z-index:40;overscroll-behavior:contain}
+
+#td77Improvements{display:grid;gap:6px}
+#td77Improvements>div{display:grid;gap:3px;justify-items:start}
+#td77MoveViews{gap:5px;flex-wrap:wrap}
+#td77MoveViews button[aria-pressed="true"]{border-color:var(--accent)}
+.td77-inline-check{display:flex;align-items:center;gap:6px}
+.td77-inline-check input{width:auto}

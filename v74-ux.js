@@ -362,7 +362,7 @@ const recentPanel=document.createElement('details');recentPanel.className='card 
 function renderRecent(){const row=$('td74RecentContents');row.innerHTML=recent().length?recent().map((n,i)=>`<button type="button" data-td74-recent="${i}">${escape(td41PokemonLabel(n.name))}${n.game?' · '+escape(n.game):''}</button>`).join(''):'<p class="note">No recently viewed Pokémon.</p>';}
 renderRecent();let lastRecentHero=null;
 new MutationObserver(()=>{const hero=$('dexResult').querySelector('[data-td71-quick-compare]');if(hero&&hero!==lastRecentHero){lastRecentHero=hero;rememberPokemon(hero.dataset.td71QuickCompare,$('dexGame').value);}}).observe($('dexResult'),{childList:true,subtree:true});
-recentPanel.addEventListener('click',e=>{const b=e.target.closest('[data-td74-recent]');if(!b)return;const record=recent()[Number(b.dataset.td74Recent)];if(!record)return;recentPanel.open=false;const g=record.game||$('dexGame').value||selectedGame();if(g&&[...$('dexGame').options].some(o=>o.value===g))$('dexGame').value=g;$('dexTeam').value='';$('dexTeamPoke').value='';$('dexInput').value=pretty(record.name);$('dexSearch').click();});
+recentPanel.addEventListener('click',e=>{const b=e.target.closest('[data-td74-recent]');if(!b)return;const record=recent()[Number(b.dataset.td74Recent)];if(!record)return;recentPanel.open=false;const g=record.game||$('dexGame').value||selectedGame();if(g&&[...$('dexGame').options].some(o=>o.value===g))$('dexGame').value=g;$('dexInput').value=pretty(record.name);$('dexSearch').click();});
 // Save and restore search strings without forcefully triggering a new data fetch.
 for(const id of ['tmMoveSearch','tmPokemon','dexInput']){
  const field=$(id);if(!field)continue;const key='takdex-v74-input-'+id;

@@ -477,7 +477,8 @@ function open(g,place){
  let target=g;
  if(!target){try{const id=localStorage.getItem('takdex-v71-active-team');const saved=JSON.parse(localStorage.getItem('poketact-teams')||'[]');const t=saved.find(t=>t.id===id);if(t?.game)target=t.game;}catch{}}
  const active=[...document.querySelectorAll('main > section')].find(el=>!el.hidden&&el.id!=='mapsPage');
- returnFrom={id:active?.id||'morePage',scroll:window.scrollY};
+ returnFrom={id:active?.id||'morePage',scroll:window.scrollY,tab:document.querySelector('.main-tabs .selected')?.id};
+ $('backMaps').textContent=returnFrom.id==='morePage'?'← More':'← Back';
  for(const el of document.querySelectorAll('main > section'))el.hidden=el!==page;
  document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));
  if(target&&!['Emerald','Platinum','Black','White','Black 2','White 2'].includes(target)){
@@ -526,7 +527,7 @@ $('backMaps').addEventListener('click',()=>{
   if(previous.id==='morePage')window.takActivate(3);
   else if(previous.id==='plannerPage')openTool('plannerPage',3);
   else if(previous.id==='battlePage')window.takActivate(1);
-  else {$(previous.id).hidden=false;document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));}
+  else {$(previous.id).hidden=false;document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',el.id===previous.tab));}
   requestAnimationFrame(()=>window.scrollTo(0,previous.scroll));
  }else window.takActivate(3);
 });

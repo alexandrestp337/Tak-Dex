@@ -119,7 +119,11 @@
   }
  }
  function description(team) {
-  return team?.saveLink ? 'Saved-game snapshot · '+new Date(team.saveLink.syncedAt).toLocaleString() : 'Read-only save snapshot';
+  if(team?.saveLink?.exportedSnapshot)return 'Exported progression snapshot';
+  if(!team?.saveLink)return 'Read-only save snapshot · Actual progression not synchronized';
+  const progress=team.saveLink.progression;
+  const milestone=progress?.postgame?'Postgame unlocked':Number.isInteger(progress?.badgeCount)?progress.badgeCount+'/8 badges':'';
+  return 'Saved-game snapshot · '+new Date(team.saveLink.syncedAt).toLocaleString()+(milestone?' · '+milestone:'');
  }
  window.takDexSaveSync={synchronize,description};
  $('teams').addEventListener('change',async event=>{
