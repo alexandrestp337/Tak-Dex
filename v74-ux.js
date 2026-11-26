@@ -438,6 +438,7 @@ const $=id=>document.getElementById(id);
 const fields='input:not([type]),input[type=text],input[type=search],input[type=email]';
 const stateful='.battle-clear,.td74-item-clear,.td65-clear,[data-clear],[data-plan-clear],[data-td44-clear]';
 function decorate(input){
+ if(input.closest('.td77-edit-move'))return;
  if(input.disabled||input.readOnly||input.inputMode==='numeric'||input.matches('[data-td2-level],[data-td74-stat],[name="_gotcha"]'))return;
  let shell=input.parentElement;
  if(!shell.matches('.search,.td74-map-search-wrap,.td7-input-shell')){

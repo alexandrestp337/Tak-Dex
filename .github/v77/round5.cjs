@@ -72,7 +72,7 @@ async function dexSearch(page, name) {
    await page.locator('#td4Candidates [data-candidate-id]').first().waitFor();
    assert.ok(Number((await page.locator('#td4CandidateStatus').textContent()).match(/^\d+/)?.[0]) > 24);
    await page.locator('#td77TypeFilter').click();
-   assert.equal(await page.locator('[data-td77-filter-type="fairy"]').count(), 0);
+   assert.equal(await page.locator('[data-td77-filter-type="fairy"]:visible').count(), 0);
    await page.locator('[data-td77-filter-type="ground"]').click();
    await page.locator('[data-td77-filter-type="dragon"]').click();
    await page.locator('#td77RequireTypes').check();
@@ -124,11 +124,11 @@ async function dexSearch(page, name) {
      return card && getComputedStyle(card).userSelect === 'none';
     });
     await openEditor(page, 0);
-    const currentRoute = page.locator('[data-td77-route="slot"]');
+    const currentRoute = page.locator('[data-td77-route="slot"]:visible,[data-td77-route="confirmed"]:visible');
     const direct = await currentRoute.locator('option').filter({ hasText: /Obtain Golduck directly.*Village Bridge.*Walk/ }).first().getAttribute('value');
     await currentRoute.selectOption(direct);
     await page.waitForFunction(key => JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[0].acquisitionRoute.startId === 55, planKey);
-    assert.match(await page.locator('#td77SlotRoute').textContent(), /Village Bridge.*Lv 36–38/);
+    assert.match(await page.locator('#td77SlotRoute:visible,[data-td77-preview-route]:has([data-td77-route="confirmed"])').textContent(), /Village Bridge.*Lv 36–38/);
     assert.equal(Object.keys((await selected(page, 0)).finalLearnset.learnBefore).length, 0);
     await preview(page, 'swanna');
     const candidateCard = page.locator('[data-td77-preview-context] .td43-candidate-pick');
@@ -186,9 +186,9 @@ async function dexSearch(page, name) {
     await page.locator('[data-td77-preview-route]').filter({ hasText: 'Use a Fire Stone' }).waitFor();
     await choose(page, 5, 'ninetales');
     await page.locator('#td77Improvements').locator('..').locator('summary').first().click();
-    const warning = page.locator('#td77Improvements').getByText(/Fire Stone.*2 required/);
+    const warning = page.locator('#td77Improvements [data-td77-resource="Fire Stone"]');
     await warning.waitFor();
-    assert.match(await warning.textContent(), /1 required for routes after the deadline/);
+    assert.deepEqual(await warning.locator('dd').allTextContents(),['2','1','1','2']);
     await page.reload({ waitUntil: 'domcontentloaded' });
     const link = page.locator('[data-td41-team-plan="round5"]');
     if (!await link.isVisible()) await page.locator('[data-td71-toggle="round5"]').click();
@@ -196,13 +196,14 @@ async function dexSearch(page, name) {
     await page.locator('#td72MoveTitle').filter({ hasText: 'Ninetales' }).waitFor();
     assert.equal((await selected(page, 5)).acquisitionRoute.startId, 37);
     await page.locator('#td77Availability').selectOption('postgame');
-    const source = page.locator('[data-td77-route="slot"]');
+    const source = page.locator('[data-td77-route="slot"]:visible,[data-td77-route="confirmed"]:visible');
     const ninetales = await source.locator('option').filter({ hasText: 'Obtain Ninetales directly' }).first().getAttribute('value');
     await source.selectOption(ninetales);
     await page.waitForFunction(key => JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[5].acquisitionRoute.startId === 38, planKey);
     const resource = page.locator('#td77Improvements');
     if (!await resource.locator('..').evaluate(el => el.open)) await resource.locator('..').locator('summary').first().click();
-    await resource.getByText(/Fire Stone.*1 required.*Arcanine/).waitFor();
+    await resource.locator('[data-td77-resource="Fire Stone"]').getByText("Arcanine").waitFor();
+    assert.deepEqual(await resource.locator('[data-td77-resource="Fire Stone"] dd').allTextContents(),['1','1','0','2']);
     console.log('Flygon routes, map return, future Fly, held touch, stone warning and refresh passed');
    }
    if (width === 1280) {
@@ -210,7 +211,7 @@ async function dexSearch(page, name) {
     const learnset = page.locator('[data-dex-section="learnset"]');
     if (!await learnset.evaluate(el => el.open)) await learnset.locator('summary').click();
     const hammer = learnset.locator('[data-td68-move="hammer-arm"]');
-    assert.match(await hammer.locator('xpath=../../..').textContent(), /Move Reminder.*Pokémon World Tournament.*One Heart Scale/);
+    assert.match(await hammer.locator('xpath=../../..').textContent(), /Move Reminder.*Pokémon World Tournament.*1 Heart Scale/);
     await hammer.click();
     await page.locator('#td68MoveResult .td64-move-back').click();
     assert.ok(await learnset.isVisible());

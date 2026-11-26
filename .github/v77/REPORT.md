@@ -17,6 +17,10 @@ Baseline verified against both `V76-STABLE` and remote `main` at `ddf951b`. This
 | V76 regressions | Pass for exercised paths | Node and Chromium suites covered existing save restore, Team Builder, team JSON, battle ranks, red and green KO notices, move checker, maps, offline reload and responsive layout. |
 | Android-native | Not tested | The web sync entry point remains compatible. No Android files changed. |
 
+## Permanent UI development standard
+
+Find the approved equivalent before changing or adding an interface element. Extend its renderer and styles to share dimensions, typography, spacing, borders, color, responsive proportions, and interaction behavior. Align adjacent buttons and avoid duplicate cards and excessive spacing. Verify rendered controls against the equivalent at phone and desktop widths using measured geometry and screenshots where they expose a difference.
+
 ## Progression evidence
 
 The parser cross-checks each optional block with both its checksum and the selected bank's checksum table. Block 52 provides individual badge bits, block 45 provides documented event flags, block 25 provides HM inventory and the validated player block provides Hall of Fame metadata. Flag 2400 means first story clear against Ghetsis in BW and Hall of Fame in B2W2. BW Champion completion is only recorded with Hall of Fame evidence. Badge counts inform estimated story timing and do not mark adjacent scripted events as completed. The last valid data for an unreadable optional block is retained for the same trainer. [PKHeX block accessors and save structures](https://github.com/kwsch/PKHeX/tree/a5311f9f55a84376fd2e2499b25d9fb9640d9f2d/PKHeX.Core/Saves) · [PKHeX documented event flags](https://github.com/kwsch/PKHeX/tree/a5311f9f55a84376fd2e2499b25d9fb9640d9f2d/PKHeX.Core/Resources/text/script/gen5)
@@ -402,3 +406,42 @@ The preview uses an allowlisted static package from a reviewed `v77-development`
 | Plan cards and summaries | Not tested | Compare the two sprites and move rows, confirm the editor title after reopening and review the separately colored coverage and progress metrics. |
 | Hold and contextual navigation | Not tested | Hold a planned card or candidate, release without triggering an action and return from Pokédex or Compare. |
 | Move Checker and phone preview | Not tested | Open the hosted preview on the phone, identify its build, search a machine and check the separate More and Back controls. |
+
+## Correction Round 6
+
+Round 5 acceptance identified six groups that needed work. Round 6 starts at `7d07d82` and retains the previously accepted interaction and layout details inside those groups.
+
+### Planner behavior
+
+- Ranked candidates are grouped after team-aware scoring. A reachable descendant can replace a redundant earlier suggestion. A tight deadline, distinct type or role, or missing requirements can leave the earlier stage in the list. Search still offers individual species. The evolution prompt explicitly offers a later endpoint with its current starting species, or a choice to keep the earlier stage. Eevee's distinct endpoints remain selectable.
+- The old ownership fallback could match another slot's Pokémon by species. The planner now allocates actual members once using save PID or the corresponding team slot for manual and older teams. When another slot already uses the compatible Pokémon, the preview can open the existing slot or use an independent native route. A legacy duplicate PID cannot supply a second slot after reordering. Plans, locks and intentional choices remain stored.
+- Fire Stone demand comes from the planned species' selected route, independently of the During game learner. The resource summary shows total, before-deadline and after-deadline demand separately from documented field stock and renewable access. A blocked Vulpix path contributes projected demand. Direct Ninetales contributes no Fire Stone. Move costs appear only where applicable. Save bag inventory remains unverified.
+- A blocked verified route can generate an editable, labeled theoretical Final set. The deadline gate still excludes it from readiness and the defensive switch-in pool. Newly seeded owned Pokémon and identifiable untouched baseline copies use the existing team-aware optimizer in both modes. Existing manual moves, locks and explicit empty selections are preserved.
+- A confirmed replacement and a temporary candidate preview are distinct. Reopening Change Pokémon restores the complete selected preview with its disabled **Selected** control. Cancel restores the confirmed preview. Selected previews compare with the original actual Pokémon when both are known.
+- The old defensive formula discounted routine half-damage switches below one unit based on a bulk average, so two otherwise adequate resistances could still appear partial. A normal resistance receives full credit unless the holder is notably frail on either defensive side. Quarter-damage resistance and immunity contribute extra, and 4× weaknesses increase demand. Uncovered and partial counts now appear together and use the same planned defensive pool as the expanded breakdown. These are estimates of switch-in options.
+
+### Shared components
+
+The Team Planner filter calls the same type-tile renderer and uses the same three-column rules as Explore Pokémon by Type. It carries the historical type rules, color, borders and selected state directly. Actual and Planned rows use the shared move display and historical statistics. The planned card embeds the autocomplete and clear control. Suggested moves appear in the editor and existing Recommended Improvements without a separate Change Moves disclosure. Collapsed cards use a muted × only where a planned move is new, leaving the existing two-column layout for rows with an actual move.
+
+Quick Compare uses a single equal-width action row. Contextual hold titles identify the actual pair passed to Compare. The TM/HM tab uses the standard clearable search field and browse-on-focus with keyboard selection. Pokédex Reminder, tutor and machine details use compact text below the statistics with supported map links. The established ordinary level-up layout is retained.
+
+The Unova audit remains 406/410 Black 2, 403/407 White 2, 332/340 Black and 424/432 White. Machine gates and Kanto and Johto data remain at their previously audited coverage. The archived Hoenn patch is retained.
+
+### Review and verification
+
+[Requirement checklist](ROUND6-CHECKLIST.md) records test scope and open validation. The private preview uses a package drawn from an explicitly selected `v77-development` Git commit. Its build label, preview manifest and cache name identify that checkout. The hosting connector controls access and keeps the isolated preview origin separate from production. GitHub Pages continues to serve `main`.
+
+| Group | User status | Representative check |
+| --- | --- | --- |
+| Evolution and resources | Not tested | Plan Flygon from Trapinch, check a Psyduck ownership conflict, then compare Fire Stone demand before and after switching Ninetales' route or deadline. |
+| Moveset planning | Not tested | Open a retained Pokémon with an incomplete actual set. Review the automatic suggestions and edit a move in place. Check the muted × and a future Final set. |
+| Filters and candidate previews | Not tested | Compare the type tiles to Pokédex By Type. Confirm a replacement, reopen its selected preview, try a different candidate, then cancel. |
+| Coverage and contextual actions | Not tested | Compare the collapsed defensive counts to the expanded groups. Hold a candidate and check the comparison pair and Quick Compare button dimensions. |
+| Pokédex, Move Checker and preview | Not tested | Check the hosted build, browse the combined TM/HM field and verify Hammer Arm's compact Black 2 Reminder information. |
+
+Physical Samsung and Android WebView testing remains deferred.
+
+The 57 Node tests include four retail-save reference comparisons. Chromium regression commands cover V76 browser, corrections, smoke and team management plus V77 browser and the Round 3–6 scripts. Round 6 checks rendered geometry at 320, 360, 390, 412 and 1280 CSS px and covers the Black 2 flows from an actual seeded team through normal taps, typing and confirmation. See the requirement checklist for individual evidence.
+
+The Sites connector returned `publish_on_push_accepted: false` for the existing private preview. The supported fallback publishes an explicitly staged review checkpoint using the preview packaging script and the Site's version deployment API. Continuous publication would require a supported branch-to-host connection that can target approved `v77-development` checkpoints and preserve the existing private access policy.

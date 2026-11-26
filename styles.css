@@ -381,7 +381,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #td71CompareQuick .td71-quick-slot small{display:block;color:var(--muted)}
 #td71CompareQuick .td71-quick-slot strong{display:block;margin-top:3px}
 #td71CompareQuick .td71-quick-slot button{flex:none}
-#td71QuickClose{margin-top:16px;width:100%}
+
 
 
 /* V71 DEV2 — compact collapsed teams and inline Pokédex base stats.
@@ -457,9 +457,9 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #td68MovePage .td72-move-header-actions button{font-size:.8rem;padding:8px 10px;white-space:nowrap}
 #td72MoveTypePanel{padding:0 0 12px}
 #td72MoveTypePanel>label{max-width:440px}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button{background:color-mix(in srgb,var(--td72-color) 25%,var(--card));border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button{background:color-mix(in srgb,var(--td72-color) 25%,var(--card));border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
 #td72MoveTypeResults{display:grid;gap:7px}
 #td72MoveTypeResults .td72-type-move{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:var(--card);border:1px solid var(--edge);color:var(--text);padding:10px 12px;min-width:0}
 #td72MoveTypeResults .td72-type-move>span{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
@@ -472,7 +472,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 @media(max-width:355px){#teams .td72-team-actions{gap:3px}#teams .td72-team-actions button{padding:7px 4px}#teams .td72-team-actions .delete-team-link{font-size:.65rem!important}}
 
 /* V72 DEV2: keep type options hidden when unavailable in selected generation. */
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button[hidden]{display:none!important}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button[hidden]{display:none!important}
 
 /* V72 DEV2 — Battle opponent typeahead opens above the input, not behind
    Android's on-screen keyboard. Scope to both single/double opponent fields;
@@ -1114,7 +1114,7 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile[aria-expanded="true"]{--td52-selection:var(--muted);border:3px solid var(--td52-selection)!important;background:color-mix(in srgb,var(--td52-selection) 24%,var(--card))!important;box-shadow:0 0 9px 1px color-mix(in srgb,var(--td52-selection) 50%,transparent)!important;outline:none!important;padding:3px 0!important}
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile.td42-good[aria-expanded="true"]{--td52-selection:#38a86a}
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile.td42-bad[aria-expanded="true"]{--td52-selection:#d94b59}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button.selected{outline:none!important;border-color:var(--td72-color)!important;background:color-mix(in srgb,var(--td72-color) 55%,var(--card))!important;box-shadow:0 0 7px color-mix(in srgb,var(--td72-color) 55%,transparent),inset 0 0 0 1px var(--td72-color)!important}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button.selected{outline:none!important;border-color:var(--td72-color)!important;background:color-mix(in srgb,var(--td72-color) 55%,var(--card))!important;box-shadow:0 0 7px color-mix(in srgb,var(--td72-color) 55%,transparent),inset 0 0 0 1px var(--td72-color)!important}
 #td4TeamPlannerPage label.td4-check{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important}
 #td4TeamPlannerPage label.td4-check input[type=checkbox]{display:inline-block!important;width:15px!important;height:15px!important;margin:0!important;padding:0!important;flex:none!important}
 #td4TeamPlannerPage .td52-milestone{position:relative;min-width:0}#td4TeamPlannerPage .td52-milestone input{padding-right:38px}#td4TeamPlannerPage .td52-milestone-x{box-shadow:none!important}
@@ -1234,7 +1234,7 @@ body.td63-map-full-body{overflow:hidden!important}
 .moveRow.td7-inline-clear,.td65-move-slot.td7-inline-clear{grid-template-columns:auto minmax(0,1fr)!important}
 #td4TeamPlannerPage .td5-inline-goal.td7-inline-clear{grid-template-columns:minmax(60px,1fr) auto minmax(90px,1.45fr)!important}
 #td56ComparePage .td56-combo.td7-input-shell input{padding-right:42px!important}
-.tm-combo.td7-input-shell input,.td74-pokemon-search.td7-input-shell input{padding-right:82px!important}
+.td74-pokemon-search.td7-input-shell input{padding-right:82px!important}
 #td68MovePage #td5FilterFields label{margin-block:0 7px!important}
 #td7FeedbackForm label{display:block;margin:0 0 10px}#td7FeedbackForm textarea{width:100%;min-height:120px;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--edge);border-radius:9px;padding:10px;font:inherit}
 #td7FeedbackForm button{margin:4px 0}#td7FeedbackForm .td7-honeypot{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -1601,7 +1601,6 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td77CoverageSummary{color:var(--muted)}
 #td77TypeFilter{min-height:48px;width:42px;padding:3px;background:var(--card);border:1px solid var(--edge);color:var(--muted)}
 #td77TypeFilter.selected,#td77TypeOptions [aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
-#td77TypeOptions .td72-move-types button{padding:3px}
 #td77ActiveTypes{grid-column:1/-1;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 #td77ActiveTypes:empty{display:none}
 #td4Search{width:100%;margin:0}
@@ -1634,3 +1633,31 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .td77-candidate-search{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:start;gap:4px}
 #td4SearchResults{position:absolute;inset:100% 0 auto;z-index:29}
 #td77TypeOptions{position:absolute;z-index:30;top:100%;left:0;right:0;padding:8px;background:var(--card);border:1px solid var(--edge);border-radius:9px;box-shadow:0 9px 22px #0006}
+
+/* V77 Round 6 uses existing comparison and search proportions. */
+#td4TeamPlannerPage .td43-tile-flow.td77-missing-actual{grid-template-columns:auto auto minmax(0,1fr)}
+#td4TeamPlannerPage .td77-no-actual{color:var(--muted);font-size:.73rem;pointer-events:none}
+.td77-quick-actions{margin-top:12px;align-items:stretch}
+.td77-quick-actions button{margin:0;width:100%;min-height:44px;padding:7px 5px;font-size:.85rem;border-radius:10px}
+#dexResult .td681-move-head.td77-special-learn{grid-template-columns:minmax(0,1fr) auto}
+#dexResult .td77-dex-acquisition{display:grid;gap:2px;margin:4px 0 0;color:var(--muted)}
+#td4TeamPlannerPage .td77-move-comparison{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch}
+#td41MoveSlots .td77-move-comparison .td77-planner-move-info{margin:0;height:100%;border-radius:10px}
+#td41MoveSlots .td77-move-comparison>.td42-arrow{align-self:center}
+#td41MoveSlots .td77-edit-move{position:relative;min-width:0}
+#td41MoveSlots .td77-edit-move .td77-planner-move-info{height:100%;margin:0;padding-bottom:4px}
+#td41MoveSlots .td77-edit-move:has(.td77-clear-plan) strong{padding-right:24px}
+#td41MoveSlots .td77-edit-move input{position:absolute;inset:0;width:100%;height:27px;min-height:0;margin:0;padding:3px 27px 3px 4px;opacity:0}
+#td41MoveSlots .td77-edit-move input:focus{opacity:1}
+#td41MoveSlots .td77-clear-plan{transform:none;top:3px;right:3px;width:23px;height:23px;min-height:23px;padding:0;line-height:1}
+#td41MoveSlots .td77-edit-move .suggestions{top:100%}
+#td77SuggestMoves{margin:6px 0}
+.td77-candidate-actions{display:grid;gap:4px;margin:6px 0}
+.td77-coverage-line{display:block;line-height:1.35}
+.td77-resource-summary{display:grid;gap:8px;margin-top:10px}
+.td77-resource-summary h4{margin:0}
+.td77-resource-summary>div{border-top:1px solid var(--edge);padding:6px 0 0}
+.td77-resource-summary strong+.note,.td77-resource-summary strong+small{color:var(--muted)}
+.td77-resource-summary dl{margin:4px 0;display:grid;gap:3px;font-size:.82rem}
+.td77-resource-summary dl>div{display:flex;justify-content:space-between;gap:5px}
+.td77-resource-summary dd{margin:0;font-weight:700}

@@ -40,3 +40,12 @@ test('Offensive suitability favors a Water-resistant switch-in over a vulnerable
  assert.ok(context.plannerSuitability(pokemon(169,['poison','flying']),['water','ground'],electric,5)>
   context.plannerSuitability(pokemon(59,['fire']),['water','ground'],electric,5));
 });
+
+test('Two ordinary sturdy resistances can cover two shared weaknesses',()=>{
+ const weaknesses=[pokemon(58,['fire']),pokemon(59,['fire'])];
+ const counters=[pokemon(134,['water']),pokemon(55,['water'])];
+ const row=context.metrics([...weaknesses,...counters],'Black 2').weak.find(type=>type.type==='water');
+ assert.equal(row.weak,2);
+ assert.equal(row.resist,2);
+ assert.equal(row.severity,'compensated');
+});
