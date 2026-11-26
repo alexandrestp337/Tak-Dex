@@ -78,18 +78,27 @@
    if (!manual && previous?.trainerKey===parsed.trainerKey && ((parsed.sequence-previous.sequence)&0xffff)>=0x8000) return 'stale';
    if (!manual && previous && modifiedAt && previous.modifiedAt && modifiedAt<previous.modifiedAt) return 'stale';
    const signature=JSON.stringify(parsed.pokemon);
-   if (!manual && previous?.signature===signature) return 'unchanged';
-   const lookup=await names();
-   const encounters=await window.takDexDB74.encounter(team.game).catch(()=>null);
-   const pokemon=await Promise.all(parsed.pokemon.map(p=>hydrate(p,team.game,lookup,encounters)));
-   if (pending.get(teamId)!==token || !teams.includes(team) || team.game!==parsed.game) return 'superseded';
-   const nextParty=Array.from({length:6},(_,i)=>pokemon[i]||null);
-   if (manual && previous && partyMatches(team.pokemon,nextParty)) return 'unchanged';
+   const progress={...(previous?.trainerKey===parsed.trainerKey?previous.progression:{}),...parsed.progression};
+   const progressChanged=JSON.stringify(progress)!==JSON.stringify(previous?.progression||{});
+   const sameParty=previous?.signature===signature;
+   if (!manual&&sameParty&&!progressChanged) return 'unchanged';
+   let nextParty=team.pokemon;
+   if(manual||!sameParty){
+    const lookup=await names();
+    const encounters=await window.takDexDB74.encounter(team.game).catch(()=>null);
+    const pokemon=await Promise.all(parsed.pokemon.map(p=>hydrate(p,team.game,lookup,encounters)));
+    const hydrated=Array.from({length:6},(_,i)=>pokemon[i]||null);
+    if(!partyMatches(team.pokemon,hydrated))nextParty=hydrated;
+   }
+   if(pending.get(teamId)!==token||!teams.includes(team)||team.game!==parsed.game)return 'superseded';
+   if(manual&&previous&&nextParty===team.pokemon&&!progressChanged)return 'unchanged';
    const oldParty=team.pokemon;
    team.pokemon=nextParty;
-   team.saveLink={signature,trainerKey:parsed.trainerKey,sequence:parsed.sequence,modifiedAt:modifiedAt||null,syncedAt:Date.now()};
+   team.saveLink={signature,progression:progress,trainerKey:parsed.trainerKey,sequence:parsed.sequence,modifiedAt:modifiedAt||null,syncedAt:Date.now()};
    try { save(); }
    catch(error) {team.pokemon=oldParty;team.saveLink=previous;throw error;}
+   window.dispatchEvent(new CustomEvent('td77:progression',{detail:{teamId}}));
+   if(nextParty===oldParty){status(teamId,description(team));return 'updated';}
    window.dispatchEvent(new CustomEvent('td76:save-synced',{detail:{teamId}}));
    for (const tile of document.querySelectorAll('[data-td74-builder-team]')) {
     if (tile.dataset.td74BuilderTeam!==teamId || tile.getAttribute('aria-expanded')==='true') continue;
@@ -99,7 +108,7 @@
     tile.setAttribute('aria-label',p?'Edit '+label:label+' '+(Number(tile.dataset.td74BuilderSlot)+1));
    }
    const body=[...document.querySelectorAll('[data-td71-team-body]')].find(node=>node.dataset.td71TeamBody===teamId);
-   if (body) body.firstElementChild.textContent=pokemon.length+'/6 Pokémon';
+   if (body) body.firstElementChild.textContent=nextParty.filter(Boolean).length+'/6 Pokémon';
    status(teamId,description(team));
    return 'updated';
   } catch(error) {
