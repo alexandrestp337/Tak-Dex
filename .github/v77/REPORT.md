@@ -549,3 +549,24 @@ The editor keeps search and four equal-size actions above the scrollable results
 1. **Recommended improvements** — Toggle the main section and expand each category. Check the unchanged recommendation count, compact comparisons and resource counters.
 2. **Move editor** — Open a move and browse before typing. Try Keep, Clear, Checker and Close. Expand a move requirement and check that the editor stays open.
 3. **Change Pokémon** — Select an empty slot, then collapse and reopen its editor. Check the header spacing and the unchanged grid-card heights.
+
+## Correction Round 10
+
+Round 10 starts at `b7ce2ce`. The active planned move and its open editor use the existing red border. The move list scroll area can grow from 230 to 260 CSS px and remains viewport-relative.
+
+Keep had used the teachable move list for both enablement and application. It now uses the existing owned Pokémon and evolution-path retention check, prevents duplicate planned moves, and updates only the selected row in the active mode. The actual card opens its own move in Move Checker, and the editor opens the planned move.
+
+Candidate rows place acquisition details in independent disclosures with visible progression and deadline status. Direct encounters use a neutral heading and separate location from method and encounter level. Evolution rows summarize the route and requirements. The coverage badges group new targets, existing coverage that gains STAB, and losses. Rankings and source data retain their existing rules.
+
+### Targeted verification
+
+- **Pass** · Chromium at 320 and 412 CSS px. Verified matching 1 px accent borders and a 260 px scroll area without horizontal overflow or automatic search focus.
+- **Pass** · Restored Scratch over Flame Wheel in Final and During game, including a fixture where Scratch is absent from the projected teachable list. Keep stayed disabled for an unrelated replacement whose list included Scratch. The learned count updated. Actual and planned Checker actions opened different moves and returned to Team Planner.
+- **Pass** · Direct and evolutionary acquisition disclosures started closed, expanded independently and preserved the candidate list on return from a map. Coverage rows used grouped badges.
+- **Pass** · Nine existing ranking and ownership tests.
+- **Pending** · Physical Samsung and Android WebView testing.
+
+### Manual acceptance
+
+1. **Move editor** — Open a planned move and check the red borders and taller list. Use Keep on a retained actual move, then compare the Actual and planned Checker destinations.
+2. **Candidates** — Expand one direct encounter and one evolution route. Check the map links, return to the list and review the grouped coverage badges.

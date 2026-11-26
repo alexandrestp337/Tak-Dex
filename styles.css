@@ -1708,3 +1708,9 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4Edit #td77SlotRoute:empty,#td4Edit #td41MoveSlots:empty{display:none}
 #td4TeamPlannerPage #td4Slots>#td4Edit:has(#td72MoveHeading[hidden]){padding-block:4px}
 #td4Edit>.td42-settings:first-of-type>summary{padding-block:6px}
+
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) .td77-planner-move-info,
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move>.suggestions:not([hidden]){border:1px solid var(--accent)}
+#td41MoveSlots .td78-move-results{max-height:min(38vh,260px)}
+#td4Candidates .td80-candidate-acquisition>summary{font-size:.82rem;padding-block:4px}
+#td4Candidates .td80-candidate-acquisition>small{display:block;margin:2px 0}

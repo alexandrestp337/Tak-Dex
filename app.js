@@ -4362,23 +4362,36 @@ document.addEventListener('keydown',event=>{
   const requirements=r?.steps.map(step=>step.requirement).join(' · ');
   return select+(r?`<details class="td42-settings td78-disclosure"><summary>${safe(heading+(requirements?' · '+requirements:''))}</summary>${routeDescription(r,r.steps.length>1)}</details>${routeFits(r)?'':`<small class="td63-danger">${safe(routeRestriction(r))}</small>`}`:'<small>'+td77AcquisitionLinks(availability(slot),state.game)+'</small>');
  }
- function candidateAcquisition(slot,index){
-  const route=chosenRoute(slot);
-  if(route)return routeDescription(route);
-  return '<small data-td62-acq="'+index+'">'+td77AcquisitionLinks(availability(slot),state.game)+'</small>';
+ function candidateAcquisition(slot){
+  const game=state.game,progress=window.td62Progress;
+  const route=chosenRoute(slot),timing=route||acquisition(slot);
+  const target=$('td77Availability').value, deadline=deadlineRank();
+  const description=progress.describe(timing,effectiveProgress(),target);
+  const heading=route?.steps.length?td41PokemonLabel(route.startName)+route.steps.map(step=>
+   ' → '+td41PokemonLabel(step.name)+' · '+step.requirement.replace(/^Level /,'Lv ')).join(''):'Acquisition details';
+  const rank=timing.rank;
+  const now=progress.rank(effectiveProgress());
+  const status=timing.kind==='owned'?'Already on team':rank==null||!timing.confirmed&&!route?description.split(' · ')[0]:
+   now!=null&&rank<=now?'Available now':rank===9?'Before Elite Four':rank===10?'Postgame':rank===0?'Start of game':'Available after badge '+rank;
+  const restriction=route&&!routeFits(route)?routeRestriction(route):!route&&deadline!=null&&rank>deadline?'After planning deadline':'';
+  const initial=route?.initial;
+  const method=initial&&({walk:'Wild encounter','dark-grass':'Dark grass','grass-spots':'Rustling grass'}[initial.method]||pretty(initial.method));
+  const levels=initial?.minLevel?'Lv '+initial.minLevel+(initial.maxLevel&&initial.maxLevel!==initial.minLevel?'–'+initial.maxLevel:''):'';
+  const gate=rank=>milestoneOptions(game).find(([key])=>progress.rank(key)===rank)?.[1];
+  const lines=initial?[initial.place,[method,levels].filter(Boolean).join(' · '),
+   gate(initial.rank),rank>initial.rank?gate(rank):'',initial.note]:
+   [description];
+  return `<details class="td78-disclosure td80-candidate-acquisition"><summary>${safe(heading)}</summary>
+   ${lines.filter(Boolean).map(line=>`<small>${td77AcquisitionLinks(line,game)}</small>`).join('')}</details>
+   <small class="${restriction?'td63-danger':progress.tone(timing,effectiveProgress(),target)}">${safe([status,restriction].filter(Boolean).join(' · '))}</small>`;
  }
  function availability(slot){if(!slot)return '';return window.td62Progress.describe(acquisition(slot),effectiveProgress(),$('td77Availability').value);}
  function refreshAcquisition(){
   const p=state?.slots[chosenSlot],a=ownedFor(p,chosenSlot);
-  const color=x=>window.td62Progress.tone(acquisition(x),effectiveProgress(),$('td77Availability').value);
   $('td77SlotRoute').innerHTML=p?routeEditor(p,'slot'):'';
   $('td77SlotRoute').hidden=Boolean(settings.open&&manualCandidate?.confirmed);
   const indicator=$('td63SelectedReplacement');
   if(indicator)indicator.textContent=p&&!sameMon(a,p)?'Planned: '+td41PokemonLabel(p.name):'';
-  for(const el of $('td4Candidates').querySelectorAll('[data-td62-acq]')){
-   const row=ranked[Number(el.dataset.td62Acq)];
-   if(row){el.innerHTML=td77AcquisitionLinks(availability(row),state.game);el.className=color(row);}
-  }
  }
  page.addEventListener('click',e=>{
   const link=e.target.closest('[data-td74-dex-map]');
@@ -5102,6 +5115,11 @@ document.addEventListener('keydown',event=>{
   if(during)for(const n of finalLearner(p).legalMoves||[])names.add(n);
   return [...names].filter(n=>!used.has(n)&&n.includes(q)).sort((a,b)=>Number(b.startsWith(q))-Number(a.startsWith(q))||a.localeCompare(b));
  }
+ function canKeepActual(p,index,mode,name){
+  const during=mode==='during',learner=during?duringLearner(p,chosenSlot):finalLearner(p);
+  const moves=during?p.duringMoves:p.plannedMoves;
+  return retainsMove(p,learner,name,chosenSlot)&&!moves.some((move,i)=>i!==index&&goal(move)===name);
+ }
  const moveHost=$('td41MoveSlots');
  function showMoveOptions(input,q=''){
   const p=state?.slots[chosenSlot];
@@ -5111,11 +5129,11 @@ document.addEventListener('keydown',event=>{
   const opts=legalOptions(p,+index,mode,q);
   const old=input.closest('[data-td77-actual-move]')?.dataset.td77ActualMove;
   const selected=goal((mode==='during'?p.duringMoves:p.plannedMoves)[+index]);
-  const timing=(old||selected)&&plannerMoveTiming(learner,old||selected);
+  const timing=selected&&plannerMoveTiming(learner,selected);
   const action=(name,attributes,path)=>`<button type="button" ${attributes}><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg>${name}</button>`;
-  const keep=action('Keep',old&&legalOptions(p,+index,mode,old).includes(old)?`data-td45-restore="${safe(old)}"`:'disabled','M3 12a9 9 0 1 1 3 7 M3 5v7h7');
+  const keep=action('Keep',canKeepActual(p,+index,mode,old)?`data-td45-restore="${safe(old)}"`:'disabled','M3 12a9 9 0 1 1 3 7 M3 5v7h7');
   const clear=action('Clear',selected?'data-td77-clear-move aria-label="Clear planned move"':'disabled','m6 6 12 12 M18 6 6 18');
-  const checker=action('Checker',(old||selected)?`data-td77-plan-move="${safe(old||selected)}" data-td77-reminder="${safe(timing?.text||'')}"`:'disabled','M13 5h6v6 M19 5l-8 8 M19 13v6H5V5h6');
+  const checker=action('Checker',selected?`data-td77-plan-move="${safe(selected)}" data-td77-reminder="${safe(timing?.text||'')}"`:'disabled','M13 5h6v6 M19 5l-8 8 M19 13v6H5V5h6');
   const close=action('Close','data-td79-close-move','m5 12 4 4L19 6');
   const render=(n,move)=>move?td77MoveResultLines({...move,name:n}):'<strong>'+safe(pretty(n))+'</strong>';
   box.innerHTML=`<div class="td78-move-actions">${keep}${clear}${checker}${close}</div><strong>Available moves</strong><div class="td78-move-results">`+
@@ -5209,15 +5227,23 @@ document.addEventListener('keydown',event=>{
   },150);
  });
  page.addEventListener('pointerdown',e=>{if(!e.target.closest('.td77-edit-move'))for(const box of moveHost.querySelectorAll('.suggestions:not([hidden])'))box.hidden=true;});
- function applyDuring(input,name){
+ function applyDuring(input,name,retained=false){
   const p=state.slots[chosenSlot],i=Number(input.dataset.td77During);
-  if(!p?.duringMoves||name&&!legalOptions(p,i,'during',name).includes(name))return;
+  if(!p?.duringMoves||name&&!retained&&!legalOptions(p,i,'during',name).includes(name))return;
   p.duringMoves[i]={move:name,purpose:'keep',replacement:''};
   (p.duringManualSlots??=[])[i]=true;delete p.autoOwnedPending;
   if(p.duringAutoMoves)p.duringAutoMoves[i]='';
   persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();
  }
- moveHost.addEventListener('click',async e=>{const b=e.target.closest('[data-td45-pick],[data-td45-restore]'),p=state?.slots[chosenSlot];if(!b||!p)return;e.preventDefault();const input=b.closest('.td45-move-search').querySelector('input'),[i,k]=input.dataset.td45Move.split(':'),n=b.dataset.td45Pick||b.dataset.td45Restore,m=p.plannedMoves[+i];if(!legalOptions(p,+i,k,n).includes(n))return;if(k==='during'){applyDuring(input,n);return;}let confirmedFrom='';const slot=chosenSlot,g=state.game,stamp=token,prev=goal(m),others=p.plannedMoves.filter((_,j)=>j!==+i).map(goal).filter(Boolean);if(prev&&prev!==n){for(const name of [prev,n])if(!info(name)){try{const v=await enrichMove({name:pretty(name)},gameGeneration(g),g);if(v?.type&&v.damageClass)moveInfo.set(g+':'+name,v)}catch{}}if(stamp!==token||slot!==chosenSlot||state.slots[slot]!==p||p.plannedMoves[+i]!==m||goal(m)!==prev)return;const reasons=downgradeReasons(finalLearner(p),slot,prev,n,others,g);if(reasons.length&&!confirm('Potential moveset downgrade: '+pretty(prev)+' → '+pretty(n)+'\n'+reasons.join('\n')+'\nKeep replacement?')){input.value=pretty(prev);input.nextElementSibling.hidden=true;return;}if(reasons.length)confirmedFrom=m.warningTarget===prev&&m.warningFrom?m.warningFrom:prev;}if(k==='move'){p.plannedMoves[+i]={move:n,purpose:'keep',replacement:'',milestone:'',usefulness:'unknown'}}else if(m.move&&m.move!==n){m.purpose='temporary';m.replacement=n}else{m.move=n;m.purpose='keep';m.replacement=''}const chosen=p.plannedMoves[+i];(p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;if(p.finalAutoMoves)p.finalAutoMoves[+i]='';chosen.warningFrom=confirmedFrom;chosen.warningTarget=confirmedFrom?n:'';persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();});
+ moveHost.addEventListener('click',async e=>{const b=e.target.closest('[data-td45-pick],[data-td45-restore]'),p=state?.slots[chosenSlot];if(!b||!p)return;e.preventDefault();const input=b.closest('.td45-move-search').querySelector('input'),[i,k]=input.dataset.td45Move.split(':'),n=b.dataset.td45Pick||b.dataset.td45Restore,m=p.plannedMoves[+i];if(b.hasAttribute('data-td45-restore')){
+  const actualMove=input.closest('[data-td77-actual-move]')?.dataset.td77ActualMove;
+  if(n!==actualMove||!canKeepActual(p,+i,k,n))return;
+  if(k==='during'){applyDuring(input,n,true);return;}
+  p.plannedMoves[+i]={move:n,purpose:'keep',replacement:''};
+  (p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;
+  if(p.finalAutoMoves)p.finalAutoMoves[+i]='';
+  persist();render();renderMoveSlots();refreshMoveInfo();return;
+ }if(!legalOptions(p,+i,k,n).includes(n))return;if(k==='during'){applyDuring(input,n);return;}let confirmedFrom='';const slot=chosenSlot,g=state.game,stamp=token,prev=goal(m),others=p.plannedMoves.filter((_,j)=>j!==+i).map(goal).filter(Boolean);if(prev&&prev!==n){for(const name of [prev,n])if(!info(name)){try{const v=await enrichMove({name:pretty(name)},gameGeneration(g),g);if(v?.type&&v.damageClass)moveInfo.set(g+':'+name,v)}catch{}}if(stamp!==token||slot!==chosenSlot||state.slots[slot]!==p||p.plannedMoves[+i]!==m||goal(m)!==prev)return;const reasons=downgradeReasons(finalLearner(p),slot,prev,n,others,g);if(reasons.length&&!confirm('Potential moveset downgrade: '+pretty(prev)+' → '+pretty(n)+'\n'+reasons.join('\n')+'\nKeep replacement?')){input.value=pretty(prev);input.nextElementSibling.hidden=true;return;}if(reasons.length)confirmedFrom=m.warningTarget===prev&&m.warningFrom?m.warningFrom:prev;}if(k==='move'){p.plannedMoves[+i]={move:n,purpose:'keep',replacement:'',milestone:'',usefulness:'unknown'}}else if(m.move&&m.move!==n){m.purpose='temporary';m.replacement=n}else{m.move=n;m.purpose='keep';m.replacement=''}const chosen=p.plannedMoves[+i];(p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;if(p.finalAutoMoves)p.finalAutoMoves[+i]='';chosen.warningFrom=confirmedFrom;chosen.warningTarget=confirmedFrom?n:'';persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();});
  $('td4HM').addEventListener('click',e=>{const b=e.target.closest('[data-td41-carrier]');if(!b)return;if($('td4Edit').hidden||chosenSlot!==Number(b.dataset.td41Carrier))$('td4Slots').querySelector(`[data-td4-slot="${Number(b.dataset.td41Carrier)}"]`)?.click();$('td41MoveSlots').scrollIntoView({block:'start'});});
 
  async function refreshLeagueInfo(){const g=state.game,stamp=token;const missing=[...new Set(leagueTargets(g).flatMap(t=>t.rows.filter(r=>!r.types?.length||!r.id||clean(r.name)==='jellicent').map(r=>clean(r.name))))];for(let i=0;i<missing.length;i+=6){if(stamp!==token)return;await Promise.all(missing.slice(i,i+6).map(async n=>{try{const d=await details(n,g);leagueInfo.set(g+':'+n,d)}catch{}}));}if(stamp===token&&state?.game===g&&!$('td41MoveSlots').contains(document.activeElement))render();}
@@ -5374,7 +5400,18 @@ document.addEventListener('keydown',event=>{
   originPid:origin?.originPid,originName:origin?.originName,originSlot:origin?.originSlot,locked:related&&!!previous.locked};persist();render();$('td4Search').value='';$('td4SearchResults').hidden=true;lookup=state.slots[i];$('td4CandidateStatus').textContent='';$('td4Clear').hidden=false;renderMoveSlots();refreshMoveInfo();if(settings.open)restoreConfirmedPreview();findCandidates();requestAnimationFrame(()=>{if(my===token&&i===chosenSlot&&!page.hidden)$('td4Edit').scrollIntoView({block:'start'});});}catch{$('td4CandidateStatus').textContent='Pokémon data unavailable.';}}
  $('td4Clear').onclick=async()=>{const i=chosenSlot,original=ownedFor(state.slots[i],i),g=state.game,stamp=token;if(state.approved||!state.slots[i]||!confirm(original?'Reset this planned Pokémon and its moves to your current team?':'Clear this planned slot?'))return;++rankRun;const restored=fromTeam(original,i);if(restored)restored.plannedMoves=restored.plannedMoves.map(m=>({...m,purpose:m.move?'keep':'review'}));state.slots[i]=restored;manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();lookup=restored;persist();render();$('td4Search').value='';$('td4SearchResults').hidden=true;$('td4Clear').hidden=!restored;renderMoveSlots();refreshMoveInfo();if(restored){try{const d=await details(restored.name,g);if(stamp!==token||state.slots[i]!==restored)return;state.slots[i]={...restored,...d};persist();render();if(i===chosenSlot)renderMoveSlots()}catch{}}if(stamp===token&&i===chosenSlot)findCandidates();};
  function candidateDelta(before,after,g){const a=metrics(before,g),b=metrics(after,g),types=ps=>[...new Set(ps.flatMap(p=>p?.types||[]))],unique=types(before),next=types(after),added=b.covered.filter(t=>!a.covered.includes(t)),lost=a.covered.filter(t=>!b.covered.includes(t)),lostTypes=unique.filter(t=>!next.includes(t)),roles=ps=>new Set(ps.flatMap(roleTags)),oldRoles=roles(before),newRoles=roles(after),lostRoles=[...oldRoles].filter(r=>!newRoles.has(r)),compatible=ps=>new Set(ps.flatMap(p=>p?.hms||[])),oldHM=compatible(before),newHM=compatible(after),lostHM=[...oldHM].filter(h=>!newHM.has(h));return {added,lost,lostTypes,lostRoles,lostHM,newTypes:next.filter(t=>!unique.includes(t))}}
- function candidateCoverageCopy(delta,p){const via=t=>(p.types||[]).filter(a=>matchup(a,[t],gameGeneration(state.game))>1).map(pretty).join('/');const actualCovered=coverageFor((actual()?.pokemon||[]).flatMap(q=>(q?.moves||[]).map(moveKey)).filter(Boolean)).types;const plannedCovered=coverageFor(knownMoves()).types;const potential=delta.added.map(t=>pretty(t)+(via(t)?' via '+via(t):'')+((actualCovered.includes(t)&&plannedCovered.includes(t))?' (already covered — Actual & Planned)':actualCovered.includes(t)?' (already covered by actual moves)':plannedCovered.includes(t)?' (already covered by planned moves)':''));return `${delta.newTypes?.length?`<small class="td41-good">New STAB type: ${safe(delta.newTypes.map(pretty).join(', '))}</small>`:''}<small>Potential STAB targets: ${safe(potential.join(', ')||'No new targets')}</small>${delta.lost.length?`<small class="td63-danger">Lost potential STAB targets: ${safe(delta.lost.map(pretty).join(', '))}</small>`:''}`;}
+ function candidateCoverageCopy(delta){
+  const actualCovered=coverageFor((actual()?.pokemon||[]).flatMap(p=>(p?.moves||[]).map(moveKey)).filter(Boolean)).types;
+  const plannedCovered=coverageFor(knownMoves()).types;
+  const groups=[
+   ['New offensive coverage',delta.added.filter(t=>!actualCovered.includes(t)&&!plannedCovered.includes(t))],
+   ['Existing move coverage · gains STAB',delta.added.filter(t=>actualCovered.includes(t)||plannedCovered.includes(t))],
+   ['STAB coverage lost',delta.lost]
+  ];
+  return (delta.newTypes.length?`<small class="td41-good">New STAB type · ${delta.newTypes.map(pill).join(' ')}</small>`:'')+
+   groups.filter(([,types])=>types.length).map(([label,types])=>
+    `<small class="${label==='STAB coverage lost'?'td63-danger':''}">${label} · ${types.map(pill).join(' ')}</small>`).join('');
+ }
  function compositionValue(party,game){
   const gen=gameGeneration(game),m=metrics(party,game);
   const typings=new Map(),roles={physical:0,special:0};
@@ -5775,7 +5812,7 @@ document.addEventListener('keydown',event=>{
    if(my!==token||run!==rankRun||i!==chosenSlot)return;
    observer.disconnect();
    candidates.querySelector('[data-td77-more-candidates]')?.remove();
-   candidates.insertAdjacentHTML('beforeend',ranked.slice(from,from+24).map((p,offset)=>{const j=from+offset;return `<div class="td43-candidate" data-candidate-id="${p.id}" data-score="${p.score.toFixed(2)}" data-factors="${safe(JSON.stringify(p.parts))}"><button type="button" class="td43-candidate-pick" data-td4-candidate="${j}"><img loading="lazy" src="${safe(sprite(p))}" alt=""><span class="td43-candidate-copy"><strong>${safe(td41PokemonLabel(p.name))}</strong>${p.evolvesSelected?'<small>Evolution of the planned Pokémon</small>':''}<span class="pills">${p.types.map(pill).join('')}</span>${p.addressed.length?`<small class="td41-good">Answers ${safe(p.addressed.map(r=>pretty(r.type)).join(', '))}</small>`:''}${p.addsPressure.length?`<small class="td63-danger">Adds ${safe(p.addsPressure.map(r=>pretty(r.type)).join(', '))} pressure</small>`:''}${candidateCoverageCopy(candidateDelta(original,[...base,p],g),p)}</span><span>Preview ›</span></button>${candidateAcquisition(p,j)}</div>`;}).join(''));
+   candidates.insertAdjacentHTML('beforeend',ranked.slice(from,from+24).map((p,offset)=>{const j=from+offset;return `<div class="td43-candidate" data-candidate-id="${p.id}" data-score="${p.score.toFixed(2)}" data-factors="${safe(JSON.stringify(p.parts))}"><button type="button" class="td43-candidate-pick" data-td4-candidate="${j}"><img loading="lazy" src="${safe(sprite(p))}" alt=""><span class="td43-candidate-copy"><strong>${safe(td41PokemonLabel(p.name))}</strong>${p.evolvesSelected?'<small>Evolution of the planned Pokémon</small>':''}<span class="pills">${p.types.map(pill).join('')}</span>${p.addressed.length?`<small class="td41-good">Answers ${safe(p.addressed.map(r=>pretty(r.type)).join(', '))}</small>`:''}${p.addsPressure.length?`<small class="td63-danger">Adds ${safe(p.addsPressure.map(r=>pretty(r.type)).join(', '))} pressure</small>`:''}${candidateCoverageCopy(candidateDelta(original,[...base,p],g))}</span><span>Preview ›</span></button>${candidateAcquisition(p)}</div>`;}).join(''));
    from+=24;
    if(from<ranked.length){
     candidates.insertAdjacentHTML('beforeend','<button type="button" data-td77-more-candidates>Show more Pokémon ('+(ranked.length-from)+')</button>');
