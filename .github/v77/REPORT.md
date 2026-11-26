@@ -474,3 +474,31 @@ This intermediate functional checkpoint starts at `f0de688` on `v77-development`
 [Round 7A Chromium test](round7a.cjs) uses the normal planner controls for the cases above. All 59 Node tests passed with the four PKTool retail-save references enabled. Chromium passed the Round 7A script, the V76 and V77 shared browser suites, and the established Round 3–6 regression scripts. The runs covered saved teams, historical data, Battle, 6v6, offline reload, Pokédex and map navigation. Use `TAKDEX_REFERENCE_SAVES` to run the retail comparison and file-picker cases.
 
 Readiness describes super-effective coverage within the checked route and deadline. It estimates future training from the route and level window. It does not verify bag contents or certify battle outcomes. Evolution paths that lack reliable data retain a restriction or an unknown status.
+
+## Correction Round 7B
+
+Round 7B starts at `8327ec4` and carries forward the functional verification above. The planner uses existing search, move cards, warnings and disclosures. Empty slots retain their six-card grid dimensions. The empty-slot editor removes its top separator and extra margin.
+
+The old autocomplete participated in the comparison grid's layout and borrowed the planned card's narrow width. It now opens over the full row, outside the measured card height. Clearing is available within the open editor. Retained moves show **Keep** and remain editable. Newly added moves use a compact non-interactive ×. The browser scenario clears and restores Scratch through the editor and checks that the learned counter changes with both edits.
+
+Evolution prompts show the route requirements and deadline restriction near the endpoint action. Candidate details move coverage and suggested moves into a disclosure. Duplicate-family warnings occupy a red line above confirmation. Resource headings and Pokémon names occupy separate lines with the existing aligned counters.
+
+Coverage uses the intended team and shows compensated weaknesses and meaningful roles. Readiness uses the deadline-filtered Round 7A results and colors each trainer independently. The selected Pokémon's move improvements use a collapsed disclosure. Team-wide moves remain alongside Pokémon improvements and display the before and after moves, relevant stats and trade-offs, route timing and confirmation.
+
+### Manual review
+
+| Group | Check |
+| --- | --- |
+| Evolution, acquisition and resources | Open Vulpix → Ninetales and compare Fire Stone demand with direct Ninetales. Review the deadline warning and clickable acquisition location. |
+| Moveset and progress | Open a retained move, search, clear it and restore it. Check **Keep**, the comparison height and learned count. |
+| Analysis and improvements | Compare intended-team weaknesses with Gym and Elite Four coverage. Preview a suggested move and check the active planning mode before confirming. |
+| Interface and previews | Open an empty slot, then reopen a confirmed replacement. Check the selector, warning placement and coverage disclosure. |
+
+Physical Samsung and Android WebView behavior remain untested.
+
+### Automated verification
+
+- **Pass** · 59 Node tests with four public retail reference saves.
+- **Pass** · Chromium rendered geometry at 320, 360, 390, 412 and 1280 CSS px. Checks measured row and dropdown widths, unchanged row height while editing, horizontal containment, no permanent clear overlay, equal adjacent slot heights and the removed empty editor separator.
+- **Pass** · Round 7A Chromium scenario with the Round 7B Scratch clear and keyboard restore checks. It also rechecked the acquisition paths, resource totals, retained moves, analysis, recommendations, legacy migration and real Black 2 import. The save bytes matched after import.
+- **Pass** · Shared V76 and V77 Chromium suites and the Round 4 planner regression. They covered Battle, 6v6, offline cold reload, file import, synchronization, JSON export and import, Pokédex, Maps, Move Checker and comparison return.

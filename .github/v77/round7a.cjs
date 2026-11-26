@@ -86,6 +86,16 @@ async function open(page){
   assert.deepEqual(await rowData(),expectedRows);
   assert.equal(await progress.locator('strong').textContent(),'7/9');
   await switchMode(page,'final');
+  const scratch=rows.filter({has:page.locator('.td41-good',{hasText:'Keep'})}).filter({has:page.getByRole('textbox',{name:'Goal move 2',exact:true})});
+  const editScratch=scratch.locator('input');
+  await editScratch.click();
+  await scratch.getByRole('button',{name:'Clear planned move',exact:true}).click();
+  assert.equal(await progress.locator('strong').textContent(),'6/8');
+  const empty=page.getByRole('textbox',{name:'Goal move 2',exact:true});
+  await empty.click();
+  await empty.fill('scratch');
+  await empty.press('Enter');
+  await page.waitForFunction(()=>document.querySelector('#td4PlanProgress').textContent.includes('7/9'));
   const target=page.getByRole('combobox',{name:'Final moveset target'});
   await target.selectOption('55');
   await waitSpecies(page,0,55);

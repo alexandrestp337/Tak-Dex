@@ -1644,14 +1644,22 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4TeamPlannerPage .td77-move-comparison{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch}
 #td41MoveSlots .td77-move-comparison .td77-planner-move-info{margin:0;height:100%;border-radius:10px}
 #td41MoveSlots .td77-move-comparison>.td42-arrow{align-self:center}
-#td41MoveSlots .td77-edit-move{position:relative;min-width:0}
-#td41MoveSlots .td77-edit-move .td77-planner-move-info{height:100%;margin:0;padding-bottom:4px}
-#td41MoveSlots .td77-edit-move:has(.td77-clear-plan) strong{padding-right:24px}
-#td41MoveSlots .td77-edit-move input{position:absolute;inset:0;width:100%;height:27px;min-height:0;margin:0;padding:3px 27px 3px 4px;opacity:0}
-#td41MoveSlots .td77-edit-move input:focus{opacity:1}
-#td41MoveSlots .td77-clear-plan{transform:none;top:3px;right:3px;width:23px;height:23px;min-height:23px;padding:0;line-height:1}
-#td41MoveSlots .td77-edit-move .suggestions{top:100%}
-#td77SuggestMoves{margin:6px 0}
+#td41MoveSlots .td77-move-comparison{position:relative;overflow:visible}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move{position:static;min-width:0}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move input{position:absolute;inset:0 0 0 auto;width:45%;height:100%;margin:0;opacity:0;cursor:pointer}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{inset:100% 0 auto;width:100%;height:36px;opacity:1;z-index:42;cursor:text}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{position:absolute;top:calc(100% + 36px);left:0;right:0;width:auto;max-width:100%;z-index:42;overflow:auto}
+#td41MoveSlots .td77-move-option{min-width:0;white-space:normal;overflow-wrap:anywhere}
+#td41MoveSlots .td77-editor-empty{align-self:center;justify-self:end;color:var(--muted)}
+#td41MoveSlots .td77-move-comparison:has(.td77-editor-empty){grid-template-columns:auto auto minmax(0,1fr)}
+#td4Edit:has(#td72MoveHeading[hidden])>.td42-settings:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.td77-family-warning,.td77-resource-summary>div>small{display:block}
+.td77-improvement-move{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.td77-improvement-move img{width:32px;height:32px;object-fit:contain}
+#td77GymSummary[data-readiness-status],#td77LeagueSummary [data-readiness-status],.td42-league-group[data-readiness-status]>.bar>b{color:var(--readiness-text,var(--muted))}
+[data-readiness-status="good"]{--readiness-text:#38a965}
+[data-readiness-status="nonstab"]{--readiness-text:#bd7e20}
+[data-readiness-status="bad"]{--readiness-text:#dc5465}
 .td77-candidate-actions{display:grid;gap:4px;margin:6px 0}
 .td77-coverage-line{display:block;line-height:1.35}
 .td77-resource-summary{display:grid;gap:8px;margin-top:10px}

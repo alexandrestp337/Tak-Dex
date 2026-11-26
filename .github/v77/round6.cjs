@@ -73,6 +73,11 @@ function tileGeometry(){
    assert.equal(moves(initial,'duringMoves').length,4);
    assert.ok(moves(initial,'duringMoves').some(n=>!['scratch','tail-whip'].includes(n)));
    await slot(page,3);
+   const emptyStyle=await fold(page).evaluate(el=>({border:getComputedStyle(el).borderTopWidth,margin:getComputedStyle(el).marginTop}));
+   assert.deepEqual(emptyStyle,{border:'0px',margin:'0px'});
+   const heights=await page.locator('#td4Slots > [data-td4-slot]').evaluateAll(tiles=>tiles.map(el=>({top:el.offsetTop,height:el.offsetHeight})));
+   const adjacent=heights.filter((tile,i)=>i!==3&&tile.top===heights[3].top);
+   assert.ok(adjacent.every(tile=>Math.abs(tile.height-heights[3].height)<2));
    await page.locator('#td77TypeFilter').click();
    await planTypes(page).locator('[data-td77-filter-type="water"]').waitFor();
    const fromPlanner=await planTypes(page).locator('[data-td77-filter-type="water"]').evaluate(el=>{
@@ -96,6 +101,19 @@ function tileGeometry(){
    assert.ok(Math.abs(cards[0].width-cards[1].width)<1);
    assert.equal(cards[0].height,cards[1].height);
    assert.equal(cards[0].radius,cards[1].radius);
+   const field=row.locator('input');
+   await field.click();
+   await field.fill('water');
+   const dropdown=row.locator('.suggestions');
+   await dropdown.waitFor();
+   const [rowBox,dropBox]=await Promise.all([row.boundingBox(),dropdown.boundingBox()]);
+   assert.ok(Math.abs(rowBox.width-dropBox.width)<2, 'autocomplete uses full row width');
+   assert.ok(Math.abs(rowBox.height-cards[0].height)<2,'autocomplete keeps row height');
+   assert.ok(dropBox.x>=0&&dropBox.x+dropBox.width<=width+1);
+   assert.equal(await dropdown.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
+   await field.press('Escape');
+   await dropdown.waitFor({state:'hidden'});
+   assert.equal(await row.locator('.td77-clear-plan').count(),0);
    assert.equal(await page.locator('#td4Edit summary').getByText('Change moves',{exact:true}).count(),0);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
    if(process.env.TAKDEX_SCREENSHOTS)await page.screenshot({path:`${process.env.TAKDEX_SCREENSHOTS}/r6-moves-${width}.png`});
@@ -120,8 +138,8 @@ function tileGeometry(){
     const stable=(await getPlan(page)).slots[0].acquisitionRoute.id;
     await choice(page).waitFor();
     assert.equal(await choice(page).isDisabled(),true);
-    await fold(page).locator('summary').click();
-    await fold(page).locator('summary').click();
+    await fold(page).locator(':scope > summary').click();
+    await fold(page).locator(':scope > summary').click();
     await candidate(page).getByText('Selected: Golduck').waitFor();
     const dialog=await hold(page,candidate(page).locator('.td43-candidate-pick'));
     await dialog.getByText('Compare Golduck with Psyduck').waitFor();
