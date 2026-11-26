@@ -1599,12 +1599,12 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4PlanProgress strong,#td4PlanProgress small{display:block}
 #td4PlanProgress small{font-size:.7rem;color:var(--muted)}
 #td77CoverageSummary{color:var(--muted)}
-#td77TypeFilter{min-height:38px;width:42px;padding:3px;background:var(--card);border:1px solid var(--edge);color:var(--muted)}
+#td77TypeFilter{min-height:48px;width:42px;padding:3px;background:var(--card);border:1px solid var(--edge);color:var(--muted)}
 #td77TypeFilter.selected,#td77TypeOptions [aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
 #td77TypeOptions .td72-move-types button{padding:3px}
 #td77ActiveTypes{grid-column:1/-1;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 #td77ActiveTypes:empty{display:none}
-#td4Search{width:100%}
+#td4Search{width:100%;margin:0}
 #td77ActiveTypes button{padding:2px 7px;min-height:25px}
 #td4Candidates [data-td77-more-candidates]{width:100%;margin:6px 0}
 .td77-move-result-lines,.td77-planner-move-info{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 6px;text-align:left;width:100%;min-width:0}

@@ -4260,8 +4260,13 @@ document.addEventListener('keydown',event=>{
  function roleTags(p){const b=p?.baseStats||{},out=[];if((b.attack||0)>=90)out.push('Physical');if((b['special-attack']||0)>=90)out.push('Special');if((b.speed||0)>=90)out.push('Fast');if((b.defense||0)>=90||(b['special-defense']||0)>=90)out.push('Defensive');return out;}
  function acquisition(slot,includeOwned=true){if(slot?.acquisitionRoute){const route=chosenRoute(slot);if(route)return route;if(pack&&includeOwned)return {kind:'unknown',reason:'Selected acquisition route needs review'};}let evidence=null;try{if(pack&&slot?.id)evidence=window.takDexAcquisitionV64.details(pack,slot.id)}catch{}return window.td62Progress.acquisition(state.game,slot,pack,includeOwned?actual()?.pokemon||[]:[],evidence);}
  function routeOptions(slot,includeOwned=true){
-  const g=state.game,member=includeOwned&&ownedFor(slot,chosenSlot);
-  return window.takDexAcquisitionV77.plannerRoutes(g,slot,pack,member?[member]:[],(game,name,encounters,id)=>{
+  const g=state.game,member=includeOwned&&ownedFor(slot,chosenSlot),owned=member?[member]:[];
+  const previous=slot?.acquisitionRoute;
+  if(previous&&member?.saveStats?.pid!=null&&member.id!==previous.startId&&
+     previous.id===previous.startId+'|owned|'+member.saveStats.pid&&lineage(member.id).has(previous.startId)){
+   owned.push({...member,id:previous.startId,level:previous.startLevel||1});
+  }
+  return window.takDexAcquisitionV77.plannerRoutes(g,slot,pack,owned,(game,name,encounters,id)=>{
    const native=window.takDexAcquisitionV77.lookup(game,name,encounters);
    return native||window.td62Progress.acquisition(game,{id,name},pack,[],null);
   });
@@ -4276,19 +4281,21 @@ document.addEventListener('keydown',event=>{
   if(r.initial.kind==='owned')return 'Use owned '+name;
   return 'Obtain '+name+(r.steps.length?'':' directly')+' · '+[r.initial.place,pretty(r.initial.method)].filter(Boolean).join(' · ');
  }
- function routeStore(r){return r&&{id:r.id,startId:r.startId};}
+ function routeStore(r){return r&&{id:r.id,startId:r.startId,...(r.initial.kind==='owned'&&r.initial.minLevel?{startLevel:r.initial.minLevel}:{})};}
  function routeDescription(r){
   const {initial,steps}=r,now=window.td62Progress.rank(effectiveProgress()),limit=deadlineRank();
   const place=td77AcquisitionLinks(initial.place,state.game);
   const levels=initial.minLevel?('Lv '+initial.minLevel+(initial.maxLevel&&initial.maxLevel!==initial.minLevel?'–'+initial.maxLevel:'')):'';
   const method=({walk:'Wild encounter','dark-grass':'Dark grass','grass-spots':'Rustling grass'})[initial.method]||pretty(initial.method);
-  const gate=r.rank===0?'Start of game':r.rank===10?'Postgame':milestoneOptions(state.game).find(([key])=>window.td62Progress.rank(key)===r.rank)?.[1];
+  const gate=rank=>rank===0?'Start of game':rank===10?'Postgame':milestoneOptions(state.game).find(([key])=>window.td62Progress.rank(key)===rank)?.[1];
+  const access=initial.kind==='owned'?'Already on team':now!=null&&now>=initial.rank?'Available now':gate(initial.rank);
+  const evolutionGate=r.rank>initial.rank?'Evolution from '+gate(r.rank):'';
   const summary=[place,safe(method),safe(levels)].filter(Boolean).join(' · ');
   const deadlineWarning=limit!=null&&r.rank>limit;
   return '<div class="td77-evolution-path"><strong>'+safe(td41PokemonLabel(r.startName))+
     steps.map(step=>' → '+safe(td41PokemonLabel(step.name))+' ('+td77AcquisitionLinks(step.requirement,state.game)+')').join('')+
     '</strong><small>'+summary+'</small><small class="'+(deadlineWarning?'td63-danger':'')+'">'+
-    [initial.kind==='owned'?'Already on team':now!=null&&now>=r.rank?'Available now':gate,td77AcquisitionLinks(initial.note,state.game),deadlineWarning?'After planning deadline':''].filter(Boolean).join(' · ')+'</small></div>';
+    [access,evolutionGate,td77AcquisitionLinks(initial.note,state.game),deadlineWarning?'After planning deadline':''].filter(Boolean).join(' · ')+'</small></div>';
  }
  function routeEditor(slot,context){
   const rows=routeOptions(slot),r=chosenRoute(slot);
@@ -4302,10 +4309,10 @@ document.addEventListener('keydown',event=>{
    allowed.map(row=>option(row,false)).join('')+(later.length?'<optgroup label="Outside the planning deadline">'+later.map(row=>option(row,true)).join('')+'</optgroup>':'')+'</select></label>':'';
   return select+(r?routeDescription(r):'<small>'+td77AcquisitionLinks(availability(slot),state.game)+'</small>');
  }
- function acquisitionPath(slot){
-  const {path}=acquisition(slot);
-  if(!path)return '';
-  return '<div class="td77-evolution-path"><strong>'+safe(path.stage+' → '+td41PokemonLabel(slot.name))+'</strong><small>Obtain '+safe(path.stage)+' · '+td77AcquisitionLinks(path.initial.place,state.game)+'</small><small>Evolve · '+td77AcquisitionLinks(path.requirement,state.game)+'</small></div>';
+ function candidateAcquisition(slot,index){
+  const route=chosenRoute(slot);
+  if(route)return routeDescription(route);
+  return '<small data-td62-acq="'+index+'">'+td77AcquisitionLinks(availability(slot),state.game)+'</small>';
  }
  function availability(slot){if(!slot)return '';return window.td62Progress.describe(acquisition(slot),effectiveProgress(),$('td77Availability').value);}
  function refreshAcquisition(){
@@ -4363,7 +4370,7 @@ document.addEventListener('keydown',event=>{
   return '<button type="button" class="td77-planner-move-info" data-td77-plan-move="'+safe(moveKey(name))+'"'+infoContext+'>'+
    td77MoveResultLines({...m,name:moveKey(name)},pretty(moveKey(name)),against?info(against):null)+'</button>';
  }return `<span class="movechip td72-move-name td75-team-move" style="--c:${colors[m?.type]||'#626774'}"><span>${safe(pretty(moveKey(name)))}</span></span>`}
- function tileMove(owned,m,i){const old=moveKey(owned?.moves?.[i]),target=goal(m),interim=m.purpose==='temporary'&&m.move;const from=old||interim;if(target&&from!==target)return `<span class="td43-tile-flow">${moveChip(from)}<span class="td42-arrow">→</span>${moveChip(target)}</span>`;return moveChip(target)}
+ function tileMove(owned,m,i){const from=moveKey(owned?.moves?.[i]),target=goal(m);if(target&&from!==target)return `<span class="td43-tile-flow">${moveChip(from)}<span class="td42-arrow">→</span>${moveChip(target)}</span>`;return moveChip(target)}
  function duringSpecies(p,slot){
   const member=ownedFor(p,slot);
   const target=finalForm(p);
@@ -4629,7 +4636,7 @@ document.addEventListener('keydown',event=>{
   if(!p)return null;
   const route=chosenRoute(p);
   if(!option||option.id===p.id)return route;
-  const projected={...option,originPid:p.originPid,originName:p.originName};
+  const projected={...option,originPid:p.originPid,originName:p.originName,acquisitionRoute:p.acquisitionRoute};
   const options=routeOptions(projected);
   return route?options.find(row=>row.id===route.id):options[0];
  }
@@ -4685,7 +4692,8 @@ document.addEventListener('keydown',event=>{
   const route=[...lineage(form.id)];
   const member=ownedFor(p,i);
   const currentStage=member?route.indexOf(Number(member.id)):-1;
-  const start=selected?route.indexOf(selected.startId):currentStage;
+  const selectedStage=selected?route.indexOf(selected.startId):currentStage;
+  const start=selected?.initial.kind==='owned'&&currentStage>=0?Math.min(currentStage,selectedStage):selectedStage;
   const ancestors=route.slice(1,start<0?undefined:start+1).reverse();
   const earlier=(await Promise.all(ancestors.map(id=>pack?.mons.find(m=>m[0]===id)).filter(Boolean).map(m=>details(m[1],g).catch(()=>null)))).filter(Boolean);
   const learnBefore={},methods={};
@@ -4698,7 +4706,9 @@ document.addEventListener('keydown',event=>{
    for(const move of (member.moves||[]).map(moveKey).filter(Boolean))methods[move]??=[];
   }
   const target={...form,legalMoves:Object.keys(methods).sort(),learnMethods:methods,learnBefore};
-  return {target,moves:await suggestedMoves(form,i,g,false,earlier,selected)};
+  const trainingRoute=selected?.initial.kind==='owned'&&currentStage>=0&&currentStage<selectedStage?
+   {...selected,initial:{...selected.initial,minLevel:member.level}}:selected;
+  return {target,moves:await suggestedMoves(form,i,g,false,earlier,trainingRoute)};
  }
  page.addEventListener('change',async e=>{
   const select=e.target.closest('[data-td77-route]');
@@ -5010,7 +5020,8 @@ document.addEventListener('keydown',event=>{
    const member=ownedFor(p,slot),learner=movesetView==='during'?duringLearner(p,slot):finalLearner(p);
    const route=projectionRoute(p,p.finalTarget);
    const timing=acquisition(learner,false);
-   const items=route?route.steps.map(step=>step.resource).filter(Boolean):[data.evolutionItem(timing)].filter(Boolean);
+   const completed=route?.initial.kind==='owned'&&member?route.steps.findIndex(step=>step.id===member.id):-1;
+   const items=route?route.steps.slice(completed+1).map(step=>step.resource).filter(Boolean):[data.evolutionItem(timing)].filter(Boolean);
    const species=Number(learner.id),ownedCopies=available.get(species)||0;
    if(ownedCopies)available.set(species,ownedCopies-1);
    else for(const item of items)claims.push({item,member:pretty(p.name),projected:(route?.rank??timing.rank)>deadline});
@@ -5275,7 +5286,7 @@ document.addEventListener('keydown',event=>{
    if(my!==token||run!==rankRun||i!==chosenSlot)return;
    observer.disconnect();
    candidates.querySelector('[data-td77-more-candidates]')?.remove();
-   candidates.insertAdjacentHTML('beforeend',ranked.slice(from,from+24).map((p,offset)=>{const j=from+offset;return `<div class="td43-candidate" data-candidate-id="${p.id}" data-score="${p.score.toFixed(2)}" data-factors="${safe(JSON.stringify(p.parts))}"><button type="button" class="td43-candidate-pick" data-td4-candidate="${j}"><img loading="lazy" src="${safe(sprite(p))}" alt=""><span class="td43-candidate-copy"><strong>${safe(td41PokemonLabel(p.name))}</strong>${p.evolvesSelected?'<small>Evolution of the planned Pokémon</small>':''}<span class="pills">${p.types.map(pill).join('')}</span>${p.addressed.length?`<small class="td41-good">Answers ${safe(p.addressed.map(r=>pretty(r.type)).join(', '))}</small>`:''}${p.addsPressure.length?`<small class="td63-danger">Adds ${safe(p.addsPressure.map(r=>pretty(r.type)).join(', '))} pressure</small>`:''}${candidateCoverageCopy(candidateDelta(original,[...base,p],g),p)}</span><span>Preview ›</span></button><small data-td62-acq="${j}">${safe(availability(p))}</small>${acquisitionPath(p)}</div>`;}).join(''));
+   candidates.insertAdjacentHTML('beforeend',ranked.slice(from,from+24).map((p,offset)=>{const j=from+offset;return `<div class="td43-candidate" data-candidate-id="${p.id}" data-score="${p.score.toFixed(2)}" data-factors="${safe(JSON.stringify(p.parts))}"><button type="button" class="td43-candidate-pick" data-td4-candidate="${j}"><img loading="lazy" src="${safe(sprite(p))}" alt=""><span class="td43-candidate-copy"><strong>${safe(td41PokemonLabel(p.name))}</strong>${p.evolvesSelected?'<small>Evolution of the planned Pokémon</small>':''}<span class="pills">${p.types.map(pill).join('')}</span>${p.addressed.length?`<small class="td41-good">Answers ${safe(p.addressed.map(r=>pretty(r.type)).join(', '))}</small>`:''}${p.addsPressure.length?`<small class="td63-danger">Adds ${safe(p.addsPressure.map(r=>pretty(r.type)).join(', '))} pressure</small>`:''}${candidateCoverageCopy(candidateDelta(original,[...base,p],g),p)}</span><span>Preview ›</span></button>${candidateAcquisition(p,j)}</div>`;}).join(''));
    from+=24;
    if(from<ranked.length){
     candidates.insertAdjacentHTML('beforeend','<button type="button" data-td77-more-candidates>Show more Pokémon ('+(ranked.length-from)+')</button>');

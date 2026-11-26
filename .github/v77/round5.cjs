@@ -112,6 +112,14 @@ async function dexSearch(page, name) {
      output[name] = { during: moves(slot.duringMoves), final: moves(slot.plannedMoves), route: slot.acquisitionRoute.id };
     }
     console.log('Full pool, four filled planned slots with two team slots empty', JSON.stringify(output));
+    const pair = page.locator('#td4Slots [data-td4-slot="0"] .td42-mon-pair');
+    assert.equal(await pair.evaluate(el => {
+     const images = [...el.querySelectorAll('img')].map(node => node.getBoundingClientRect());
+     const names = [...el.querySelectorAll('strong')].map(node => node.getBoundingClientRect());
+     return images.length === 2 && Math.abs(images[0].width - images[1].width) < 1 &&
+      Math.abs(images[0].height - images[1].height) < 1 && Math.abs(names[0].top - names[1].top) < 1;
+    }), true);
+    assert.equal(await pair.evaluate(el => getComputedStyle(el).userSelect), 'none');
     await openEditor(page, 0);
     const currentRoute = page.locator('[data-td77-route="slot"]');
     const direct = await currentRoute.locator('option').filter({ hasText: /Obtain Golduck directly.*Village Bridge.*Walk/ }).first().getAttribute('value');
@@ -119,6 +127,17 @@ async function dexSearch(page, name) {
     await page.waitForFunction(key => JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[0].acquisitionRoute.startId === 55, planKey);
     assert.match(await page.locator('#td77SlotRoute').textContent(), /Village Bridge.*Lv 36–38/);
     assert.equal(Object.keys((await selected(page, 0)).finalLearnset.learnBefore).length, 0);
+    await preview(page, 'swanna');
+    const candidateCard = page.locator('[data-td77-preview-context] .td43-candidate-pick');
+    await candidateCard.scrollIntoViewIfNeeded();
+    const releaseCandidate = await press(page, candidateCard, true);
+    const actions = page.locator('dialog[open]');
+    await actions.getByRole('button', { name: 'Compare', exact: true }).waitFor();
+    await releaseCandidate();
+    await actions.getByRole('button', { name: 'Open Pokédex' }).click();
+    await page.locator('#dexResult .dex-entry[data-td71-quick-compare="swanna"]').waitFor();
+    await page.locator('#td73DexReturn').click();
+    await page.locator('#td63ManualCandidate [data-td77-preview-route]').waitFor();
     await openEditor(page, 4);
     await preview(page, 'flygon');
     assert.match(await page.locator('[data-td77-preview-route]').textContent(), /Trapinch.*Vibrava.*35.*Flygon.*45/);
@@ -132,6 +151,7 @@ async function dexSearch(page, name) {
     assert.ok(await page.locator('#td63ManualCandidate').isVisible());
     await choose(page, 4, 'flygon');
     assert.equal((await selected(page, 4)).acquisitionRoute.startId, 328);
+    assert.match(await page.locator('#td4Slots [data-td4-slot="4"]').textContent(), /Obtain Trapinch/);
     for (const mode of ['during', 'final']) {
      await page.locator(`[data-view="${mode}"]`).click();
      const field = page.locator(`${mode === 'during' ? '[data-td77-during="0"]' : '[data-td45-move="0:goal"]'}`);
@@ -172,6 +192,14 @@ async function dexSearch(page, name) {
     await link.click();
     await page.locator('#td72MoveTitle').filter({ hasText: 'Ninetales' }).waitFor();
     assert.equal((await selected(page, 5)).acquisitionRoute.startId, 37);
+    await page.locator('#td77Availability').selectOption('postgame');
+    const source = page.locator('[data-td77-route="slot"]');
+    const ninetales = await source.locator('option').filter({ hasText: 'Obtain Ninetales directly' }).first().getAttribute('value');
+    await source.selectOption(ninetales);
+    await page.waitForFunction(key => JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[5].acquisitionRoute.startId === 38, planKey);
+    const resource = page.locator('#td77Improvements');
+    if (!await resource.locator('..').evaluate(el => el.open)) await resource.locator('..').locator('summary').first().click();
+    await resource.getByText(/Fire Stone.*1 required.*Arcanine/).waitFor();
     console.log('Flygon routes, map return, future Fly, held touch, stone warning and refresh passed');
    }
    if (width === 1280) {
