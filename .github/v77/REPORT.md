@@ -283,13 +283,25 @@ TAKDEX_ACQUISITION_LEDGER=/tmp/takdex-round4-ledger.jsonl node .github/v77/cover
 
 Set `TAKDEX_LEDGER_GAME` to a comma-separated list of game labels to narrow the inventory. Where bundles contain no source, the next step is to obtain a version-specific encounter or gift catalog before assigning gates. For populated regional bundles, verify encounter methods and enterable room or field-move prerequisites for each location. Alternate routes and progression codes should follow the same evidence bar used for Unova.
 
+### Kanto follow-through
+
+The Red, Blue and Yellow bundles now use location and encounter-method gates. This review checked named prerequisites such as Misty and Cut for Route 9, the Silph Scope for Pokémon Tower, the Poké Flute en route to Fuchsia, the individual fishing rods, and Surf and the Hall of Fame for Cerulean Cave. Named prerequisites matter because several gyms can be beaten out of order. The timing number is a lower bound. Version-specific gifts and in-game trades remain separate, including the Abra and Clefairy trades for Mr. Mime. [Route 9](https://bulbapedia.bulbagarden.net/wiki/Kanto_Route_9) · [Pokémon Tower](https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_Tower) · [Safari Zone](https://bulbapedia.bulbagarden.net/wiki/Kanto_Safari_Zone) · [Cerulean Cave](https://bulbapedia.bulbagarden.net/wiki/Cerulean_Cave) · [In-game trades](https://bulbapedia.bulbagarden.net/wiki/In-game_trade)
+
+| Game | Fixed baseline → verified | Expanded baseline → verified | Remaining in expanded cohort | Named location lower bounds |
+| --- | ---: | ---: | --- | ---: |
+| Red | 0 → 103 / 106 (97.2%) | 0 → 114 / 117 (97.4%) | 3 conditional starter choices | 42/45 |
+| Blue | 0 → 103 / 106 (97.2%) | 0 → 114 / 117 (97.4%) | 3 conditional starter choices | 42/45 |
+| Yellow | 0 → 106 / 106 (100%) | 0 → 120 / 120 (100%) | 0 within this cohort | 42/45 |
+
+The Yellow cohort figure excludes out-of-cohort species and routes. Remaining location work includes the exact stretch of Route 23 where fishing is possible and individual event-gated Underground Path transactions. Gen II and later regional catalogs outside Unova still need a comparable audit.
+
 ### Automated verification
 
 | Status | Verification |
 | --- | --- |
-| Pass | 41 V76 and V77 Node tests, including exact Unova gates, historical version restrictions, unconditional evolution paths, and bounded TM and species resources. |
+| Pass | 42 V76 and V77 Node tests, including exact Unova gates, historical version restrictions, unconditional evolution paths, and bounded TM and species resources. |
 | Pass | Focused Chromium at 390 and 412 CSS px. Automatic During and Final moves were populated with zero, one, two, three and four existing moves. The exact comparison exercised Golduck and Starmie through the real ranking code with a restricted candidate fixture. Full-catalog Round 3 coverage ran separately. |
-| Pass | Browser projection covered Psyduck → Golduck, a tightened deadline, a retained manual move, Keep Psyduck, Eevee → Jolteon, Sandile → Krookodile and disabling the unverified local Conkeldurr evolution. Route 11 and off-atlas Nature Preserve navigation passed, including contextual return. A single TM copy was flagged in Red and Crystal, while the same repeated machine in Black 2 was accepted. |
+| Pass | Browser projection covered Psyduck → Golduck, a tightened deadline, a retained manual move, Keep Psyduck, Eevee → Jolteon, Sandile → Krookodile and disabling the unverified local Conkeldurr evolution. Route 11 and off-atlas Nature Preserve navigation passed, including contextual return. A single TM copy was flagged in Red and Crystal, while the same repeated machine in Black 2 was accepted. The Red Mr. Mime entry displayed its level range, Abra trade and Diglett’s Cave approach. |
 | Pass | Round 3 and V77 browser flows across 320, 360, 390, 412 and 1280 px included dynamic ranking, compact layouts, save synchronization, plan transfer, contextual return and toolbar geometry. V76 visual comparison, team management, Battle/6v6, historical data and offline cold reload also passed. |
 | Need work | Catalogs outside the expanded Unova cohort, especially games where the local bundle has no indexed encounters. Complete move budgets, item ownership and all legal inheritance sequences need more evidence and modeling. |
 | Not tested | Native Android, physical mobile touch and a playthrough of every documented encounter. |

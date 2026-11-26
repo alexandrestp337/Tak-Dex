@@ -73,7 +73,7 @@ for(const game of games){
   }
  }
  const old=counts(before),next=counts(after),places=new Set(Object.values(pack.entries).flat().map(r=>r[0].split(' · ')[0]));
- const gated=[...places].filter(place=>after.location(game,place)!=null).length;
+ const gated=[...places].filter(place=>(after.location(game,place)??candidate.catalog.takDexAcquisitionV77?.verifiedAreaRank(game,place))!=null).length;
  console.log(`| ${game} | ${rows.length} | ${fmt(old.verified,rows.length)} | ${fmt(next.verified,rows.length)} | ${next.partial} | ${rows.length-next.verified-next.partial} | ${gated}/${places.size} |`);
 }
 

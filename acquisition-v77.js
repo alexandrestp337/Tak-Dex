@@ -72,13 +72,16 @@
   'unova-route-23':9,'unova-victory-road-2 · unknown-area-71':9,
   'undella-bay':6,'undella-town':6,'humilau-city':7,'unova-route-21':8,'unova-route-1':10,'unova-route-3':10,
   'unova-route-8':10,'icirrus-city':10,'moor-of-icirrus':10};
+ const isKanto=game=>['Red','Blue','Yellow'].includes(game);
  const canonicalAliases={
+  'kanto-victory-road-2':'Victory Road','kanto-safari-zone':'Safari Zone','kanto-power-plant':'Power Plant',
+  'digletts-cave':'Diglett’s Cave',
   'nature-sanctuary':'Nature Preserve','unova-victory-road-2':'Victory Road','unova-victory-road':'Victory Road',
   'relic-castle':'Relic Castle','marvelous-bridge':'Marvelous Bridge'
  };
  function placeName(value,game){
   const [raw,room]=String(value||'').split(' · ');
-  const base=canonicalAliases[raw]||raw.replace(/^unova-/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
+  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|kanto-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
   if(raw==='unova-victory-road-2'&&['unknown-area-71','unknown-area-78'].includes(room))return 'Victory Road · Cave';
   if(raw==='relic-castle'&&room==='d'&&game?.endsWith(' 2'))return 'Relic Castle · Volcarona’s chamber';
   if(!room||/^unknown-area/i.test(room))return base;
@@ -89,7 +92,71 @@
   'unova-route-18 · hidden-grotto':10,'pinwheel-forest · hidden-grotto-inner-area':10,
   'pinwheel-forest · hidden-grotto-outer-area':10,'unova-route-3 · hidden-grotto-dark-grass':10,
   'lostlorn-forest · hidden-grotto':4,'unova-route-13 · hidden-grotto-stairs':6,'giant-chasm · hidden-grotto':8};
+ // RBY can reach several gyms out of order. The named event remains decisive.
+ const kantoAreaGates={
+  'pallet-town':[0],'viridian-city':[0],'kanto-route-1':[0],'kanto-route-2':[0],
+  'viridian-forest':[0],'kanto-route-22':[0],
+  'kanto-route-3':[1,'Defeat Brock to leave Pewter City eastward.'],
+  'mt-moon':[1,'Defeat Brock and travel east from Pewter City.'],
+  'kanto-route-4':[1,'Reach Cerulean by crossing Mt. Moon.'],
+  'cerulean-city':[1,'Cross Mt. Moon from Pewter City.'],
+  'kanto-route-24':[1,'Reach Cerulean and defeat the rival at Nugget Bridge.'],
+  'kanto-route-25':[1,'Cross Nugget Bridge north of Cerulean City.'],
+  'kanto-route-5':[1,'Help Bill, then pass through the burgled house in Cerulean.'],
+  'kanto-route-6':[1,'Use the Underground Path from Route 5.'],
+  'vermilion-city':[1,'Use the Underground Path from Route 5 and walk south from Route 6.'],
+  'kanto-route-11':[1,'Reach Vermilion via the Routes 5–6 Underground Path.'],
+  'digletts-cave':[1,'Enter from Route 11 east of Vermilion.'],
+  'kanto-route-9':[2,'Obtain Cut from the S.S. Anne and defeat Misty.'],
+  'kanto-route-10':[2,'Use Cut east of Cerulean City, then follow Route 9.'],
+  'rock-tunnel':[2,'Reach Route 10 with Cut after Misty. Flash is optional for visibility.'],
+  'kanto-route-7':[2,'Reach Lavender through Rock Tunnel, then use the Routes 7–8 Underground Path.'],
+  'kanto-route-8':[2,'Reach Lavender through Rock Tunnel after obtaining Cut.'],
+  'celadon-city':[2,'Travel via the Routes 7–8 Underground Path after reaching Lavender Town.'],
+  'pokemon-tower':[2,'Obtain the Silph Scope from the Rocket Hideout to catch the ghosts.'],
+  'kanto-route-12':[2,'Use the Poké Flute from Mr. Fuji to pass the sleeping Snorlax.'],
+  'kanto-route-13':[2,'Use the Poké Flute to pass Route 12.'],
+  'kanto-route-14':[2,'Reach the coastal route south of the Route 12 Snorlax.'],
+  'kanto-route-15':[2,'Reach Fuchsia by the coastal routes or Cycling Road after obtaining the Poké Flute.'],
+  'kanto-route-16':[2,'Reach Celadon. The grass north of the Cycling Road gate is accessible with Cut.'],
+  'kanto-route-17':[2,'Wake Snorlax on Route 16 and bring the Bicycle.'],
+  'kanto-route-18':[2,'Reach Cycling Road with the Bicycle or approach from Fuchsia.'],
+  'fuchsia-city':[2,'Reach Fuchsia via the coast or Cycling Road after obtaining the Poké Flute.'],
+  'kanto-safari-zone':[2,'Reach Fuchsia after obtaining the Poké Flute and pay the Safari Zone fee.'],
+  'kanto-sea-route-19':[3,'Obtain Surf at the Safari Zone and defeat Koga.'],
+  'kanto-sea-route-20':[3,'Obtain Surf at the Safari Zone and defeat Koga.'],
+  'kanto-sea-route-21':[3,'Obtain Surf at the Safari Zone and defeat Koga.'],
+  'seafoam-islands':[3,'Reach the islands with Surf after Koga. Use Strength and boulders for the lower water passages.'],
+  'cinnabar-island':[3,'Obtain Surf at the Safari Zone and defeat Koga.'],
+  'pokemon-mansion':[3,'Surf to Cinnabar Island after Koga. Mansion switches control access to lower rooms.'],
+  'kanto-power-plant':[3,'Surf from Route 10 after obtaining the Soul Badge.'],
+  'kanto-victory-road-2':[8,'Show all eight badges on Route 23. Use Strength to traverse Victory Road.'],
+  'cerulean-cave':[10,'Enter the Hall of Fame, then Surf southwest from Route 24.']
+ };
+ const kantoRodGates={
+  'old-rod':[1,'Get the Old Rod from the Vermilion City Fishing Guru.'],
+  'good-rod':[2,'Get the Good Rod from the Fuchsia City Fishing Guru after opening the route to Fuchsia.'],
+  'super-rod':[2,'Get the Super Rod from the Fishing Guru south of Snorlax on Route 12.']
+ };
+ function verifiedAreaRank(game,place){return isKanto(game)?kantoAreaGates[place.split(' · ')[0]]?.[0]:null;}
+ function kantoRoute(game,row){
+  const [place,method,,,conditions=[]]=row;
+  if(conditions.length)return null;
+  const area=place.split(' · ')[0];
+  const gate=kantoAreaGates[area];
+  if(!gate)return null;
+  const [rank,access]=gate;
+  let methodGate=kantoRodGates[method],note=access;
+  if(method==='surf')methodGate=[3,'Use Surf after defeating Koga.'];
+  if(method==='pokeflute')methodGate=[2,'Rescue Mr. Fuji in Pokémon Tower to obtain the Poké Flute, then wake Snorlax.'];
+  if(method==='static'&&!['cerulean-cave','seafoam-islands','kanto-power-plant','kanto-victory-road-2'].includes(area))return null;
+  if(area==='seafoam-islands'&&(method==='static'||method==='surf'))methodGate=[4,'Use Strength with Erika’s Rainbow Badge to stop the currents.'];
+  if(!methodGate&&!['walk','static'].includes(method))return null;
+  if(methodGate)note=method==='pokeflute'?methodGate[1]:[access,methodGate[1]].filter(Boolean).join(' ');
+  return {...early(Math.max(rank,methodGate?.[0]??0),placeName(place,game),method,note),source:'rby-location-story-and-method'};
+ }
  function encounterRoute(game,row){
+  if(isKanto(game))return kantoRoute(game,row);
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
   const sequel=game.endsWith(' 2'),[place,method, , ,conditions=[]]=row;
   if(conditions.some(c=>!/^season-(spring|summer|autumn|winter)$/.test(c)))return null;
@@ -241,7 +308,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  };
  const catalogIndexes=new WeakMap();
  function levelPath(game,id,pack,owned){
-  if(!['Black','White','Black 2','White 2'].includes(game)||!pack?.mons||!auditedLevelEvolutions[id])return null;
+  if((!isKanto(game)&&!['Black','White','Black 2','White 2'].includes(game))||!pack?.mons||!auditedLevelEvolutions[id])return null;
   if(!catalogIndexes.has(pack)){
    const rows=new Map(pack.mons.map(row=>[row[0],row]));
    const counts=new Map();
@@ -261,6 +328,59 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    source:'pokeapi-unconditional-level-evolution'};
  }
  function lookup(game,name,encounters){
+  if(isKanto(game)){
+   const yellow=game==='Yellow';
+   const gifts={
+    eevee:[2,'Celadon City · Mansion','Enter by the back door and take the single Eevee on the rooftop.'],
+    lapras:[2,'Saffron City · Silph Co.','Give the gate guards a drink from Celadon. Defeat the rival on 7F, then speak to the employee.'],
+    magikarp:[1,'Route 4 · Pokémon Center','Buy a Magikarp from the salesman before entering Mt. Moon for ₽500.'],
+    hitmonlee:[2,'Saffron City · Fighting Dojo','Give a drink to enter Saffron, defeat the Karate Master and choose one gift fighter.'],
+    hitmonchan:[2,'Saffron City · Fighting Dojo','Give a drink to enter Saffron, defeat the Karate Master and choose one gift fighter.']
+   };
+   if(yellow)Object.assign(gifts,{
+    pikachu:[0,'Pallet Town','Professor Oak gives Pikachu at the start.'],
+    bulbasaur:[1,'Cerulean City','Show Melanie a sufficiently happy starter Pikachu.'],
+    charmander:[1,'Route 24','Cross Nugget Bridge, then speak to the trainer on Route 24.'],
+    squirtle:[3,'Vermilion City','Defeat Lt. Surge, then speak to Officer Jenny.']
+   });
+   const direct=land(game,encounters);
+   if(gifts[name]){
+    const [rank,place,note]=gifts[name];
+    if(direct&&direct.rank<rank)return direct;
+    return {...early(rank,place,name==='magikarp'?'purchase':'gift',note),source:'rby-game-specific-gifts'};
+   }
+   const trades=yellow?{
+    'mr-mime':[1,'Route 2','Clefairy','Approach through Diglett’s Cave from Vermilion.'],
+    machamp:[2,'Routes 5–6 Underground Path','Cubone','The received Machoke evolves on arrival.'],
+    parasect:[2,'Route 18','Tangela','Catch Tangela in the Yellow Safari Zone.'],
+    rhydon:[3,'Cinnabar Island · Lab','Golduck'],dewgong:[3,'Cinnabar Island · Lab','Growlithe'],muk:[3,'Cinnabar Island · Lab','Kangaskhan']
+   }:{
+    'mr-mime':[1,'Route 2','Abra','Approach through Diglett’s Cave from Vermilion.'],
+    'nidoran-f':[1,'Routes 5–6 Underground Path','Nidoran♂'],
+    nidorina:[1,'Route 11','Nidorino'],
+    farfetchd:[1,'Vermilion City','Spearow'],
+    jynx:[2,'Cerulean City','Poliwhirl'],
+    lickitung:[2,'Route 18','Slowbro'],
+    seel:[3,'Cinnabar Island · Lab','Ponyta'],electrode:[3,'Cinnabar Island · Lab','Raichu'],tangela:[3,'Cinnabar Island · Lab','Venonat']
+   };
+   if(trades[name]){
+    const [rank,place,partner,requirement]=trades[name];
+    const trade={...early(rank,place,'in-game trade',['Trade '+partner+'.',requirement].filter(Boolean).join(' ')),source:'rby-in-game-trades'};
+    return direct&&direct.rank<=rank?{...direct,alternatives:[trade]}:trade;
+   }
+   if(direct)return direct;
+   if(encounters?.some(r=>r[0]==='celadon-city · prize-corner'&&r[1]==='gift')){
+    return {...early(2,'Celadon City · Prize Corner','purchase','Get the Coin Case in Celadon and exchange Game Corner coins at the Prize Corner.'),source:'celadon-version-specific-prizes'};
+   }
+   if(['omanyte','kabuto','aerodactyl'].includes(name)){
+    const part={omanyte:'Choose the Helix Fossil at Mt. Moon.',kabuto:'Choose the Dome Fossil at Mt. Moon.',
+     aerodactyl:'Take the Old Amber from the back room of the Pewter Museum after obtaining Cut.'}[name];
+    return {...early(3,'Cinnabar Island · Lab','fossil',part+' Surf to Cinnabar after Koga and revive the fossil.'),source:'rby-fossils'};
+   }
+   if(name==='mew')return {kind:'event',reason:'Official Red, Blue and Yellow acquisition requires a distribution or trade from a distribution.'};
+   if(!yellow&&['bulbasaur','charmander','squirtle'].includes(name))return {kind:'tradePossible',reason:'Choose this starter at the beginning of the game. Other starter families require a trade.'};
+   return null;
+  }
   const sequel=game==='Black 2'||game==='White 2';
   if(!sequel&&game!=='Black'&&game!=='White')return null;
   if(sequel&&((name==='magby'&&game==='White 2')||(name==='elekid'&&game==='Black 2')))
@@ -486,5 +606,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return rules;
  }
- root.takDexAcquisitionV77={lookup,levelPath,hidden,encounterRoute,placeName,machineGate,machineLocation,limitedSpecies,limitedMachine};
+ root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,limitedSpecies,limitedMachine};
 })(globalThis);

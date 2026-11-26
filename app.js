@@ -1350,20 +1350,23 @@ $('dexInput').addEventListener('takdex:pokedex-search',async()=>{
     const timing=engine?.acquisition(game,pokemon,pack,[],null);
     const path=timing?.path;
     const source=path?.initial||timing;
-    const matchingRecord=timing?.confirmed&&records.find(r=>td77SameAcquisition(r,timing,game));
-    const distinctRoute=timing?.confirmed&&!matchingRecord&&(!path||timing.method!=='evolution');
+    const routes=timing?.confirmed?[timing,...(timing.alternatives||[])]:[];
+    const matching=routes.filter(route=>records.some(r=>td77SameAcquisition(r,route,game)));
     const entries=[];
     if(path)entries.push({place:source.place,method:source.method,
      detail:[engine.milestone(source.rank),source.note,path.stage+' → '+pretty(pokemon.name)+' · '+path.requirement].filter(Boolean).join(' · ')});
-    if(distinctRoute)entries.push({place:timing.place,method:timing.method,
-     detail:[engine.milestone(timing.rank),timing.note].filter(Boolean).join(' · ')});
-    if(!entries.length&&['trade','event'].includes(timing?.kind)){
-     entries.push({method:timing.kind==='trade'?'Trade or transfer':'Event requirement',detail:timing.reason});
-    }else if(!entries.length&&!matchingRecord){
+    for(const route of routes){
+     if(matching.includes(route)||path&&route.method==='evolution')continue;
+     entries.push({place:route.place,method:route.method,
+      detail:[engine.milestone(route.rank),route.note].filter(Boolean).join(' · ')});
+    }
+    if(!entries.length&&['trade','event','tradePossible'].includes(timing?.kind)){
+     entries.push({method:timing.kind==='trade'?'Trade or transfer':timing.kind==='tradePossible'?'Starter choice':'Event requirement',detail:timing.reason});
+    }else if(!entries.length&&!matching.length){
      entries.push(...window.takDexAcquisitionV64.details(pack,pokemon.id).notes.filter(n=>n.text)
       .map(n=>({method:n.kind,detail:n.text})));
     }
-    const formatted=cat.format(records,game,matchingRecord?timing:null);
+    const formatted=cat.format(records,game,matching);
     renderEncounter(entries.map(r=>td77AcquisitionEntry(r,game)).join('')+(formatted||(!entries.length?noRecords:''))+sourceFoot);
    }else{
     // An ordinary Pokédex search must not trigger the massive 34-game bulk download.
@@ -2593,16 +2596,17 @@ update();
  async function remove(game){MEM.delete(game);if('caches' in window){const cache=await caches.open(CACHE);await cache.delete(key(game))}window.dispatchEvent(new Event('td58-pack-update'))}
  async function clearAll(){MEM.clear();if('caches' in window)await caches.delete(CACHE);window.dispatchEvent(new Event('td58-pack-update'))}
  async function count(){let total=0;for(const g of games)if(await cached(g))total++;return total}
- function format(records,game,timing){
+ function format(records,game,routes=[]){
   return (records||[]).map(r=>{
    const progress=window.td62Progress;
-   const audited=timing&&td77SameAcquisition(r,timing,game);
-   const detail=audited?[progress.milestone(timing.rank),timing.note].filter(Boolean).join(' · '):
+   const audited=routes.find(route=>td77SameAcquisition(r,route,game));
+   const detail=audited?[progress.milestone(audited.rank),audited.note].filter(Boolean).join(' · '):
     game&&progress?.encounterAccess(game,r)||'Encounter timing unverified';
    return td77AcquisitionEntry({
     location:r[0],place:window.takDexAcquisitionV77?.placeName(r[0],game)||pretty(r[0]),
-    method:audited?timing.method:r[1],levels:r[2]>0?'Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:''):'',
-    detail:[detail,...(r[4]||[]).map(pretty)].join(' · ')
+    method:audited?audited.method:r[1],levels:r[2]>0?'Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:''):'',
+    detail:[detail,...(r[4]||[]).map(pretty).filter(condition=>
+     !detail.toLowerCase().replace(/[:.]/g,'').includes(condition.toLowerCase()))].join(' · ')
    },game);
   }).join('');
  }
@@ -2614,7 +2618,7 @@ const TD77_ACQUISITION_METHOD_LABELS={walk:'Walking','grass-spots':'Rustling gra
  'super-rod-spots':'Super Rod (rippling water)','bridge-spots':'Bridge shadows','cave-spots':'Dust cloud','npc-trade':'In-game trade'};
 function td77SameAcquisition(row,timing,game){
  const label=value=>(window.takDexAcquisitionV77?.placeName(value,game)||value||'').split(' · ')[0].toLowerCase();
- const method=value=>({'npc-trade':'in-game trade',purchase:'gift'})[value]||value;
+ const method=value=>({'npc-trade':'in-game trade',purchase:'gift',fossil:'gift'})[value]||value;
  return label(row[0])===label(timing.place)&&method(row[1])===method(timing.method);
 }
 function td77AcquisitionEntry({location,place,method,levels,detail},game){
@@ -4001,7 +4005,7 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  function starterFamily(g,n){return unova(g)?starterFamilies.find(f=>f.includes(norm(n))):null;}
  function starterChoice(g,n,owned){const family=starterFamily(g,n);if(!family)return null;const matching=owned.some(p=>p&&family.includes(norm(p.name)));if(matching)return null;const others=starterFamilies.filter(f=>f!==family&&owned.some(p=>p&&f.includes(norm(p.name))));return {kind:'tradePossible',reason:others.length?'Other starter family on team · alternative starter choice requires trade/import':'One starter choice per playthrough · verify chosen starter'};}
  const directOverrides={Black:{rufflet:'White exclusive',braviary:'White exclusive'},White:{vullaby:'Black exclusive',mandibuzz:'Black exclusive'},'Black 2':{rufflet:'White 2 exclusive',braviary:'White 2 exclusive'},'White 2':{vullaby:'Black 2 exclusive',mandibuzz:'Black 2 exclusive'}};
- function acquisition(g,slot,pack,owned,evidence){const name=norm(slot?.name),id=Number(slot?.id);if(!slot)return {kind:'unknown'};if(owned.some(p=>p&&(norm(p.name)===name||id&&Number(p.id)===id)))return {kind:'owned'};const starter=starterChoice(g,name,owned);if(starter)return starter;if(directOverrides[g]?.[name])return {kind:'trade',reason:directOverrides[g][name]};const audited=window.takDexAcquisitionV77?.lookup(g,name,pack?.entries?.[id]);if(audited?.confirmed||audited?.kind==='trade'||audited?.kind==='event')return audited;const inherited=window.takDexAcquisitionV77?.levelPath(g,id,pack,owned);if(inherited)return inherited;if(audited)return audited;if(bw(g)&&['poliwag','poliwhirl','poliwrath','politoed'].includes(name)&&!owned.some(p=>p&&(['poliwag','poliwhirl'].includes(norm(p.name))))){return {kind:'timed',confirmed:true,rank:10,place:'Super Rod / fishing',method:'postgame fishing',note:name==='politoed'?'Evolution also requires a trade with King’s Rock.':''};}if(!pack||pack.game!==g||!id)return {kind:'unknown'};const rec=pack.entries?.[id]||[],gates=rec.map(r=>encounter(g,r)).filter(Boolean).sort((a,b)=>a.rank-b.rank);if(gates.length&&gates.length===rec.length){const first=gates[0],mon=pack.mons?.find(x=>x[0]===id),confirmed=false;return {kind:'timed',...first,confirmed,note:mon?.[4]?'Recorded wild encounter; evolution may be available earlier.':'Recorded encounter; method and other conditions apply.'};}if(evidence?.externalTrade&&pack.hasSource&&!evidence.verified)return {kind:'trade',reason:'Known external trade or trade evolution requirement'};if(evidence?.notes?.some(n=>n.eventOnly))return {kind:'event',reason:'Event-only acquisition'};const parents=new Set();let v=id;while(v&&!parents.has(v)){parents.add(v);v=pack.mons?.find(x=>x[0]===v)?.[4]||0;}const parent=owned.find(p=>p&&parents.has(Number(p.id)));if(parent)return {kind:'evolution',reason:'Earlier evolution on team · evolution requirements not verified'};if(evidence?.nativeEvolution)return {kind:'evolution',reason:'Evolution route · level, item, or trade requirement still unverified'};if(gates.length)return {kind:'partial',...gates[0]};if(rec.length)return {kind:'recorded',place:window.takDexAcquisitionV77?.placeName(rec[0][0],g)||rec[0][0]};return {kind:'unknown',reason:evidence?.label};}
+ function acquisition(g,slot,pack,owned,evidence){const name=norm(slot?.name),id=Number(slot?.id);if(!slot)return {kind:'unknown'};if(owned.some(p=>p&&(norm(p.name)===name||id&&Number(p.id)===id)))return {kind:'owned'};const starter=starterChoice(g,name,owned);if(starter)return starter;if(directOverrides[g]?.[name])return {kind:'trade',reason:directOverrides[g][name]};const audited=window.takDexAcquisitionV77?.lookup(g,name,pack?.entries?.[id]);if(audited?.confirmed||['trade','event','tradePossible'].includes(audited?.kind))return audited;const inherited=window.takDexAcquisitionV77?.levelPath(g,id,pack,owned);if(inherited)return inherited;if(audited)return audited;if(bw(g)&&['poliwag','poliwhirl','poliwrath','politoed'].includes(name)&&!owned.some(p=>p&&(['poliwag','poliwhirl'].includes(norm(p.name))))){return {kind:'timed',confirmed:true,rank:10,place:'Super Rod / fishing',method:'postgame fishing',note:name==='politoed'?'Evolution also requires a trade with King’s Rock.':''};}if(!pack||pack.game!==g||!id)return {kind:'unknown'};const rec=pack.entries?.[id]||[],gates=rec.map(r=>encounter(g,r)).filter(Boolean).sort((a,b)=>a.rank-b.rank);if(gates.length&&gates.length===rec.length){const first=gates[0],mon=pack.mons?.find(x=>x[0]===id),confirmed=false;return {kind:'timed',...first,confirmed,note:mon?.[4]?'Recorded wild encounter; evolution may be available earlier.':'Recorded encounter; method and other conditions apply.'};}if(evidence?.externalTrade&&pack.hasSource&&!evidence.verified)return {kind:'trade',reason:'Known external trade or trade evolution requirement'};if(evidence?.notes?.some(n=>n.eventOnly))return {kind:'event',reason:'Event-only acquisition'};const parents=new Set();let v=id;while(v&&!parents.has(v)){parents.add(v);v=pack.mons?.find(x=>x[0]===v)?.[4]||0;}const parent=owned.find(p=>p&&parents.has(Number(p.id)));if(parent)return {kind:'evolution',reason:'Earlier evolution on team · evolution requirements not verified'};if(evidence?.nativeEvolution)return {kind:'evolution',reason:'Evolution route · level, item, or trade requirement still unverified'};if(gates.length)return {kind:'partial',...gates[0]};if(rec.length)return {kind:'recorded',place:window.takDexAcquisitionV77?.placeName(rec[0][0],g)||rec[0][0]};return {kind:'unknown',reason:evidence?.label};}
  const late=(r,id)=>r?.kind==='timed'&&rank(id)!=null&&r.rank>rank(id);
  function tone(r,current,target){if(r.kind==='owned')return 'td41-good';if(['trade','event'].includes(r.kind)||late(r,target))return 'td63-danger';if(r.kind==='timed'&&rank(current)!=null){if(r.rank>rank(current))return 'td63-danger';if(r.confirmed)return 'td41-good';}return '';}
  function describe(r,current,target){const now=rank(current);if(r.kind==='owned')return 'Already on team';if(r.kind==='trade')return 'Trade or import required · '+r.reason;if(r.kind==='tradePossible')return r.reason+' · Trade/import may be required; coverage incomplete';if(r.kind==='event')return r.reason+' · Event availability not verified';if(r.kind==='evolution')return r.reason;if(r.kind==='timed'){const status=r.rank===10?(now>=10?(r.confirmed?'Available now · Postgame':'Recorded encounter: postgame'):(r.confirmed?'Postgame only':'Recorded encounter: postgame')):now==null?'Acquisition from '+milestone(r.rank):now>=r.rank?(r.confirmed?'Available now':'Area access estimated'):'Available later · '+milestone(r.rank);return [status,r.place?.replace(/-/g,' '),r.note,late(r,target)?(r.confirmed?'Target too early — trade or import required.':'Recorded encounter is later than target; check alternative acquisition.') :''].filter(Boolean).join(' · ');}if(r.kind==='partial'&&r.note)return r.note+' · '+r.place+' · '+milestone(r.rank);if(r.kind==='partial')return 'Recorded encounter · '+String(r.place).replace(/-/g,' ')+' · Earliest access not fully verified';if(r.kind==='recorded')return 'Recorded encounter · '+String(r.place).replace(/-/g,' ')+' · Timing unverified';return r.reason&&r.reason!=='Not indexed'?r.reason+' · Timing unverified':'Acquisition timing unverified';}
@@ -4552,7 +4556,7 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  }
  let plannerIndexRequest;
  function plannerIndex(){
-  if(!plannerIndexRequest)plannerIndexRequest=fetch('./db74/planner-v77.json?v=77.4.0').then(response=>{
+  if(!plannerIndexRequest)plannerIndexRequest=fetch('./db74/planner-v77.json?v=77.4.1').then(response=>{
    if(!response.ok)throw Error('Recommendation index unavailable');
    return response.json();
   }).catch(error=>{plannerIndexRequest=null;throw error;});

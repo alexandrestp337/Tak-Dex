@@ -129,3 +129,18 @@ test('Finite species and machines distinguish reusable or renewable routes',()=>
  assert.ok(!data.limitedSpecies('FireRed',10).some(r=>r.species.includes(133)));
  assert.ok(!data.limitedSpecies('Emerald',10).some(r=>r.species.includes(345)));
 });
+
+test('Red, Blue and Yellow routes keep named gates, fishing and trade rules distinct',()=>{
+ const red=require('../../db74/e-red.json');
+ const yellow=require('../../db74/e-yellow.json');
+ assert.equal(data.encounterRoute('Red',['kanto-route-22','walk',4,4,[]]).rank,0);
+ assert.match(data.encounterRoute('Red',['kanto-route-22','old-rod',5,5,[]]).note,/Old Rod.*Vermilion/);
+ assert.match(data.encounterRoute('Yellow',['pokemon-tower · 3f','walk',18,18,[]]).note,/Silph Scope/);
+ assert.match(data.encounterRoute('Yellow',['cerulean-cave · b1f','static',70,70,[]]).note,/Hall of Fame.*Surf/);
+ assert.equal(data.encounterRoute('FireRed',['cerulean-cave · b1f','static',70,70,[]]),null);
+ assert.match(data.lookup('Red','mr-mime',red.entries[122]).note,/Abra/);
+ assert.match(data.lookup('Yellow','mr-mime',yellow.entries[122]).note,/Clefairy/);
+ assert.match(data.lookup('Yellow','parasect',yellow.entries[47]).alternatives[0].note,/Tangela.*Safari Zone/);
+ assert.equal(data.lookup('Red','bulbasaur',red.entries[1]).kind,'tradePossible');
+ assert.match(data.lookup('Yellow','bulbasaur',yellow.entries[1]).note,/happy starter Pikachu/);
+});

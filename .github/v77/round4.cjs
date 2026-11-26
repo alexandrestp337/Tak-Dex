@@ -142,6 +142,17 @@ const assert=require('node:assert/strict');
    const demand=sample.getByText(move+': one TM copy in '+game,{exact:false});
    if(expected)await demand.waitFor();
    else assert.equal(await demand.count(),0);
+   if(game==='Red'){
+    await sample.locator('#dexTab').click();
+    await sample.locator('#dexGame').selectOption('Red');
+    await sample.locator('#dexInput').fill('mime');
+    await sample.locator('#dexResults button').filter({hasText:/Mr.*Mime/}).first().click();
+    const encounter=sample.locator('#td56DexEncounters');
+    if(!await encounter.evaluate(el=>el.open))await encounter.locator('summary').click();
+    const trade=encounter.locator('.td77-acquisition-entry').filter({hasText:'Trade Abra'}).first();
+    await trade.waitFor();
+    assert.match(await trade.textContent(),/Route 2.*Lv .*Trade Abra.*Diglett/);
+   }
    console.log(game+' resource policy passed');
    await sample.close();
   }
