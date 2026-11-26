@@ -502,3 +502,5 @@ Physical Samsung and Android WebView behavior remain untested.
 - **Pass** · Chromium rendered geometry at 320, 360, 390, 412 and 1280 CSS px. Checks measured row and dropdown widths, unchanged row height while editing, horizontal containment, no permanent clear overlay, equal adjacent slot heights and the removed empty editor separator.
 - **Pass** · Round 7A Chromium scenario with the Round 7B Scratch clear and keyboard restore checks. It also rechecked the acquisition paths, resource totals, retained moves, analysis, recommendations, legacy migration and real Black 2 import. The save bytes matched after import.
 - **Pass** · Shared V76 and V77 Chromium suites and the Round 4 planner regression. They covered Battle, 6v6, offline cold reload, file import, synchronization, JSON export and import, Pokédex, Maps, Move Checker and comparison return.
+
+The Round 5 browser regression also passed its five viewport checks, map returns and Quick Compare. The Round 3 test counts both the empty placeholder and the new non-interactive × as an empty actual move.

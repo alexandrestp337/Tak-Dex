@@ -79,7 +79,7 @@ async function compareHead(page){
      await page.locator(`#td4Slots [data-td4-slot="${slot}"]`).click();
      assert.equal(await page.locator('[data-td77-during]').count(),4);
      assert.equal(await page.locator('.td77-during-flow .movechip,.td77-during-flow>button.td77-planner-move-info>strong').count(),actualCount);
-     assert.equal(await page.locator('.td77-during-flow .td42-empty-move').count(),4-actualCount);
+     assert.equal(await page.locator('.td77-during-flow .td42-empty-move,.td77-during-flow .td77-editor-empty').count(),4-actualCount);
      await page.locator('[data-view="final"]').click();
      assert.equal(await page.locator('#td41MoveSlots [data-td42-preview]').count(),4);
      await page.locator('[data-view="during"]').click();
