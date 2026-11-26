@@ -1537,3 +1537,12 @@ body.light .td76-battle-warning.td76-battle-opportunity{background:#ecfaf2;color
 #td77MoveViews button[aria-pressed="true"]{border-color:var(--accent)}
 .td77-inline-check{display:flex;align-items:center;gap:6px}
 .td77-inline-check input{width:auto}
+
+label:has(>input[type="checkbox"]){display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:.5rem}
+label>input[type="checkbox"]{margin:0;flex:0 0 auto;width:auto;min-width:0}
+#td4Edit,#td63ManualCandidate{scroll-margin-top:12px}
+#td4TeamPlannerPage .td77-during-flow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px}
+#td4TeamPlannerPage .td77-during-flow select{min-width:0;max-width:100%}
+#mapsPage .td73-map-toolbar #backMaps{margin-inline-start:auto;white-space:nowrap}
+
+.td77-evolution-path{display:grid;gap:3px;padding:6px 8px;overflow-wrap:anywhere}

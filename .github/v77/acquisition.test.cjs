@@ -33,7 +33,7 @@ test('Encounter accessibility separates area, Surf and fishing timing',()=>{
 
 test('Verified final forms retain earlier stages, item and encounter gates',()=>{
  assert.match(data.lookup('Black 2','gliscor').note,/Gligar.*Razor Fang/);
- assert.match(data.lookup('Black 2','golduck').note,/psyduck.*Lv 33/);
+ assert.match(data.lookup('Black 2','golduck').note,/Psyduck.*Lv 33/);
  assert.equal(data.lookup('Black 2','vaporeon').rank,5);
  assert.match(data.lookup('Black 2','vaporeon').note,/Requires Surf/);
  assert.equal(data.lookup('Black 2','archen').rank,10);
@@ -46,4 +46,17 @@ test('Verified final forms retain earlier stages, item and encounter gates',()=>
  assert.equal(index[55][0],0);
  assert.equal(index[55][1][3],95);
  assert.ok(index[55][4][14]>0);
+});
+
+test('Verified encounter routes preserve fishing, Surf and seasonal prerequisites',()=>{
+ const surf=data.encounterRoute('Black 2',['unova-route-19','surf',10,20,[]]);
+ assert.equal(surf.rank,5);
+ assert.match(surf.note,/Requires Surf/);
+ assert.equal(data.encounterRoute('Black 2',['unova-route-19','super-rod',10,20,[]]).rank,10);
+ const winter=data.encounterRoute('White 2',['unova-route-7','walk',10,20,['season-winter']]);
+ assert.match(winter.note,/winter/);
+ assert.equal(data.encounterRoute('White 2',['unova-route-7','walk',10,20,['undocumented-flag']]),null);
+ assert.match(data.lookup('White 2','braviary').note,/Monday/);
+ assert.match(data.lookup('Black 2','mandibuzz').note,/Thursday/);
+ assert.equal(data.lookup('Black','cranidos').rank,10);
 });

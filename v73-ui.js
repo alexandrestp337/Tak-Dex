@@ -38,7 +38,7 @@ function showDex(name,context,options={}){
  $('dexGame').value=game;refreshTeamMenus();$('dexInput').value=td41PokemonLabel(name);$('dexResults').hidden=true;syncDexClear();
  window.takActivate(2);for(const el of sections)el.hidden=el.id!=='dexPage';
  if(Number(options.id)>0)$('dexInput').dataset.evolutionId=String(options.id);else $('dexInput').value=String(name).replace(/-/g,' ');
- $('dexSearch').click();delete $('dexInput').dataset.evolutionId;
+ td77SearchDex();delete $('dexInput').dataset.evolutionId;
 }
 function goBack(){const old=previousDexScreen;if(!old)return;clearBack();old.restore?.();}
 dexReturn.addEventListener('click',goBack);

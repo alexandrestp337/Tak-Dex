@@ -127,3 +127,58 @@ Run `TAKDEX_FIXED_DENOMINATOR=1 node .github/v77/coverage.cjs` for the fixed set
 | Untested | Not tested | Physical touch, Android-native comparison and file permissions, and an exhaustive party reorder/evolution and species acquisition matrix. |
 
 The round uses the existing plan keys with additive move-stage fields and needs no manual migration.
+
+## Correction Round 2
+
+Review baseline `e2fdaf8` on `v77-development`, with the V76-STABLE web comparison at `ddf951b). Round 1 acceptance was 12 Pass, 14 Need work, 1 Fail and 1 Not tested. This round remains a candidate for user acceptance.
+
+### Implementation and ranking evidence
+
+- Team Planner now has a read-only Actual story progression and one persisted Planning deadline. The global During game / Final selector controls all the cards, the open editor and planned move coverage. Actual moves remain visible in the V76-style comparison. Changing modes or deadlines preserves both saved movesets. Earlier V77 progression and milestone fields remain in the stored plan for compatibility.
+- The planner ranks the full eligible pool against the other five slots. The score uses marginal value from type and move coverage, first resistance and immunity coverage, unprotected shared weaknesses, repeated exact typings, physical/special balance, stat distribution and trainer roster coverage. Quality receives more weight than acquisition rank. A shared type can still win on other contributions. The owned-evolution convenience bonus is smaller than the exact-type redundancy penalty. Documented final forms suppress competitive intermediate recommendations; verified branching alternatives remain separate.
+- A controlled Black 2 test reverses the preference between Golduck and Magnezone. Magnezone wins on a Water-heavy team with Vaporeon and Poliwrath. Golduck wins on the Steel-heavy fixture with Skarmory, Magneton and Metagross. This verifies the composition score. It is not an exhaustive assertion about exact UI ordering for every team.
+- Recommended Improvements compares the best verified evolution and replacement for unlocked slots before choosing a preview. Move proposals follow the current mode. Coverage, HM, Gym and League cards stay separate. Gym analysis uses the milestone before each fight, with the three Striaton starter matchups sharing one Gym. Level-up evolution requirements are compared with the roster's documented levels. League summaries show coverage by trainer and skip explicitly postgame/rematch presets.
+- A press-and-hold offers Compare or Cancel from recommendation and preview cards. Team Planner resumes after tab switching and displays refreshed actual data if the save changed while away. Ordinary Pokédex suggestions open their entry on selection without a View button. The Maps Back button shares the map toolbar, and replacement selection and confirmation scroll to the preview and editor respectively.
+
+### Acquisition method and results
+
+The fixed denominator uses the original V77 review cohort at `165f154` and compares Round 1 with Round 2. The expanded set is the union of species with indexed encounters or audited routes in those versions and the current candidate. Curated entries are game and method specific. Normal ground encounters use named audited areas or floors. Surf and Super Rod checks use separate location gates and item acquisition timing. Seasonal conditions are carried in the route. Other unknown conditions remain partial or unresolved. A verified row establishes a route by a milestone. Additional research may establish an earlier route.
+
+Additional reviewed records include late and postgame land areas, Surf and fishing on audited routes, daily National Pokédex fossils, Route 6 Deerling, and the version-specific weekly Route 4 encounters. Move timing now covers BW Rock Tomb and B2W2 Frustration, Thief and Rock Smash. The latter requires defeating the three Workers; Frustration requires finding Herdier. Existing item evolution, Hidden Grotto, and Move Reminder evidence remains in the Round 1 section. [Black and White walkthrough](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Black_and_White) · [Black 2 and White 2 walkthrough](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Black_2_and_White_2) · [Super Rod](https://bulbapedia.bulbagarden.net/wiki/Super_Rod) · [Twist Mountain](https://bulbapedia.bulbagarden.net/wiki/Twist_Mountain) · [Route 4](https://bulbapedia.bulbagarden.net/wiki/Unova_Route_4) · [Route 6](https://bulbapedia.bulbagarden.net/wiki/Unova_Route_6) · [Virbank Complex](https://bulbapedia.bulbagarden.net/wiki/Virbank_Complex) · [Generation V TMs and HMs](https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_V)
+
+| Game | Fixed assessed | Verified R1 → R2 | Partial R2 | Unresolved R2 | Expanded assessed | Expanded verified R1 → R2 | Expanded partial / unresolved R2 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Black | 247 | 64 → 158 (64.0%) | 70 | 19 | 248 | 65 → 159 (64.1%) | 70 / 19 |
+| White | 247 | 64 → 158 (64.0%) | 70 | 19 | 248 | 65 → 159 (64.1%) | 70 / 19 |
+| Black 2 | 304 | 121 → 204 (67.1%) | 49 | 51 | 306 | 123 → 206 (67.3%) | 49 / 51 |
+| White 2 | 303 | 121 → 204 (67.3%) | 49 | 50 | 305 | 123 → 206 (67.5%) | 49 / 50 |
+
+Machine timing is 19/101 per original and 27/101 per sequel. The lower-bound location index remains 47/52 and 62/68 respectively. Run `TAKDEX_FIXED_DENOMINATOR=1 node .github/v77/coverage.cjs` for the fixed cohort and omit the variable for the expanded set. Neither set proves the count of every legally obtainable species.
+
+### Verification and known limits
+
+| Status | Results |
+| --- | --- |
+| Pass | 36 Node tests, including composition ranking, seasonal and field requirements, version-specific statics, Gen V progression and legacy V76 data. |
+| Pass | Chromium focused checks at 412 and 1280 px for progression, global settings, independent moves, preview scroll, mouse and emulated touch prompts, tab return, explicit exit, JSON transfer, autocomplete and Maps return. V76 regression suites cover Battle, 6v6, map controls, JSON, save reimport and offline reload, with responsive corrections at 320, 412 and 1280 px. |
+| Need work | Complete cross-game acquisition and complete tutor, reminder and evolution-item prerequisite chains. Unresolved groups include conditioned spawns, subarea and entrance requirements, alternate evolution, breeding, trades and event-only routes. Game-specific records outside Gen V received limited research. |
+| Need work | Complete whole-team budgeting for single-use TMs and other finite resources, and exhaustive legal moveset feasibility. Final selections use the known gate or practical level cap. Manual choices past an established gate are marked. Full trainer battle readiness and historical coverage for undocumented rosters remain open. |
+| Not tested | Physical mobile touch, Android-native compare/selection and filesystem behavior, complete roster/availability matrix, and every save reorder/evolution scenario. |
+
+### Manual acceptance checklist
+
+1. **R2-01 Evolution paths**. Look for Gliscor and Golduck in Black 2. Check the named pre-evolution, location, milestone, evolution requirement and any direct alternative.
+2. **R2-02 Marginal ranking**. Compare recommendations in two materially different teams. Replace one member and reopen another slot. Check that weaknesses, move coverage and typing overlap affect the alternatives and trade-offs.
+3. **R2-03 Locks and rarity**. Lock a member and open Recommended Improvements. Confirm the member can receive move advice. Check that the Legendary/Mythical toggle is initially off and aligned with its text.
+4. **R2-04 Global modes**. Toggle During game and Final above Planned team. All cards and the open editor change together. Actual moves remain in the left column and are read-only.
+5. **R2-05 Independent edits**. Edit one move in each mode, switch twice, reload, and verify both saved choices. A fresh import updates actual moves without replacing either plan.
+6. **R2-06 Global deadline**. Choose an early Gym and then Before Elite Four. Early filters require verified availability, and after-deadline manual choices remain visible with their warning.
+7. **R2-07 Actual progression**. Import a save using Team Builder. Check the actual milestone and change the deadline. The save milestone stays the same. Repeat with an unchanged-party progression update or an invalid file.
+8. **R2-08 Analysis sections**. Check the five separate disclosures. Compare the Gym list with the next badge and the League list with Final moves. Look for the planned coverage summary and per-trainer counts.
+9. **R2-09 Compare popup**. Hold a candidate and a replacement preview. Cancel one and confirm the other. Check the comparison pair, selected game, return scroll and normal tap behavior.
+10. **R2-10 Replacement scroll**. Tap a candidate, then confirm it. The preview and then the affected editor should come into view.
+11. **R2-11 Retained navigation**. Switch tabs with a plan and editor open, then return to Team. The plan remains active. Exit explicitly with My Team.
+12. **R2-12 Pokédex and Maps**. Search `fr`, select a result using the list, and open a known encounter map. Back is in the map toolbar and restores the source screen.
+13. **R2-13 Acquisition quality**. Compare Route 19 land and Surf conditions, the Route 4 weekly encounters in both sequels, and a postgame fossil. An unknown condition must remain labeled.
+14. **R2-14 Data portability**. Export and reimport in a separate browser profile. Confirm the new ID, both movesets, locks, deadline and progression snapshot. Try a legacy team-only file.
+15. **R2-15 Existing tools**. Reopen Battle, 6v6 and Move Checker, then reload offline. Check layout, save data and navigation against V76.

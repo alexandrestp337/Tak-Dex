@@ -521,6 +521,11 @@ for(const tabId of ['teamsTab','battleTab','dexTab','moreTab'])$(tabId).addEvent
 const offlineMenuButton=$('td59OpenOffline');
 if(offlineMenuButton?.parentElement)offlineMenuButton.before($('openMaps'));
 $('openMaps').addEventListener('click',()=>open());
+const mapBack=$('backMaps'),mapToolbarActions=mapBack.parentElement;
+new MutationObserver(()=>{
+ const target=$('mapsContent').hidden?$('mapsBackFallback'):mapToolbarActions;
+ if(mapBack.parentElement!==target)target.append(mapBack);
+}).observe($('mapsContent'),{attributes:true,attributeFilter:['hidden']});
 $('backMaps').addEventListener('click',()=>{
  stopAnimation();const previous=returnFrom;returnFrom=null;page.hidden=true;
  if(previous?.id&&$(previous.id)){
