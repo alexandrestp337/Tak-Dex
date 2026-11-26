@@ -79,9 +79,12 @@ for(const game of games){
 
 console.log('\n| Game | Machines listed | Machine timing before | Machine timing after |');
 console.log('| --- | ---: | ---: | ---: |');
-for(const game of ['Black','White','Black 2','White 2']){
+const groupedMachines=JSON.parse(read('db74/machines.json'));
+for(const game of ['Black','White','Black 2','White 2','Gold','Silver','Crystal']){
  const assets=candidate.catalog;
- const machines=(game.includes('2')?assets.takDexB2W2:assets.takDexUnovaV74).machines;
+ const group={Gold:'gold-silver',Silver:'gold-silver',Crystal:'crystal'}[game];
+ const machines=group?groupedMachines[group].map(row=>({...row,location:assets.takDexAcquisitionV77?.machineLocation(game,row.item)})):
+  (game.includes('2')?assets.takDexB2W2:assets.takDexUnovaV74).machines;
  const timed=engine=>machines.filter(m=>engine.moveTiming(game,m.move,[['machine',0]])?.rank!=null).length;
  if(process.env.TAKDEX_ACQUISITION_LEDGER)for(const machine of machines){
   const timing=after.moveTiming(game,machine.move,[['machine',0]]);

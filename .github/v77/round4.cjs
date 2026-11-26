@@ -156,5 +156,18 @@ const assert=require('node:assert/strict');
    console.log(game+' resource policy passed');
    await sample.close();
   }
+  const johto=await browser.newPage({viewport:{width:390,height:850},isMobile:true,hasTouch:true});
+  await johto.goto(process.argv[2]||'http://127.0.0.1:8795',{waitUntil:'domcontentloaded'});
+  await johto.locator('#dexTab').click();
+  await johto.locator('#dexGame').selectOption('Gold');
+  await johto.locator('#dexInput').fill('qwilfish');
+  await johto.locator('#dexResults button').filter({hasText:'Qwilfish'}).first().click();
+  const encounters=johto.locator('#td56DexEncounters');
+  if(!await encounters.evaluate(el=>el.open))await encounters.locator('summary').click();
+  const swarm=encounters.locator('.td77-acquisition-entry').filter({hasText:'Fisher Ralph'}).first();
+  await swarm.waitFor();
+  assert.match(await swarm.textContent(),/Route 32.*Rod.*swarm call/);
+  console.log('Gold Qwilfish shows its rod and swarm prerequisites');
+  await johto.close();
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});

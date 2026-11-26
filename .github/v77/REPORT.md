@@ -293,15 +293,27 @@ The Red, Blue and Yellow bundles now use location and encounter-method gates. Th
 | Blue | 0 → 103 / 106 (97.2%) | 0 → 114 / 117 (97.4%) | 3 conditional starter choices | 42/45 |
 | Yellow | 0 → 106 / 106 (100%) | 0 → 120 / 120 (100%) | 0 within this cohort | 42/45 |
 
-The Yellow cohort figure excludes out-of-cohort species and routes. Remaining location work includes the exact stretch of Route 23 where fishing is possible and individual event-gated Underground Path transactions. Gen II and later regional catalogs outside Unova still need a comparable audit.
+The Yellow cohort figure excludes out-of-cohort species and routes. Remaining location work includes the exact stretch of Route 23 where fishing is possible and individual event-gated Underground Path transactions. Regional catalogs after Johto outside Unova still need a comparable audit.
+
+### Johto follow-through
+
+Gold, Silver and Crystal now distinguish route access from fishing rods, daylight, tree encounters, field moves and phone-triggered swarms. The Gold Qwilfish row names the Old Rod and Fisher Ralph’s call. Union Cave Lapras requires access to the deepest room and a Friday visit. Silver's Lugia uses the Radio Tower Silver Wing, while Gold and Crystal use the postgame Pewter wing. Crystal’s Ho-Oh, randomized Odd Egg and Celebi event are separate from the Gold and Silver rules. Post-League Kanto follows the Johto access sequence. [Gold and Silver walkthrough](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Gold_and_Silver) · [Crystal walkthrough](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Crystal) · [Outbreaks](https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_outbreak) · [Whirl Islands](https://bulbapedia.bulbagarden.net/wiki/Whirl_Islands) · [Bell Tower](https://bulbapedia.bulbagarden.net/wiki/Bell_Tower)
+
+| Game | Fixed baseline → verified | Expanded baseline → verified | Remaining in expanded cohort | Named location lower bounds |
+| --- | ---: | ---: | --- | ---: |
+| Gold | 0 → 148 / 151 (98.0%) | 0 → 167 / 170 (98.2%) | 3 conditional starter choices | 75/84 |
+| Silver | 0 → 148 / 151 (98.0%) | 0 → 167 / 170 (98.2%) | 3 conditional starter choices | 75/84 |
+| Crystal | 0 → 166 / 170 (97.6%) | 0 → 176 / 180 (97.8%) | 3 conditional starter choices and Celebi distribution / platform | 75/85 |
+
+All 57 machine locations are documented per title. The timing engine has **56/57** story or badge gates. Psych Up depends on a Generation I Abra and a Time Capsule trade, with no standalone in-game badge deadline. Crystal’s Goldenrod tutor costs 4,000 coins, requires a Coin Case and Hall of Fame entry, and appears Wednesday or Saturday. The planner tracks documented single-copy Johto TMs while recognizing repeatable shop sources. The [Kanto and Johto exception ledger](round4-kanto-johto-ledger.jsonl) records remaining conditional rows. [Generation II machines](https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_II) · [Move Tutor](https://bulbapedia.bulbagarden.net/wiki/Move_Tutor)
 
 ### Automated verification
 
 | Status | Verification |
 | --- | --- |
-| Pass | 42 V76 and V77 Node tests, including exact Unova gates, historical version restrictions, unconditional evolution paths, and bounded TM and species resources. |
+| Pass | 43 V76 and V77 Node tests, including exact Unova gates, historical version restrictions, unconditional evolution paths, and bounded TM and species resources. |
 | Pass | Focused Chromium at 390 and 412 CSS px. Automatic During and Final moves were populated with zero, one, two, three and four existing moves. The exact comparison exercised Golduck and Starmie through the real ranking code with a restricted candidate fixture. Full-catalog Round 3 coverage ran separately. |
-| Pass | Browser projection covered Psyduck → Golduck, a tightened deadline, a retained manual move, Keep Psyduck, Eevee → Jolteon, Sandile → Krookodile and disabling the unverified local Conkeldurr evolution. Route 11 and off-atlas Nature Preserve navigation passed, including contextual return. A single TM copy was flagged in Red and Crystal, while the same repeated machine in Black 2 was accepted. The Red Mr. Mime entry displayed its level range, Abra trade and Diglett’s Cave approach. |
+| Pass | Browser projection covered Psyduck → Golduck, a tightened deadline, a retained manual move, Keep Psyduck, Eevee → Jolteon, Sandile → Krookodile and disabling the unverified local Conkeldurr evolution. Route 11 and off-atlas Nature Preserve navigation passed, including contextual return. A single TM copy was flagged in Red and Crystal, while the same repeated machine in Black 2 was accepted. The Red Mr. Mime entry displayed its level range, Abra trade and Diglett’s Cave approach. Gold Qwilfish displayed the fishing rod and swarm prerequisites. |
 | Pass | Round 3 and V77 browser flows across 320, 360, 390, 412 and 1280 px included dynamic ranking, compact layouts, save synchronization, plan transfer, contextual return and toolbar geometry. V76 visual comparison, team management, Battle/6v6, historical data and offline cold reload also passed. |
 | Need work | Catalogs outside the expanded Unova cohort, especially games where the local bundle has no indexed encounters. Complete move budgets, item ownership and all legal inheritance sequences need more evidence and modeling. |
 | Not tested | Native Android, physical mobile touch and a playthrough of every documented encounter. |

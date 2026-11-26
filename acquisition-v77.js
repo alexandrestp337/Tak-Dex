@@ -73,6 +73,7 @@
   'undella-bay':6,'undella-town':6,'humilau-city':7,'unova-route-21':8,'unova-route-1':10,'unova-route-3':10,
   'unova-route-8':10,'icirrus-city':10,'moor-of-icirrus':10};
  const isKanto=game=>['Red','Blue','Yellow'].includes(game);
+ const isJohto=game=>['Gold','Silver','Crystal'].includes(game);
  const canonicalAliases={
   'kanto-victory-road-2':'Victory Road','kanto-safari-zone':'Safari Zone','kanto-power-plant':'Power Plant',
   'digletts-cave':'Diglett’s Cave',
@@ -81,7 +82,7 @@
  };
  function placeName(value,game){
   const [raw,room]=String(value||'').split(' · ');
-  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|kanto-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
+  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|(?:kanto|johto)-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
   if(raw==='unova-victory-road-2'&&['unknown-area-71','unknown-area-78'].includes(room))return 'Victory Road · Cave';
   if(raw==='relic-castle'&&room==='d'&&game?.endsWith(' 2'))return 'Relic Castle · Volcarona’s chamber';
   if(!room||/^unknown-area/i.test(room))return base;
@@ -138,7 +139,7 @@
   'good-rod':[2,'Get the Good Rod from the Fuchsia City Fishing Guru after opening the route to Fuchsia.'],
   'super-rod':[2,'Get the Super Rod from the Fishing Guru south of Snorlax on Route 12.']
  };
- function verifiedAreaRank(game,place){return isKanto(game)?kantoAreaGates[place.split(' · ')[0]]?.[0]:null;}
+ function verifiedAreaRank(game,place){return isKanto(game)?kantoAreaGates[place.split(' · ')[0]]?.[0]:isJohto(game)?johtoAreaGates[place]?.[0]:null;}
  function kantoRoute(game,row){
   const [place,method,,,conditions=[]]=row;
   if(conditions.length)return null;
@@ -155,8 +156,111 @@
   if(methodGate)note=method==='pokeflute'?methodGate[1]:[access,methodGate[1]].filter(Boolean).join(' ');
   return {...early(Math.max(rank,methodGate?.[0]??0),placeName(place,game),method,note),source:'rby-location-story-and-method'};
  }
+ const johtoAreaGates={
+  'new-bark-town':[0],'cherrygrove-city':[0],'johto-route-29':[0],'johto-route-30':[0],
+  'johto-route-31':[0],'johto-route-46':[0,'Enter the southern end from Route 29.'],
+  'violet-city':[0],'sprout-tower':[0],'dark-cave · violet-city-entrance':[0,'Enter via Route 31.'],
+  'johto-route-32':[1,'Defeat Falkner to head south from Violet City.'],
+  'union-cave · 1f':[1,'Follow Route 32 south.'],
+  'union-cave · b1f':[1,'Follow Route 32 south.'],
+  'union-cave · b2f':[4,'Surf to the deepest room after defeating Morty.'],
+  'johto-route-33':[1,'Pass through Union Cave.'],
+  'azalea-town':[1,'Pass through Union Cave.'],
+  'slowpoke-well · 1f':[1,'Speak to Kurt in Azalea and follow him to confront Team Rocket.'],
+  'slowpoke-well · b1f':[4,'Clear Team Rocket, then use Strength and Surf.'],
+  'ilex-forest':[2,'Rescue the Farfetch’d in Ilex Forest, then use Cut after Bugsy.'],
+  'johto-route-34':[2,'Exit Ilex Forest after obtaining Cut.'],
+  'goldenrod-city':[2,'Travel north from Ilex Forest through Route 34.'],
+  'johto-route-35':[2,'Leave Goldenrod north through the gate.'],
+  'national-park':[2,'Enter from Route 35 north of Goldenrod.'],
+  'johto-route-36':[3,'Obtain the SquirtBottle after Whitney to remove Sudowoodo.'],
+  'johto-route-37':[3,'Clear Sudowoodo with the SquirtBottle.'],
+  'ecruteak-city':[3,'Clear Sudowoodo with the SquirtBottle.'],
+  'burned-tower':[3,'Reach Ecruteak and enter the Burned Tower.'],
+  'johto-route-38':[3,'Leave Ecruteak westward.'],'johto-route-39':[3,'Continue west of Ecruteak.'],
+  'olivine-city':[3,'Follow Routes 38–39 from Ecruteak.'],
+  'johto-sea-route-40':[4,'Use Surf after defeating Morty to cross from Olivine.'],
+  'johto-sea-route-41':[4,'Use Surf after defeating Morty to cross from Olivine.'],
+  'cianwood-city':[4,'Surf across Routes 40 and 41 from Olivine.'],
+  'johto-route-42':[3,'Travel east from Ecruteak via Route 42.'],
+  'mt-mortar · 1f':[3,'Enter Mt. Mortar from Route 42.'],
+  'mt-mortar · lower-cave':[3,'Enter Mt. Mortar from Route 42.'],
+  'mt-mortar · b1f':[4,'Use Surf to reach the inner cave.'],
+  'mt-mortar · upper-cave':[8,'Use Surf and Waterfall after obtaining the Rising Badge.'],
+  'johto-route-43':[3,'Go north from Mahogany Town.'],
+  'lake-of-rage':[3,'Travel north of Mahogany Town via Route 43.'],
+  'johto-route-44':[7,'Resolve the Goldenrod Radio Tower takeover after obtaining seven badges.'],
+  'ice-path':[7,'Resolve the Goldenrod Radio Tower takeover, then continue east on Route 44.'],
+  'blackthorn-city':[7,'Travel through Ice Path after freeing the Radio Tower.'],
+  'johto-route-45':[7,'Exit Blackthorn southward.'],
+  'dragons-den':[7,'Defeat Clair in Blackthorn and enter Dragon’s Den to complete her challenge.'],
+  'dark-cave · blackthorn-city-entrance':[7,'Enter from Route 45 south of Blackthorn.'],
+  'ruins-of-alph · outside':[0,'Enter from Route 36 south of Violet.'],
+  'kanto-route-26':[8,'Use Surf and Waterfall through Tohjo Falls after Clair.'],
+  'kanto-route-27':[8,'Use Surf and Waterfall through Tohjo Falls after Clair.'],
+  'tohjo-falls':[8,'Use Surf and Waterfall after Clair to traverse the falls.'],
+  'kanto-victory-road-1':[8,'Show eight Johto badges at the Pokémon League gate.'],
+  'mt-silver':[10,'Earn all 16 badges, then speak to Professor Oak.'],
+  'kanto-route-28':[10,'Earn all 16 badges and ask Oak for permission to access Mt. Silver.'],
+  'digletts-cave':[10,'Restore the Power Plant, get the EXPN Card from the Lavender Radio Tower, then wake Snorlax with the Poké Flute station.'],
+  'kanto-route-2':[10,'Open Diglett’s Cave by waking Snorlax with the Poké Flute station.'],
+  'kanto-route-3':[10,'Wake Snorlax and reach Pewter via Diglett’s Cave.'],
+  'mt-moon':[10,'Reach Pewter after waking Snorlax, then follow Route 3 east.'],
+  'whirl-islands':[5,'Use Surf and Whirlpool after clearing the Mahogany Rocket Hideout and defeating Pryce.'],
+  ...Object.fromEntries(['celadon-city','cerulean-city','cinnabar-island','fuchsia-city','pallet-town','vermilion-city',
+   'viridian-city','rock-tunnel','kanto-route-1','kanto-route-4','kanto-route-5','kanto-route-6','kanto-route-7',
+   'kanto-route-8','kanto-route-9','kanto-route-10','kanto-route-11','kanto-route-12','kanto-route-13','kanto-route-14',
+   'kanto-route-15','kanto-route-16','kanto-route-17','kanto-route-18','kanto-route-22','kanto-route-24','kanto-route-25',
+   'kanto-sea-route-19','kanto-sea-route-20','kanto-sea-route-21']
+   .map(place=>[place,[10,'Enter the Hall of Fame and obtain the S.S. Ticket to reach postgame Kanto.']]))
+ };
+ const johtoMethods={
+  surf:[4,'Get Surf after the Ecruteak Dance Theater battles and defeat Morty.'],
+  'old-rod':[1,'Get the Old Rod at the Route 32 Pokémon Center.'],
+  'good-rod':[3,'Get the Good Rod in Olivine City.'],
+  'super-rod':[10,'Get the Super Rod on Route 12 in postgame Kanto.'],
+  headbutt:[2,'Obtain Headbutt in Ilex Forest and use it on an eligible tree.'],
+  'rock-smash':[3,'Remove Sudowoodo, then speak to the NPC east of its former spot for Rock Smash.']
+ };
+ const johtoSwarmContacts={
+  'mt-mortar · 1f':[7,'Hiker Parry on Route 45'],
+  'johto-route-35':[2,'Bug Catcher Arnie on Route 35'],
+  'dark-cave · violet-city-entrance':[1,'Hiker Anthony on Route 33'],
+  'johto-route-38':[3,'Schoolboy Chad on Route 38'],
+  'johto-route-32':[1,'Fisher Ralph on Route 32'],
+  'johto-route-44':[7,'Fisher Wilton on Route 44']
+ };
+ function johtoRoute(game,row){
+  const [place,method,,,conditions=[]]=row;
+  if(conditions.some(c=>!/^time-(morning|day|night)$|^weekday-friday$|^swarm-(no|yes)$/.test(c)))return null;
+  const area=place.split(' · ')[0],gate=johtoAreaGates[place]||johtoAreaGates[area];
+  if(!gate)return null;
+  const [areaRank,areaNote]=gate;
+  const field=johtoMethods[method.startsWith('headbutt-')?'headbutt':method];
+  let milestone=areaRank,requirement=areaNote;
+  if(method==='static'&&place==='union-cave · b2f'){
+   requirement='Surf to the deepest room after Morty. Lapras appears on Fridays.';
+  }else if(method==='static'&&place==='lake-of-rage'){
+   milestone=4;requirement='Surf to the red Gyarados after defeating Morty.';
+  }else if(method==='squirt-bottle'){
+   requirement='Defeat Whitney, get the SquirtBottle and use it on Sudowoodo.';
+  }else if(field){
+   milestone=Math.max(milestone,field[0]);
+   requirement=[areaNote,field[1]].filter(Boolean).join(' ');
+  }else if(method!=='walk')return null;
+  if(conditions.includes('swarm-yes')){
+   const contact=johtoSwarmContacts[place];
+   if(!contact)return null;
+   milestone=Math.max(milestone,contact[0]);
+   requirement=[requirement,'Register '+contact[1]+' and wait for a swarm call.'].filter(Boolean).join(' ');
+  }
+  const time=conditions.filter(c=>c.startsWith('time-')).map(c=>c.slice(5));
+  return {...early(milestone,placeName(place,game),method,[requirement,time.length?'Time: '+time.join(', '):''].filter(Boolean).join(' ')),
+   source:'gsc-location-story-and-method'};
+ }
  function encounterRoute(game,row){
   if(isKanto(game))return kantoRoute(game,row);
+  if(isJohto(game))return johtoRoute(game,row);
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
   const sequel=game.endsWith(' 2'),[place,method, , ,conditions=[]]=row;
   if(conditions.some(c=>!/^season-(spring|summer|autumn|winter)$/.test(c)))return null;
@@ -308,7 +412,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  };
  const catalogIndexes=new WeakMap();
  function levelPath(game,id,pack,owned){
-  if((!isKanto(game)&&!['Black','White','Black 2','White 2'].includes(game))||!pack?.mons||!auditedLevelEvolutions[id])return null;
+  if((!isJohto(game)&&!isKanto(game)&&!['Black','White','Black 2','White 2'].includes(game))||!pack?.mons||!auditedLevelEvolutions[id])return null;
   if(!catalogIndexes.has(pack)){
    const rows=new Map(pack.mons.map(row=>[row[0],row]));
    const counts=new Map();
@@ -379,6 +483,54 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    }
    if(name==='mew')return {kind:'event',reason:'Official Red, Blue and Yellow acquisition requires a distribution or trade from a distribution.'};
    if(!yellow&&['bulbasaur','charmander','squirtle'].includes(name))return {kind:'tradePossible',reason:'Choose this starter at the beginning of the game. Other starter families require a trade.'};
+   return null;
+  }
+  if(isJohto(game)){
+   if(name==='snorlax')return {...early(10,'Vermilion City','pokeflute',
+    'Restore the Power Plant, obtain the EXPN Card in Lavender Town and tune the Pokégear to the Poké Flute station by Snorlax.'),source:'vermilion-city'};
+   if(name==='aerodactyl')return {...early(10,'Route 14','in-game trade','Trade Chansey to the NPC on Route 14 in postgame Kanto.'),source:'gsc-in-game-trades'};
+   if(name==='porygon')return {...early(10,'Celadon City · Prize Corner','purchase',
+    'Exchange '+(game==='Crystal'?'5,555':'9,999')+' coins at the postgame Celadon Prize Corner.'),source:'celadon-version-specific-prizes'};
+   if(game==='Crystal'&&['pichu','cleffa','igglybuff','tyrogue','smoochum','elekid','magby'].includes(name)){
+    return {...early(2,'Route 34 · Day Care','gift egg',
+     'In the international release, take the one Odd Egg and hatch it. The species is random; breeding supplies alternatives.'),source:'crystal-odd-egg'};
+   }
+   if(name==='tyrogue')return {...early(8,'Mt. Mortar · B1F','gift',
+    'Surf and use Waterfall with the Rising Badge, then defeat the Karate King. Keep an open party slot.'),source:'mt-mortar'};
+   if((game==='Gold'&&name==='ekans')||(game==='Silver'&&name==='sandshrew')){
+    return {...early(2,'Goldenrod City · Game Corner','purchase','Exchange 700 coins at the Goldenrod Game Corner.'),source:'goldenrod-version-specific-prizes'};
+   }
+   if(name==='unown')return {...early(0,'Ruins of Alph','walk','Solve the first sliding-panel puzzle in the accessible ruin above the entrance.'),source:'ruins-of-alph'};
+   if(name==='lugia'){
+    const rank=game==='Silver'?7:10;
+    return {...early(rank,'Whirl Islands','static','Bring the Silver Wing from '+(game==='Silver'?'the Radio Tower Director after Team Rocket':'the man in postgame Pewter City')+'. Use Surf and Whirlpool to approach from the northeast island.'),source:'whirl-islands'};
+   }
+   if(name==='ho-oh'){
+    const rank=game==='Gold'?7:10;
+    const wing=game==='Crystal'?'Catch the three legendary beasts, enter the Hall of Fame and obtain the Rainbow Wing from the Sage.':
+     'Bring the Rainbow Wing from '+(game==='Gold'?'the Radio Tower Director after Team Rocket.':'the man in postgame Pewter City.');
+    return {...early(rank,'Bell Tower · Roof','static',wing),source:'bell-tower'};
+   }
+   if(game==='Crystal'&&name==='suicune')return {...early(7,'Bell Tower · 1F','static',
+    'Free the Radio Tower to receive the Clear Bell, then meet the Sages and enter the tower.'),source:'bell-tower'};
+   if(game==='Crystal'&&name==='remoraid')return {kind:'trade',reason:'Crystal has no native Remoraid fishing encounter. Trade from Gold or Silver.'};
+   const gifts={
+    togepi:[1,'Violet City','After defeating Falkner, take the Egg from Elm’s aide at the Pokémon Center and hatch it.','gift egg'],
+    eevee:[3,'Goldenrod City · Bill’s House','Meet Bill in the Ecruteak Pokémon Center, then return to his home.','gift'],
+    shuckle:[4,'Cianwood City · Mania’s House','Surf to Cianwood after Morty and talk to Mania.','gift'],
+    dratini:[8,'Dragon’s Den','Complete Clair’s test in the Dragon Shrine and return for the gift.','gift']
+   };
+   const direct=land(game,encounters),gift=gifts[name];
+   if(gift&&(name!=='dratini'||game==='Crystal')&&(!direct||direct.rank>=gift[0])){
+    const [rank,place,note,method]=gift;
+    return {...early(rank,place,method,note),source:'gsc-game-specific-gifts'};
+   }
+   if(direct)return direct;
+   if(['chikorita','cyndaquil','totodile'].includes(name))return {kind:'tradePossible',reason:'Choose one starter from Professor Elm. The other families require a trade.'};
+   if(name==='celebi'&&game==='Crystal')return {kind:'event',reason:'Requires the GS Ball through a supported official event or the Virtual Console post-League release.'};
+   if(['raikou','entei'].includes(name)||name==='suicune'&&game!=='Crystal'){
+    return {...early(3,'Johto · Roaming encounter','roaming-grass','Awaken the legendary Pokémon at the Burned Tower in Ecruteak, then track it through Johto.'),source:'burned-tower'};
+   }
    return null;
   }
   const sequel=game==='Black 2'||game==='White 2';
@@ -565,8 +717,133 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   hm04:"Fuchsia City · Rainbow Badge required for field use",
   hm05:"Route 2 · Boulder Badge required for field use",
  };
+ const johtoMachineLocations={
+  tm01:"Prize for defeating Chuck",
+  tm02:"Ilex Forest, Goldenrod Department Store · ₽2,000",
+  tm03:"Celadon Mansion",
+  tm04:"Route 35",
+  tm05:"Route 32",
+  tm06:"Prize for defeating Janine",
+  tm07:"Kanto Power Plant",
+  tm08:"Route 36, Goldenrod Department Store · ₽1,000",
+  tm09:"Traded Abra from Generation I",
+  tm10:"Lake of Rage, Celadon Department Store · ₽3,000",
+  tm11:"Goldenrod Radio Tower, Celadon Department Store · ₽2,000",
+  tm12:"Route 34",
+  tm13:"Moomoo Farm, Dark Cave",
+  tm14:"Goldenrod Game Corner · 5,500 Game Corner coins",
+  tm15:"Celadon Game Corner · 7,500 Game Corner coins",
+  tm16:"Prize for defeating Pryce",
+  tm17:"Celadon Department Store · ₽3,000",
+  tm18:"Slowpoke Well, Celadon Department Store · ₽2,000",
+  tm19:"Prize for defeating Erika",
+  tm20:"Burned Tower",
+  tm21:"Goldenrod Department Store",
+  tm22:"Route 27",
+  tm23:"Prize for defeating Jasmine",
+  tm24:"Prize for defeating Clair",
+  tm25:"Goldenrod Game Corner · 5,500 Game Corner coins",
+  tm26:"Victory Road",
+  tm27:"Goldenrod Department Store",
+  tm28:"National Park",
+  tm29:"Saffron City, Celadon Game Corner · 3,500 Game Corner coins",
+  tm30:"Prize for defeating Morty",
+  tm31:"Prize for defeating Falkner",
+  tm32:"Celadon Game Corner · 1,500 Game Corner coins",
+  tm33:"Goldenrod Department Store, Traded Krabby Horsea Goldeen and Staryu from Generation I · ₽3,000",
+  tm34:"Olivine Lighthouse",
+  tm35:"Goldenrod Department Store basement",
+  tm36:"Route 43",
+  tm37:"Route 27, Celadon Department Store · ₽2,000",
+  tm38:"Goldenrod Game Corner · 5,500 Game Corner coins",
+  tm39:"Union Cave",
+  tm40:"Mt. Mortar",
+  tm41:"Goldenrod Department Store · ₽3,000",
+  tm42:"Viridian City",
+  tm43:"Lake of Rage, Traded Nidoran♀ and Nidoran♂ from Generation I",
+  tm44:"Ice Path",
+  tm45:"Prize for defeating Whitney",
+  tm46:"Team Rocket HQ",
+  tm47:"Route 28, Rock Tunnel",
+  tm48:"Goldenrod Department Store · ₽3,000",
+  tm49:"Prize for defeating Bugsy",
+  tm50:"Route 31 after delivering Randy’s mail",
+  hm01:"Ilex Forest · Hive Badge required for field use",
+  hm02:"Cianwood City · Storm Badge required for field use",
+  hm03:"Ecruteak City · Fog Badge required for field use",
+  hm04:"Olivine City · Plain Badge required for field use",
+  hm05:"Sprout Tower · Zephyr Badge required for field use",
+  hm06:"Team Rocket HQ · Glacier Badge required for field use",
+  hm07:"Ice Path · Rising Badge required for field use",
+ };
+ const johtoMoveWindows={
+  'dynamic-punch':[5,'Defeat Chuck in Cianwood.'],
+  headbutt:[2,'Speak to the Headbutt tutor in Ilex Forest.'],
+  curse:[10,'Speak to the NPC in the Celadon Mansion at night.'],
+  rollout:[2,'Reach Route 35 after Ilex Forest.'],
+  roar:[2,'Use Cut to reach the man on the north ledge of Route 32.'],
+  snore:[3,'Feed seven Berries to Moomoo at the farm on Route 39. There is another copy in Dark Cave.'],
+  'rain-dance':[4,'Use Surf and Strength in the lower Slowpoke Well. Another copy is for sale in postgame Celadon.'],
+  endure:[3,'Use Strength to reach the northeastern basement of Burned Tower after Whitney.'],
+  'sleep-talk':[7,'Use the Basement Key to reach the Radio Director in the Goldenrod warehouse during the takeover.'],
+  'sludge-bomb':[4,'Clear the Mahogany Rocket Hideout, then speak to the guard in the Route 43 toll building.'],
+  sandstorm:[8,'Show the woman on Route 27 a high-friendship lead after crossing Tohjo Falls.'],
+  'defense-curl':[4,'Reach the raised platform in the center of Mt. Mortar.'],
+  'dream-eater':[10,'Speak to the sleeping man in Viridian after using Cut or Surf.'],
+  detect:[3,'Use Cut to reach the northeastern path beside the Lake of Rage.'],
+  thief:[4,'Enter the southwestern B2F room of the Mahogany Rocket Hideout.'],
+  'steel-wing':[10,'Find a copy in Rock Tunnel. Another is available from the celebrity on Route 28.'],
+  toxic:[10,'Defeat Janine in postgame Fuchsia.'],
+  'zap-cannon':[10,'Return the Machine Part to the postgame Power Plant manager.'],
+  'rock-smash':[3,'Move Sudowoodo and talk to the man on Route 36.'],
+  'psych-up':[null,'Requires a Generation I Abra through the Time Capsule.'],
+  'hidden-power':[3,'Get the TM at the Lake of Rage.'],
+  'sunny-day':[7,'Receive it at the Radio Tower after the Rocket takeover.'],
+  'sweet-scent':[2,'Speak to the attendant in the Ilex Forest gate to Route 34.'],
+  blizzard:[2,'5,500 coins in Goldenrod.'],thunder:[2,'5,500 coins in Goldenrod.'],
+  'fire-blast':[2,'5,500 coins in Goldenrod.'],
+  'hyper-beam':[10,'7,500 coins in Celadon.'],
+  'icy-wind':[5,'Defeat Pryce in Mahogany after clearing Team Rocket’s hideout.'],
+  protect:[10,'Purchase at the Celadon Department Store.'],
+  'giga-drain':[10,'Defeat Erika in postgame Celadon.'],
+  frustration:[2,'Visit the Goldenrod Department Store on Sunday with a low-friendship lead.'],
+  return:[2,'Visit the Goldenrod Department Store on Sunday with a high-friendship lead.'],
+  'solar-beam':[8,'Explore Route 27 using Surf and Waterfall after Clair.'],
+  'iron-tail':[5,'Deliver the SecretPotion and defeat Jasmine in Olivine.'],
+  'dragon-breath':[8,'Complete Clair’s Dragon’s Den challenge.'],
+  earthquake:[8,'Pass through Victory Road after collecting eight Johto badges.'],
+  dig:[2,'Look behind the fence in the National Park.'],
+  psychic:[10,'Visit Mr. Psychic in Saffron or exchange 3,500 coins in Celadon.'],
+  'shadow-ball':[4,'Defeat Morty in Ecruteak.'],
+  'mud-slap':[1,'Defeat Falkner in Violet.'],
+  'double-team':[10,'Exchange 1,500 coins in Celadon.'],
+  'ice-punch':[2,'Purchase at the Goldenrod Department Store.'],
+  'thunder-punch':[2,'Purchase at the Goldenrod Department Store.'],
+  'fire-punch':[2,'Purchase at the Goldenrod Department Store.'],
+  swagger:[3,'Climb the Olivine Lighthouse.'],swift:[1,'Explore Union Cave.'],
+  rest:[7,'Pass through Ice Path after freeing the Radio Tower.'],
+  attract:[3,'Defeat Whitney in Goldenrod.'],
+  'fury-cutter':[2,'Defeat Bugsy in Azalea.'],
+  nightmare:[2,'Take Randy’s mail from the Route 35 gate to the man on Route 31.'],
+  cut:[2,'Rescue the Farfetch’d in Ilex Forest. The Hive Badge is required for field use.'],
+  fly:[5,'Defeat Chuck, then speak to his wife in Cianwood.'],
+  surf:[3,'Defeat the Kimono Girls. The Fog Badge is required for field use.'],
+  strength:[3,'Speak to a sailor at the Olivine Café. The Plain Badge is required for field use.'],
+  flash:[0,'Defeat the elder in Sprout Tower. The Zephyr Badge is required for field use.'],
+  whirlpool:[4,'Clear the Rocket Hideout in Mahogany. The Glacier Badge is required for field use.'],
+  waterfall:[7,'Find it in Ice Path. The Rising Badge is required for field use.']
+ };
+ function johtoMoveTiming(game,name,methods){
+  if(!isJohto(game))return null;
+  const machine=methods.some(m=>m[0]==='machine')?johtoMoveWindows[name]:null;
+  const tutor=game==='Crystal'&&methods.some(m=>m[0]==='tutor')&&['ice-beam','thunderbolt','flamethrower'].includes(name)?
+   [10,'Goldenrod Game Corner tutor on Wednesday or Saturday after the League. Requires the Coin Case and 4,000 coins.']:null;
+  const known=[machine,tutor].filter(Boolean);
+  const ranks=known.map(row=>row[0]).filter(rank=>rank!=null);
+  return known.length?{rank:ranks.length?Math.min(...ranks):null,requirements:known.map(row=>row[1]),text:known.map(row=>row[1]).join(' / ')}:null;
+ }
  function machineLocation(game,item){
-  return ['Red','Blue','Yellow'].includes(game)?kantoMachineLocations[item]:null;
+  return isKanto(game)?kantoMachineLocations[item]:isJohto(game)?johtoMachineLocations[item]:null;
  }
  // Kanto's repeatable shop and Game Corner machines are excluded.
  const kantoSingleUse=new Set([
@@ -576,9 +853,13 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   'metronome','self-destruct','fire-blast','swift','skull-bash','soft-boiled','dream-eater','sky-attack',
   'rest','thunder-wave','psywave','explosion','rock-slide','tri-attack',
  ]);
+ const johtoSingleUse=new Set(['dynamic-punch','curse','rollout','roar','toxic','zap-cannon','sweet-scent','icy-wind',
+  'giga-drain','endure','solar-beam','iron-tail','dragon-breath','earthquake','dig','shadow-ball','mud-slap','swagger','sleep-talk',
+  'sludge-bomb','swift','defense-curl','dream-eater','rest','attract','thief','fury-cutter','nightmare']);
  function limitedMachine(game,name){
   if(['Red','Blue','Yellow'].includes(game))return kantoSingleUse.has(name);
-  if(['Gold','Silver','Crystal','FireRed','LeafGreen'].includes(game))return name==='earthquake';
+  if(isJohto(game))return johtoSingleUse.has(name);
+  if(['FireRed','LeafGreen'].includes(game))return name==='earthquake';
   return false;
  }
  function limitedSpecies(game,rank){
@@ -594,6 +875,8 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
     rules.push({name:'Fighting Dojo gift',species:[106,107],alternative:remakes?'Trade for the other fighter or breed Tyrogue after unlocking the Four Island Day Care.':'Use a trade to obtain the other fighter.'});
    }
   }
+  if(game==='Crystal')rules.push({name:'Crystal Odd Egg',species:[172,173,174,236,238,239,240],renewable:true,
+   alternative:'The Odd Egg hatches one random Pokémon. Use breeding or another documented route for additional families.'});
   if(unova){
    const renewable=game.endsWith(' 2');
    rules.push({name:'Cover or Plume Fossil',species:[564,566],renewable,
@@ -606,5 +889,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return rules;
  }
- root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,limitedSpecies,limitedMachine};
+ root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine};
 })(globalThis);

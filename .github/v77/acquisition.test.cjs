@@ -144,3 +144,22 @@ test('Red, Blue and Yellow routes keep named gates, fishing and trade rules dist
  assert.equal(data.lookup('Red','bulbasaur',red.entries[1]).kind,'tradePossible');
  assert.match(data.lookup('Yellow','bulbasaur',yellow.entries[1]).note,/happy starter Pikachu/);
 });
+
+test('Johto verifies times, version-specific legendary gates and Crystal resources separately',()=>{
+ const qwilfish=data.encounterRoute('Gold',['johto-route-32','old-rod',5,5,['swarm-yes']]);
+ assert.equal(qwilfish.rank,1);
+ assert.match(qwilfish.note,/Old Rod.*Fisher Ralph.*swarm call/);
+ assert.match(data.encounterRoute('Crystal',['johto-route-29','walk',2,4,['time-night']]).note,/night/);
+ const lapras=data.encounterRoute('Silver',['union-cave · b2f','static',20,20,['weekday-friday']]);
+ assert.equal(lapras.rank,4);
+ assert.match(lapras.note,/Morty.*Fridays/);
+ assert.equal(data.lookup('Silver','lugia').rank,7);
+ assert.equal(data.lookup('Gold','lugia').rank,10);
+ assert.match(data.lookup('Crystal','ho-oh').note,/three legendary beasts.*Hall of Fame/);
+ assert.equal(data.lookup('Crystal','remoraid').kind,'trade');
+ assert.match(data.lookup('Crystal','elekid').note,/Odd Egg/);
+ assert.match(data.machineLocation('Crystal','hm07'),/Ice Path.*Rising Badge/);
+ assert.equal(engine.moveTiming('Crystal','waterfall',[['machine',0]]).rank,7);
+ assert.match(engine.moveTiming('Crystal','ice-beam',[['tutor',0]]).text,/Wednesday or Saturday.*4,000/);
+ assert.equal(engine.moveTiming('Gold','ice-beam',[['tutor',0]]),null);
+});
