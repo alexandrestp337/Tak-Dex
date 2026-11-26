@@ -1520,3 +1520,5 @@ body.light .td76-battle-warning.td76-battle-opportunity{background:#ecfaf2;color
 .td77-duel-ability,.td77-duel-item{min-height:1em;font-size:.72rem;color:var(--muted);overflow-wrap:anywhere}
 .td77-turn-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center;height:2rem}
 .td77-turn-row [data-side="opp"]{grid-column:2}
+
+#td4TeamPlannerPage .td43-candidate-pick{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y}
