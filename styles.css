@@ -1522,3 +1522,7 @@ body.light .td76-battle-warning.td76-battle-opportunity{background:#ecfaf2;color
 .td77-turn-row [data-side="opp"]{grid-column:2}
 
 #td4TeamPlannerPage .td43-candidate-pick{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y}
+
+#dexResult .td77-dex-ability{grid-column:1/-1;display:grid;gap:4px;max-width:34rem}
+#dexResult .td77-encounter-access{display:block;color:var(--muted)}
+#typeExplorerResults .td61-entry{scroll-margin-top:16px}

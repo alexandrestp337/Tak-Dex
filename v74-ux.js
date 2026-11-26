@@ -385,15 +385,14 @@ refresh();
 
 // All Pokédex encounter locations for Platinum link to the active Sinnoh map.
 const dexRecords=$('dexResult');
-function linkDexEncounters(){const region=dexRecords.querySelector('#td56DexEncounters .td66-section-body');
- if(!region||!['Platinum','Black','White'].includes($('dexGame').value))return;
- for(const bold of region.querySelectorAll('p > b')){if(bold.querySelector('button'))continue;
- const raw=bold.textContent.trim(),name=raw.split(' · ')[0].trim();
- // Acquisition evidence labels summarize records; they are not geographical locations.
- // Leave the individual, actual encounter location links above them untouched.
- if(/^(recorded encounter|starter|evolution route|trade evolution|external trade required|event-only(?:.+)?|gift|availability unverified):?$/i.test(raw))continue;
- const mapped=window.takDexMapsV73?.resolveLocation?.(name,$('dexGame').value);
- bold.innerHTML=mapped?`<button type="button" class="td74-dex-map-link" data-td74-dex-map="${escape(mapped)}" title="Show ${escape(name)} on the map">${escape(raw)} <span aria-hidden="true">⌖</span></button>`:`<button type="button" class="td74-dex-map-link" data-td74-dex-map-search="${escape(name)}" title="Search ${escape(name)} on the map">${escape(raw)} <span aria-hidden="true">⌖</span></button>`;
+function linkDexEncounters(){
+ const region=dexRecords.querySelector('#td56DexEncounters .td66-section-body');
+ if(!region)return;
+ for(const bold of region.querySelectorAll('p > b:not([data-map-checked])')){
+  bold.dataset.mapChecked='';
+  if(bold.querySelector('button'))continue;
+  const raw=bold.textContent.trim(),mapped=window.takDexMapsV73?.resolveLocation(raw,$('dexGame').value);
+  if(mapped)bold.innerHTML=`<button type="button" class="td74-dex-map-link" data-td74-dex-map="${escape(mapped)}">${escape(raw)} <span aria-hidden="true">⌖</span></button>`;
  }
 }
 function linkDexActions(){const hero=dexRecords.querySelector('.td71-dex-hero'),name=hero?.querySelector('[data-td71-quick-compare]')?.dataset.td71QuickCompare||hero?.querySelector('h3')?.textContent.trim(),game=$('dexGame').value;

@@ -1,0 +1,97 @@
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright-core');
+const {makeSave}=require('../v76/fixtures.cjs');
+const url=process.argv[2]||'http://127.0.0.1:8795';
+(async()=>{
+ const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ try{
+  const page=await browser.newPage({viewport:{width:Number(process.env.TAKDEX_WIDTH)||412,height:860},isMobile:true,hasTouch:true,reducedMotion:'reduce',ignoreHTTPSErrors:true});
+  page.setDefaultTimeout(18000);
+  const errors=[];page.on('pageerror',e=>errors.push(e.stack));
+  await page.goto(url,{waitUntil:'domcontentloaded'});
+  await page.evaluate(()=>{
+   teams.push({id:'v77-test',name:'V77 test',game:'Black 2',pokemon:Array(6).fill(null)});
+   save();showTeams();openTeam('v77-test');
+  });
+  const picker=page.locator('[data-save-file="v77-test"]');
+  const file=(seq,progress)=>({name:'story.sav',mimeType:'application/octet-stream',buffer:makeSave(23,seq,40,progress)});
+  await picker.setInputFiles(file(21,{mask:1}));
+  await page.waitForFunction(()=>current?.saveLink?.progression?.badgeCount===1);
+  const update=await page.evaluate(bytes=>takDexSaveSync.synchronize({teamId:'v77-test',bytes:Uint8Array.from(atob(bytes),c=>c.charCodeAt(0))}),file(22,{mask:7,surf:true}).buffer.toString('base64'));
+  assert.equal(update,'updated');
+  assert.equal(await page.evaluate(()=>current.saveLink.progression.badgeCount),3);
+  await picker.setInputFiles({name:'story.sav',mimeType:'application/octet-stream',buffer:Buffer.alloc(524288)});
+  await page.waitForFunction(()=>document.querySelector('[data-save-status="v77-test"]').textContent.includes('No valid'));
+  assert.equal(await page.evaluate(()=>current.saveLink.progression.badgeCount),3);
+  await page.evaluate(()=>td41OpenTeamPlan('v77-test'));
+  await page.locator('#td77ActualProgress').filter({hasText:'3/8'}).waitFor();
+  await page.locator('#td4Progress').fill('Humilau');
+  await page.locator('#td4Progress').locator('..').getByRole('button',{name:/Humilau City/}).click();
+  assert.equal(await page.evaluate(()=>current.saveLink.progression.badgeCount),3);
+  await page.locator('#td4Slots [data-td4-slot="1"]').click();
+  const candidate=page.locator('[data-td4-candidate]').first();
+  await candidate.waitFor();
+  await candidate.click();
+  await page.locator('[data-td63-manual-select]').click();
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))['Black 2:v77-test']?.slots[1]?.plannedMoves?.filter(m=>m.move).length===4);
+  await page.locator('#td77Lock').click();
+  await page.evaluate(()=>td41OpenTeamPlan('v77-test'));
+  await page.locator('#td4Slots [data-td4-slot="1"]').click();
+  assert.equal(await page.locator('#td77Lock').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.locator('#td77Lock').click();
+  const settings=page.locator('#td4Edit .td42-settings').first();
+  if(!await settings.evaluate(el=>el.open))await settings.locator(':scope > summary').click();
+  await candidate.waitFor();
+  const openComparison=async(method)=>{
+   const button=page.locator('[data-td4-candidate]').first();
+   await button.scrollIntoViewIfNeeded();
+   const box=await button.boundingBox(),x=box.x+box.width/2,y=box.y+box.height/2;
+   if(method==='mouse'){
+    await page.mouse.move(x,y);await page.mouse.down();await page.waitForTimeout(550);await page.mouse.up();
+   }else{
+    const cdp=await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+    await page.waitForTimeout(550);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await cdp.detach();
+   }
+   const dialog=page.locator('dialog[open].td71-quick-dialog');
+   await dialog.getByRole('button',{name:'Compare',exact:true}).click();
+   assert.equal(await page.locator('#td56Game').inputValue(),'Black 2');
+   await page.locator('#td56Back').click();
+   assert.equal(await page.locator('#td4TeamPlannerPage').isVisible(),true);
+  };
+  await openComparison('mouse');
+  await openComparison('touch');
+  console.log('Team Planner comparison opened and returned for mouse and emulated touch');
+  console.log('Progression-only sync, invalid preservation, hypothetical milestone, empty-slot preview and four-move population, persisted lock');
+  await page.locator('#dexTab').click();
+  await page.evaluate(()=>takDexBattleNavigationV73.showDex('lapras','dex',{game:'Black 2',id:131}));
+  await page.locator('#td77DexAbility option').nth(1).waitFor({state:'attached'});
+  assert.equal(await page.locator('#td77DexAbility').inputValue(),'');
+  await page.locator('#td77DexAbility').selectOption('hydration');
+  assert.equal(await page.locator('#td77HiddenAbility').isVisible(),true);
+  const encounters=page.locator('#td56DexEncounters');
+  if(!await encounters.evaluate(el=>el.open))await encounters.locator('summary').click();
+  await encounters.locator('[data-td74-dex-map="Village Bridge"]').first().click();
+  assert.equal(await page.locator('#mapsGame').inputValue(),'Black 2');
+  await page.waitForFunction(()=>document.querySelector('#mapsCanvas svg')?.dataset.selection?.toLowerCase().includes('village'));
+  await page.locator('#backMaps').click();
+  assert.equal(await encounters.evaluate(el=>el.open),true);
+  console.log('Pokédex hidden ability and Black 2 Village Bridge map with return state');
+  await page.evaluate(()=>takDexBattleNavigationV73.showDex('rotom','dex',{game:'Black',id:479}));
+  await page.locator('#td77DexAbility').waitFor();
+  assert.equal(await page.locator('#td77DexAbility').inputValue(),'levitate');
+  await page.evaluate(()=>takDexBattleNavigationV73.showDex('pikachu','dex',{game:'Red',id:25}));
+  await page.locator('#dexResult .td71-dex-hero').filter({hasText:'Red'}).waitFor();
+  assert.equal(await page.locator('#td77DexAbility').count(),0);
+  await page.locator('#openTypeExplorer').click();
+  await page.locator('#typeExplorerGame').selectOption('Black 2');
+  await page.locator('[data-explore-type="fire"]').click();
+  await page.locator('#typeExplorerResults .td61-entry').first().waitFor();
+  await page.waitForFunction(()=>document.querySelector('#typeExplorerResults .td61-entry').getBoundingClientRect().top<100);
+  console.log('Generation I Pokédex hides abilities and selecting a type scrolls to results');
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1});

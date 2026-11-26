@@ -25,10 +25,21 @@
   magikarp:early(10,'Marvelous Bridge','purchase','₽500 after the story clear.'),
   larvesta:early(6,'Route 18','gift egg','Requires Surf and hatching the egg.')
  };
+ function addRoutes(records,rank,place,names,note=''){
+  for(const name of names.split(' '))if(!records[name])records[name]=early(rank,place,'walk',note);
+ }
+ addRoutes(bw2,0,'Route 20','sunkern');
+ addRoutes(bw2,2,'Castelia Sewers','rattata zubat grimer','Open during the Team Plasma investigation.');
+ addRoutes(bw2,2,'Relic Passage','onix roggenrola woobat timburr','Enter from Castelia Sewers.');
+ addRoutes(bw2,3,'Desert Resort','sandshrew trapinch maractus dwebble scraggy sigilyph');
+ addRoutes(bw,1,'Pinwheel Forest exterior','timburr tympole');
+ addRoutes(bw,2,'Pinwheel Forest interior','sewaddle venipede','After the Nacrene Gym museum incident.');
+ addRoutes(bw,3,'Desert Resort','maractus dwebble scraggy sigilyph');
  const levels={flaaffy:['mareep',15],ampharos:['mareep',30],magneton:['magnemite',30],
   watchog:['patrat',20],liepard:['purrloin',20],herdier:['lillipup',16],stoutland:['lillipup',32],
   krookodile:['sandile',40],krokorok:['sandile',29],darmanitan:['darumaka',35],
   zoroark:['zorua',30],gurdurr:['timburr',25],boldore:['roggenrola',25],gyarados:['magikarp',20]};
+ const regionalPlants={Black:'cottonee',White:'petilil'};
  const conditions={lucario:['riolu','Friendship during the day'],crobat:['zubat','Friendship after Golbat'],
   gigalith:['roggenrola','Trade Boldore'],conkeldurr:['timburr','Trade Gurdurr'],
   arcanine:['growlithe','Fire Stone'],magnezone:['magnemite','Level up Magneton in Chargestone Cave'],
@@ -38,6 +49,7 @@
   if(!sequel&&game!=='Black'&&game!=='White')return null;
   if(sequel&&((name==='magby'&&game==='White 2')||(name==='elekid'&&game==='Black 2')))
    return {kind:'trade',reason:'Version-exclusive family'};
+  if(!sequel&&regionalPlants[game]===name)return {...early(2,'Pinwheel Forest interior','walk','After the Nacrene Gym museum incident.'),source:'walkthrough-bw'};
   const records=sequel?bw2:bw;
   if(records[name])return {...records[name],source:sequel?'walkthrough-b2w2':'walkthrough-bw'};
   const rule=levels[name]||conditions[name],parent=rule&&records[rule[0]];
