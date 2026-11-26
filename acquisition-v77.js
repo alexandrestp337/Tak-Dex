@@ -56,6 +56,20 @@
  const waterB2={'unova-route-19':0,'unova-route-20':0,'unova-route-6':5,'unova-route-11':6,'village-bridge':6,
   'undella-bay':6,'undella-town':6,'humilau-city':7,'unova-route-21':8,'unova-route-1':10,'unova-route-3':10,
   'unova-route-8':10,'icirrus-city':10,'moor-of-icirrus':10};
+ const canonicalAliases={
+  'nature-sanctuary':'Nature Preserve','unova-victory-road-2':'Victory Road','unova-victory-road':'Victory Road',
+  'relic-castle':'Relic Castle','marvelous-bridge':'Marvelous Bridge'
+ };
+ function placeName(value,game){
+  const [raw,room]=String(value||'').split(' · ');
+  const base=canonicalAliases[raw]||raw.replace(/^unova-/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
+  if(raw==='unova-victory-road-2'&&['unknown-area-71','unknown-area-78'].includes(room))return 'Victory Road · Cave';
+  if(raw==='relic-castle'&&room==='d'&&game?.endsWith(' 2'))return 'Relic Castle · Volcarona’s chamber';
+  if(!room||/^unknown-area/i.test(room))return base;
+  return base+' · '+room.replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
+ }
+ const reviewedGrottos={'unova-route-5 · hidden-grotto':4,'unova-route-7 · hidden-grotto':5,
+  'unova-route-9 · hidden-grotto':6};
  function encounterRoute(game,row){
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
   const sequel=game.endsWith(' 2'),[place,method, , ,conditions=[]]=row;
@@ -63,6 +77,8 @@
   let rank,requirement='';
   if(['walk','dark-grass','grass-spots','cave-spots'].includes(method)){
    rank=(sequel?sequelLand:originalLand)[place];
+  }else if(sequel&&method==='hidden-grotto'){
+   rank=reviewedGrottos[place];requirement='Hidden Grotto encounter. Check after the Route 5 tutorial; spawns are random.';
   }else if(['surf','surf-spots','super-rod','super-rod-spots'].includes(method)){
    const area=(sequel?waterB2:waterBW)[place];
    if(area==null)return null;
@@ -71,7 +87,7 @@
    requirement=fishing?'Requires Super Rod after the story clear.':'Requires Surf.';
   }
   if(rank==null)return null;
-  const name=place.replace(/^unova-/,'').replace(/-/g,' ').replace(/\b[a-z]/g,c=>c.toUpperCase());
+  const name=placeName(place,game);
   const seasons=conditions.map(c=>c.slice(7)).join(', ');
   return {...early(rank,name,method,[requirement,seasons?'Season: '+seasons:''].filter(Boolean).join(' ')),source:sequel?'walkthrough-b2w2':'walkthrough-bw'};
  }
@@ -115,6 +131,26 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   if(sequel&&((name==='magby'&&game==='White 2')||(name==='elekid'&&game==='Black 2')))
    return {kind:'trade',reason:'Version-exclusive family'};
   if(!sequel&&regionalPlants[game]===name)return {...early(2,'Pinwheel Forest interior','walk','After the Nacrene Gym museum incident.'),source:'walkthrough-bw'};
+  if(sequel&&['gible','gabite','garchomp'].includes(name)){
+   if(game==='White 2')return {kind:'trade',reason:'The Gible gift is exclusive to Black 2. Trade or transfer a Gible to evolve it in White 2.'};
+   const gift=early(10,'Floccesy Town','gift','Defeat Benga in Black Tower, then visit Alder’s house.');
+   if(name==='gible')return {...gift,source:'floccesy-town'};
+   const requirement=name==='gabite'?'Level 24':'Gible → Gabite at Lv 24 → Garchomp at Lv 48';
+   return {...early(10,'Floccesy Town','evolution',gift.note+' '+requirement+'.'),path:{stage:'Gible',initial:gift,requirement},source:'floccesy-town'};
+  }
+  if(sequel&&['baltoy','claydol'].includes(name)){
+   const initial=early(5,'Relic Castle · Volcarona’s chamber','walk','Enter Relic Passage from the Pokémon World Tournament after Clay.');
+   return name==='baltoy'?{...initial,source:'relic-castle'}:{...early(5,initial.place,'evolution','Baltoy evolves at Lv 36.'),path:{stage:'Baltoy',initial,requirement:'Level 36'},source:'relic-castle'};
+  }
+  if(sequel&&name==='golurk')return {...early(9,'Victory Road · Cave','walk','Lv 48–50 in the cave after Route 23.'),source:'victory-road-b2w2'};
+  if(!sequel&&name==='golurk'){
+   const initial=early(6,'Dragonspiral Tower','walk','Golett on 1F and 2F after Brycen.');
+   return {...early(6,initial.place,'evolution','Golett evolves at Lv 43.'),path:{stage:'Golett',initial,requirement:'Level 43'},source:'dragonspiral-tower'};
+  }
+  if(sequel&&name==='golduck'){
+   const initial=bw2.psyduck;
+   return {...early(0,initial.place,'evolution','Psyduck evolves at Lv 33. Train it before relying on Golduck for an early Gym.'),path:{stage:'Psyduck',initial,requirement:'Level 33',alternative:'Catch Golduck on Route 11 after Skyla'},source:'floccesy-ranch-and-route-11'};
+  }
   if(fossils[name])return {...early(10,'Twist Mountain → Nacrene Museum','fossil',
    fossils[name]+' · Random daily fossil after receiving the National Pokédex.'),source:'twist-mountain'};
   if(sequel&&name==='deerling')return {...early(5,'Route 6 Season Research Lab','gift','Level 30 with Serene Grace.'),source:'unova-route-6'};
@@ -141,5 +177,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   return {kind:typeof rule[1]==='number'?'timed':'partial',confirmed:typeof rule[1]==='number',rank:parent.rank,place:parent.place,method:'evolution',
    note:title(rule[0])+' available earlier · '+(typeof rule[1]==='number'?'Evolves at Lv '+rule[1]:rule[1]),path:{stage:title(rule[0]),initial:parent,requirement:typeof rule[1]==='number'?'Level '+rule[1]:rule[1]},source:'pokedb-evolution'};
  }
- root.takDexAcquisitionV77={lookup,hidden,encounterRoute};
+ root.takDexAcquisitionV77={lookup,hidden,encounterRoute,placeName};
 })(globalThis);

@@ -182,3 +182,67 @@ Machine timing is 19/101 per original and 27/101 per sequel. The lower-bound loc
 13. **R2-13 Acquisition quality**. Compare Route 19 land and Surf conditions, the Route 4 weekly encounters in both sequels, and a postgame fossil. An unknown condition must remain labeled.
 14. **R2-14 Data portability**. Export and reimport in a separate browser profile. Confirm the new ID, both movesets, locks, deadline and progression snapshot. Try a legacy team-only file.
 15. **R2-15 Existing tools**. Reopen Battle, 6v6 and Move Checker, then reload offline. Check layout, save data and navigation against V76.
+
+## Correction Round 3
+
+Review baseline `b987b3c` on `v77-development`. Production Web V76-STABLE remains at `ddf951b`. Round 2 manual acceptance recorded 32 Pass, 7 Need work, 2 Fail and 2 Not tested. Round 3 awaits manual acceptance.
+
+### Ranking and interface
+
+The old replacement score subtracted a constant for the selected member across candidates. Most of the remaining distinction came from intrinsic quality and static type coverage. In particular, replacing a member with a better moveset could leave the ordering largely intact. The new ranking recalculates against the surviving planned teammates, measures its coverage loss against the current slot’s planned moves and accounts for the remaining team's unanswered defensive weaknesses. Available candidate move quality, acquisition, stats, type overlap and League coverage still contribute. The current planned state feeds both the candidate list and improvement panel. A verified evolution within the deadline is shown separately with its score, even if the general replacement shortlist would omit it.
+
+In the Black 2 browser fixture, Psyduck, Growlithe and Magnemite started with three, one and one actual moves. Golduck appeared explicitly as Psyduck’s evolution. Confirming it changed the same-slot score for Gliscor from 76.20 to 51.96 and its moves contribution from 35 to 27. After confirming Magnemite → Magnezone, the alternatives below Arcanine changed when Growlithe’s editor was reopened.
+
+| Candidate | Before rank among replacements | After rank among replacements | Score before → after | Moves contribution before → after |
+| --- | ---: | ---: | ---: | ---: |
+| Gliscor | 1 | 1 | 84.33 → 76.82 | 27.5 → 20 |
+| Salamence | 2 | 3 | 75.89 → 68.39 | 22.5 → 15 |
+| Heracross | 3 | 2 | 71.67 → 69.17 | 20 → 17.5 |
+| Vespiquen | 4 | 4 | 58.13 → 53.13 | 11 → 6 |
+
+The Legendary/Mythical label inherited a more specific Planner `display: block` rule that overrode its inline checkbox layout. The corrected label uses a shared row layout and the selector now matches the actual cascade. During game and Final are compact equal-width tabs. Both modes retain four independent rows. Actual move chips use the available column width and wrap at word boundaries. Analysis disclosures have a bold title above a smaller summary and a right-aligned chevron. HM, Team Coverage and individual League metrics use contextual colors. Recommended Improvements shows ranked actions with previews, explicit acceptance and additional options when available.
+
+Hold to Compare scrolls to the rendered results for Planner and Pokédex flows with a result. Pokédex acquisition descriptions link supported canonical atlas destinations, including Marvelous Bridge. Unsupported locations such as Nature Preserve are shown by name. Empty headings and generic disclaimers were removed. Map actions and contextual Back share a single compact row on mobile. The fullscreen toolbar retains the zoom percentage.
+
+### Acquisition audit
+
+| Game | Fixed verified before → after | Fixed partial / unresolved | Expanded verified before → after | Expanded partial / unresolved | Named location lower bounds |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Black | 158 → 158 / 247 (64.0%) | 70 / 19 | 159 → 160 / 249 (64.3%) | 70 / 19 | 47/52 |
+| White | 158 → 158 / 247 (64.0%) | 70 / 19 | 159 → 160 / 249 (64.3%) | 70 / 19 | 47/52 |
+| Black 2 | 204 → 207 / 304 (68.1%) | 47 / 50 | 206 → 212 / 309 (68.6%) | 47 / 50 | 62/68 |
+| White 2 | 204 → 206 / 303 (68.0%) | 47 / 50 | 206 → 209 / 306 (68.3%) | 47 / 50 | 62/68 |
+
+The fixed cohort stays anchored at `165f154`. The expanded cohort includes newly identified species. Both before and after counts use the same denominator within each row. Verified means a documented route by the cited milestone. Earlier alternate routes may still exist.
+
+- Black 2’s Gible gift requires defeating Benga in Black Tower and visiting Alder in Floccesy Town. Gible evolves at levels 24 and 48. The gift differs by version. Black 2 also has Baltoy in the Volcarona chamber via the PWT entrance after Clay. Baltoy evolves at level 36. [Floccesy Town](https://bulbapedia.bulbagarden.net/wiki/Floccesy_Town) · [Relic Castle](https://bulbapedia.bulbagarden.net/wiki/Relic_Castle)
+- Sequel Golurk has a documented Victory Road cave encounter at levels 48–50. The original pair has a Golett route via Dragonspiral Tower and level 43 evolution. Sequel Psyduck evolves at level 33, with a documented direct Golduck alternative on Route 11. Generic Hidden Grotto gates were added for Routes 5, 7 and 9, with the random spawn condition retained. Exact Victory Road cave room identifiers remain unresolved. [Sequel Victory Road](https://bulbapedia.bulbagarden.net/wiki/Victory_Road_(Black_2_and_White_2)) · [Dragonspiral Tower](https://bulbapedia.bulbagarden.net/wiki/Dragonspiral_Tower) · [Floccesy Ranch](https://bulbapedia.bulbagarden.net/wiki/Floccesy_Ranch) · [Route 11](https://bulbapedia.bulbagarden.net/wiki/Unova_Route_11) · [Hidden Grotto](https://bulbapedia.bulbagarden.net/wiki/Hidden_Grotto)
+- Verified TM/HM timing rose from 19 to 43 of 101 in each original game and from 27 to 58 of 101 in each sequel. New machine records include audited shops and BP purchases with their facility requirements. Verified tutor locations and timing remain 67/67 in each sequel and 0 indexed ordinary tutor entries in each original. Previously documented Move Reminder locations still require a Heart Scale. Previously verified evolution-item gates were retained. There is no exhaustive denominator for evolution items or earliest repeatable Heart Scale access. [Gen V machines](https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_V) · [Move Reminder](https://bulbapedia.bulbagarden.net/wiki/Move_Reminder)
+
+Run `TAKDEX_FIXED_DENOMINATOR=1 node .github/v77/coverage.cjs` or omit the variable for the expanded cohort and per-game output. Location counts measure the presence of an audited area gate. A Surf, rod, seasonal or encounter-specific prerequisite can be stricter.
+
+### Verification and remaining limits
+
+| Status | Evidence |
+| --- | --- |
+| Pass | Round 3 Chromium geometry at 320, 360, 390, 412 and 1280 px, including checkbox alignment, compact tabs, word wrapping, analysis hierarchy and contextual map controls. The 412 px sequence verifies actual replacement confirmation, reordering of common candidates and the comparison results viewport. The 1280 px full team changes the ranking from the three-member fixture, retains four planned rows in both modes for 0–4 actual moves and shows three improvements plus more. |
+| Pass | 37 V76/V77 Node tests including acquisition paths, version exclusivity, Gen V progression, save round trips, ranking and battle mechanics. |
+| Pass | Chromium V77 browser flow checks for save import and progression, unchanged-party detection, invalid-save preservation, persistence, JSON transfer, emulated touch and mouse comparison, Pokédex abilities and Village Bridge return. |
+| Pass | V76 Chromium browser, visual corrections, team management and smoke suites. They cover Battle and 6v6, Gen V save reimport, locks and navigation, map viewport and fullscreen controls, historical data, branding and offline cold reload. Visual corrections include the V75 computed style reference and candidate checks at 320, 412 and 1280 px. |
+| Need work | Acquisition audits were focused on the reported Unova cases, selected Hidden Grottos and machine gates. Additional encounter conditions, area entrances, special spawns, trades, breeding, evolution items and earlier alternative routes remain unresolved. Older games did not receive comparable timing research in this round. Nature Preserve has no supported sequel atlas target. |
+| Need work | Planner identifies potential pre-Gen V machine-copy conflicts and the initial Cover/Plume fossil choice. The planner does not solve whole-team inventory and evolution-item allocation or count repeatable sources. Generation V TMs remain reusable. |
+| Not tested | Physical Android touch, native selection or filesystem behavior, exhaustive acquisition and recommendation matrices, and gameplay confirmation of every new prerequisite. |
+
+The cache version advances with the changed web assets. Existing plan keys and export formats are retained. No manual migration is required.
+
+### Manual acceptance checklist
+
+1. **R3-01, R3-16.** In Black 2 compare Garchomp, Claydol, Golurk, Psyduck and Golduck in Planner and Pokédex. Check the stated route, level, method, prerequisite, alternate route and version distinctions.
+2. **R3-02, R3-03.** Open Psyduck’s recommendations, preview and confirm Golduck, then confirm a replacement in another slot. Reopen both editors and compare candidate order, defensive reasons and plan moves.
+3. **R3-04.** Tap both the Legendary/Mythical checkbox and its text. Check side-by-side alignment in narrow and wide layouts.
+4. **R3-05–07.** Check the tab indicator, four move slots in both modes, natural move-name wrapping, and independent persistence after a reload. Include a Pokémon with fewer than four actual moves.
+5. **R3-08, R3-17.** Preview and accept one improvement. Reopen the panel and check the refreshed proposals, lock behavior and visible warnings where resources overlap.
+6. **R3-09–11.** Check each analysis title above the summary, right-side chevron, planned-only coverage counts, and color changes as HM and opponent coverage change.
+7. **R3-12.** Hold a Planner recommendation, a preview and a Pokédex entry. Compare should open at rendered results. Test Cancel and return to the original scroll position.
+8. **R3-13–15.** Open Marvelous Bridge from Black 2 Magikarp acquisition text, check the map selection and one-row toolbar, then return. Check Nature Preserve’s name and that empty acquisition headings are absent.
+9. **Regression.** Import a save and reload offline after creating a plan. Check the plan, actual progression, Team Builder, Battle and 6v6. Compare version-exclusive acquisition in Black 2 and White 2.

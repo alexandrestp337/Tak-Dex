@@ -4,7 +4,7 @@ const {execFileSync}=require('node:child_process');
 const path=require('node:path');
 const root=path.join(__dirname,'../..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const baselineRef=process.env.TAKDEX_ACQUISITION_BASE||'e2fdaf8';
+const baselineRef=process.env.TAKDEX_ACQUISITION_BASE||'b987b3c';
 const fromGit=file=>execFileSync('git',['show',baselineRef+':'+file],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']});
 const old=fromGit('app.js');
 function engine(app,updated,ref=baselineRef){
@@ -48,4 +48,12 @@ for(const game of ['Black','White','Black 2','White 2']){
  const machines=(game.includes('2')?assets.takDexB2W2:assets.takDexUnovaV74).machines;
  const timed=engine=>machines.filter(m=>engine.moveTiming(game,m.move,[['machine',0]])?.rank!=null).length;
  console.log(`| ${game} | ${machines.length} | ${timed(before)} | ${timed(after)} |`);
+}
+
+const names=Object.keys(JSON.parse(read('db74/moves.json')));
+console.log('\n| Game | Moves with tutor location | Moves with verified tutor timing |');
+console.log('| --- | ---: | ---: |');
+for(const game of ['Black','White','Black 2','White 2']){
+ const known=names.filter(n=>candidate.catalog.takDexTutorV73.find(game,n).length);
+ console.log(`| ${game} | ${known.length} | ${known.filter(n=>after.moveTiming(game,n,[['tutor',0]])?.rank!=null).length} |`);
 }

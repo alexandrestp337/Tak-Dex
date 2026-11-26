@@ -60,3 +60,14 @@ test('Verified encounter routes preserve fishing, Surf and seasonal prerequisite
  assert.match(data.lookup('Black 2','mandibuzz').note,/Thursday/);
  assert.equal(data.lookup('Black','cranidos').rank,10);
 });
+
+test('Round 3 named examples distinguish evolution, cave, gift and version restrictions',()=>{
+ assert.match(data.lookup('Black 2','garchomp').note,/Benga.*Lv 48/);
+ assert.equal(data.lookup('White 2','garchomp').kind,'trade');
+ assert.match(data.lookup('Black 2','claydol').path.requirement,/36/);
+ assert.equal(data.lookup('Black 2','golurk').rank,9);
+ assert.equal(data.placeName('unova-victory-road-2 · unknown-area-71','Black 2'),'Victory Road · Cave');
+ assert.equal(data.placeName('nature-sanctuary','Black 2'),'Nature Preserve');
+ assert.equal(data.encounterRoute('Black 2',['unova-route-7 · hidden-grotto','hidden-grotto',30,34,[]]).rank,5);
+ assert.equal(data.encounterRoute('Black 2',['floccesy-ranch · hidden-grotto','hidden-grotto',10,14,[]]),null);
+});
