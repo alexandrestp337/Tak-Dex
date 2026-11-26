@@ -33,7 +33,7 @@ test('Defensive compensation distinguishes an uncovered weakness from a practica
 });
 
 test('Offensive suitability favors a Water-resistant switch-in over a vulnerable Pokémon',()=>{
- vm.runInContext(part(' function plannerSuitability(', ' function td5CandidateScore('),context);
+ vm.runInContext(part(' function plannerSuitability(', ' function rateMoveChange('),context);
  const electric={type:'electric',priority:0};
  assert.ok(context.plannerSuitability(pokemon(54,['water']),['water'],electric,5)>
   context.plannerSuitability(pokemon(58,['fire']),['water'],electric,5));
@@ -48,4 +48,30 @@ test('Two ordinary sturdy resistances can cover two shared weaknesses',()=>{
  assert.equal(row.weak,2);
  assert.equal(row.resist,2);
  assert.equal(row.severity,'compensated');
+});
+
+test('Trainer summaries use the same coverage classification as the opponent tiles',()=>{
+ const context=vm.createContext({leagueHits:(_,row)=>({status:row})});
+ vm.runInContext(part(' function readinessStatus(', ' const readinessLabels='),context);
+ const classify=rows=>context.readinessStatus({rows},[]);
+ assert.equal(classify(['good','good']),'good');
+ assert.equal(classify(['good','nonstab']),'nonstab');
+ assert.equal(classify(['good','unknown']),'unknown');
+ assert.equal(classify(['nonstab','bad','unknown']),'bad');
+ assert.equal(classify([]),'unknown');
+});
+
+test('Only the chosen individual can carry known moves across a planned evolution',()=>{
+ const actual={id:54,moves:[{name:'Tail Whip'},{name:'Scratch'}]};
+ const owned={initial:{kind:'owned'}},wild={initial:{kind:'timed'}};
+ const context=vm.createContext({
+  ownedFor:(_,slot)=>slot===0?actual:null,
+  lineage:id=>new Set(id===55?[55,54]:[id]),
+  moveKey:move=>move.name.toLowerCase().replaceAll(' ','-')
+ });
+ vm.runInContext(part(' function retainsMove(', ' function alignedMoves('),context);
+ assert.equal(context.retainsMove({}, {id:55},'scratch',0,owned),true);
+ assert.equal(context.retainsMove({}, {id:55},'scratch',0,wild),false);
+ assert.equal(context.retainsMove({}, {id:55},'scratch',1,owned),false);
+ assert.equal(context.retainsMove({}, {id:19},'scratch',0,owned),false);
 });

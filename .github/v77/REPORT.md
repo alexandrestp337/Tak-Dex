@@ -445,3 +445,32 @@ Physical Samsung and Android WebView testing remains deferred.
 The 57 Node tests include four retail-save reference comparisons. Chromium regression commands cover V76 browser, corrections, smoke and team management plus V77 browser and the Round 3–6 scripts. Round 6 checks rendered geometry at 320, 360, 390, 412 and 1280 CSS px and covers the Black 2 flows from an actual seeded team through normal taps, typing and confirmation. See the requirement checklist for individual evidence.
 
 The Sites connector returned `publish_on_push_accepted: false` for the existing private preview. The supported fallback publishes an explicitly staged review checkpoint using the preview packaging script and the Site's version deployment API. Continuous publication would require a supported branch-to-host connection that can target approved `v77-development` checkpoints and preserve the existing private access policy.
+
+## Correction Round 7A
+
+This intermediate functional checkpoint starts at `f0de688` on `v77-development`. It carries forward the accepted Round 6 behavior and targets the remaining planner corrections. Reviewer-facing styles and the hosted Round 6 preview remain at their previous checkpoints. Round 7B owns the new Keep presentation, readiness summary colors and consolidated visual review.
+
+### Functional changes
+
+- The Final selector updates the planned Pokémon, its acquisition route, moveset learner, card, resources and analysis together. Plans with a separately stored Final target migrate in place. The previous stage or a verified alternate branch remains selectable. Manual selections and locks survive same-route evolution changes. Manual search can show verified endpoints beyond the deadline and warns before selecting an earlier stage. Automatic candidates continue to use feasible routes and suppress redundant downgrades in the selected slot and across other slots.
+- The intended team feeds STAB, moveset, defense and role analysis in both modes. Gym and League readiness use the selected deadline, acquisition routes and compatible move-learning sequences. Readiness summaries expose the same four states as individual opponents. Known missing coverage takes precedence over an unknown row. Role thresholds and defensive compensation weights retain their previous rules.
+- The planner assigns actual and planned move rows by move identity before showing replacements. The learned counter uses the number of populated moves in the active mode as its denominator. It credits only the assigned actual Pokémon along its selected retention path. Independent acquisitions and separate teammates do not supply credit or avoid acquisition costs.
+- Individual Suggested moves and team Recommended improvements share one evaluator. It considers the legal move pool along the chosen route, available resources, timing, coverage trade-offs, reliable damage and defensive suitability. During game considers the current milestone and one upcoming milestone within the deadline. Final uses the selected global deadline. Move changes require confirmation and affect one slot in one mode. Editable future Final moves remain available for planned routes beyond the deadline.
+
+### Verification
+
+| Status | Case | Observed result |
+| --- | --- | --- |
+| Pass | Black 2 Psyduck → Golduck | Selecting Golduck in Final persisted Golduck with the owned Psyduck route. The tile showed Psyduck → Golduck. During game used Psyduck's learnset and the lock and manual rows survived. |
+| Pass | Black 2 Vulpix → Ninetales | Vulpix's manual preview offered Ninetales through Abundant Shrine and a Fire Stone. Keeping Vulpix and then selecting Ninetales in Final produced four editable theoretical moves beyond the deadline. Searching Vulpix again warned that it is an earlier stage. The Arcanine candidate list excluded redundant Growlithe. |
+| Pass | Black 2 Fire Stones | Growlithe → Arcanine and Vulpix → Ninetales reported two total, one before the deadline and one projected afterward. Choosing direct Ninetales acquisition reported one total, one before, zero after. The displayed stock is documented supply. |
+| Pass | Black 2 defensive coverage and readiness | Arcanine, Ninetales and Magmar appeared in the intended pool and roles. Three shared Water, Ground and Rock weaknesses remained visible. Resistant and immune teammates changed compensation. The late Ninetales route supplied no League answer. Trainer summaries matched their opponent tiles. |
+| Pass | Black 2 retained moves and progress | Water Sport → Water Gun, Scratch retained, Tail Whip retained and empty → Disable aligned in both modes. Patrat retained Tackle despite its different move index. The fixture reported 7/9 known before and after the planned Golduck evolution. |
+| Pass | Recommendations in both modes | The browser run showed Arcanine with Bulldoze in Final and Dig in During game. The individual and team During game offers agreed. Cancel preserved the plan, and accepting changed only the selected Pokémon and mode. |
+| Pass | Legacy plan migration | The browser migrated a separate Final target into Golduck without altering the selected route, manual moves or lock. |
+| Pass | Retail Black 2 save | Imported the public reference through the file picker. The planner showed unlocked postgame progression and 24/24 already-known moves before suggestions could change the plan. The save bytes matched after import. |
+| Not tested | Physical Samsung and Android WebView | Device validation remains outside this web checkpoint. |
+
+[Round 7A Chromium test](round7a.cjs) uses the normal planner controls for the cases above. All 59 Node tests passed with the four PKTool retail-save references enabled. Chromium passed the Round 7A script, the V76 and V77 shared browser suites, and the established Round 3–6 regression scripts. The runs covered saved teams, historical data, Battle, 6v6, offline reload, Pokédex and map navigation. Use `TAKDEX_REFERENCE_SAVES` to run the retail comparison and file-picker cases.
+
+Readiness describes super-effective coverage within the checked route and deadline. It estimates future training from the route and level window. It does not verify bag contents or certify battle outcomes. Evolution paths that lack reliable data retain a restriction or an unknown status.
