@@ -4006,11 +4006,12 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  function starterFamily(g,n){return unova(g)?starterFamilies.find(f=>f.includes(norm(n))):null;}
  function starterChoice(g,n,owned){const family=starterFamily(g,n);if(!family)return null;const matching=owned.some(p=>p&&family.includes(norm(p.name)));if(matching)return null;const others=starterFamilies.filter(f=>f!==family&&owned.some(p=>p&&f.includes(norm(p.name))));return {kind:'tradePossible',reason:others.length?'Other starter family on team · alternative starter choice requires trade/import':'One starter choice per playthrough · verify chosen starter'};}
  const directOverrides={Black:{rufflet:'White exclusive',braviary:'White exclusive'},White:{vullaby:'Black exclusive',mandibuzz:'Black exclusive'},'Black 2':{rufflet:'White 2 exclusive',braviary:'White 2 exclusive'},'White 2':{vullaby:'Black 2 exclusive',mandibuzz:'Black 2 exclusive'}};
- function acquisition(g,slot,pack,owned,evidence){const name=norm(slot?.name),id=Number(slot?.id);if(!slot)return {kind:'unknown'};if(owned.some(p=>p&&(norm(p.name)===name||id&&Number(p.id)===id)))return {kind:'owned'};const starter=starterChoice(g,name,owned);if(starter)return starter;if(directOverrides[g]?.[name])return {kind:'trade',reason:directOverrides[g][name]};const audited=window.takDexAcquisitionV77?.lookup(g,name,pack?.entries?.[id]);if(audited?.confirmed||['trade','event','tradePossible'].includes(audited?.kind))return audited;const inherited=window.takDexAcquisitionV77?.levelPath(g,id,pack,owned);if(inherited)return inherited;if(audited)return audited;if(bw(g)&&['poliwag','poliwhirl','poliwrath','politoed'].includes(name)&&!owned.some(p=>p&&(['poliwag','poliwhirl'].includes(norm(p.name))))){return {kind:'timed',confirmed:true,rank:10,place:'Super Rod / fishing',method:'postgame fishing',note:name==='politoed'?'Evolution also requires a trade with King’s Rock.':''};}if(!pack||pack.game!==g||!id)return {kind:'unknown'};const rec=pack.entries?.[id]||[],gates=rec.map(r=>encounter(g,r)).filter(Boolean).sort((a,b)=>a.rank-b.rank);if(gates.length&&gates.length===rec.length){const first=gates[0],mon=pack.mons?.find(x=>x[0]===id),confirmed=false;return {kind:'timed',...first,confirmed,note:mon?.[4]?'Recorded wild encounter; evolution may be available earlier.':'Recorded encounter; method and other conditions apply.'};}if(evidence?.externalTrade&&pack.hasSource&&!evidence.verified)return {kind:'trade',reason:'Known external trade or trade evolution requirement'};if(evidence?.notes?.some(n=>n.eventOnly))return {kind:'event',reason:'Event-only acquisition'};const parents=new Set();let v=id;while(v&&!parents.has(v)){parents.add(v);v=pack.mons?.find(x=>x[0]===v)?.[4]||0;}const parent=owned.find(p=>p&&parents.has(Number(p.id)));if(parent)return {kind:'evolution',reason:'Earlier evolution on team · evolution requirements not verified'};if(evidence?.nativeEvolution)return {kind:'evolution',reason:'Evolution route · level, item, or trade requirement still unverified'};if(gates.length)return {kind:'partial',...gates[0]};if(rec.length)return {kind:'recorded',place:window.takDexAcquisitionV77?.placeName(rec[0][0],g)||rec[0][0]};return {kind:'unknown',reason:evidence?.label};}
+ function acquisition(g,slot,pack,owned,evidence){const name=norm(slot?.name),id=Number(slot?.id);if(!slot)return {kind:'unknown'};if(owned.some(p=>p&&(norm(p.name)===name||id&&Number(p.id)===id)))return {kind:'owned'};const starter=starterChoice(g,name,owned);if(starter)return starter;if(directOverrides[g]?.[name])return {kind:'trade',reason:directOverrides[g][name]};const audited=window.takDexAcquisitionV77?.lookup(g,name,pack?.entries?.[id]);if(audited?.confirmed||['trade','event','tradePossible'].includes(audited?.kind))return audited;const inherited=window.takDexAcquisitionV77?.levelPath(g,id,pack,owned);if(inherited)return inherited;if(audited)return audited;const documented=window.takDexAcquisitionV77?.documentedUnovaAlternative(g,name,pack);if(documented)return documented;const transfer=window.takDexAcquisitionV77?.transferOnly(g,id,name);if(transfer&&!pack?.entries?.[id]?.length)return transfer;if(bw(g)&&['poliwag','poliwhirl','poliwrath','politoed'].includes(name)&&!owned.some(p=>p&&(['poliwag','poliwhirl'].includes(norm(p.name))))){return {kind:'timed',confirmed:true,rank:10,place:'Super Rod / fishing',method:'postgame fishing',note:name==='politoed'?'Evolution also requires a trade with King’s Rock.':''};}if(!pack||pack.game!==g||!id)return {kind:'unknown'};const rec=pack.entries?.[id]||[],gates=rec.map(r=>encounter(g,r)).filter(Boolean).sort((a,b)=>a.rank-b.rank);if(gates.length&&gates.length===rec.length){const first=gates[0],mon=pack.mons?.find(x=>x[0]===id),confirmed=false;return {kind:'timed',...first,confirmed,note:mon?.[4]?'Recorded wild encounter; evolution may be available earlier.':'Recorded encounter; method and other conditions apply.'};}if(evidence?.externalTrade&&pack.hasSource&&!evidence.verified)return {kind:'trade',reason:'Known external trade or trade evolution requirement'};if(evidence?.notes?.some(n=>n.eventOnly))return {kind:'event',reason:'Event-only acquisition'};const parents=new Set();let v=id;while(v&&!parents.has(v)){parents.add(v);v=pack.mons?.find(x=>x[0]===v)?.[4]||0;}const parent=owned.find(p=>p&&parents.has(Number(p.id)));if(parent)return {kind:'evolution',reason:'Earlier evolution on team · evolution requirements not verified'};if(evidence?.nativeEvolution)return {kind:'evolution',reason:'Evolution route · level, item, or trade requirement still unverified'};if(gates.length)return {kind:'partial',...gates[0]};if(rec.length)return {kind:'recorded',place:window.takDexAcquisitionV77?.placeName(rec[0][0],g)||rec[0][0]};return {kind:'unknown',reason:evidence?.label};}
  const late=(r,id)=>r?.kind==='timed'&&rank(id)!=null&&r.rank>rank(id);
  function tone(r,current,target){if(r.kind==='owned')return 'td41-good';if(['trade','event'].includes(r.kind)||late(r,target))return 'td63-danger';if(r.kind==='timed'&&rank(current)!=null){if(r.rank>rank(current))return 'td63-danger';if(r.confirmed)return 'td41-good';}return '';}
  function describe(r,current,target){const now=rank(current);if(r.kind==='owned')return 'Already on team';if(r.kind==='trade')return 'Trade or import required · '+r.reason;if(r.kind==='tradePossible')return r.reason+' · Trade/import may be required; coverage incomplete';if(r.kind==='event')return r.reason+' · Event availability not verified';if(r.kind==='evolution')return r.reason;if(r.kind==='timed'){const status=r.rank===10?(now>=10?(r.confirmed?'Available now · Postgame':'Recorded encounter: postgame'):(r.confirmed?'Postgame only':'Recorded encounter: postgame')):now==null?'Acquisition from '+milestone(r.rank):now>=r.rank?(r.confirmed?'Available now':'Area access estimated'):'Available later · '+milestone(r.rank);return [status,r.place?.replace(/-/g,' '),r.note,late(r,target)?(r.confirmed?'Target too early — trade or import required.':'Recorded encounter is later than target; check alternative acquisition.') :''].filter(Boolean).join(' · ');}if(r.kind==='partial'&&r.note)return r.note+' · '+r.place+' · '+milestone(r.rank);if(r.kind==='partial')return 'Recorded encounter · '+String(r.place).replace(/-/g,' ')+' · Earliest access not fully verified';if(r.kind==='recorded')return 'Recorded encounter · '+String(r.place).replace(/-/g,' ')+' · Timing unverified';return r.reason&&r.reason!=='Not indexed'?r.reason+' · Timing unverified':'Acquisition timing unverified';}
- function moveTiming(g,name,methods){if(!Array.isArray(methods)||!methods.length)return null;if(!unova(g))return window.takDexAcquisitionV77?.johtoMoveTiming(g,norm(name),methods)||null;const level=methods.filter(m=>m[0]==='level-up').map(m=>+m[1]).filter(n=>n>0),options=[],verified=[],requirements=[];if(level.length)options.push('Level '+Math.min(...level));if(level.includes(1))options.push('Move Reminder · '+(sequel(g)?'Pokémon World Tournament':'Mistralton City')+' · After badge 5 · Heart Scale (daily request in Driftveil City)');if(methods.some(m=>m[0]==='egg'))options.push('Egg move');if(methods.some(m=>m[0]==='tutor')){const tutors=window.takDexTutorV73?.find(g,name)||[];if(tutors.length){for(const t of tutors){const place=norm(t.place.normalize('NFD').replace(/[\u0300-\u036f]/g,''));const gate=sequel(g)?({'driftveil-city':4,'lentimas-town':6,'humilau-city':7,'nacrene-city':10,'pokemon-world-tournament':5,'opelucid-city':7})[place]:null;options.push('Tutor · '+t.place+' · '+t.cost+(gate==null?'':' · '+milestone(gate)));if(gate!=null)verified.push(gate);}}else{options.push('Tutor timing unverified');}}const machine=(bw(g)?window.takDexUnovaV74:window.takDexB2W2)?.machines?.find(m=>norm(m.move)===norm(name));if(methods.some(m=>m[0]==='machine')){if(machine){const h=hm(g,name,''),shop=machine.location.match(/^(.*?) (?:Poké Mart|· shop)(?:,|$)/)?.[1];
+ function moveTiming(g,name,methods){if(!Array.isArray(methods)||!methods.length)return null;if(!unova(g))return window.takDexAcquisitionV77?.johtoMoveTiming(g,norm(name),methods)||null;const level=methods.filter(m=>m[0]==='level-up').map(m=>+m[1]).filter(n=>n>0),options=[],verified=[],requirements=[];if(level.length)options.push('Level '+Math.min(...level));if(level.includes(1))options.push('Move Reminder · '+(sequel(g)?'Pokémon World Tournament':'Mistralton City')+' · After badge 5 · Heart Scale (daily request in Driftveil City)');if(methods.some(m=>m[0]==='egg'))options.push('Egg move');if(methods.some(m=>m[0]==='tutor')){const tutors=window.takDexTutorV73?.find(g,name)||[];if(tutors.length){for(const t of tutors){const place=norm(t.place.normalize('NFD').replace(/[\u0300-\u036f]/g,''));const gate=sequel(g)?({'driftveil-city':4,'lentimas-town':6,'humilau-city':7,'nacrene-city':10,'pokemon-world-tournament':5,'opelucid-city':7,'cafe-sonata':2,'pledge-grove':0})[place]:
+   ({'driftveil-city':4,'route-13':10,'opelucid-city':7,'cafe-sonata':2,'moor-of-icirrus':7})[place];options.push('Tutor · '+t.place+' · '+t.cost+(gate==null?'':' · '+milestone(gate))+(t.condition?' · '+t.condition:''));if(gate!=null)verified.push(gate);}}else{options.push('Tutor timing unverified');}}const machine=(bw(g)?window.takDexUnovaV74:window.takDexB2W2)?.machines?.find(m=>norm(m.move)===norm(name));if(methods.some(m=>m[0]==='machine')){if(machine){const h=hm(g,name,''),shop=machine.location.match(/^(.*?) (?:Poké Mart|· shop)(?:,|$)/)?.[1];
  const audited=window.takDexAcquisitionV77?.machineGate(g,machine.item);
  const bp=sequel(g)&&machine.location.startsWith('Pokémon World Tournament ·')?5:bw(g)&&machine.location.startsWith('Battle Subway ·')?3:null;
  const specific=(bw(g)?{'ice-beam':10,earthquake:10,'work-up':1,retaliate:2,'struggle-bug':3,'volt-switch':4,bulldoze:5,acrobatics:6,'frost-breath':7,'dragon-tail':8,dig:2,scald:4,'rock-tomb':3}: {'ice-beam':8,earthquake:10,'energy-ball':5,'rock-slide':5,'wild-charge':9,'thunderbolt':9,'false-swipe':6,retaliate:8,'work-up':1,return:1,venoshock:2,'struggle-bug':3,'volt-switch':4,bulldoze:5,acrobatics:6,'dragon-tail':7,scald:8,dig:2,frustration:0,thief:1,'rock-smash':1})[norm(name)],gate=h?.rank??audited?.[0]??specific??bp??(shop?location(g,shop):null);options.push(machine.item.toUpperCase()+' · '+machine.location+(gate!=null?' · '+milestone(gate):' · location access '+(location(g,machine.location)==null?'unverified':milestone(location(g,machine.location)))));if(audited?.[1])requirements.push(audited[1]);if(bw(g)&&machine.item==='tm95')requirements.push('Lock Capsule was never distributed');if(gate!=null)verified.push(gate);}}return options.length?{text:options.join(' / ')+(requirements.length?' · '+requirements.join(' · '):''),rank:verified.length?Math.min(...verified):null,requirements}:null;}
@@ -4069,7 +4070,7 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  $('td4Game').onchange=()=>{teamMenu();load()};$('td4Team').onchange=load;// DEV5.2: bounded milestone vocabulary. Location-specific availability is DEV6.
  function milestoneOptions(g){const out=[['start','Start of game']];if(g==='Black'||g==='White'||g==='Black 2'||g==='White 2'){const gyms=g==='Black'||g==='White'?['Striaton City','Nacrene City','Castelia City','Nimbasa City','Driftveil City','Mistralton City','Icirrus City','Opelucid City']:['Aspertia City','Virbank City','Castelia City','Nimbasa City','Driftveil City','Mistralton City','Opelucid City','Humilau City'];gyms.forEach((city,i)=>out.push(['badge-'+(i+1),(i+1)+' badge'+(i?'s':'')+' · After '+city+' Gym']));}else if(!['Sun','Moon','Ultra Sun','Ultra Moon'].includes(g)){for(let i=1;i<=8;i++)out.push(['badge-'+i,i+' badge'+(i===1?'':'s')]);}out.push(['pre-league','Before Elite Four'],['post-league','After first Pokémon League'],['postgame','Postgame']);return out;}
  function moveKey(m){return clean(typeof m==='string'?m:m?.name||m?.move);}
- function moveSlots(p){return Array.from({length:4},(_,i)=>{const m=p?.plannedMoves?.[i];return m&&typeof m==='object'?{move:moveKey(m.move),purpose:['keep','temporary'].includes(m.purpose)?m.purpose:'review',replacement:moveKey(m.replacement),milestone:String(m.milestone||''),usefulness:['needed','not-needed'].includes(m.usefulness)?m.usefulness:'unknown',warningFrom:moveKey(m.warningFrom),warningTarget:moveKey(m.warningTarget)}:{move:moveKey(p?.moves?.[i]),purpose:'review',replacement:'',milestone:'',usefulness:'unknown'};});}
+ function moveSlots(p){return Array.from({length:4},(_,i)=>{const m=p?.plannedMoves?.[i];return m&&typeof m==='object'?{move:moveKey(m.move),purpose:['keep','temporary'].includes(m.purpose)?m.purpose:'review',replacement:moveKey(m.replacement),milestone:String(m.milestone||''),usefulness:['needed','not-needed'].includes(m.usefulness)?m.usefulness:'unknown',warningFrom:moveKey(m.warningFrom),warningTarget:moveKey(m.warningTarget),reminderFor:moveKey(m.reminderFor)}:{move:moveKey(p?.moves?.[i]),purpose:'review',replacement:'',milestone:'',usefulness:'unknown'};});}
  function fromTeam(p){return p?{originPid:p.saveStats?.pid,originName:td73IdentityKey(p),id:p.id,name:clean(p.name),types:p.types||[],baseStats:p.baseStats||{},abilities:p.abilities||[],ability:p.ability||'',image:td71StoredArt(p),imported:false,plannedMoves:moveSlots(p)}:null}
  function migrateMoves(){const actualMons=actual()?.pokemon||[];state.slots=state.slots.map(p=>{if(!p)return null;const a=actualMons.find(x=>x&&(Number(x.id)===Number(p.id)||clean(x.name)===p.name));const planned=Array.isArray(p.plannedMoves)?moveSlots(p):moveSlots(a||p);return {...p,plannedMoves:planned}});const legacy=state.hmAssignments||{};for(const [hm,carrier] of Object.entries(legacy)){if(!carrier)continue;const p=state.slots.find(x=>x?.name===carrier);if(!p||p.plannedMoves.some(m=>m.move===hm))continue;const free=p.plannedMoves.find(m=>!m.move);if(free)free.move=hm;else{state.legacyHmReview=state.legacyHmReview||{};state.legacyHmReview[hm]=carrier;}}delete state.hmAssignments;}
 
@@ -4254,6 +4255,7 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
     resourceNotes.push(rule.name+': '+members.map(p=>pretty(p.name)).join(' and ')+'. '+rule.alternative);
    }
   }
+  resourceNotes.push(...unovaResourceNotes(g));
   proposals.sort((a,b)=>b.score-a.score);
   const preview=proposals.slice(0,3).map(p=>p.html).join('');
   const more=proposals.slice(3,8).map(p=>p.html).join('');
@@ -4353,7 +4355,7 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  }
  function feasibleFinalForm(option){
   if(!option?.timing.confirmed||!option.timing.path||option.timing.rank>(deadlineRank()??9))return false;
-  const level=Number(option.timing.path.requirement?.match(/(?:Level |Lv )(\d+)$/)?.[1]||0);
+  const level=Number(option.timing.path.level||option.timing.path.requirement?.match(/(?:Level |Lv )(\d+)$/)?.[1]||0);
   const limit=deadlineRank()??9;
   if(!level||limit>=9)return true;
   const roster=leagueTargets(state.game).filter(t=>t.gym).find((_,i)=>gymBefore(state.game,i)===limit);
@@ -4557,7 +4559,7 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  }
  let plannerIndexRequest;
  function plannerIndex(){
-  if(!plannerIndexRequest)plannerIndexRequest=fetch('./db74/planner-v77.json?v=77.4.2').then(response=>{
+  if(!plannerIndexRequest)plannerIndexRequest=fetch('./db74/planner-v77.json?v=77.4.3').then(response=>{
    if(!response.ok)throw Error('Recommendation index unavailable');
    return response.json();
   }).catch(error=>{plannerIndexRequest=null;throw error;});
@@ -4573,6 +4575,42 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
  function statValue(p){
   const b=p.baseStats||{},atk=b.attack||0,spa=b['special-attack']||0;
   return (Object.values(b).reduce((a,n)=>a+n,0)*.2+Math.max(atk,spa)*1.5+(b.speed||0)+(b.hp||0)*.75+((b.defense||0)+(b['special-defense']||0))*.5)/8;
+ }
+ function unovaResourceNotes(g){
+  if(!['Black','White','Black 2','White 2'].includes(g))return [];
+  const deadline=movesetView==='during'?window.td62Progress.rank(effectiveProgress())??0:deadlineRank()??9;
+  const data=window.takDexAcquisitionV77,claims=[],currencies=new Map(),available=new Map();
+  for(const mon of actual()?.pokemon||[])if(mon?.id)available.set(Number(mon.id),(available.get(Number(mon.id))||0)+1);
+  const spend=(currency,n)=>currencies.set(currency,(currencies.get(currency)||0)+n);
+  for(const [slot,p] of state.slots.entries()){
+   if(!p)continue;
+   const member=ownedFor(p,slot),learner=movesetView==='during'?duringLearner(p,slot):finalLearner(p);
+   const item=data.evolutionItem(acquisition(learner,false));
+   const species=Number(learner.id),ownedCopies=available.get(species)||0;
+   if(ownedCopies)available.set(species,ownedCopies-1);
+   else if(item)claims.push({item,member:pretty(learner.name)});
+   const alreadyKnown=member&&lineage(learner.id).has(Number(member.id))?new Set((member.moves||[]).map(moveKey)):new Set();
+   const planned=displayedMoves(p);
+   for(const move of new Set(planned.map(goal).filter(Boolean))){
+    if(alreadyKnown.has(move))continue;
+    const methods=learner.learnMethods?.[move]||[];
+    if(deadline>=5&&(planned.some(m=>goal(m)===move&&m.reminderFor===move)||
+     methods.length&&methods.every(([method,level])=>method==='level-up'&&level===1))){
+     spend('Heart Scale',1);
+    }
+    if(!methods.length||!methods.every(([method])=>method==='tutor'))continue;
+    const tutor=window.takDexTutorV73?.find(g,move)?.[0],timing=window.td62Progress.moveTiming(g,move,methods);
+    const cost=tutor?.cost?.match(/^(\d+)\s+(.+)$/);
+    if(cost&&timing?.rank!=null&&timing.rank<=deadline)spend(cost[2],Number(cost[1]));
+   }
+  }
+  const notes=data.resourceBudget(g,deadline,claims).filter(row=>row.members.length>1||row.shortfall)
+   .map(row=>row.item+': '+row.members.length+' planned ('+row.members.join(', ')+') · '+row.guaranteed+' documented field copies by this stage.'+
+    (row.shortfall?row.renewable?' Obtain the remaining '+row.shortfall+' from '+row.renewable+'.':
+     ' Adjust the deadline, use a direct encounter, or supply another copy.':''));
+  if(currencies.size)notes.push('Planned move costs: '+[...currencies].map(([key,n])=>n+' '+key).join(' · ')+
+   '. Shards are renewable from dust clouds and repeatable missions. Daily Heart Scales are available in Driftveil.');
+  return notes;
  }
  function limitedSpeciesClaims(slots,g){
   const rules=window.takDexAcquisitionV77?.limitedSpecies(g,deadlineRank()??9)||[];
@@ -4618,27 +4656,42 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
   const practicalLevel=Math.max(retained.length||sameMon(actualMon,p)?actualMon.level||1:1,
    ...(gym?.rows||[]).map(r=>r.level||1),!during&&deadline>=9?60:1);
   const routes=new Map();
+  const data=window.takDexAcquisitionV77;
+  const inUnova=['Black','White','Black 2','White 2'].includes(g);
+  const stages=[...earlier,p];
+  const actualStage=actualMon?.saveStats&&sameMon(actualMon,stages[0]);
+  const startingLevel=actualStage?actualMon.level||1:1;
+  const stageMinimums=stages.map((_,i)=>i+1<stages.length?data.evolutionTrainingLevel(stages[i+1].id):1);
   const allocated=plannedMachineCopies(g,slot,during?'during':'final');
-  for(const learner of [...earlier,p]){
+  const add=(name,route)=>{
+   if(!routes.has(name))routes.set(name,[]);
+   routes.get(name).push(route);
+  };
+  for(const [stage,learner] of stages.entries()){
    for(const name of learner.legalMoves||[]){
     const methods=learner.learnMethods[name]||[];
-    if(!known.has(name)&&allocated.has(name)&&window.takDexAcquisitionV77?.limitedMachine(g,name)&&methods.every(([method])=>method==='machine'))continue;
+    if(known.has(name))continue;
+    if(allocated.has(name)&&data.limitedMachine(g,name)&&methods.every(([method])=>method==='machine'))continue;
     const timing=progress.moveTiming(g,name,methods);
-    const learnsAt=methods.filter(([method,n])=>method==='level-up'&&n>1).map(([,n])=>n);
-    const canRecall=learner.id===p.id&&deadline>=5&&gameGeneration(g)===5&&methods.some(([method,n])=>method==='level-up'&&n===1);
-    const level=Math.min(...learnsAt,canRecall?1:Infinity);
-    if(!known.has(name)&&!(timing?.rank!=null&&timing.rank<=deadline)&&level>practicalLevel)continue;
-    const route={timing,level};
-    const existing=routes.get(name);
-    if(!existing||Math.min(level,timing?.rank??Infinity)<Math.min(existing.level,existing.timing?.rank??Infinity))routes.set(name,route);
+    if(timing?.rank!=null&&timing.rank<=deadline)add(name,{stage,timing,level:Infinity});
+    for(const [method,level] of methods){
+     if(method!=='level-up'||level<1||level>practicalLevel)continue;
+     if(level>1&&(!inUnova||!actualStage||stage!==0||level>startingLevel)){
+      add(name,{stage,level,at:level});
+     }
+     if(inUnova&&deadline>=5){
+      add(name,{stage,level,minimum:level,timing:{rank:5},reminder:true});
+     }
+    }
    }
   }
-  for(const name of known.keys())if(!routes.has(name))routes.set(name,{level:0});
+  for(const name of known.keys())add(name,{stage:0,level:0});
   const utility=new Set(['tail-whip','leer','harden','withdraw','sand-attack','growl','defense-curl','charm',
    'thunder-wave','will-o-wisp','toxic','hypnosis','sleep-powder','stun-spore','recover','roost','synthesis',
    'slack-off','reflect','light-screen','calm-mind','swords-dance','work-up','bulk-up','confuse-ray','disable']);
   const pool=[...routes.entries()],rows=[];
-  for(let offset=0;offset<pool.length;offset+=12)rows.push(...(await Promise.all(pool.slice(offset,offset+12).map(async ([name,{level,timing}])=>{
+  for(let offset=0;offset<pool.length;offset+=12)rows.push(...(await Promise.all(pool.slice(offset,offset+12).map(async ([name,options])=>{
+   const {level,timing}=options.find(route=>Number.isFinite(route.level))||options[0];
    const move=info(name)||await enrichMove({name:pretty(name)},gameGeneration(g),g).catch(()=>known.get(name));
    if(!move?.type||!move.damageClass)return null;
    moveInfo.set(g+':'+name,move);
@@ -4647,22 +4700,28 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
    const damage=usable?td5Merit(move,p,slot,g)-(td51Risk(name)?15:0):0;
    if(usable&&damage<=0&&!known.has(name))return null;
    const score=usable?Math.max(5,damage)+(Number.isFinite(level)?8:0)+(timing?.rank!=null?5:0):utility.has(name)?-30:-65;
-   return {name,move,score:score+(known.has(name)?5:0),level,timing,usable};
+   return {name,move,score:score+(known.has(name)?5:0),level,timing,usable,options};
   }))).filter(Boolean));
   const targets=[],types=new Set(),gen=gameGeneration(g);
   while(targets.length<4&&rows.length){
    const merit=r=>r.score+(r.usable?(types.has(r.move.type)?-28:0)+uncovered.filter(t=>matchup(r.move.type,[t],gen)>1).length*3:0);
    rows.sort((a,b)=>merit(b)-merit(a));
-   const next=rows.shift();targets.push(next);types.add(next.move.type);
+   const next=rows.shift();
+   const set=[...targets,next];
+   const schedule=inUnova?data.scheduleEvolutionMoves(stageMinimums,startingLevel,practicalLevel,set.map(r=>r.options)):null;
+   if(inUnova&&!schedule)continue;
+   if(schedule)for(const [i,route] of schedule.entries())Object.assign(set[i],{level:route.level,timing:route.timing,reminder:!!route.reminder});
+   targets.push(next);
+   types.add(next.move.type);
   }
-  const owned=actualMon;
+  const stageNow=actualMon?stages.findIndex(learner=>sameMon(actualMon,learner)):0;
   const used=new Set(targets.map(x=>x.name));
   const result=targets.map(target=>{
    const pending=!during&&target.timing?.rank!=null&&target.timing.rank>now;
-   const temp=pending&&rows.find(r=>!used.has(r.name)&&(r.timing?.rank!=null&&r.timing.rank<=now||
-    sameMon(owned,p)&&r.level<=owned.level)&&r.move.type===target.move.type);
+   const temp=pending&&rows.find(r=>!used.has(r.name)&&r.move.type===target.move.type&&r.options.some(route=>
+    route.stage===stageNow&&(route.timing?.rank!=null&&route.timing.rank<=now||known.has(r.name))));
    if(temp)used.add(temp.name);
-   return {move:temp?temp.name:target.name,purpose:temp?'temporary':'keep',replacement:temp?target.name:'',milestone:'',usefulness:'unknown'};
+   return {move:temp?temp.name:target.name,purpose:temp?'temporary':'keep',replacement:temp?target.name:'',milestone:'',usefulness:'unknown',reminderFor:target.reminder?target.name:''};
   });
   return moveSlots({plannedMoves:result});
  }
@@ -4706,8 +4765,8 @@ queueMicrotask(()=>{try{const id=localStorage.getItem('takdex-v71-active-team');
    const row=index[id];
    if(!row||used.has(id)||!types?.length||improvementType&&matchup(improvementType,types,gen)>=1||!td7PokemonAllowed(name,id,g)||row[0]&&!$('td77Legendary').checked)continue;
    const evidence=window.takDexAcquisitionV64.details(pack,id);
-   if(!evidence.verified&&!evidence.nativeEvolution&&!pack.entries?.[id]?.length&&!window.takDexAcquisitionV77?.lookup(g,name)&&!owned.some(p=>p.id===id))continue;
    const timing=window.td62Progress.acquisition(g,{id,name},pack,owned,evidence);
+   if(!timing.confirmed&&timing.kind!=='owned'&&!evidence.verified&&!evidence.nativeEvolution&&!pack.entries?.[id]?.length)continue;
    if((timing.kind!=='owned'&&alreadyClaimsSpecies({id},base,g))||!candidateInWindow(timing)||evidence.notes?.some(note=>note.eventOnly)&&!timing.confirmed)continue;
    const p={id,name,types,parent,timing,baseStats:indexedStats(row,gen)};
    const after=[...base,p];

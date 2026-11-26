@@ -307,15 +307,34 @@ Gold, Silver and Crystal now distinguish route access from fishing rods, dayligh
 
 All 57 machine locations are documented per title. The timing engine has **56/57** story or badge gates. Psych Up depends on a Generation I Abra and a Time Capsule trade, with no standalone in-game badge deadline. Crystal’s Goldenrod tutor costs 4,000 coins, requires a Coin Case and Hall of Fame entry, and appears Wednesday or Saturday. The planner tracks documented single-copy Johto TMs while recognizing repeatable shop sources. The [Kanto and Johto exception ledger](round4-kanto-johto-ledger.jsonl) records remaining conditional rows. [Generation II machines](https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_II) · [Move Tutor](https://bulbapedia.bulbagarden.net/wiki/Move_Tutor)
 
+### Revised Unova-only scope
+
+The user narrowed new acquisition and move timing research to Black 2 and White 2 first, followed by Black and White. The Kanto and Johto improvements above remain in the candidate. The unfinished Hoenn research and patch were saved separately for possible future work.
+
+The Unova follow-through checked the previously unclassified regional and national entries against the version-specific encounter and transfer catalogs. It added National Pokédex swarms, resident-dependent White Forest encounters, the post-League Day Care gates, compatible parents and required incense, Nimbasa's Dropped Item trade sequence, evolution items, and separate restrictions for Dream Radar, Funfest Missions and historic distributions. A direct native route takes precedence over any transfer listing. A classification records a verified route or a documented restriction for each bundled catalog row. It does not imply every alternative has been timed or that the historical hardware and distribution programs remain accessible. [BW2 swarms](https://www.serebii.net/black2white2/swarms.shtml) · [BW swarms](https://www.serebii.net/blackwhite/swarms.shtml) · [BW2 in-game trades](https://www.serebii.net/black2white2/ingametrade.shtml) · [White Forest residents](https://bulbapedia.bulbagarden.net/wiki/White_Forest) · [Day Care](https://bulbapedia.bulbagarden.net/wiki/Day_Care) · [BW2 transfer catalog](https://www.serebii.net/black2white2/unobtainable.shtml) · [BW transfer catalog](https://www.serebii.net/blackwhite/unobtainable.shtml)
+
+| Game | Fixed verified | Expanded baseline → verified | Transfer / event / conditional choice outside verified timing |
+| --- | ---: | ---: | ---: |
+| Black 2 | 300/304 | 212 → 406 / 410 (99.0%) | 224 / 11 / 9 |
+| White 2 | 299/303 | 209 → 403 / 407 (99.0%) | 227 / 11 / 9 |
+| Black | 239/247 | 160 → 332 / 340 (97.6%) | 303 / 6 / 9 |
+| White | 239/247 | 160 → 424 / 432 (98.1%) | 211 / 6 / 9 |
+
+Each title has 650 bundled catalog rows. Verified native timing and the three restriction categories partition those rows. The expanded percentage uses the audited positive-route cohort, with the same expanded denominator applied to the baseline. The [Unova exception ledger](round4-unova-ledger.jsonl) covers all non-timed rows and exceptions. The 97 original TM/HM story gates, three count-gated reward TMs and unavailable Snarl account for all 101 original machines. Each sequel has 101 story gates. Special-tutor coverage now includes **69** moves per sequel and **9** per original. The audit records friendship, species and event requirements separately from the route gate. [Generation V Move Tutors](https://bulbapedia.bulbagarden.net/wiki/Move_Tutor#Generation_V) · [Generation V machines](https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_V)
+
+Automatic Unova Final recommendations schedule the selected moves across evolution stages. For example, a move needed at Lv 46 on the earlier stage and another learned at Lv 28 on the later stage cannot be combined through ordinary level-up. The latter may work via the Move Reminder if the deadline permits it. A linked save's actual level and retained moves constrain which levels can still be reached. Manual choices remain editable and keep their existing warnings. The scheduler does not prove every possible egg, event or alternate-form inheritance combination.
+
+The resource review counts documented field copies of evolution items, currency costs for planned tutor-only moves, and Heart Scales for planned Reminder routes. It consolidates needs across the team, distinguishes version-specific copies and recommends documented repeatable supplies when a field copy is already committed. The Black 2 two-Fire-Stone browser plan showed one field copy and the BP alternative at the early deadline, then two field copies at the later deadline. Starter and fossil choices retain their version restrictions. This estimates supply and planned demand. The save parser does not read the bag or verify that the player has purchased, spent or traded their resources. [Fire Stone](https://bulbapedia.bulbagarden.net/wiki/Fire_Stone) · [Dusk Stone](https://bulbapedia.bulbagarden.net/wiki/Dusk_Stone) · [Electirizer](https://bulbapedia.bulbagarden.net/wiki/Electirizer) · [Magmarizer](https://bulbapedia.bulbagarden.net/wiki/Magmarizer)
+
 ### Automated verification
 
 | Status | Verification |
 | --- | --- |
-| Pass | 43 V76 and V77 Node tests, including exact Unova gates, historical version restrictions, unconditional evolution paths, and bounded TM and species resources. |
+| Pass | 48 V76 and V77 Node tests, including exact Unova gates, historical version restrictions, unconditional evolution paths, and bounded TM and species resources. |
 | Pass | Focused Chromium at 390 and 412 CSS px. Automatic During and Final moves were populated with zero, one, two, three and four existing moves. The exact comparison exercised Golduck and Starmie through the real ranking code with a restricted candidate fixture. Full-catalog Round 3 coverage ran separately. |
 | Pass | Browser projection covered Psyduck → Golduck, a tightened deadline, a retained manual move, Keep Psyduck, Eevee → Jolteon, Sandile → Krookodile and disabling the unverified local Conkeldurr evolution. Route 11 and off-atlas Nature Preserve navigation passed, including contextual return. A single TM copy was flagged in Red and Crystal, while the same repeated machine in Black 2 was accepted. The Red Mr. Mime entry displayed its level range, Abra trade and Diglett’s Cave approach. Gold Qwilfish displayed the fishing rod and swarm prerequisites. |
 | Pass | Round 3 and V77 browser flows across 320, 360, 390, 412 and 1280 px included dynamic ranking, compact layouts, save synchronization, plan transfer, contextual return and toolbar geometry. V76 visual comparison, team management, Battle/6v6, historical data and offline cold reload also passed. |
-| Need work | Catalogs outside the expanded Unova cohort, especially games where the local bundle has no indexed encounters. Complete move budgets, item ownership and all legal inheritance sequences need more evidence and modeling. |
+| Deferred / limited | The user deferred further non-Unova research. Historical hardware, actual resource ownership and the earliest possible alternate route under every single playthrough remain outside the verified inference. |
 | Not tested | Native Android, physical mobile touch and a playthrough of every documented encounter. |
 
 ### Essential acceptance checks
@@ -323,4 +342,4 @@ All 57 machine locations are documented per title. The timing engine has **56/57
 1. In Black 2, select Psyduck → Golduck. Check four useful choices in During and Final where legal. Then plan Psyduck with Golduck as its Final target, edit one move and change the deadline or choose Keep Psyduck. The manual choice should remain.
 2. Compare Golduck and Starmie on the current team. Check that both retain meaningful strengths and that the recommendation explains the practical trade-off.
 3. Check that Black 2 Golduck has two-line individual entries. Open Nature Preserve from Magikarp’s Pokédex, read the Permit requirement, then return to the same entry.
-4. If you have a Kanto plan, assign its one Thunderbolt TM to two machine-only learners. Check the resource warning while both manual selections remain visible.
+4. Set a Black 2 plan with two Fire Stone evolutions. Check that the early deadline shows one field copy and a renewable source, and that changing the deadline updates the count while preserving both choices.

@@ -431,6 +431,377 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   return {...early(rank,place,'evolution',requirement),path:{stage:title(parent[1]),initial:initial?.confirmed?initial:{method:'already owned',rank},requirement},
    source:'pokeapi-unconditional-level-evolution'};
  }
+ const versionFamilies={
+  Black:['solosis','duosion','reuniclus','elekid','electabuzz','electivire','magby','magmar','magmortar','budew','slakoth'],
+  White:['gothita','gothorita','gothitelle'],
+  'Black 2':['solosis','duosion','reuniclus','elekid','electabuzz','electivire','skitty','delcatty','numel','camerupt'],
+  'White 2':['gothita','gothorita','gothitelle','magby','magmar','magmortar','buneary','lopunny','spoink','grumpig']
+ };
+ const sequelEggFamilies={
+  beldum:'Metang or Metagross',blitzle:'Zebstrika',budew:'Roselia or Roserade holding a Rose Incense',
+  cleffa:'Clefairy or Clefable',deino:'Zweilous or Hydreigon',golett:'Golurk',igglybuff:'Jigglypuff or Wigglytuff',
+  larvesta:'Volcarona',larvitar:'Pupitar or Tyranitar',shuppet:'Banette',slakoth:'Vigoroth or Slaking',
+  swinub:'Piloswine or Mamoswine',tympole:'Palpitoad or Seismitoad',vanillite:'Vanillish or Vanilluxe',wingull:'Pelipper'
+ };
+ const moveStoneEvolution=(rank,stage,initial,requirement,resource,level=0)=>({
+  ...early(rank,initial.place,'evolution',stage+' · '+requirement),
+  path:{stage,initial,requirement,resource,level},source:'unova-item-and-evolution'
+ });
+ const originalSwarms={
+  "farfetchd":["Route 1", ""],
+  "wynaut":["Route 2", ""],
+  "volbeat":["Route 3", "Black"],
+  "illumise":["Route 3", "White"],
+  "hippopotas":["Route 4", ""],
+  "smeargle":["Route 5", ""],
+  "plusle":["Route 6", "Black"],
+  "minun":["Route 6", "White"],
+  "sentret":["Route 7", ""],
+  "croagunk":["Route 8", ""],
+  "houndour":["Route 9", "Black"],
+  "poochyena":["Route 9", "White"],
+  "tyrogue":["Route 10", ""],
+  "shroomish":["Route 11", "Black"],
+  "paras":["Route 11", "White"],
+  "doduo":["Route 12", ""],
+  "shuppet":["Route 13", ""],
+  "yanma":["Route 14", ""],
+  "mankey":["Route 15", ""],
+  "pineco":["Route 16", ""],
+  "exeggcute":["Route 18", ""],
+ };
+ const sequelSwarms={
+  "farfetchd":["Route 1", ""],
+  "volbeat":["Route 3", "Black 2"],
+  "illumise":["Route 3", "White 2"],
+  "natu":["Route 5", ""],
+  "plusle":["Route 6", "Black 2"],
+  "minun":["Route 6", "White 2"],
+  "furret":["Route 7", ""],
+  "quagsire":["Route 8", ""],
+  "swalot":["Route 9", ""],
+  "masquerain":["Route 11", ""],
+  "doduo":["Route 12", ""],
+  "swellow":["Route 13", ""],
+  "fearow":["Route 15", ""],
+  "pineco":["Route 16", ""],
+  "hoppip":["Route 18", ""],
+  "sudowoodo":["Route 20", "Black 2"],
+  "mr-mime":["Route 20", "White 2"],
+  "ariados":["Route 22", "Black 2"],
+  "ledian":["Route 22", "White 2"],
+  "hypno":["Dreamyard", ""],
+  "hippowdon":["Desert Resort", ""],
+  "slowpoke":["Abundant Shrine", ""],
+  "cacturne":["Reversal Mountain", ""],
+ };
+ const whiteForestResidents={
+  "pidgey":["grass", "Leo"],
+  "nidoran-f":["grass", "Jacques"],
+  "nidoran-m":["grass", "Ken"],
+  "oddish":["grass", "Lynette"],
+  "abra":["grass", "Collin"],
+  "machop":["grass", "Ryder"],
+  "bellsprout":["grass", "Piper"],
+  "magnemite":["grass", "Marie"],
+  "gastly":["grass", "Dave"],
+  "rhyhorn":["grass", "Shane"],
+  "porygon":["grass", "Herman"],
+  "togepi":["grass", "Miki"],
+  "mareep":["grass", "Pierce"],
+  "hoppip":["grass", "Britney"],
+  "elekid":["grass", "Robbie"],
+  "magby":["grass", "Vincent"],
+  "wurmple":["grass", "Silvia"],
+  "lotad":["grass", "Ralph"],
+  "seedot":["grass", "Miho"],
+  "ralts":["grass", "Lena"],
+  "slakoth":["grass", "Karenna"],
+  "whismur":["grass", "Rosa"],
+  "azurill":["grass", "Molly"],
+  "aron":["grass", "Gene"],
+  "trapinch":["grass", "Eliza"],
+  "bagon":["grass", "Grace"],
+  "starly":["grass", "Carlos"],
+  "shinx":["grass", "Doug"],
+  "budew":["grass", "Frederic"],
+  "happiny":["grass", "Emi"],
+  "wooper":["surf", "Lena, Frederic, Herman, Grace"],
+  "surskit":["surf", "Leo, Silvia, Dave, Britney, Robbie, Miki, Lynette, Pierce, Gene, Piper, Miho, Shane, Ralph"],
+  "corphish":["surf", "Vincent, Carlos, Ken, Emi"],
+ };
+ const originalUnovaTransfer=new Set([
+  1,2,3,4,5,6,7,8,9,23,24,25,26,50,51,52,53,58,59,72,
+  73,88,89,96,97,100,101,109,110,122,123,128,133,134,135,136,144,145,146,150,
+  151,152,153,154,155,156,157,158,159,160,172,177,178,185,190,194,195,196,197,201,
+  203,209,210,212,216,217,218,219,227,231,232,241,243,244,245,249,250,251,252,253,
+  254,255,256,257,258,259,260,263,264,290,291,292,296,297,299,300,301,307,308,309,
+  310,316,317,322,323,324,325,326,327,331,332,351,352,355,356,361,362,377,378,379,
+  380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,412,413,414,417,
+  422,423,424,427,428,431,432,434,435,438,439,441,442,443,444,445,451,452,455,459,
+  460,470,471,476,477,478,480,481,482,483,484,485,486,487,488,489,490,491,492,493,
+ ]);
+ const sequelUnovaTransfer=new Set([
+  1,2,3,4,5,6,7,8,9,16,17,18,23,24,25,26,43,44,45,46,
+  47,50,51,66,67,68,69,70,71,72,73,74,75,76,77,78,92,93,94,100,
+  101,102,103,104,105,106,107,115,123,124,128,137,144,145,146,150,151,152,153,154,
+  155,156,157,158,159,160,172,182,200,201,212,218,219,228,229,233,234,235,236,237,
+  238,241,243,244,245,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,
+  264,265,266,267,268,269,290,291,292,293,294,295,324,355,356,358,361,362,382,383,
+  384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,401,402,403,404,405,
+  412,413,414,420,421,429,433,459,460,474,477,478,483,484,487,489,490,491,492,493,
+  494,641,642,645,647,648,649,
+ ]);
+ const namedTransferEvidence={
+  "Black 2":new Set(["beautifly", "beedrill", "bellossom", "bidoof", "blissey", "bonsly", "breloom", "butterfree", "cacnea", "cascoon", "caterpie", "chansey", "cherubi", "chingling", "cubone", "drowzee", "dustox", "electrike", "exeggutor", "exploud", "gallade", "gardevoir", "gastrodon", "gengar", "geodude", "gloom", "golem", "gulpin", "haunter", "hippopotas", "hitmonchan", "hitmonlee", "hitmontop", "honchkrow", "houndoom", "jumpluff", "kakuna", "kirlia", "kricketot", "ledyba", "lombre", "lotad", "loudred", "ludicolo", "luxio", "luxray", "machamp", "machoke", "makuhita", "masquerain", "meditite", "metapod", "mightyena", "mime-jr", "misdreavus", "mismagius", "munchlax", "murkrow", "nidoking", "nidoqueen", "nidorina", "nidorino", "parasect", "pidgeot", "pidgeotto", "ponyta", "porygon-z", "porygon2", "rhydon", "rhyperior", "salamence", "sentret", "shelgon", "shroomish", "silcoon", "skiploom", "slowbro", "slowking", "smoochum", "snorlax", "snubbull", "spearow", "spinarak", "staraptor", "staravia", "surskit", "taillow", "togekiss", "togetic", "venonat", "victreebel", "vileplume", "weedle", "weepinbell", "wooper", "wynaut"]),
+  "White 2":new Set(["beautifly", "beedrill", "bellossom", "bidoof", "blissey", "bonsly", "breloom", "butterfree", "cacnea", "cascoon", "caterpie", "chansey", "cherubi", "chingling", "cubone", "drowzee", "dustox", "electrike", "exeggutor", "exploud", "gallade", "gardevoir", "gastrodon", "gengar", "geodude", "gloom", "golem", "gulpin", "haunter", "hippopotas", "hitmonchan", "hitmonlee", "hitmontop", "honchkrow", "houndoom", "jumpluff", "kakuna", "kirlia", "kricketot", "ledyba", "lombre", "lotad", "loudred", "ludicolo", "luxio", "luxray", "machamp", "machoke", "makuhita", "masquerain", "meditite", "metapod", "mightyena", "mime-jr", "misdreavus", "mismagius", "munchlax", "murkrow", "nidoking", "nidoqueen", "nidorina", "nidorino", "parasect", "pidgeot", "pidgeotto", "ponyta", "porygon-z", "porygon2", "rhydon", "rhyperior", "salamence", "sentret", "shelgon", "shroomish", "silcoon", "skiploom", "slowbro", "slowking", "smoochum", "snorlax", "snubbull", "spearow", "spinarak", "staraptor", "staravia", "surskit", "taillow", "togekiss", "togetic", "venonat", "victreebel", "vileplume", "weedle", "weepinbell", "wooper", "wynaut"]),
+  "Black":new Set(["abra", "aggron", "aipom", "alakazam", "ampharos", "azumarill", "beautifly", "bellossom", "blissey", "bonsly", "butterfree", "cacnea", "cascoon", "caterpie", "chansey", "crawdaunt", "drowzee", "dustox", "electrike", "exploud", "flaaffy", "flygon", "gallade", "gardevoir", "gastrodon", "gengar", "gloom", "gulpin", "haunter", "jumpluff", "kadabra", "kirlia", "lairon", "lombre", "lotad", "loudred", "ludicolo", "luxio", "luxray", "machamp", "machoke", "magneton", "magnezone", "makuhita", "marill", "masquerain", "meditite", "metapod", "mightyena", "mime-jr", "misdreavus", "mismagius", "nidoking", "nidoqueen", "nidorina", "nidorino", "nuzleaf", "parasect", "pidgeot", "pidgeotto", "porygon-z", "porygon2", "rhydon", "rhyperior", "roselia", "roserade", "salamence", "seedot", "shelgon", "shiftry", "silcoon", "skiploom", "slaking", "snubbull", "staraptor", "staravia", "surskit", "togekiss", "togetic", "vibrava", "victreebel", "vigoroth", "vileplume", "weepinbell", "wooper"]),
+  "White":new Set(["aipom", "beedrill", "bonsly", "breloom", "cacnea", "drowzee", "electrike", "gastrodon", "gulpin", "honchkrow", "houndoom", "kakuna", "makuhita", "meditite", "mime-jr", "murkrow", "shroomish", "snubbull", "weedle"]),
+ };
+ const documentedBreeding={
+  "Black 2":{
+   "abra":["Kadabra", "Alakazam"],
+   "aipom":["Ambipom"],
+   "beldum":["Metang", "Metagross"],
+   "cleffa":["Clefairy", "Clefable"],
+   "drifloon":["Drifblim"],
+   "hoothoot":["Noctowl"],
+   "igglybuff":["Jigglypuff", "Wigglytuff"],
+   "larvitar":["Pupitar", "Tyranitar"],
+   "seedot":["Nuzleaf", "Shiftry"],
+   "swinub":["Piloswine", "Mamoswine"],
+  },
+  "White 2":{
+   "abra":["Kadabra", "Alakazam"],
+   "aipom":["Ambipom"],
+   "beldum":["Metang", "Metagross"],
+   "cleffa":["Clefairy", "Clefable"],
+   "drifloon":["Drifblim"],
+   "hoothoot":["Noctowl"],
+   "igglybuff":["Jigglypuff", "Wigglytuff"],
+   "larvitar":["Pupitar", "Tyranitar"],
+   "seedot":["Nuzleaf", "Shiftry"],
+   "swinub":["Piloswine", "Mamoswine"],
+  },
+  "Black":{
+   "baltoy":["Claydol"],
+   "beldum":["Metang", "Metagross"],
+   "bidoof":["Bibarel"],
+   "bronzor":["Bronzong"],
+   "cherubi":["Cherrim"],
+   "chingling":["Chimecho"],
+   "cleffa":["Clefairy", "Clefable"],
+   "cubone":["Marowak"],
+   "drifloon":["Drifblim"],
+   "geodude":["Graveler", "Golem"],
+   "hoothoot":["Noctowl"],
+   "igglybuff":["Jigglypuff", "Wigglytuff"],
+   "kricketot":["Kricketune"],
+   "larvitar":["Pupitar", "Tyranitar"],
+   "ledyba":["Ledian"],
+   "ponyta":["Rapidash"],
+   "psyduck":["Golduck"],
+   "rattata":["Raticate"],
+   "sandshrew":["Sandslash"],
+   "smoochum":["Jynx"],
+   "spearow":["Fearow"],
+   "spinarak":["Ariados"],
+   "swablu":["Altaria"],
+   "swinub":["Piloswine", "Mamoswine"],
+   "taillow":["Swellow"],
+   "venonat":["Venomoth"],
+   "weedle":["Kakuna", "Beedrill"],
+   "zubat":["Golbat", "Crobat"],
+  },
+  "White":{
+   "baltoy":["Claydol"],
+   "beldum":["Metang", "Metagross"],
+   "bidoof":["Bibarel"],
+   "bronzor":["Bronzong"],
+   "caterpie":["Metapod", "Butterfree"],
+   "cherubi":["Cherrim"],
+   "chingling":["Chimecho"],
+   "cleffa":["Clefairy", "Clefable"],
+   "cubone":["Marowak"],
+   "drifloon":["Drifblim"],
+   "geodude":["Graveler", "Golem"],
+   "hoothoot":["Noctowl"],
+   "igglybuff":["Jigglypuff", "Wigglytuff"],
+   "kricketot":["Kricketune"],
+   "larvitar":["Pupitar", "Tyranitar"],
+   "ledyba":["Ledian"],
+   "ponyta":["Rapidash"],
+   "psyduck":["Golduck"],
+   "rattata":["Raticate"],
+   "sandshrew":["Sandslash"],
+   "smoochum":["Jynx"],
+   "spearow":["Fearow"],
+   "spinarak":["Ariados"],
+   "swablu":["Altaria"],
+   "swinub":["Piloswine", "Mamoswine"],
+   "taillow":["Swellow"],
+   "venonat":["Venomoth"],
+   "zubat":["Golbat", "Crobat"],
+  },
+ };
+ const lateIncense={
+  azurill:'Sea Incense',wynaut:'Lax Incense',budew:'Rose Incense',chingling:'Pure Incense',happiny:'Luck Incense',
+  'mime-jr':'Odd Incense',bonsly:'Rock Incense',mantyke:'Wave Incense',munchlax:'Full Incense'
+ };
+ const documentedEvolutions={
+  exeggutor:['Exeggcute','Use a Leaf Stone','leaf-stone'],hitmonlee:['Tyrogue','Reach Lv 20 with Attack higher than Defense',null,20],
+  hitmonchan:['Tyrogue','Reach Lv 20 with Defense higher than Attack',null,20],hitmontop:['Tyrogue','Reach Lv 20 with Attack equal to Defense',null,20],
+  snorlax:['Munchlax','Level up with high friendship'],togetic:['Togepi','Level up with high friendship'],
+  togekiss:['Togetic','Use a Shiny Stone','shiny-stone'],blissey:['Chansey','Level up with high friendship'],
+  chansey:['Happiny','Level up during daylight while holding an Oval Stone'],nidoqueen:['Nidorina','Use a Moon Stone','moon-stone'],
+  nidoking:['Nidorino','Use a Moon Stone','moon-stone'],vileplume:['Gloom','Use a Leaf Stone','leaf-stone'],
+  victreebel:['Weepinbell','Use a Leaf Stone','leaf-stone'],bellossom:['Gloom','Use a Sun Stone','sun-stone'],
+  kadabra:['Abra','Evolve at Lv 16',null,16],azumarill:['Marill','Evolve at Lv 18',null,18],
+  gardevoir:['Kirlia','Evolve at Lv 30',null,30],marill:['Azurill','Level up with high friendship'],silcoon:['Wurmple','Reach Lv 7. The result depends on Wurmple’s internal value',null,7],
+  cascoon:['Wurmple','Reach Lv 7. The result depends on Wurmple’s internal value',null,7],
+  beautifly:['Silcoon','Reach Lv 10',null,10],dustox:['Cascoon','Reach Lv 10',null,10],
+  ludicolo:['Lombre','Use a Water Stone','water-stone'],shiftry:['Nuzleaf','Use a Leaf Stone','leaf-stone'],
+  roselia:['Budew','Level up with high friendship during daylight'],roserade:['Roselia','Use a Shiny Stone','shiny-stone'],
+  gallade:['Kirlia','Use a Dawn Stone on a male Kirlia','dawn-stone'],lucario:['Riolu','Level up with high friendship during daylight'],
+  lickilicky:['Lickitung','Level up while it knows Rollout'],yanmega:['Yanma','Level up while it knows Ancient Power'],
+  magnezone:['Magneton','Level up in Chargestone Cave'],weavile:['Sneasel','Level up at night holding a Razor Claw','razor-claw']
+ };
+ function documentedUnovaAlternative(game,name,pack,seen=new Set()){
+  if(seen.has(name))return null;
+  const ancestry=new Set([...seen,name]);
+  if(!pack?.mons||!['Black','White','Black 2','White 2'].includes(game))return null;
+  const starters=new Set(['snivy','tepig','oshawott']);
+  if(starters.has(name))return null;
+  const nativeRoute=label=>{
+   const key=label.toLowerCase().replaceAll(' ','-');
+   const mon=pack.mons.find(row=>row[1]===key);
+   if(!mon)return null;
+   const found=lookup(game,key,pack.entries?.[mon[0]])||levelPath(game,mon[0],pack,[]);
+   if(found?.confirmed)return found;
+   const inherited=documentedUnovaAlternative(game,key,pack,ancestry);
+   return inherited?.confirmed?inherited:null;
+  };
+  function breedRoute(parents,baby){
+   const initial=parents.map(nativeRoute).filter(Boolean).sort((a,b)=>a.rank-b.rank)[0];
+   if(!initial)return null;
+   const sequel=game.endsWith(' 2');
+   const incense=lateIncense[baby];
+   const gate=sequel?'Enter the Hall of Fame to reach the Day Care.':'Help the Day-Care Man in Nimbasa City and obtain the Bike to unlock breeding.';
+   return {...early(Math.max(initial.rank,sequel||incense?10:3),'Route 3 · Day Care','breeding',
+    'Breed '+parents.join(' or ')+(incense?' with the compatible parent holding '+incense+' from Driftveil Market':'')+'. '+gate),
+    source:'pokemondb-species-and-unova-day-care'};
+  }
+  const entry=documentedBreeding[game]?.[name];
+  if(entry)return breedRoute(entry,name);
+  if(!game.endsWith(' 2')||name==='kadabra'){
+   const evo=documentedEvolutions[name];
+   if(evo&&!namedTransferEvidence[game]?.has(name)){
+    const [parent,condition,item,level]=evo,initial=nativeRoute(parent);
+    if(initial){
+     const earliestItem=item?{ 'leaf-stone':5,'moon-stone':3,'sun-stone':3,'water-stone':4,
+      'shiny-stone':5,'dawn-stone':6,'razor-claw':10 }[item]||0:0;
+     return moveStoneEvolution(Math.max(initial.rank,earliestItem),parent,initial,condition,item,level||0);
+    }
+   }
+  }
+  const tradeEvolutions={alakazam:'Kadabra',golem:'Graveler',machamp:'Machoke',gengar:'Haunter',
+   porygon2:'Porygon holding an Up-Grade','porygon-z':'Porygon2 holding a Dubious Disc',
+   rhyperior:'Rhydon holding a Protector',steelix:'Onix holding a Metal Coat',
+   huntail:'Clamperl holding a Deep Sea Tooth',gorebyss:'Clamperl holding a Deep Sea Scale'};
+  return tradeEvolutions[name]&&!namedTransferEvidence[game]?.has(name)?{kind:'trade',reason:'Trade '+tradeEvolutions[name]+' to evolve.',source:'pokemondb-species-and-evolution'}:null;
+ }
+ function transferOnly(game,id,name){
+  const original=game==='Black'||game==='White';
+  const sequel=game==='Black 2'||game==='White 2';
+  const entries=original?originalUnovaTransfer:sequel?sequelUnovaTransfer:null;
+  if(game==='Black'&&whiteForestResidents[name]){
+   return {kind:'trade',reason:'This route uses the resident encounter table exclusive to White Forest in Pokémon White.',source:'white-forest-residents'};
+  }
+  if(namedTransferEvidence[game]?.has(name)){
+   return {kind:'trade',reason:'The game-specific acquisition catalog lists trade or migration for this species.',source:'pokemondb-version-acquisition'};
+  }
+  if(!entries?.has(Number(id)))return null;
+  return {kind:'trade',reason:'Transfer from a compatible game or use a supported historical tie-in. No native route is listed for this version pair.',
+   source:original?'serebii-bw-transfer-catalog':'serebii-b2w2-transfer-catalog'};
+ }
+ const yancyTrades=new Set(['meowth','wobbuffet','ralts','shieldon','rhyhorn','shellos','mawile','spiritomb','snorlax','teddiursa','spinda','togepi']);
+ const curtisTrades=new Set(['mankey','wobbuffet','ralts','cranidos','rhyhorn','shellos','sableye','spiritomb','snorlax','phanpy','spinda','togepi']);
+ function droppedItemTrade(name){
+  const yancy=yancyTrades.has(name),curtis=curtisTrades.has(name);
+  if(!yancy&&!curtis)return null;
+  const who=yancy&&curtis?'Yancy or Curtis':yancy?'Yancy (male player)':'Curtis (female player)';
+  return {...early(10,'Nimbasa City','in-game trade','After the League, return the Dropped Item and complete the Xtransceiver calls and Ferris Wheel sequence. Trade any Pokémon to '+who+' for its daily offer.'),
+   source:'serebii-b2w2-dropped-item-trades'};
+ }
+ function recentUnovaRoute(game,name){
+  const sequel=game.endsWith(' 2');
+  if(versionFamilies[game]?.includes(name))return {kind:'trade',reason:'Trade or transfer this family from a compatible game with a native route.'};
+  if(sequel&&sequelEggFamilies[name]){
+   return {...early(10,'Route 3 · Day Care','breeding','Breed '+sequelEggFamilies[name]+'. The Day Care opens after entering the Hall of Fame.'),
+    source:'unova-day-care-and-species-catalog'};
+  }
+  if(['keldeo-ordinary','meloetta-aria','genesect'].includes(name)||sequel&&name==='victini'){
+   return {kind:'event',reason:'Requires an official event Pokémon or transfer from a compatible game with the distribution.'};
+  }
+  if(sequel&&['tornadus-incarnate','thundurus-incarnate','landorus-incarnate'].includes(name)){
+   return {kind:'event',reason:'Obtain the Therian Forme through Pokémon Dream Radar or trade. Use the Reveal Glass obtained at Abundant Shrine to change form.'};
+  }
+  const tradeEvolutions={conkeldurr:'Gurdurr',escavalier:'Karrablast for Shelmet',accelgor:'Shelmet for Karrablast'};
+  if(tradeEvolutions[name])return {kind:'trade',reason:'Trade '+tradeEvolutions[name]+' to evolve.'};
+  if(['electivire','magmortar'].includes(name)){
+   const item=name==='electivire'?'Electirizer':'Magmarizer';
+   return {kind:'trade',reason:'Trade '+(name==='electivire'?'Electabuzz':'Magmar')+' holding the '+item+'. '+
+    (sequel?'A native copy is aboard the Plasma Frigate in '+(name==='electivire'?'White 2':'Black 2')+'; Join Avenue has an alternate source.':
+     'Route 13 supplies the item in the postgame.')};
+  }
+  if(sequel&&['espeon','umbreon','leafeon','glaceon'].includes(name)){
+   const requirements={espeon:'Level up with high friendship during the day',umbreon:'Level up with high friendship at night',
+    leafeon:'Level up near the Moss Rock in postgame Pinwheel Forest',glaceon:'Level up near the Ice Rock in postgame Twist Mountain'};
+   const requirement=requirements[name];
+   return {...early(['leafeon','glaceon'].includes(name)?10:2,bw2.eevee.place,'evolution',requirement),
+    path:{stage:'Eevee',initial:bw2.eevee,requirement},source:'unova-eevee-evolution'};
+  }
+  if(sequel&&name==='probopass'){
+   const initial=early(5,'Chargestone Cave','walk','After Clay, reach the cave via Route 6.');
+   return {...early(5,initial.place,'evolution','Level up Nosepass in Chargestone Cave.'),
+    path:{stage:'Nosepass',initial,requirement:'Level up in Chargestone Cave'},source:'chargestone-cave'};
+  }
+  if(sequel&&name==='weavile'){
+   const initial=early(8,'Giant Chasm','walk','Follow the Plasma Frigate story into Giant Chasm after Marlon.');
+   return moveStoneEvolution(8,'Sneasel',initial,'Level up at night holding a Razor Claw (8 BP at the PWT or find it in Giant Chasm)','razor-claw');
+  }
+  if(!sequel&&name==='swoobat'){
+   const initial=bw.woobat;
+   return {...early(1,initial.place,'evolution','Raise Woobat’s friendship, then level it up.'),
+    path:{stage:'Woobat',initial,requirement:'Level up with high friendship'},source:'woobat-evolution'};
+  }
+  if(name==='eelektross'){
+   const initial=early(5,'Chargestone Cave','walk','Catch Tynamo in Chargestone Cave after Clay.');
+   return moveStoneEvolution(5,'Tynamo',initial,'Evolve at Lv 39, then use a Thunder Stone from Chargestone Cave','thunder-stone',39);
+  }
+  if(name==='chandelure'){
+   const initial=early(5,'Celestial Tower','walk','Catch Litwick in Celestial Tower.');
+   return moveStoneEvolution(6,'Litwick',initial,'Evolve at Lv 41, then use a Dusk Stone from '+(sequel?'the Strange House':'Mistralton Cave with Surf'),'dusk-stone',41);
+  }
+  const monkey={simisage:['Pansage','Leaf Stone','leaf-stone'],simisear:['Pansear','Fire Stone','fire-stone'],simipour:['Panpour','Water Stone','water-stone']}[name];
+  if(monkey){
+   const initial=sequel?early(3,'Lostlorn Forest','grass-spots','Find the elemental monkeys in rustling grass.'):
+    early(2,'Pinwheel Forest · Interior','grass-spots','Find the elemental monkeys in rustling grass. The Dreamyard gift depends on the starter.');
+   const [stage,stone,resource]=monkey;
+   const location=sequel?{simisage:'Lostlorn Forest',simisear:'Desert Resort',simipour:'Route 19 with Surf'}[name]:'Castelia City (one stone choice)';
+   return moveStoneEvolution(sequel&&name==='simipour'?5:initial.rank,stage,initial,'Use a '+stone+' from '+location,resource);
+  }
+  if((game.startsWith('Black')&&name==='lilligant')||(game.startsWith('White')&&name==='whimsicott')){
+   const initial=sequel?early(3,'Route 4','in-game trade','Trade the native plant Pokémon for its counterpart.'):
+    early(2,'Nacrene City','in-game trade','Trade the native Pinwheel Forest Pokémon for its counterpart.');
+   return moveStoneEvolution(3,name==='lilligant'?'Petilil':'Cottonee',initial,'Use a Sun Stone from Nimbasa City','sun-stone');
+  }
+  if(game==='White'&&['elekid','magby','budew','slakoth'].includes(name)){
+   return {...early(10,'White Forest','walk','The matching White Forest resident must be present. Check the resident roster or recruit from a compatible game.'),
+    source:'white-forest-residents'};
+  }
+  return null;
+ }
  function lookup(game,name,encounters){
   if(isKanto(game)){
    const yellow=game==='Yellow';
@@ -535,6 +906,30 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   const sequel=game==='Black 2'||game==='White 2';
   if(!sequel&&game!=='Black'&&game!=='White')return null;
+  const verified=recentUnovaRoute(game,name);
+  if(verified)return verified;
+  const resident=game==='White'&&whiteForestResidents[name];
+  if(sequel&&['glameow','purugly','stunky','skuntank'].includes(name)&&!encounters?.length){
+   const quiet=['glameow','purugly'].includes(name);
+   return {kind:'event',reason:'Requires the '+(quiet?'Quiet Hidden Grottoes (White 2)':'Noisy Hidden Grottoes (Black 2)')+
+    ' Funfest Mission or a trade from its supported version.',source:'serebii-b2w2-special-grottos'};
+  }
+  if(resident&&!encounters?.some(row=>encounterRoute(game,row))){
+   return {...early(10,'White Forest',resident[0]==='grass'?'walk':resident[0],
+    'Requires '+resident[1]+' in the White Forest resident roster. '+(resident[0]==='surf'?'Requires Surf. ':'')+
+    'Recruit a missing resident through compatible Entralink play.'),source:'white-forest-residents'};
+  }
+  if(sequel&&!encounters?.length){
+   const trade=droppedItemTrade(name);
+   if(trade)return trade;
+  }
+  const swarm=(sequel?sequelSwarms:originalSwarms)[name];
+  if(swarm&&!(!swarm[1]||swarm[1]===game)&&!encounters?.length)
+   return {kind:'trade',reason:'The documented swarm is exclusive to '+swarm[1]+'.'};
+  if(swarm&&(!swarm[1]||swarm[1]===game)&&!encounters?.some(row=>encounterRoute(game,row))){
+   return {...early(10,swarm[0],'swarm','Obtain the National Pokédex and check the current swarm on a route gate’s electronic board.'),
+    source:sequel?'serebii-b2w2-swarms':'serebii-bw-swarms'};
+  }
   if(sequel&&((name==='magby'&&game==='White 2')||(name==='elekid'&&game==='Black 2')))
    return {kind:'trade',reason:'Version-exclusive family'};
   if(!sequel){
@@ -862,6 +1257,99 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   if(['FireRed','LeafGreen'].includes(game))return name==='earthquake';
   return false;
  }
+ function evolutionTrainingLevel(id){return auditedLevelEvolutions[id]||1;}
+ function scheduleEvolutionMoves(stages,start,cap,choices){
+  const selected=[];
+  function compatible(){
+   let level=start;
+   for(const [stage,evolvesAt] of stages.entries()){
+    const moves=selected.filter(route=>route.stage===stage);
+    if(moves.some(route=>route.at&&route.at<level))return false;
+    level=Math.max(level,evolvesAt,...moves.map(route=>route.at||route.minimum||1));
+    if(level>cap)return false;
+   }
+   return true;
+  }
+  function choose(i){
+   if(!compatible())return false;
+   if(i===choices.length)return true;
+   for(const route of choices[i]){
+    selected.push(route);
+    if(choose(i+1))return true;
+    selected.pop();
+   }
+   return false;
+  }
+  return choose(0)?selected:null;
+ }
+ // Guaranteed local copies are lower bounds. Random drops and purchases are separate routes.
+ const unovaItemSources={
+  'fire-stone':{name:'Fire Stone',original:[3],sequel:[3,6],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[3,'3 BP at the Battle Subway after the entrance battle']},
+  'water-stone':{name:'Water Stone',original:[4],sequel:[5,10],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[3,'3 BP at the Battle Subway after the entrance battle']},
+  'leaf-stone':{name:'Leaf Stone',original:[5],sequel:[3,5],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[3,'3 BP at the Battle Subway after the entrance battle']},
+  'thunder-stone':{name:'Thunder Stone',original:[5,7],sequel:[3,5],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[3,'3 BP at the Battle Subway after the entrance battle']},
+  'sun-stone':{name:'Sun Stone',original:[3],sequel:[3,5],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[5,'dust clouds in Chargestone Cave or later caves']},
+  'dusk-stone':{name:'Dusk Stone',original:[6,8],sequel:[6,9,10],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[5,'dust clouds in Chargestone Cave or later caves']},
+  'razor-claw':{name:'Razor Claw',original:[10],sequel:[8],renewableOriginal:[3,'48 BP at the Battle Subway'],
+   renewableSequel:[3,'8 BP at the Battle Subway after the entrance battle']},
+  'razor-fang':{name:'Razor Fang',original:[10],sequel:[6],renewableOriginal:[3,'48 BP at the Battle Subway'],
+   renewableSequel:[3,'8 BP at the Battle Subway after the entrance battle']},
+  'moon-stone':{name:'Moon Stone',original:[2,6],sequel:[5,8],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[5,'dust clouds in Chargestone Cave']},
+  'dawn-stone':{name:'Dawn Stone',original:[8],sequel:[10,10,10],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[5,'dust clouds in Chargestone Cave']},
+  'shiny-stone':{name:'Shiny Stone',original:[5,6],sequel:[5,6,10,10],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[5,'dust clouds in Chargestone Cave']},
+  'oval-stone':{name:'Oval Stone',original:[10],sequel:[],renewableOriginal:[1,'dust clouds in Wellspring Cave'],
+   renewableSequel:[5,'dust clouds in Chargestone Cave']},
+  'metal-coat':{name:'Metal Coat',original:[6],sequel:[5,10],renewableOriginal:[10,'the Route 13 treasure hunter or wild holders'],
+   renewableSequel:[1,'wild Magnemite holding a Metal Coat']},
+  'kings-rock':{name:'King’s Rock',original:[6],sequel:[10,10],renewableOriginal:[0,'Pickup with a Pokémon at Lv 11–30'],
+   renewableSequel:[0,'Pickup with a Pokémon at Lv 11–30']},
+  protector:{name:'Protector',original:[10],sequel:[10],renewableOriginal:[10,'the Route 13 treasure hunter'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop']},
+  'up-grade':{name:'Up-Grade',original:[10],sequel:[10,10],renewableOriginal:[10,'the Route 13 treasure hunter'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop']},
+  'dubious-disc':{name:'Dubious Disc',original:[6],sequel:[10],renewableOriginal:[10,'the Route 13 treasure hunter'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop']},
+  electirizer:{name:'Electirizer',original:[10],sequel:{'White 2':[8]},renewableOriginal:[10,'the Route 13 treasure hunter'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop']},
+  magmarizer:{name:'Magmarizer',original:[],sequel:{'Black 2':[8]},renewableOriginal:[10,'the Route 13 treasure hunter'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop']},
+  'deep-sea-tooth':{name:'Deep Sea Tooth',original:[6],sequel:[],renewableOriginal:[6,'wild Red-Striped Basculin holding the item'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop or a wild holder']},
+  'deep-sea-scale':{name:'Deep Sea Scale',original:[10],sequel:[],renewableOriginal:[6,'wild Blue-Striped Basculin holding the item'],
+   renewableSequel:[3,'a developed Join Avenue Antique Shop or a wild holder']}
+ };
+ function evolutionItem(timing){
+  const path=timing?.path;
+  if(path?.resource)return path.resource;
+  const text=(path?.requirement||(timing?.kind==='trade'?timing.reason:'')||'').toLowerCase().replace(/['’]/g,'').replace(/-/g,' ');
+  return Object.keys(unovaItemSources).find(key=>text.includes(key.replaceAll('-',' ')));
+ }
+ function resourceBudget(game,deadline,claims){
+  if(!['Black','White','Black 2','White 2'].includes(game))return [];
+  const sequel=game.endsWith(' 2'),counted=new Map();
+  for(const claim of claims){
+   if(!unovaItemSources[claim.item])continue;
+   if(!counted.has(claim.item))counted.set(claim.item,[]);
+   counted.get(claim.item).push(claim.member);
+  }
+  return [...counted].map(([item,members])=>{
+   const source=unovaItemSources[item];
+   const stock=sequel?source.sequel:source.original;
+   const local=Array.isArray(stock)?stock:stock[game]||[];
+   const guaranteed=local.filter(rank=>rank<=deadline).length;
+   const route=sequel?source.renewableSequel:source.renewableOriginal,renewable=route&&route[0]<=deadline?route[1]:'';
+   return {item:source.name,members,guaranteed,renewable,shortfall:Math.max(0,members.length-guaranteed)};
+  });
+ }
  function limitedSpecies(game,rank){
   const gen1=['Red','Blue','Yellow'].includes(game);
   const remakes=['FireRed','LeafGreen'].includes(game);
@@ -879,6 +1367,8 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    alternative:'The Odd Egg hatches one random Pokémon. Use breeding or another documented route for additional families.'});
   if(unova){
    const renewable=game.endsWith(' 2');
+   rules.push({name:'Unova starter choice',species:[495,498,501],
+    alternative:'Only one family is available from the starter gift. Trade for another starter family.'});
    rules.push({name:'Cover or Plume Fossil',species:[564,566],renewable,
     alternative:renewable?'One guaranteed museum choice. Try the Join Avenue Antique Shop or trade for the other fossil.':
      'The local choice gives one of these fossil families. Trade for the other.'});
@@ -889,5 +1379,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return rules;
  }
- root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine};
+ root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,transferOnly,documentedUnovaAlternative};
 })(globalThis);

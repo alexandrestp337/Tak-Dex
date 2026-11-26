@@ -67,7 +67,7 @@ for(const game of games){
    };
    ledger.push({game,id,name,regional,parent,cohort:cohort.has(id),status:restrictions[row.kind]?row.kind:
     row.rank!=null?'partially verified':routes.length?'encounter recorded, progression unverified':'availability unverified',
-    reason:row.reason||restrictions[row.kind],routes,
+    reason:row.reason||restrictions[row.kind],source:row.source,routes,
     next:restrictions[row.kind]?'Keep the restriction unless a version-specific alternative route is verified.':next});
 
   }

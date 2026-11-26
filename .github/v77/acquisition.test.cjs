@@ -163,3 +163,66 @@ test('Johto verifies times, version-specific legendary gates and Crystal resourc
  assert.match(engine.moveTiming('Crystal','ice-beam',[['tutor',0]]).text,/Wednesday or Saturday.*4,000/);
  assert.equal(engine.moveTiming('Gold','ice-beam',[['tutor',0]]),null);
 });
+
+test('Unova sequel breeding, branch evolutions and starter tutors match their specific gates',()=>{
+ assert.equal(data.lookup('Black 2','larvesta').rank,10);
+ assert.match(data.lookup('Black 2','larvesta').note,/Volcarona.*Hall of Fame/);
+ assert.match(data.lookup('White 2','budew').note,/Rose Incense/);
+ assert.equal(data.lookup('Black 2','numel').kind,'trade');
+ assert.equal(data.lookup('White 2','espeon').rank,2);
+ assert.equal(data.lookup('White 2','leafeon').rank,10);
+ assert.equal(data.lookup('Black 2','eelektross').path.level,39);
+ assert.equal(data.lookup('White 2','chandelure').path.resource,'dusk-stone');
+ assert.match(data.lookup('White 2','tornadus-incarnate').reason,/Dream Radar/);
+ assert.equal(engine.moveTiming('Black','grass-pledge',[['tutor',0]]).rank,4);
+ assert.match(engine.moveTiming('Black','grass-pledge',[['tutor',0]]).text,/friendship/);
+ assert.equal(engine.moveTiming('White','hydro-cannon',[['tutor',0]]).rank,10);
+ assert.equal(engine.moveTiming('Black 2','hydro-cannon',[['tutor',0]]).rank,5);
+ assert.match(engine.moveTiming('White 2','secret-sword',[['tutor',0]]).text,/Pledge Grove.*event Keldeo/);
+});
+
+test('Final stage scheduling prevents impossible retained and post-evolution level combinations',()=>{
+ const before={stage:0,at:46};
+ const after={stage:1,at:28};
+ assert.equal(data.scheduleEvolutionMoves([1,1],20,50,[[before],[after]]),null);
+ const recall={stage:1,minimum:28};
+ assert.deepEqual([...data.scheduleEvolutionMoves([1,1],20,50,[[before],[after,recall]])],[before,recall]);
+ assert.equal(data.scheduleEvolutionMoves([33,1],20,32,[[{stage:0,at:24}]]),null);
+ assert.equal(data.scheduleEvolutionMoves([33,1],30,45,[[{stage:0,at:24}]]),null);
+});
+
+test('Unova resource accounting separates field copies, renewable stock and a genuine shortfall',()=>{
+ const stones=[{item:'dusk-stone',member:'Chandelure'},{item:'dusk-stone',member:'Lampent plan'}];
+ const early=data.resourceBudget('Black 2',4,stones)[0];
+ assert.equal(early.shortfall,2);
+ assert.equal(early.renewable,'');
+ const late=data.resourceBudget('White 2',6,stones)[0];
+ assert.equal(late.guaranteed,1);
+ assert.equal(late.shortfall,1);
+ assert.match(late.renewable,/Chargestone Cave/);
+ assert.equal(data.resourceBudget('Black 2',9,stones)[0].shortfall,0);
+ assert.equal(data.resourceBudget('Emerald',9,stones).length,0);
+});
+
+test('Documented Unova swarms, residents, NPC swaps and transfers retain their evidence',()=>{
+ assert.match(data.lookup('Black 2','farfetchd').note,/National Pokédex.*electronic board/);
+ assert.equal(data.lookup('White 2','volbeat').kind,'trade');
+ assert.match(data.lookup('White','bagon').note,/Grace.*White Forest/);
+ assert.equal(data.transferOnly('Black',371,'bagon').source,'white-forest-residents');
+ assert.match(data.lookup('Black 2','mawile').note,/Yancy.*male player/);
+ assert.match(data.lookup('White 2','sableye').note,/Curtis.*female player/);
+ assert.match(data.lookup('Black 2','glameow').reason,/Quiet Hidden Grottoes.*White 2/);
+ assert.equal(data.transferOnly('White 2',1,'bulbasaur').kind,'trade');
+ const pack=require('../../db74/e-black-2.json');
+ assert.match(data.documentedUnovaAlternative('Black 2','abra',pack).note,/Alakazam.*Hall of Fame/);
+ assert.equal(data.documentedUnovaAlternative('Black 2','kadabra',pack).path.level,16);
+});
+
+test('Trade evolution equipment is budgeted by version and actual source',()=>{
+ const timing=data.lookup('White 2','electivire');
+ assert.equal(data.evolutionItem(timing),'electirizer');
+ const claim=[{item:'electirizer',member:'Electivire'}];
+ assert.equal(data.resourceBudget('White 2',8,claim)[0].guaranteed,1);
+ assert.equal(data.resourceBudget('Black 2',8,claim)[0].guaranteed,0);
+ assert.match(data.resourceBudget('Black 2',8,claim)[0].renewable,/Antique Shop/);
+});

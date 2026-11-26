@@ -156,6 +156,26 @@ const assert=require('node:assert/strict');
    console.log(game+' resource policy passed');
    await sample.close();
   }
+  const capacity=await browser.newPage({viewport:{width:390,height:850},isMobile:true,hasTouch:true});
+  await capacity.addInitScript(()=>{
+   const game='Black 2',id='stones';
+   const pokemon=[{id:58,name:'Growlithe',types:['fire']},{id:513,name:'Pansear',types:['fire']}];
+   const slots=[{id:59,name:'arcanine',types:['fire'],originName:'growlithe'},{id:514,name:'simisear',types:['fire'],originName:'pansear'}];
+   localStorage.setItem('poketact-teams',JSON.stringify([{id,name:'Stone planning',game,pokemon}]));
+   localStorage.setItem('takdex-v74-playthrough-plans',JSON.stringify({[game+':'+id]:{game,slots,deadline:'badge-3'}}));
+  });
+  await capacity.goto(process.argv[2]||'http://127.0.0.1:8795',{waitUntil:'domcontentloaded'});
+  await capacity.locator('[data-td71-toggle="stones"]').click();
+  await capacity.locator('[data-td41-team-plan="stones"]').click();
+  await capacity.getByText('Recommended improvements',{exact:true}).click();
+  const stones=capacity.getByText('Fire Stone: 2 planned',{exact:false});
+  await stones.waitFor();
+  assert.match(await stones.textContent(),/1 documented field copies.*remaining 1.*Battle Subway/);
+  await capacity.locator('#td77Availability').selectOption('badge-6');
+  await capacity.waitForFunction(()=>document.querySelector('#td77Improvements')?.textContent.includes('2 documented field copies'));
+  assert.doesNotMatch(await stones.textContent(),/remaining 1/);
+  console.log('Black 2 two-member Fire Stone plan reflects field supply and renewable BP');
+  await capacity.close();
   const johto=await browser.newPage({viewport:{width:390,height:850},isMobile:true,hasTouch:true});
   await johto.goto(process.argv[2]||'http://127.0.0.1:8795',{waitUntil:'domcontentloaded'});
   await johto.locator('#dexTab').click();
