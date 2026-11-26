@@ -1416,7 +1416,8 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    const guaranteed=local.filter(rank=>rank<=deadline).length;
    const route=sequel?source.renewableSequel:source.renewableOriginal,renewable=route&&route[0]<=deadline?route[1]:'';
    const projected=members.filter(m=>m.projected).length;
-   return {item:source.name,members:members.map(m=>m.member),guaranteed,renewable,
+   const sources=[...new Set(members.map(member=>member.source).filter(Boolean))];
+   return {item:source.name,...(sources.length?{sources}:{}),members:members.map(m=>m.member),guaranteed,renewable,
     ...(projected?{projected}:{}),shortfall:Math.max(0,members.length-projected-guaranteed)};
   });
  }

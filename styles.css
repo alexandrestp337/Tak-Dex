@@ -1654,8 +1654,6 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td41MoveSlots .td77-move-comparison:has(.td77-editor-empty){grid-template-columns:auto auto minmax(0,1fr)}
 #td4Edit:has(#td72MoveHeading[hidden])>.td42-settings:first-of-type{border-top:0;margin-top:0;padding-top:0}
 .td77-family-warning,.td77-resource-summary>div>small{display:block}
-.td77-improvement-move{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-.td77-improvement-move img{width:32px;height:32px;object-fit:contain}
 #td77GymSummary[data-readiness-status],#td77LeagueSummary [data-readiness-status],.td42-league-group[data-readiness-status]>.bar>b{color:var(--readiness-text,var(--muted))}
 [data-readiness-status="good"]{--readiness-text:#38a965}
 [data-readiness-status="nonstab"]{--readiness-text:#bd7e20}
@@ -1683,3 +1681,30 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .td78-category details>small,.td77-resource-summary details>small,.td78-benefits>small{display:block}
 #td4Edit>.td42-settings:first-of-type:not([open]){margin-top:4px;padding-top:0}
 #td4Edit>.td42-settings:first-of-type:not([open])>summary{padding-block:6px}
+
+/* Planner disclosures share the application's existing chevrons. */
+#td77Improvements .td78-category{margin:0;padding:0}
+#td77Improvements .td78-category>summary{font-size:.86rem;padding:7px 24px 7px 0}
+#td77Improvements .td78-category details{margin:3px 0;padding:0 7px;background:var(--bg);border-radius:8px}
+#td77Improvements .td78-category details>summary{font-size:.78rem;line-height:1.25;padding:6px 24px 6px 0}
+#td77Improvements .td78-category details[open]>:last-child{margin-bottom:5px}
+#td77Improvements .td78-category details>button{width:100%;min-height:32px;padding:4px 6px;font-size:.78rem;margin:4px 0}
+#td77Improvements .td77-resource-summary{gap:0;margin:0}
+.td79-pokemon-compare,.td79-move-compare{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px}
+.td79-pokemon-compare>div{text-align:center;font-size:.78rem}
+.td79-pokemon-compare img{display:block;width:48px;height:48px;object-fit:contain;margin:auto}
+.td79-pokemon-compare .pills{justify-content:center}
+.td79-move-compare{align-items:stretch}
+.td79-move-compare>span{align-self:center}
+.td79-move-compare .td77-planner-move-info{min-width:0;background:var(--card);color:var(--text);margin:0;border:1px solid var(--edge);border-radius:8px;padding:4px}
+.td79-coverage{margin:4px 0}
+#td41MoveSlots .td78-move-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+#td41MoveSlots .td78-move-actions button{display:grid;justify-items:center;gap:2px;min-height:38px;padding:3px 0;font-size:.69rem;line-height:1.1;white-space:nowrap}
+.td78-move-actions svg{width:13px;height:13px}
+#td41MoveSlots .td79-move-choice{border:1px solid var(--edge);border-radius:8px;margin:3px 0;padding:0 5px}
+#td41MoveSlots .td79-move-choice>button{padding:4px 0;border:0}
+.td79-move-choice .td62-move-timing{display:block;font-size:.68rem}
+.td79-move-choice .td62-move-timing summary{padding-block:3px}
+#td4Edit #td77SlotRoute:empty,#td4Edit #td41MoveSlots:empty{display:none}
+#td4TeamPlannerPage #td4Slots>#td4Edit:has(#td72MoveHeading[hidden]){padding-block:4px}
+#td4Edit>.td42-settings:first-of-type>summary{padding-block:6px}

@@ -75,6 +75,14 @@ function tileGeometry(){
    await slot(page,3);
    const emptyStyle=await fold(page).evaluate(el=>({border:getComputedStyle(el).borderTopWidth,margin:getComputedStyle(el).marginTop}));
    assert.deepEqual(emptyStyle,{border:'0px',margin:'0px'});
+   const entry=fold(page).locator(':scope > summary');
+   const topGap=()=>entry.evaluate(el=>el.getBoundingClientRect().top-el.closest('#td4Edit').getBoundingClientRect().top);
+   assert.ok(await topGap()<=7);
+   await entry.click();
+   assert.ok(await topGap()<=10);
+   assert.ok((await page.locator('#td4Edit').boundingBox()).height<=44);
+   if(process.env.TAKDEX_SCREENSHOTS)await page.screenshot({path:`${process.env.TAKDEX_SCREENSHOTS}/round9-empty-${width}.png`});
+   await entry.click();
    const heights=await page.locator('#td4Slots > [data-td4-slot]').evaluateAll(tiles=>tiles.map(el=>({top:el.offsetTop,height:el.offsetHeight})));
    const adjacent=heights.filter((tile,i)=>i!==3&&tile.top===heights[3].top);
    assert.ok(adjacent.every(tile=>Math.abs(tile.height-heights[3].height)<2));
@@ -106,6 +114,25 @@ function tileGeometry(){
    assert.equal(await field.evaluate(el=>el===document.activeElement),false);
    assert.ok(await row.locator('.td78-move-results button').count()>0);
    assert.ok(await row.locator('.td78-move-actions').evaluate(el=>el.getBoundingClientRect().bottom<=el.parentElement.querySelector('.td78-move-results').getBoundingClientRect().top));
+   const actions=row.locator('.td78-move-actions button');
+   assert.deepEqual(await actions.allTextContents(),['Keep','Clear','Checker','Close']);
+   const sizes=await actions.evaluateAll(nodes=>nodes.map(el=>[el.offsetWidth,el.offsetHeight]));
+   assert.ok(sizes.every(([w,h])=>Math.abs(w-sizes[0][0])<=1&&h===sizes[0][1]));
+   if(process.env.TAKDEX_SCREENSHOTS){
+    await actions.first().evaluate(el=>el.closest('.suggestions').scrollIntoView({block:'center'}));
+    await page.screenshot({path:`${process.env.TAKDEX_SCREENSHOTS}/round9-editor-${width}.png`});
+   }
+   const timing=row.locator('.td79-move-choice details > summary').first();
+   if(await timing.count()){
+    const planned=(await getPlan(page)).slots[0].plannedMoves;
+    await timing.click();
+    assert.equal(await timing.evaluate(el=>el.parentElement.open),true);
+    assert.deepEqual((await getPlan(page)).slots[0].plannedMoves,planned);
+    assert.equal(await row.locator('.suggestions').isVisible(),true);
+   }
+   await actions.last().click();
+   await row.locator('.suggestions').waitFor({state:'hidden'});
+   await row.locator('[data-td78-open-move]').click();
    await field.fill('water');
    const dropdown=row.locator('.suggestions');
    await dropdown.waitFor();
@@ -207,13 +234,13 @@ function tileGeometry(){
     const stone=resources.locator('[data-td77-resource="Fire Stone"]');
     await page.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
     await stone.waitFor();
-    assert.deepEqual(await stone.locator('dd').allTextContents(),['2','1','1','2']);
+    assert.deepEqual(await stone.locator('dd').allTextContents(),['1','1','2']);
     await page.locator('#td77Availability').selectOption('postgame');
-    await page.waitForFunction(()=>[...document.querySelectorAll('[data-td77-resource="Fire Stone"] dd')].map(x=>x.textContent).join(',')==='2,2,0,2');
+    await page.waitForFunction(()=>[...document.querySelectorAll('[data-td77-resource="Fire Stone"] dd')].map(x=>x.textContent).join(',')==='2,0,2');
     const finalRoute=page.locator('[data-td77-route="slot"]:visible,[data-td77-route="confirmed"]:visible');
     const direct=await finalRoute.locator('option').filter({hasText:'Obtain Ninetales directly'}).first().getAttribute('value');
     await finalRoute.selectOption(direct);
-    await page.waitForFunction(()=>[...document.querySelectorAll('[data-td77-resource="Fire Stone"] dd')].map(x=>x.textContent).join(',')==='1,1,0,2');
+    await page.waitForFunction(()=>[...document.querySelectorAll('[data-td77-resource="Fire Stone"] dd')].map(x=>x.textContent).join(',')==='1,0,2');
     await page.locator('#td77CoverageSummary .td77-coverage-line').first().waitFor();
     assert.equal(await page.locator('#td77CoverageSummary .td77-coverage-line').count(),2);
     console.log('Owned auto-fill, exclusive ownership, endpoint and branching prompts, confirmed preview, theoretical moves and resource deadlines passed');

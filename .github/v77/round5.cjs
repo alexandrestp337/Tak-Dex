@@ -190,7 +190,7 @@ async function dexSearch(page, name) {
     const warning = page.locator('#td77Improvements [data-td77-resource="Fire Stone"]');
     await page.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
     await warning.waitFor();
-    assert.deepEqual(await warning.locator('dd').allTextContents(),['2','1','1','2']);
+    assert.deepEqual(await warning.locator('dd').allTextContents(),['1','1','2']);
     await page.reload({ waitUntil: 'domcontentloaded' });
     const link = page.locator('[data-td41-team-plan="round5"]');
     if (!await link.isVisible()) await page.locator('[data-td71-toggle="round5"]').click();
@@ -207,7 +207,7 @@ async function dexSearch(page, name) {
     await resource.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
     await resource.locator('[data-td77-resource="Fire Stone"] > summary').click();
     await resource.locator('[data-td77-resource="Fire Stone"]').getByText("Arcanine").waitFor();
-    assert.deepEqual(await resource.locator('[data-td77-resource="Fire Stone"] dd').allTextContents(),['1','1','0','2']);
+    assert.deepEqual(await resource.locator('[data-td77-resource="Fire Stone"] dd').allTextContents(),['1','0','2']);
     console.log('Flygon routes, map return, future Fly, held touch, stone warning and refresh passed');
    }
    if (width === 1280) {

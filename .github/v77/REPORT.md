@@ -527,3 +527,25 @@ Physical Samsung keyboard and Android WebView behavior remain unverified.
 - **Pass** · Chromium responsive exercises at 320, 360, 390, 412 and 1280 CSS px. The planner checks compare editor and dropdown bounds, active focus, contextual actions, row heights and adjacent team tiles.
 - **Pass** · Black 2 retained move clear and restore, learned counter, shared evolution route, resource totals, move suggestion confirmation and legacy migration. The retail import left the save bytes unchanged.
 - **Pass** · Route disclosure opened the Desert Resort map and returned to the same planner position. Pokémon recommendations and resource restrictions use the existing verified paths. The route disclosures received a separate selector from Change Pokémon so slot switches and recommendation previews open the intended section.
+
+## Correction Round 9
+
+Round 9 starts at `4b2127e`. The collapsed count previously skipped evaluations that ran only when Recommended improvements was open. Both states now use one recommendation collection and wait for its data before showing a count. Resource rows retain their own count. The Black 2 browser fixture kept seven recommendations across the disclosure interaction.
+
+The three categories share compact typography, right-aligned chevrons and contrasting item rows. Expanded Pokémon items use side-by-side artwork and badges. Coverage gains are grouped by whether moves already cover those targets. Move improvements use the planner's historical move cards, colored stat differences and only relevant drawbacks. Resource rows keep total need in the heading and show separate before-deadline, after-deadline and documented supply counters.
+
+The editor keeps search and four equal-size actions above the scrollable results. Acquisition disclosures are siblings of the selectable move buttons, so expanding a requirement leaves the moveset and editor open. The empty editor previously kept margins from empty route and moveset wrappers plus outer card padding. Those wrappers no longer occupy space, and the compact padding applies only to an empty selection.
+
+### Verification
+
+- **Pass** · 59 Node tests with the retail reference saves enabled.
+- **Pass** · Chromium at 320, 360, 390, 412 and 1280 CSS px. Measured the full-width dropdown and equal action dimensions, checked for horizontal overflow and verified the search field stayed unfocused on open. The empty collapsed editor measured at most 44 CSS px. The header began within 7 CSS px of the expanded container top and within 10 CSS px of the collapsed container top. Adjacent team-card heights matched within 2 CSS px.
+- **Pass** · Targeted planner interactions covered disclosure count stability, recommendation preview and apply, acquisition details without selection, map return, retained moves, planned evolution, resource totals and the retail Black 2 save import.
+- **Visual evidence** · Rendered editor and empty-slot screenshots at all five widths, plus Pokémon improvement, move improvement and resource screenshots. The layouts were compared with the Round 9 specification.
+- **Pending** · Physical Samsung and Android WebView verification.
+
+### Manual acceptance
+
+1. **Recommended improvements** — Toggle the main section and expand each category. Check the unchanged recommendation count, compact comparisons and resource counters.
+2. **Move editor** — Open a move and browse before typing. Try Keep, Clear, Checker and Close. Expand a move requirement and check that the editor stays open.
+3. **Change Pokémon** — Select an empty slot, then collapse and reopen its editor. Check the header spacing and the unchanged grid-card heights.

@@ -85,7 +85,11 @@ async function compareHead(page){
      await page.locator('[data-view="during"]').click();
     }
     const improvements=page.locator('#td77Improvements');
+    const count=page.locator('#td77ImprovementSummary');
+    await page.waitForFunction(()=>/\d+ to review/.test(document.querySelector('#td77ImprovementSummary').textContent));
+    const initialCount=await count.textContent();
     await improvements.locator('xpath=..').locator(':scope > summary').click();
+    assert.equal(await count.textContent(),initialCount);
     const categories=improvements.locator(':scope > details');
     assert.equal(await categories.count(),3);
     assert.equal(await improvements.getByText('More improvements',{exact:true}).count(),0);
@@ -93,6 +97,8 @@ async function compareHead(page){
     await pokemon.locator(':scope > summary').click();
     await pokemon.locator('details summary').first().click();
     await pokemon.locator('details[open] button').first().waitFor();
+    if(process.env.TAKDEX_SCREENSHOTS){await improvements.locator('xpath=..').screenshot({path:`${process.env.TAKDEX_SCREENSHOTS}/round9-pokemon-improvement.png`});}
+    assert.equal(await count.textContent(),initialCount);
     console.log('Three separate recommendation categories and individual Pokémon preview actions passed');
    }
    if(width===412){

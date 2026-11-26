@@ -141,7 +141,11 @@ async function open(page){
   await improve.locator(':scope > summary').click();
   await page.locator('.td78-category > summary').filter({hasText:'Required resources'}).click();
   await page.locator('[data-td77-resource="Fire Stone"]').waitFor();
-  assert.deepEqual((await stats(page)).slice(0,3),['2','1','1']);
+  assert.deepEqual((await stats(page)).slice(0,2),['1','1']);
+  const resource=page.locator('[data-td77-resource="Fire Stone"]');
+  await resource.locator(':scope > summary').click();
+  assert.match(await resource.textContent(),/Documented field supply/);
+  if(process.env.TAKDEX_SCREENSHOTS)await resource.screenshot({path:`${process.env.TAKDEX_SCREENSHOTS}/round9-resources.png`});
 
   await setSlot(page,4);
   const route=page.locator('#td77SlotRoute [data-td77-route]:visible,#td63ManualCandidate [data-td77-route]:visible').first();
@@ -149,7 +153,7 @@ async function open(page){
   assert.ok(direct,'Black 2 direct Ninetales encounter must be selectable');
   await route.selectOption(direct);
   await page.waitForFunction(key=>JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))[key].slots[4]?.acquisitionRoute?.startId===38,key);
-  assert.deepEqual((await stats(page)).slice(0,3),['1','1','0']);
+  assert.deepEqual((await stats(page)).slice(0,2),['1','0']);
   console.log('Black 2 Fire Stone total 2 / before 1 / after 1 via Vulpix; direct Ninetales total 1 / before 1 / after 0');
 
   await select(page,5,'magmar',126);
@@ -191,6 +195,11 @@ async function open(page){
   };
   await finalButton.waitFor({state:'attached'});
   const finalOffer=await openOffer(finalButton);
+  const group=improvements.locator('.td78-category').filter({hasText:'Move improvements'});
+  const font=selector=>page.locator(selector).first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+  assert.ok(await font('#td77Improvements .td78-category > summary')>await font('#td77Improvements .td78-category details > summary'));
+  assert.equal(await group.locator('.td79-move-compare').count()>0,true);
+  if(process.env.TAKDEX_SCREENSHOTS){await finalButton.locator('..').screenshot({path:`${process.env.TAKDEX_SCREENSHOTS}/round9-move-improvement.png`});}
   const oldPlan=await read(page);
   assert.doesNotMatch(finalOffer,/Golduck|Ninetales/);
   page.once('dialog',dialog=>dialog.dismiss());
