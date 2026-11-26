@@ -1257,6 +1257,74 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   if(['FireRed','LeafGreen'].includes(game))return name==='earthquake';
   return false;
  }
+ // Build routes from the version's audited acquisition records and encounter index.
+ function plannerRoutes(game,target,pack,owned=[],resolve=lookup){
+  if(!pack?.mons||!target?.id)return [];
+  const rows=new Map();
+  let cursor=Number(target.id);
+  while(cursor&&!rows.has(cursor)){
+   const row=pack.mons.find(entry=>entry[0]===cursor);
+   if(!row)break;
+   rows.set(cursor,row);
+   cursor=Number(row[4]);
+  }
+  if(!rows.has(Number(target.id)))return [];
+  const chain=[...rows.values()].reverse();
+  const audited=chain.map(([id,name])=>resolve(game,name,pack.entries?.[id],id));
+  const direct=(row,record)=>{
+   const [id]=row;
+   const included=[record,...(record?.alternatives||[])].filter(r=>r?.confirmed&&!r.path&&
+    !['evolution','breeding'].includes(r.method));
+   const area=place=>String(place||'').split(' · ')[0].toLowerCase();
+   const encounters=(pack.entries?.[id]||[]).filter(()=>!record||!['trade','event'].includes(record.kind))
+    .map(e=>{
+     const place=placeName(e[0],game);
+     const fallback=included.find(r=>r.method===e[1]&&area(r.place)===area(place));
+     const route=encounterRoute(game,e)||fallback;
+     return route&&{...route,place,minLevel:e[2],maxLevel:e[3],conditions:e[4]||[]};
+    }).filter(Boolean);
+   const special=included.filter(r=>!encounters.some(e=>area(e.place)===area(r.place)&&e.method===r.method&&e.rank===r.rank));
+   return [...encounters,...special];
+  };
+  const routes=[];
+  for(const [start,row] of chain.entries()){
+   const [id,name]=row,record=audited[start];
+   const onward=chain.slice(start+1);
+   const steps=onward.map(([nextId,nextName],i)=>{
+    const note=audited[start+i+1]?.path;
+    const previous=chain[start+i]?.[1];
+    const level=auditedLevelEvolutions[nextId]||0;
+    const specialMatch=note?.stage&&note.stage.toLowerCase().replaceAll(' ','-')===previous;
+    const stone=nextId===38&&['Black','White','Black 2','White 2'].includes(game);
+    const requirement=level?'Level '+level:specialMatch?note.requirement:stone?'Use a Fire Stone':'';
+    const resource=specialMatch?evolutionItem({path:note}):stone?'fire-stone':null;
+    return requirement?{id:nextId,name:nextName,requirement,level,resource,
+     rank:specialMatch&&!level?audited[start+i+1].rank:0}:null;
+   });
+   if(steps.includes(null))continue;
+   const sources=direct(row,record);
+   for(const p of owned.filter(p=>Number(p?.id)===id)){
+    sources.push({kind:'owned',confirmed:true,rank:0,method:'already owned',minLevel:p.level,member:p.saveStats?.pid??''});
+   }
+   for(const initial of sources){
+    const key=initial.kind==='owned'?[id,'owned',initial.member??''].join('|'):
+     [id,initial.method,initial.place||'',initial.minLevel||0,initial.maxLevel||0,...(initial.conditions||[])].join('|');
+    if(routes.some(r=>r.id===key))continue;
+    const rank=Math.max(initial.rank,...steps.map(step=>step.rank));
+    routes.push({...initial,id:key,rank,startId:id,startName:name,initial,steps,
+     kind:initial.kind==='owned'&&!steps.length?'owned':'timed',
+     path:steps.length?{stage:title(name),initial,requirement:steps.map(step=>step.requirement).join(' → '),level:steps.at(-1).level}:undefined});
+   }
+  }
+  return routes.sort((a,b)=>Number(b.initial.kind==='owned')-Number(a.initial.kind==='owned')||a.rank-b.rank||
+   a.steps.length-b.steps.length||(a.initial.minLevel||0)-(b.initial.minLevel||0)||a.id.localeCompare(b.id));
+ }
+ function moveReminder(game){
+  if(!['Black','White','Black 2','White 2'].includes(game))return null;
+  const sequel=game.endsWith(' 2'),place=sequel?'Pokémon World Tournament':'Mistralton City';
+  const gate=sequel?'After Clay and the first tournament':'After Clay; reach Mistralton through Chargestone Cave';
+  return {rank:5,place,text:'Move Reminder · '+place+' · One Heart Scale · '+gate};
+ }
  function evolutionTrainingLevel(id){return auditedLevelEvolutions[id]||1;}
  function scheduleEvolutionMoves(stages,start,cap,choices){
   const selected=[];
@@ -1339,7 +1407,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   for(const claim of claims){
    if(!unovaItemSources[claim.item])continue;
    if(!counted.has(claim.item))counted.set(claim.item,[]);
-   counted.get(claim.item).push(claim.member);
+   counted.get(claim.item).push(claim);
   }
   return [...counted].map(([item,members])=>{
    const source=unovaItemSources[item];
@@ -1347,7 +1415,9 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    const local=Array.isArray(stock)?stock:stock[game]||[];
    const guaranteed=local.filter(rank=>rank<=deadline).length;
    const route=sequel?source.renewableSequel:source.renewableOriginal,renewable=route&&route[0]<=deadline?route[1]:'';
-   return {item:source.name,members,guaranteed,renewable,shortfall:Math.max(0,members.length-guaranteed)};
+   const projected=members.filter(m=>m.projected).length;
+   return {item:source.name,members:members.map(m=>m.member),guaranteed,renewable,
+    ...(projected?{projected}:{}),shortfall:Math.max(0,members.length-projected-guaranteed)};
   });
  }
  function limitedSpecies(game,rank){
@@ -1379,5 +1449,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return rules;
  }
- root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,transferOnly,documentedUnovaAlternative};
+ root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
 })(globalThis);

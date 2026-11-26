@@ -38,7 +38,7 @@ const assert=require('node:assert/strict');
    console.log(mode,moves.join(', '));
   }
   await page.locator('[data-view="during"]').click();
-  assert.deepEqual(await page.locator('[data-td77-during]').evaluateAll(rows=>rows.map(row=>row.value)),slot.duringMoves.map(m=>m.move));
+  assert.deepEqual(await page.locator('[data-td77-during]').evaluateAll(rows=>rows.map(row=>row.value.toLowerCase().replaceAll(' ','-'))),slot.duringMoves.map(m=>m.move));
   const choose=async(name,id)=>{
    await page.locator('#td4Search').fill(name);
    await page.locator(`#td4SearchResults [data-value="${name}"]`).first().click();

@@ -226,3 +226,45 @@ test('Trade evolution equipment is budgeted by version and actual source',()=>{
  assert.equal(data.resourceBudget('Black 2',8,claim)[0].guaranteed,0);
  assert.match(data.resourceBudget('Black 2',8,claim)[0].renewable,/Antique Shop/);
 });
+
+test('Selected V77 routes keep all verified Flygon stages and native direct alternatives',()=>{
+ const pack=require('../../db74/e-black-2.json');
+ const get=id=>({id,name:pack.mons.find(r=>r[0]===id)[1]});
+ const flygon=data.plannerRoutes('Black 2',get(330),pack);
+ const trapinch=flygon.find(r=>r.startId===328);
+ assert.deepEqual(JSON.parse(JSON.stringify(trapinch.steps.map(s=>[s.name,s.level]))),[['vibrava',35],['flygon',45]]);
+ assert.equal(trapinch.initial.minLevel,21);
+ assert.ok(flygon.some(r=>r.startId===329&&r.initial.minLevel===38));
+ assert.ok(!flygon.some(r=>r.startId===330));
+ const golduck=data.plannerRoutes('Black 2',get(55),pack);
+ assert.equal(golduck[0].startName,'psyduck');
+ assert.ok(golduck.some(r=>r.startName==='golduck'&&r.initial.place==='Village Bridge'&&r.steps.length===0));
+ const lucario=data.plannerRoutes('Black 2',get(448),pack);
+ assert.ok(lucario.some(r=>r.startName==='riolu'&&/friendship/i.test(r.steps[0].requirement)));
+ assert.ok(!lucario.some(r=>r.startName==='lucario'));
+});
+
+test('Stone demand follows the exact route and reports blocked demand separately',()=>{
+ const pack=require('../../db74/e-black-2.json');
+ const arcanine=data.plannerRoutes('Black 2',{id:59,name:'arcanine'},pack);
+ const ninetales=data.plannerRoutes('Black 2',{id:38,name:'ninetales'},pack);
+ assert.ok(arcanine.every(r=>r.steps[0].resource==='fire-stone'));
+ assert.ok(ninetales.some(r=>r.startId===38&&r.steps.length===0));
+ assert.ok(ninetales.some(r=>r.startId===37&&r.steps[0].resource==='fire-stone'&&r.rank===10));
+ const [budget]=data.resourceBudget('Black 2',3,[
+  {item:'fire-stone',member:'Arcanine'}, {item:'fire-stone',member:'Ninetales',projected:true}
+ ]);
+ assert.equal(budget.projected,1);
+ assert.equal(budget.shortfall,0);
+ assert.match(budget.renewable,/Battle Subway/);
+ const opts1=data.plannerRoutes('Black 2',{id:59,name:'arcanine'},pack,[{id:58,level:11,saveStats:{pid:100}}]);
+ const opts2=data.plannerRoutes('Black 2',{id:59,name:'arcanine'},pack,[{id:58,level:33,saveStats:{pid:100}}]);
+ assert.equal(opts1[0].id,opts2[0].id);
+ assert.equal(opts2[0].initial.minLevel,33);
+});
+
+test('Generation V move reminder conditions distinguish original and sequel games',()=>{
+ assert.match(data.moveReminder('Black 2').text,/Pokémon World Tournament.*One Heart Scale.*first tournament/);
+ assert.match(data.moveReminder('White').text,/Mistralton City.*One Heart Scale.*Chargestone Cave/);
+ assert.equal(data.moveReminder('Red'),null);
+});

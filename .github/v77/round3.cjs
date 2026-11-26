@@ -49,7 +49,7 @@ async function compareHead(page){
    await page.locator('[data-view="during"]').click();
    await page.locator('[data-td77-during]').first().waitFor();
    assert.equal(await page.locator('[data-td77-during]').count(),4);
-   const texts=page.locator('.td77-during-flow .movechip');
+   const texts=page.locator('.td77-during-flow .movechip,.td77-during-flow .td77-planner-move-info>strong');
    await texts.first().waitFor();
    const geometry=await texts.evaluateAll(elements=>elements.filter(el=>['Scratch','Tail Whip','Water Sport'].includes(el.textContent.trim())).map(el=>{
     const range=document.createRange();range.selectNodeContents(el);
@@ -76,7 +76,7 @@ async function compareHead(page){
     for(const [slot, actualCount] of [[1,1],[3,0],[4,2],[5,4]]){
      await page.locator(`#td4Slots [data-td4-slot="${slot}"]`).click();
      assert.equal(await page.locator('[data-td77-during]').count(),4);
-     assert.equal(await page.locator('.td77-during-flow .movechip').count(),actualCount);
+     assert.equal(await page.locator('.td77-during-flow .movechip,.td77-during-flow .td77-planner-move-info>strong').count(),actualCount);
      assert.equal(await page.locator('.td77-during-flow .td42-empty-move').count(),4-actualCount);
      await page.locator('[data-view="final"]').click();
      assert.equal(await page.locator('#td41MoveSlots [data-td42-preview]').count(),4);

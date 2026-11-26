@@ -1,0 +1,42 @@
+# V77 Correction Round 5
+
+Baseline: `a1f21b1`, draft PR #2. Each item remains open until its user-facing behavior is verified.
+
+- [ ] R5-01 Replace Temporary Pokémon / role with Acquisition Method
+- [ ] R5-02 Single source of truth
+- [ ] R5-03 Acquisition-aware learnsets
+- [ ] R5-04 Collapsed card acquisition indicator
+- [ ] R5-05 Relocate Acquisition Options
+- [ ] R5-06 Clickable Team Planner acquisition locations
+- [ ] R5-07 Consistent acquisition presentation
+- [ ] R5-08 Contradictory acquisition descriptions
+- [ ] R5-09 Remove arbitrary recommendation limits
+- [ ] R5-10 Preserve dynamic recommendation quality
+- [ ] R5-11 Compact type filter popup
+- [ ] R5-12 Fill all four slots where legally possible
+- [ ] R5-13 Optimize movesets as combinations
+- [ ] R5-14 Team-wide moveset optimization
+- [ ] R5-15 Defensive matchup suitability for offensive coverage
+- [ ] R5-16 Typable autocomplete
+- [ ] R5-17 Missing compatible moves
+- [ ] R5-18 Display move comparison statistics
+- [ ] R5-19 Incorrect or disappearing Pokémon title
+- [ ] R5-20 Lock Pokémon button placement
+- [ ] R5-21 Consistent Pokémon artwork
+- [ ] R5-22 Align paired artwork and names
+- [ ] R5-23 Clearly identify newly added moves
+- [ ] R5-24 Collapsed Pokémon card contextual Pokédex access
+- [ ] R5-25 Expanded replacement contextual actions
+- [ ] R5-26 Open popup immediately when hold duration is reached
+- [ ] R5-27 Disable ordinary application text selection
+- [ ] R5-28 Keep Quick Compare open after replacement
+- [ ] R5-29 Close and Open Compare buttons
+- [ ] R5-30 Independent dynamic summary colors
+- [ ] R5-31 Distinguish shared weaknesses from actual defensive gaps
+- [ ] R5-32 Replace inline progress sentence with compact counters
+- [ ] R5-33 Acquisition-path-dependent resource requirements
+- [ ] R5-34 Combine TM and HM tabs
+- [ ] R5-35 Consistent two-line move result cards
+- [ ] R5-36 Contextual Move Checker Back button
+- [ ] R5-37 Level 1 moves and Move Reminder
+- [ ] R5-38 Enable mobile testing without the PC running

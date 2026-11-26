@@ -7,7 +7,7 @@ const part=(from,to)=>app.slice(app.indexOf(from),app.indexOf(to,app.indexOf(fro
 const context=vm.createContext({games:[...Array(18).fill(''), 'Black 2']});
 vm.runInContext(part('const chart=','\nconst safe=')+part('function gameGeneration(','\nfunction historicalTypes(').split('\nfunction historicalTypes(')[0].split('\nfunction ')[0]+
  'function matchup(t,types){return types.reduce((n,d)=>n*(chart[t]?.[d]??1),1)}\n'+
- 'const typesFor=()=>Object.keys(chart);const metrics=party=>({covered:typesFor().filter(t=>party.some(p=>p.types.some(a=>matchup(a,[t])>1)))});\n'+
+ 'const typesFor=()=>Object.keys(chart);function defensiveEffect(move,p){return matchup(move.type,p.types)};\n'+part(' function matchupDefense(', ' function leagueTargets(')+'\n'+
  part(' function statValue(',' async function suggestedMoves(')+part(' function compositionValue(',' function setDeadlineOptions('),context);
 const index=require('../../db74/planner-v77.json');
 const pokemon=(id,types)=>({types,baseStats:Object.fromEntries(['hp','attack','defense','special-attack','special-defense','speed'].map((k,i)=>[k,index[id][1][i]]))});
