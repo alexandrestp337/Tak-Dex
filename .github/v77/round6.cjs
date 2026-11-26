@@ -139,7 +139,13 @@ function tileGeometry(){
     assert.equal((await getPlan(page)).slots[3].acquisitionRoute.startId,328);
     const acceptDowngrade=dialog=>dialog.accept();
     page.on('dialog',acceptDowngrade);
-    for(const [i,name] of [[0,'rock-slide'],[1,'rock-smash']]){
+    const rockMoves=['rock-slide','rock-smash'];
+    for(const name of rockMoves){
+     const rows=(await getPlan(page)).slots[3].plannedMoves;
+     if(rows.some(move=>(move.replacement||move.move)===name))continue;
+     const existing=rows.findIndex(move=>move.move===name||move.replacement===name);
+     const i=existing>=0?existing:rows.findIndex(move=>!rockMoves.includes(move.move)&&!rockMoves.includes(move.replacement));
+     assert.ok(i>=0);
      const editor=page.locator(`[data-td45-move="${i}:goal"]`);
      await editor.fill(name.replace('-',' '));
      await editor.locator('..').locator('[data-td45-pick="'+name+'"]').click();
