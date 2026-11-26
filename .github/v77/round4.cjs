@@ -169,7 +169,7 @@ const assert=require('node:assert/strict');
   await capacity.locator('[data-td71-toggle="stones"]').click();
   await capacity.locator('[data-td41-team-plan="stones"]').click();
   await capacity.getByText('Recommended improvements',{exact:true}).click();
-  const stones=capacity.getByText('Fire Stone: 2 planned',{exact:false});
+  const stones=capacity.getByText('Fire Stone: 2 required',{exact:false});
   await stones.waitFor();
   assert.match(await stones.textContent(),/1 documented field copies.*remaining 1.*Battle Subway/);
   await capacity.locator('#td77Availability').selectOption('badge-6');

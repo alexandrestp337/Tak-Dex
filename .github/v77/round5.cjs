@@ -119,7 +119,10 @@ async function dexSearch(page, name) {
      return images.length === 2 && Math.abs(images[0].width - images[1].width) < 1 &&
       Math.abs(images[0].height - images[1].height) < 1 && Math.abs(names[0].top - names[1].top) < 1;
     }), true);
-    assert.equal(await pair.evaluate(el => getComputedStyle(el).userSelect), 'none');
+    await page.waitForFunction(() => {
+     const card = document.querySelector('#td4Slots [data-td4-slot="0"] .td42-mon-pair');
+     return card && getComputedStyle(card).userSelect === 'none';
+    });
     await openEditor(page, 0);
     const currentRoute = page.locator('[data-td77-route="slot"]');
     const direct = await currentRoute.locator('option').filter({ hasText: /Obtain Golduck directly.*Village Bridge.*Walk/ }).first().getAttribute('value');
