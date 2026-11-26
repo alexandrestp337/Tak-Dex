@@ -264,7 +264,7 @@ test('Stone demand follows the exact route and reports blocked demand separately
 });
 
 test('Generation V move reminder conditions distinguish original and sequel games',()=>{
- assert.match(data.moveReminder('Black 2').text,/Pokémon World Tournament.*One Heart Scale.*first tournament/);
+ assert.match(data.moveReminder('Black 2').text,/Pokémon World Tournament.*One Heart Scale.*After Clay.*kiosks/);
  assert.match(data.moveReminder('White').text,/Mistralton City.*One Heart Scale.*Chargestone Cave/);
  assert.equal(data.moveReminder('Red'),null);
 });

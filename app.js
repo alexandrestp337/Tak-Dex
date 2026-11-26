@@ -524,7 +524,7 @@ function td77MoveStatsText(move,comparison){
  const neverMiss=/^(aerial-ace|aura-sphere|faint-attack|feint-attack|magical-leaf|magnet-bomb|shadow-punch|shock-wave|swift|vital-throw)$/;
  const multiHit=Number(move?.meta?.max_hits)>1||name==='triple-kick';
  const power=status?'—':Number.isFinite(move?.power)?String(move.power)+(multiHit?' per hit':''):fixed.test(name)?'Special damage':'Variable';
- const accuracy=Number.isFinite(move?.accuracy)?move.accuracy+'%':(move.alwaysHit||neverMiss.test(name))?'Always hits':'—';
+ const accuracy=Number.isFinite(move?.accuracy)?move.accuracy+'%':(move?.alwaysHit||neverMiss.test(name))?'Always hits':'—';
  if(!comparison)return 'PWR '+power+' · ACC '+accuracy;
  const color=stat=>Number.isFinite(move[stat])&&Number.isFinite(comparison[stat])?
   move[stat]>comparison[stat]?'td41-good':move[stat]<comparison[stat]?'td41-warn':'':'';
