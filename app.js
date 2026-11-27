@@ -4414,9 +4414,11 @@ document.addEventListener('keydown',event=>{
    e.preventDefault();
    const box=$('td41MoveSlots').querySelector('.suggestions:not([hidden])');
    const input=box?.previousElementSibling;
+   clearTimeout(moveBlurTimer);
    checkerEditor=input?{token,slot:chosenSlot,field:input.dataset.td45Move,search:input.value,
     scroll:box.querySelector('.td78-move-results').scrollTop}:null;
    window.takDexMoveV68?.open(move.dataset.td77PlanMove,'team-planner',state.game,move.dataset.td77Reminder);
+   page.hidden=true;
   }
  });
  function plannerMoveTiming(p,name){
@@ -5141,6 +5143,7 @@ document.addEventListener('keydown',event=>{
   return retainsMove(p,learner,name,chosenSlot)&&!moves.some((move,i)=>i!==index&&goal(move)===name);
  }
  const moveHost=$('td41MoveSlots');
+ let moveBlurTimer;
  function showMoveOptions(input,q=''){
   const p=state?.slots[chosenSlot];
   if(!p)return;
@@ -5238,11 +5241,12 @@ document.addEventListener('keydown',event=>{
  });
  moveHost.addEventListener('focusout',e=>{
   const container=e.target.closest('.search');
-  if(!container||container.contains(e.relatedTarget))return;
+  if(!container||checkerEditor||container.contains(e.relatedTarget))return;
   const input=container.querySelector('[data-td45-move]');
   if(!input)return;
   const box=input.nextElementSibling,contents=box.firstElementChild;
-  setTimeout(()=>{
+  clearTimeout(moveBlurTimer);
+  moveBlurTimer=setTimeout(()=>{
    if(checkerEditor||contents!==box.firstElementChild||!input.isConnected||container.contains(document.activeElement))return;
    box.hidden=true;box.moveObserver?.disconnect();
    const [i,k]=input.dataset.td45Move.split(':'),p=state?.slots[chosenSlot];

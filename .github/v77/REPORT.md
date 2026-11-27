@@ -576,3 +576,9 @@ Candidate rows place acquisition details in independent disclosures with visible
 From `07c549f`. Move Checker return restores the selected Pokémon's open editor, query and suggestion scroll without focusing search. The search field shares the red border. Keep and Clear confirm the move and intended change before applying it. Locked cards show a small top-right padlock without changing their size.
 
 Syntax checks for `app.js` and `sw.js` and inspection of the modified code passed. Automated tests and rendered checks were deferred for manual preview acceptance.
+
+## Correction Round 12
+
+From `8efad09`. The focused Chromium case reproduced the editor closing on contextual Back. Tracing showed that return restored the editor, then a deferred focusout handler from navigation hid the suggestions after the saved state had been consumed. The planner now cancels pending focusout work before opening Checker, suppresses new dismissal work during the transition and hides the planner while Checker is visible.
+
+**Pass** · One targeted Chromium case at 412 CSS px opened Flame Wheel, used Checker and returned through contextual Back. After the return frames and focusout window, the same Pokémon and editor were open, the search and both scroll positions were preserved, and the search field remained unfocused. No broad regression suite or native device check was run.
