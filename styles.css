@@ -1166,7 +1166,7 @@ body.td63-map-full-body{overflow:hidden!important}
 /* DEV6.4 inline planner */
 #td4TeamPlannerPage #td4Slots>#td4Edit{grid-column:1/-1;margin:0;padding:12px;border-color:var(--accent);background:var(--card);width:100%}
 #td4TeamPlannerPage #td4Slots>[data-td4-slot].td64-selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-#td4TeamPlannerPage .td42-mon-pair strong{display:block;width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;text-align:center}
+#td4TeamPlannerPage .td42-mon-pair strong{display:grid;place-items:center;width:100%;min-width:0;min-height:2.1em;line-height:1.05;white-space:normal;overflow-wrap:anywhere;text-align:center;font-size:clamp(.65rem,2.95vw,.87rem)}
 #td4TeamPlannerPage #td63SelectedReplacement{display:block;margin:3px 0 0;font-weight:normal}
 #td4TeamPlannerPage #td63SelectedReplacement:empty{display:none}
 #td4TeamPlannerPage .td64-league-legend{font-size:.72rem;color:var(--muted);line-height:1.35;margin:0 0 8px}
@@ -1328,7 +1328,7 @@ button.td71-disclosure{position:relative!important;padding-right:26px!important}
 .td74-builder-inline #cancelPoke{display:none!important}
 .td74-builder-inline #pokePreview{margin:0;padding:0}
 .td74-builder-inline #pokePreview:empty{display:none}
-#dexResult .td75-dex-back-row{display:flex;justify-content:flex-end;align-items:center;margin:0 0 6px;min-height:0}
+#dexResult .td75-dex-back-row{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;min-height:0}
 #dexResult .td75-dex-back-row:empty{display:none}
 #td73DexReturn{margin:0;flex:none;font-size:.8rem;min-height:32px}
 #td73DexReturn[hidden]{display:none!important}
@@ -1586,7 +1586,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td77SlotRoute select,[data-td77-preview-route] select{width:100%;min-width:0;text-overflow:ellipsis}
 #td4TeamPlannerPage .td77-evolution-path strong,#td4TeamPlannerPage .td77-evolution-path small{min-width:0;overflow-wrap:normal}
 #td4TeamPlannerPage .td42-mon-pair{align-items:stretch}
-#td4TeamPlannerPage .td42-mon-pair>span:not(.td42-arrow){display:grid;grid-template-rows:auto 1em 32px 1em;justify-items:center;align-items:start}
+#td4TeamPlannerPage .td42-mon-pair>span:not(.td42-arrow){display:grid;grid-template-rows:auto auto 36px 1em;justify-items:center;align-items:start}
 #td4TeamPlannerPage .td42-mon-pair .td42-arrow{align-self:start;margin-top:clamp(25px,7vw,45px)}
 #td4TeamPlannerPage .td42-mon-pair .pills{min-height:32px;align-content:flex-start}
 #td4TeamPlannerPage .td42-mon-pair .pill{white-space:nowrap;overflow-wrap:normal}
@@ -1747,3 +1747,12 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4TeamPlannerPage .td772-recommendation>details summary small{display:inline;margin-inline-start:4px}
 #td4TeamPlannerPage .td772-evolution-choices>div{display:grid;gap:3px;padding:6px 0;border-top:1px solid var(--edge)}
 #td4TeamPlannerPage .td772-evolution-choices button{width:100%;min-height:40px}
+#dexResult .td75-dex-back-row h3{margin:0;overflow-wrap:anywhere}
+#mapsPage .td73-map-filters{grid-template-columns:minmax(0,1fr)}
+#mapsPage .td73-map-filters .td772-filter-line{margin:0}
+#mapsPage .td73-map-filters>.td74-map-search{margin:0}
+#mapsPage.td63-map-full .td772-filter-line{display:none}
+#td4TeamPlannerPage .td78-benefits .td79-coverage:not(.td63-danger)>small{color:var(--good,#65d199)}
+#td4TeamPlannerPage .td42-tile-moves>*{min-height:2.45em}
+#td4TeamPlannerPage .td42-plan-tile{scroll-margin-top:max(8px,env(safe-area-inset-top))}
+#td4TeamPlannerPage .td772-team-proposal>summary>span{min-width:0;overflow-wrap:anywhere}

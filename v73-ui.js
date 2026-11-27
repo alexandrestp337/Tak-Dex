@@ -19,13 +19,23 @@ plannerButton.onclick=function(e){
 };
 // DEV7.5: one result-local contextual Back for every external Pokédex origin.
 function parkBack(){
- const result=$('dexResult');result.before(dexReturn);dexReturn.hidden=!previousDexScreen;
+ const result=$('dexResult'),row=result.querySelector('.td75-dex-back-row');
+ const source=result.querySelector('.td71-dex-hero .dex-entry > div');
+ const title=row?.querySelector('h3');
+ if(title&&source)source.prepend(title);
+ row?.remove();
+ result.before(dexReturn);dexReturn.hidden=!previousDexScreen;
 }
 function mountBack(){
  const card=$('dexResult').querySelector('.td66-pokemon-card');
  if(!card||!previousDexScreen){parkBack();return;}
  let row=card.querySelector('.td75-dex-back-row');
- if(!row){row=document.createElement('div');row.className='td75-dex-back-row';card.prepend(row);}
+ if(!row){
+  const title=card.querySelector('.td71-dex-hero .dex-entry h3');
+  row=document.createElement('div');row.className='bar td75-dex-back-row td772-context-heading';
+  if(title)row.append(title);
+  card.prepend(row);
+ }
  row.append(dexReturn);dexReturn.hidden=false;
 }
 function clearBack(origin){if(origin&&previousDexScreen?.origin!==origin)return;previousDexScreen=null;parkBack();}

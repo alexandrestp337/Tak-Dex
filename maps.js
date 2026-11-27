@@ -528,11 +528,27 @@ for(const tabId of ['teamsTab','battleTab','dexTab','moreTab'])$(tabId).addEvent
 const offlineMenuButton=$('td59OpenOffline');
 if(offlineMenuButton?.parentElement)offlineMenuButton.before($('openMaps'));
 $('openMaps').addEventListener('click',()=>open());
-const mapBack=$('backMaps'),mapToolbarActions=mapBack.parentElement;
-new MutationObserver(()=>{
- const target=$('mapsContent').hidden?$('mapsBackFallback'):mapToolbarActions;
+const mapBack=$('backMaps'),mapToolbarActions=mapBack.parentElement,mapHeader=$('mapsBackFallback').parentElement;
+mapHeader.classList.add('td772-context-heading');
+function placeMapBack(){
+ const target=page.classList.contains('td63-map-full')?mapToolbarActions:$('mapsBackFallback');
  if(mapBack.parentElement!==target)target.append(mapBack);
-}).observe($('mapsContent'),{attributes:true,attributeFilter:['hidden']});
+}
+placeMapBack();
+new MutationObserver(placeMapBack).observe(page,{attributes:true,attributeFilter:['class']});
+const mapFilterLine=document.createElement('div');
+mapFilterLine.className='td772-filter-line';
+mapFilterLine.innerHTML=td772FilterButton('td772MapFilter','Map filters','td772MapFilterPanel');
+game.setAttribute('aria-label','Game');
+game.closest('label').replaceWith(mapFilterLine);
+mapFilterLine.prepend(game);
+const mapFilterPanel=filter.closest('label');
+mapFilterPanel.id='td772MapFilterPanel';
+mapFilterPanel.hidden=true;
+mapFilterLine.after(mapFilterPanel);
+const mapFilterButton=$('td772MapFilter');
+td772BindFilter(mapFilterButton,mapFilterPanel);
+filter.addEventListener('change',()=>mapFilterButton.classList.toggle('selected',filter.value!=='all'));
 $('backMaps').addEventListener('click',()=>{
  stopAnimation();const previous=returnFrom;returnFrom=null;page.hidden=true;
  if(previous?.id&&$(previous.id)){
