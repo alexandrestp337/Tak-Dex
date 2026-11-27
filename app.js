@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id), games=['Red','Blue','Yellow','Gold','Si
 const vg={'Red':'red-blue','Blue':'red-blue','Yellow':'yellow','Gold':'gold-silver','Silver':'gold-silver','Crystal':'crystal','Ruby':'ruby-sapphire','Sapphire':'ruby-sapphire','Emerald':'emerald','FireRed':'firered-leafgreen','LeafGreen':'firered-leafgreen','Diamond':'diamond-pearl','Pearl':'diamond-pearl','Platinum':'platinum','HeartGold':'heartgold-soulsilver','SoulSilver':'heartgold-soulsilver','Black':'black-white','White':'black-white','Black 2':'black-2-white-2','White 2':'black-2-white-2','X':'x-y','Y':'x-y','Omega Ruby':'omega-ruby-alpha-sapphire','Alpha Sapphire':'omega-ruby-alpha-sapphire','Sun':'sun-moon','Moon':'sun-moon','Ultra Sun':'ultra-sun-ultra-moon','Ultra Moon':'ultra-sun-ultra-moon','Sword':'sword-shield','Shield':'sword-shield','Brilliant Diamond':'brilliant-diamond-and-shining-pearl','Shining Pearl':'brilliant-diamond-and-shining-pearl','Scarlet':'scarlet-violet','Violet':'scarlet-violet'};
 const colors={normal:'#A8A77A',fire:'#EE8130',water:'#6390F0',electric:'#F7D02C',grass:'#7AC74C',ice:'#96D9D6',fighting:'#C22E28',poison:'#A33EA1',ground:'#E2BF65',flying:'#A98FF3',psychic:'#F95587',bug:'#A6B91A',rock:'#B6A136',ghost:'#735797',dragon:'#6F35FC',dark:'#705746',steel:'#B7B7CE',fairy:'#D685AD'};
 const chart={normal:{rock:.5,ghost:0,steel:.5},fire:{fire:.5,water:.5,grass:2,ice:2,bug:2,rock:.5,dragon:.5,steel:2},water:{fire:2,water:.5,grass:.5,ground:2,rock:2,dragon:.5},electric:{water:2,electric:.5,grass:.5,ground:0,flying:2,dragon:.5},grass:{fire:.5,water:2,grass:.5,poison:.5,ground:2,flying:.5,bug:.5,rock:2,dragon:.5,steel:.5},ice:{fire:.5,water:.5,grass:2,ice:.5,ground:2,flying:2,dragon:2,steel:.5},fighting:{normal:2,ice:2,rock:2,dark:2,steel:2,poison:.5,flying:.5,psychic:.5,bug:.5,ghost:0,fairy:.5},poison:{grass:2,poison:.5,ground:.5,rock:.5,ghost:.5,steel:0,fairy:2},ground:{fire:2,electric:2,grass:.5,poison:2,flying:0,bug:.5,rock:2,steel:2},flying:{electric:.5,grass:2,fighting:2,bug:2,rock:.5,steel:.5},psychic:{fighting:2,poison:2,psychic:.5,dark:0,steel:.5},bug:{fire:.5,grass:2,fighting:.5,poison:.5,flying:.5,psychic:2,ghost:.5,dark:2,steel:.5,fairy:.5},rock:{fire:2,ice:2,fighting:.5,ground:.5,flying:2,bug:2,steel:.5},ghost:{normal:0,psychic:2,ghost:2,dark:.5},dragon:{dragon:2,steel:.5,fairy:0},dark:{fighting:.5,psychic:2,ghost:2,dark:.5,fairy:.5},steel:{fire:.5,water:.5,electric:.5,ice:2,rock:2,steel:.5,fairy:2},fairy:{fire:.5,fighting:2,poison:.5,dragon:2,dark:2,steel:.5}};
-const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const td51DefaultForms={'darmanitan-standard':'Darmanitan','darmanitan-zen':'Darmanitan (Zen Mode)','jellicent-male':'Jellicent','frillish-male':'Frillish','basculin-red-striped':'Basculin','deoxys-normal':'Deoxys','giratina-altered':'Giratina','shaymin-land':'Shaymin','wormadam-plant':'Wormadam','landorus-incarnate':'Landorus','thundurus-incarnate':'Thundurus','tornadus-incarnate':'Tornadus','keldeo-ordinary':'Keldeo','meloetta-aria':'Meloetta','aegislash-shield':'Aegislash','zygarde-50':'Zygarde','pumpkaboo-average':'Pumpkaboo','gourgeist-average':'Gourgeist','meowstic-male':'Meowstic','indeedee-male':'Indeedee','wishiwashi-solo':'Wishiwashi','lycanroc-midday':'Lycanroc','toxtricity-amped':'Toxtricity','urshifu-single-strike':'Urshifu','oricorio-baile':'Oricorio','eiscue-ice':'Eiscue','morpeko-full-belly':'Morpeko','palafin-zero':'Palafin','maushold-family-of-four':'Maushold','dudunsparce-two-segment':'Dudunsparce','squawkabilly-green-plumage':'Squawkabilly','tatsugiri-curly':'Tatsugiri','oinkologne-male':'Oinkologne','basculegion-male':'Basculegion','enamorus-incarnate':'Enamorus'};const td51NameKey=s=>String(s??'').trim().toLowerCase().replace(/\s+/g,'-');const td51Canonical=s=>Object.keys(td51DefaultForms).find(k=>td51NameKey(td51DefaultForms[k])===td51NameKey(s))||td51NameKey(s);const pretty=s=>td51DefaultForms[td51NameKey(s)]||String(s??'').split('-').map(w=>w?w[0].toUpperCase()+w.slice(1):'').join(' ');const pill=t=>`<span class="pill" style="--c:${colors[t]||'#777'}">${pretty(t)}</span>`;const chip=m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`;
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const td51DefaultForms={'darmanitan-standard':'Darmanitan','darmanitan-zen':'Darmanitan (Zen Mode)','jellicent-male':'Jellicent','frillish-male':'Frillish','basculin-red-striped':'Basculin','deoxys-normal':'Deoxys','giratina-altered':'Giratina','shaymin-land':'Shaymin','wormadam-plant':'Wormadam','landorus-incarnate':'Landorus','thundurus-incarnate':'Thundurus','tornadus-incarnate':'Tornadus','keldeo-ordinary':'Keldeo','meloetta-aria':'Meloetta','aegislash-shield':'Aegislash','zygarde-50':'Zygarde','pumpkaboo-average':'Pumpkaboo','gourgeist-average':'Gourgeist','meowstic-male':'Meowstic','indeedee-male':'Indeedee','wishiwashi-solo':'Wishiwashi','lycanroc-midday':'Lycanroc','toxtricity-amped':'Toxtricity','urshifu-single-strike':'Urshifu','oricorio-baile':'Oricorio','eiscue-ice':'Eiscue','morpeko-full-belly':'Morpeko','palafin-zero':'Palafin','maushold-family-of-four':'Maushold','dudunsparce-two-segment':'Dudunsparce','squawkabilly-green-plumage':'Squawkabilly','tatsugiri-curly':'Tatsugiri','oinkologne-male':'Oinkologne','basculegion-male':'Basculegion','enamorus-incarnate':'Enamorus'};const td51NameKey=s=>String(s??'').trim().toLowerCase().replace(/\s+/g,'-');const td51Canonical=s=>Object.keys(td51DefaultForms).find(k=>td51NameKey(td51DefaultForms[k])===td51NameKey(s))||td51NameKey(s);const pretty=s=>td51DefaultForms[td51NameKey(s)]||String(s??'').split('-').map(w=>w?w[0].toUpperCase()+w.slice(1):'').join(' ');const pill=t=>`<span class="pill" style="--c:${colors[t]||'#777'}">${safe(pretty(t))}</span>`;const chip=m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`;
 // V74 DEV4.1: presentation only; never use a label as a canonical form identifier.
 function td71StoredArt(p){const img=String(p?.image||'');const id=Number(p?.id)||window.takDexBWCoreV75?.ids?.[td51Canonical(p?.name)]||window.takDexSpriteIdsV77?.[td51Canonical(p?.name)]||0;return img&&!img.startsWith('blob:')?img:id?'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/'+id+'.png':'';}
 function td73IdentityKey(p){return td51Canonical(typeof p==='string'?p:(p?.canonicalName||p?.name||''));}
@@ -15,19 +15,112 @@ let td70TeamRecovery=null;
 function td70ReadTeams(){
  let raw=null;
  try{
-  raw=localStorage.getItem('poketact-teams');
-  if(raw===null)return [];
-  const data=JSON.parse(raw);
+  raw=localStorage.getItem(takDexStorageV78.KEY)??localStorage.getItem(takDexStorageV78.TEAM_KEY);
+  const snapshot=takDexStorageV78.read();
+  if(snapshot.status==='corrupt')throw snapshot.error;
+  const data=Object.values(takDexStorageV78.values(snapshot.state,'teams'));
   if(!Array.isArray(data)||!data.every(t=>t&&typeof t==='object'&&typeof t.id==='string'&&typeof t.name==='string'&&games.includes(t.game)&&Array.isArray(t.pokemon)))throw Error('Saved team data is not a valid team array');
   return data;
  }catch(e){
   td70TeamRecovery=raw;
-  try{if(raw!==null)localStorage.setItem('takdex-v70-team-recovery-'+new Date().toISOString(),raw)}catch{}
+  try{if(raw!==null&&localStorage.getItem('takdex-v78-state-v1')===null)localStorage.setItem('takdex-v70-team-recovery-'+new Date().toISOString(),raw)}catch{}
   console.warn('Tak-Dex: invalid saved teams preserved for recovery',e);
   return [];
  }
 }
-let teams=td70ReadTeams(),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const save=()=>{localStorage.setItem('poketact-teams',JSON.stringify(teams));queueMicrotask(()=>window.dispatchEvent(new CustomEvent('td74:team-saved')));};
+let teams=td70ReadTeams(),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const td78Store=window.takDexStorageV78;
+const td78TeamWrites=new Map(Object.entries(td78Store.read().state.teams).map(([id,row])=>[id,{row,proposed:row.value}]));
+const td78NotifyTeamSaved=()=>window.dispatchEvent(new CustomEvent('td74:team-saved'));
+let td78Drafts=[];
+function td78WriteWarning(error,draft){
+ if(draft)td78Drafts.push(td78Store.copy(draft));
+ let warning=$('td78WriteWarning');
+ if(!warning){
+  warning=document.createElement('aside');warning.id='td78WriteWarning';warning.className='card';warning.setAttribute('role','alert');
+  const message=document.createElement('p'),download=document.createElement('button');
+  download.type='button';download.textContent='Download unsaved changes';
+  download.onclick=()=>td70DownloadFile('takdex-unsaved-changes.json',JSON.stringify(td78Drafts,null,2));
+  warning.append(message,download);document.querySelector('main').before(warning);
+ }
+ warning.firstElementChild.textContent=(error?.message||'Could not save local changes.')+(draft?' Download your unsaved changes before reloading.':'');
+ warning.lastElementChild.hidden=!td78Drafts.length;
+}
+function td78ProjectionWarning(result){
+ if(result.projectionError)td78WriteWarning(Error('Changes are saved in Tak-Dex. Compatibility copies could not be refreshed because storage is full or unavailable.'));
+}
+function td78AcceptTeam(state,id,{render=false}={}){
+ const row=td78Store.entry(state,'teams',id);
+ const before=td78TeamWrites.get(id);
+ if(before?.pending||before&&!td78Store.same(before.proposed,teams.find(team=>team.id===id)))return;
+ const local=teams.find(team=>team.id===id);
+ if(row.value){
+  if(local){for(const key of Object.keys(local))if(!Object.hasOwn(row.value,key))delete local[key];Object.assign(local,td78Store.copy(row.value));}
+  else teams.push(td78Store.copy(row.value));
+ }else{
+  teams=teams.filter(team=>team.id!==id);
+  if(current===local)current=null;
+ }
+ td78TeamWrites.set(id,{row,proposed:row.value});
+ if(render)showTeams();
+}
+function td78RefreshUnrelatedTeams(state,excluded){
+ for(const [id,row] of Object.entries(state.teams)){
+  if(excluded.has(id))continue;
+  const local=teams.find(team=>team.id===id);
+  if(local===current||local&&row.value)continue;
+  td78AcceptTeam(state,id);
+ }
+}
+function save({deletedId=null,expectedPlans={}}={}){
+ const desired=new Map(teams.map(team=>[team.id,td78Store.copy(team)])),edits=[];
+ for(const id of new Set([...td78TeamWrites.keys(),...desired.keys()])){
+  if(!desired.has(id)&&id!==deletedId)continue;
+  const before=td78TeamWrites.get(id)||{row:{revision:0,value:null},proposed:null};
+  const proposed=desired.get(id)||null;
+  if(td78Store.same(before.proposed,proposed))continue;
+  const write={proposed};
+  td78TeamWrites.set(id,write);
+  edits.push({id,before,write});
+ }
+ if(!edits.length)return Promise.resolve(true);
+ const operation=Promise.all(edits.map(async ({before})=>before.pending?await before.pending:before.row)).then(expected=>
+  td78Store.commit(state=>{
+   edits.forEach(({id},i)=>td78Store.expect(state,'teams',id,expected[i]));
+   if(deletedId){
+    for(const [key,row] of Object.entries(state.plans)){
+     if(row.value===null||key.slice(key.indexOf(':')+1)!==deletedId)continue;
+     td78Store.expect(state,'plans',key,expectedPlans[key]||{revision:0,value:null});
+     td78Store.replace(state,'plans',key,null);
+    }
+    const link=td78Store.entry(state,'links',deletedId).value;
+    td78Store.replace(state,'links',deletedId,{generation:(link?.generation||0)+1,intent:'deleted'});
+   }
+   for(const {id,write} of edits){
+    const previous=td78Store.entry(state,'teams',id).value;
+    if(previous&&write.proposed&&previous.game!==write.proposed.game){
+     const link=td78Store.entry(state,'links',id).value;
+     td78Store.replace(state,'links',id,{game:write.proposed.game,generation:(link?.generation||0)+1,intent:'game-changed'});
+    }
+    td78Store.replace(state,'teams',id,write.proposed);
+   }
+  }));
+ for(const {id,write} of edits)write.pending=operation.then(result=>td78Store.entry(result.state,'teams',id));
+ return operation.then(result=>{
+  for(const {id,write} of edits){
+   write.row=td78Store.entry(result.state,'teams',id);write.pending=null;
+  }
+  td78RefreshUnrelatedTeams(result.state,new Set(edits.map(edit=>edit.id)));
+  td78ProjectionWarning(result);showTeams();td78NotifyTeamSaved();return true;
+ },error=>{
+  for(const {write} of edits)write.pending?.catch(()=>{});
+  td78WriteWarning(error,edits.map(({id,write})=>({id,team:write.proposed,deleteRequested:id===deletedId})));
+  return false;
+ });
+}
+function td78TeamWriteState(id){
+ const queued=td78TeamWrites.get(id);
+ return queued?.pending?queued.pending:Promise.resolve(queued?.row||{revision:0,value:null});
+}
 // CacheStorage is larger than localStorage and survives network outages for downloaded records.
 const OFFLINE_CACHE='takdex-pokeapi-records-v1';
 // V27: resolve name-based lookups to the numbered records stored by the offline downloader.
@@ -242,7 +335,7 @@ $('teams').onclick=e=>{
  if(edit){if(!td74CloseInline())return;openTeam(edit.dataset.editCard);$('editTeam').click();return}
  if(exp){const team=teams.find(t=>t.id===exp.dataset.exportCard);if(team)td70ExportTeam(team);return}
  if(del&&confirm('Permanently delete this team? This cannot be undone.')){
-  const id=del.dataset.delete,wasActive=current?.id===id;if(wasActive)td74CloseInline(true);teams=teams.filter(t=>t.id!==id);td71ExpandedTeams.delete(id);save();
+  const id=del.dataset.delete,wasActive=current?.id===id,expectedPlans=td78Store.read().state.plans;if(wasActive)td74CloseInline(true);teams=teams.filter(t=>t.id!==id);td71ExpandedTeams.delete(id);save({deletedId:id,expectedPlans});
   if(wasActive)td70CloseTeam();showTeams();return;
  }
  if(e.target.closest('[data-td70-recover]')&&td70TeamRecovery)td70DownloadFile('takdex-team-recovery.json',td70TeamRecovery);
@@ -342,22 +435,7 @@ function td70ShowCopyExport(filename,contents){
 }
 const td77PlanStorage='takdex-v74-playthrough-plans';
 function td77ReadPlans(){
- try{const plans=JSON.parse(localStorage.getItem(td77PlanStorage)||'{}');return plans&&typeof plans==='object'&&!Array.isArray(plans)?plans:{};}catch{return {};}
-}
-function td77ValidatePlan(plan,game){
- if(plan==null)return null;
- if(plan.game!==game||!Array.isArray(plan.slots)||plan.slots.length>6||plan.progress!=null&&typeof plan.progress!=='string')throw Error('Invalid Team Planner data');
- for(const slot of plan.slots){
-  if(slot===null)continue;
-  if(!slot||!Number.isInteger(slot.id)||typeof slot.name!=='string'||!Array.isArray(slot.types)||slot.types.some(type=>typeof type!=='string'))throw Error('Invalid planned Pokémon');
-  if(slot.acquisitionRoute!=null&&(typeof slot.acquisitionRoute.id!=='string'||
-   slot.acquisitionRoute.id.length>300||!Number.isInteger(slot.acquisitionRoute.startId)))throw Error('Invalid acquisition route');
-  for(const key of ['plannedMoves','duringMoves']){
-   if(slot[key]===undefined)continue;
-   if(!Array.isArray(slot[key])||slot[key].length>4||slot[key].some(m=>!m||typeof m.move!=='string'||m.replacement!=null&&typeof m.replacement!=='string'))throw Error('Invalid planned moves');
-  }
- }
- return plan;
+ return td78Store.values(td78Store.read().state,'plans');
 }
 function td77ProgressSnapshot(value){
  if(value==null)return undefined;
@@ -395,16 +473,20 @@ async function td70ExportTeam(team){
 }
 $('exportTeam').onclick=()=>td70ExportTeam(current);
 $('importTeam').onclick=()=>$('importTeamFile').click();
-$('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2000000)throw Error('File is too large');const data=JSON.parse(await file.text());const t=data?.format==='takdex-team'?data.team:data;if(!t||typeof t.name!=='string'||!games.includes(t.game)||!Array.isArray(t.pokemon)||t.pokemon.length>6)throw Error('Invalid Tak-Dex team file');const pokemon=Array.from({length:6},(_,i)=>{const mon=t.pokemon[i];if(mon==null)return null;if(typeof mon.id!=='number'||typeof mon.name!=='string'||!Array.isArray(mon.moves)||mon.moves.length>4||!Array.isArray(mon.types))throw Error('Invalid Pokémon data');return {...mon,nickname:typeof mon.nickname==='string'?mon.nickname.slice(0,30):''}});const team={id:String(Date.now())+Math.random().toString(36).slice(2),name:t.name.slice(0,40),game:t.game,pokemon};const envelope=data?.format==='takdex-team';
- if(envelope&&![1,2].includes(data.version??1))throw Error('Unsupported team export version');
- const plan=envelope?td77ValidatePlan(data.plan,team.game):null;
- const progression=envelope?td77ProgressSnapshot(data.progression):undefined;
+$('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{
+ if(file.size>2000000)throw Error('File is too large');
+ const {team:source,plan,progression:observed,warnings}=window.takDexImportV78.validate(JSON.parse(await file.text()),games);
+ const pokemon=Array.from({length:6},(_,i)=>source.pokemon[i]?{...source.pokemon[i],nickname:source.pokemon[i].nickname?.slice(0,30)||''}:null);
+ const team={id:td71NewTeamId(),name:source.name.slice(0,40),game:source.game,pokemon};
+ const progression=td77ProgressSnapshot(observed);
  if(progression)team.saveLink={progression,exportedSnapshot:true};
- await td70EnsureMigrated();const updated=[...teams,team],priorPlans=localStorage.getItem(td77PlanStorage);
- if(plan)localStorage.setItem(td77PlanStorage,JSON.stringify({...td77ReadPlans(),[team.game+':'+team.id]:plan}));
- try{localStorage.setItem('poketact-teams',JSON.stringify(updated));}
- catch(error){if(plan){if(priorPlans==null)localStorage.removeItem(td77PlanStorage);else localStorage.setItem(td77PlanStorage,priorPlans);}throw error;}
- teams=updated;showTeams();$('newDialog').close();openTeam(team.id)}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
+ await td70EnsureMigrated();
+ const commit=await td78Store.commit(state=>{
+  td78Store.expect(state,'teams',team.id,{revision:0,value:null});
+  td78Store.replace(state,'teams',team.id,team);
+  if(plan)td78Store.replace(state,'plans',team.game+':'+team.id,plan);
+ });
+ td78AcceptTeam(commit.state,team.id);td78ProjectionWarning(commit);td78NotifyTeamSaved();showTeams();$('newDialog').close();openTeam(team.id);if(warnings.length)alert(warnings.join('\n'));}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
 
 search($('pokeInput'),$('pokeResults'),n=>{td74DraftDirty=true;const previous=td75Preview||current?.pokemon?.[slotIndex];if(td51Canonical(previous?.name)!==td51Canonical(n))$('pokeNickname').value='';loadPokemon(n)});search($('foeInput'),$('foeResults'),name=>td76ChooseQuickOpponent(name,1));
 
@@ -1692,9 +1774,8 @@ function td77MigrateBattleProfiles(){
     item:actual||mon.level!=null?mon.item??row.item??'':row.item??mon.item??'',
     statAdjustments:mon.statAdjustments??(matchesSnapshot?row.statAdjustments??{}:{})};
   })}));
-  localStorage.setItem('poketact-teams',JSON.stringify(migrated));
   teams=migrated;
-  localStorage.removeItem(TD72_LEVELS_KEY);
+  save().then(saved=>{if(saved&&localStorage.getItem(TD72_LEVELS_KEY)===raw)localStorage.removeItem(TD72_LEVELS_KEY);});
  }catch(error){console.warn('Could not migrate saved battle profiles',error);}
 }
 function td77PlannerTeamRows(team){
@@ -3649,7 +3730,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V77.2.1-STABLE</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
+ <p><strong>Web version:</strong> V78 DEV1 RC1</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
 </div>
  <div class="card td70-about-card"><h3>Storage &amp; offline reference</h3><p class="note" id="td70AboutStorage">Checking local storage…</p></div>
  <div class="tool-card"><button type="button" id="td68OpenCoverage" class="tool-link">▦ Database Coverage ›</button></div>
@@ -4207,8 +4288,9 @@ document.addEventListener('keydown',event=>{
 
 // V74 DEV4: playthrough Team Planner. Planned slots are saved independently of actual teams.
 (function td4TeamPlanner(){
- const KEY='takdex-v74-playthrough-plans',clean=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,'-');
- const six=()=>Array.from({length:6},()=>null);const read=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'{}');return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}catch{return {}}};
+ const clean=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,'-');
+ const six=()=>Array.from({length:6},()=>null);
+ const planWrites=new Map();
  const records=new Map();let state=null,pack=null,token=0,rankRun=0,ranked=[],chosenSlot=0,lookup=null,manualCandidate=null,manualRun=0; const moveInfo=new Map(),leagueInfo=new Map(),temporaryHmCache=new Map(); let moveRun=0;
  const more=$('morePage'),page=document.createElement('section');page.id='td4TeamPlannerPage';page.hidden=true;
  more.after(page);
@@ -4222,9 +4304,27 @@ document.addEventListener('keydown',event=>{
  }
  const planKey=()=>[$('td4Game').value,$('td4Team').value||'standalone'].join(':');
  function say(t){$('td4Status').textContent=t;}
- function persist(){if(!state||!games.includes(state.game))return false;try{const x=read();x[planKey()]=state;localStorage.setItem(KEY,JSON.stringify(x));return true}catch{say('Could not save plan. Storage unavailable.');return false}}
+ function persist(){
+  if(!state||!games.includes(state.game))return;
+  const key=planKey(),id=$('td4Team').value,proposed=td78Store.copy(state);
+  const before=planWrites.get(key);
+  if(!before||td78Store.same(before.proposed,proposed))return;
+  const write={proposed};
+  planWrites.set(key,write);
+  const operation=Promise.resolve(before.pending||before.row).then(expected=>td78Store.commit(snapshot=>{
+   td78Store.expect(snapshot,'plans',key,expected);
+   if(id&&td78Store.entry(snapshot,'teams',id).value?.game!==proposed.game)
+    throw td78Store.fault('CONFLICT','The team changed or was deleted. The plan was not saved.');
+   td78Store.replace(snapshot,'plans',key,proposed);
+  }));
+  write.pending=operation.then(result=>td78Store.entry(result.state,'plans',key));
+  operation.then(result=>{write.row=td78Store.entry(result.state,'plans',key);write.pending=null;td78ProjectionWarning(result);},error=>{
+   write.pending?.catch(()=>{});
+   say(error.message);td78WriteWarning(error,{key,plan:proposed});
+  });
+ }
  function teamMenu(){const g=$('td4Game').value,old=$('td4Team').value;$('td4Team').innerHTML='<option value="">Standalone plan</option>'+teams.filter(t=>t.game===g).map(t=>`<option value="${safe(t.id)}">${safe(t.name)}</option>`).join('');if([...$('td4Team').options].some(o=>o.value===old))$('td4Team').value=old;}
- function load(){++token;++rankRun;manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();$('td5TeamProposals').innerHTML='';ranked=[];pack=null;lookup=null;$('td4Edit').hidden=true;$('td4Candidates').innerHTML='';const g=$('td4Game').value;filterTypes.clear();$('td77TypeOptions').hidden=true;$('td77TypeFilter').setAttribute('aria-expanded','false');const saved=read()[planKey()];state=saved?.game===g&&Array.isArray(saved.slots)?saved:{game:g,slots:six(),approved:false,progress:''};state.approved=false;delete state.manualAcquired;state.slots=Array.from({length:6},(_,i)=>{const stored=state.slots[i];
+ function load(){++token;++rankRun;manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();$('td5TeamProposals').innerHTML='';ranked=[];pack=null;lookup=null;$('td4Edit').hidden=true;$('td4Candidates').innerHTML='';const g=$('td4Game').value;filterTypes.clear();$('td77TypeOptions').hidden=true;$('td77TypeFilter').setAttribute('aria-expanded','false');const key=planKey(),pending=planWrites.get(key),row=td78Store.entry(td78Store.read().state,'plans',key);const saved=td78Store.copy(pending?.pending?pending.proposed:row.value);if(!pending?.pending)planWrites.set(key,{row,proposed:td78Store.copy(saved)});state=saved?.game===g&&Array.isArray(saved.slots)?saved:{game:g,slots:six(),approved:false,progress:''};state.approved=false;delete state.manualAcquired;state.slots=Array.from({length:6},(_,i)=>{const stored=state.slots[i];
   if(!stored)return null;
   const {finalTarget,imported,...source}=stored;
   const migrated=Number.isInteger(finalTarget?.id)&&finalTarget.id!==stored.id&&

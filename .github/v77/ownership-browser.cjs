@@ -41,6 +41,7 @@ const widths=baseline?[360]:[360,412];
   if(!await page.locator('[data-td41-team-plan="ownership"]').isVisible())await page.locator('[data-td71-toggle="ownership"]').click();
   await page.locator('[data-td41-team-plan="ownership"]').click();
   await page.waitForFunction(()=>document.querySelector('#td4Status').textContent==='');
+  await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key))['Black 2:ownership'].slots.length===6,key);
  };
  const tile=page.locator('[data-td4-slot="0"]');
  await page.goto(url);
@@ -48,6 +49,7 @@ const widths=baseline?[360]:[360,412];
  await sync([original],true);
  await page.locator('[data-td41-team-plan="ownership"]').click();
  await page.waitForFunction(()=>document.querySelector('#td4Slots').children.length===6);
+ await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key))['Black 2:ownership'].slots.length===6,key);
  const originalIntent=intent(await plan());
  if(!baseline){
   await page.waitForFunction(()=>document.querySelector('#td77Gyms [title^="Actual:"]'));
@@ -71,12 +73,13 @@ const widths=baseline?[360]:[360,412];
  assert.equal(intent(await plan()),originalIntent);
  await checkCandidate({page,tile,sync,mon,original,patrat,sandile,plan,open,width,party});
  for(const scenario of ['direct','competing','duplicates']){
-  await page.evaluate(key=>{localStorage.removeItem(key);localStorage.removeItem('poketact-teams')},key);
+  await page.evaluate(key=>{localStorage.removeItem(key);localStorage.removeItem('poketact-teams');localStorage.removeItem('takdex-v78-state-v1')},key);
   await page.goto(url+'?scenario='+scenario);
   await open();
   if(scenario==='direct'){
    await sync([patrat,mon(553,42)]);
    await page.waitForFunction(()=>document.querySelector('[data-td4-slot="0"]').innerText.includes('On team'));
+   await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key))['Black 2:ownership'].slots[0].fulfilledPid===42,key);
    assert.equal((await plan()).slots[0].fulfilledPid,42);
   }else{
    const roster=scenario==='competing'?[sandile]:[sandile,mon(551,43)];
@@ -99,9 +102,11 @@ const widths=baseline?[360]:[360,412];
     await confirm.waitFor();
    }
    await confirm.click();
+   await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key))['Black 2:ownership'].slots[0].fulfilledPid===42,key);
    assert.equal((await plan()).slots[0].fulfilledPid,42);
    assert.equal((await plan()).slots[1]?.fulfilledPid,undefined);
    await page.reload();await open();
+   await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key))['Black 2:ownership'].slots[0].fulfilledPid===42,key);
    assert.equal((await plan()).slots[0].fulfilledPid,42);
   }
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
@@ -118,6 +123,7 @@ const intent=state=>JSON.stringify({deadline:state.deadline,slots:state.slots.ma
 async function checkCandidate({page,tile,sync,mon,original,patrat,sandile,plan,open,width,party}){
  const wait=pattern=>page.waitForFunction(pattern=>new RegExp(pattern).test(document.querySelector('[data-td4-slot="0"]').innerText),pattern);
  await wait('Sandile');
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))['Black 2:ownership'].slots[0].fulfilledPid===42);
  await saveEvidence(tile,width+'-fulfilled');
  assert.doesNotMatch(await tile.innerText(),/Purrloin/);
  const before=intent(await plan());
