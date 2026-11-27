@@ -6,7 +6,7 @@
 
 Tak-Dex is a free, unofficial Pokémon team builder, battle calculator and playthrough companion. It combines team planning, generation-specific matchup analysis, move and evolution reference information, and interactive region maps in one mobile-friendly web app. Saved teams and plans stay on the device.
 
-> **V77.2-STABLE.** This release polishes Team Planner, move acquisition, and Gym readiness. Existing saved teams and plans remain compatible. Android builds are released separately. [Release notes](.github/v77/REPORT.md#v772-stable-release)
+> **V77.2.1-STABLE.** Save synchronization recognizes acquired Pokémon while preserving the selected team plan. [Release notes](.github/v77/REPORT.md#v7721-stable-release)
 
 ## Tools
 
