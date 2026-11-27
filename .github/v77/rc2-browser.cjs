@@ -17,11 +17,17 @@ function fixture() {
  });
  const slots = [
   plan({id:196,name:'Espeon',types:['psychic']},['psychic','shadow-ball'],{duringTargetId:133,duringSpecies:'eevee',duringMoves:[{move:'quick-attack',purpose:'keep'}]}),
-  plan(psyduck,['scratch','water-pulse','ice-punch','thief'],{originName:'psyduck',originSlot:1}),
+  plan(psyduck,['scratch','water-pulse','ice-punch'],{originName:'psyduck',originSlot:1}),
   plan(patrat,[],{originName:'patrat',originSlot:2})
  ];
- localStorage.setItem('poketact-teams',JSON.stringify([{id,game,name:'RC2 team',pokemon:[null,psyduck,patrat,null,null,null],saveLink:{progression:{badgeCount:2}}}]));
- localStorage.setItem('takdex-v74-playthrough-plans',JSON.stringify({[game+':'+id]:{game,slots,deadline:'pre-league',progress:'badge-2'}}));
+ localStorage.setItem('poketact-teams',JSON.stringify([
+  {id,game,name:'RC2 team',pokemon:[null,psyduck,patrat,null,null,null],saveLink:{progression:{badgeCount:2}}},
+  {id:'rc2-unknown',game:'Platinum',name:'Unverified timing',pokemon:[psyduck,null,null,null,null,null]}
+ ]));
+ localStorage.setItem('takdex-v74-playthrough-plans',JSON.stringify({
+  [game+':'+id]:{game,slots,deadline:'pre-league',progress:'badge-2'},
+  'Platinum:rc2-unknown':{game:'Platinum',slots:[plan(psyduck,['ice-beam'],{originName:'psyduck',originSlot:0})]}
+ }));
 }
 
 (async()=>{
@@ -176,17 +182,20 @@ function fixture() {
    assert.match(await timing('ice-punch').textContent(),/Tutor · Driftveil City/);
    await timing('ice-punch').locator('summary').click();
    await shots('rc2-level-and-tutor',loc('#td41MoveSlots'));
-   const uncertain=timing('thief');
-   await uncertain.locator('summary').click();
-   assert.match(await uncertain.textContent(),/TM46 · Virbank Complex/);
-   assert.match(await uncertain.textContent(),/Timing unverified/);
-   await shots('rc2-unverified-timing',uncertain.locator('..'));
    await showCandidates(5);
    const emptyCandidate=recommendations.first();
    await emptyCandidate.locator('.td773-coverage summary').click();
    assert.match(await emptyCandidate.locator('.td773-candidate-meta small').textContent(),/^BST \d+$/);
    assert.equal(await emptyCandidate.locator('.td773-coverage-grid section > div:nth-of-type(2) .pill').count(),0);
    await shots('rc2-empty-slot-candidate',emptyCandidate);
+   await click('#td4Back');
+   await click('[data-td71-toggle="rc2-unknown"]');
+   await click('[data-td41-team-plan="rc2-unknown"]');
+   await tile(0).click();
+   const uncertain=timing('ice-beam');
+   await uncertain.waitFor();
+   assert.match(await uncertain.textContent(),/timing unverified/i);
+   await shots('rc2-unverified-timing',uncertain.locator('..'));
    await click('#td4Back');
 
    await click('#dexTab');await click('#openTypeExplorer');

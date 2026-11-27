@@ -4182,11 +4182,11 @@ document.addEventListener('keydown',event=>{
  const specific=(bw(g)?{'ice-beam':10,earthquake:10,'work-up':1,retaliate:2,'struggle-bug':3,'volt-switch':4,bulldoze:5,acrobatics:6,'frost-breath':7,'dragon-tail':8,dig:2,scald:4,'rock-tomb':3}: {'ice-beam':8,earthquake:10,'energy-ball':5,'rock-slide':5,'wild-charge':9,'thunderbolt':9,'false-swipe':6,retaliate:8,'work-up':1,return:1,venoshock:2,'struggle-bug':3,'volt-switch':4,bulldoze:5,acrobatics:6,'dragon-tail':7,scald:8,dig:2,frustration:0,thief:1,'rock-smash':1})[norm(name)],gate=h?.rank??audited?.[0]??specific??bp??(shop?location(g,shop):null);options.push(machine.item.toUpperCase()+' · '+machine.location+(gate!=null?' · '+milestone(gate):' · location access '+(location(g,machine.location)==null?'unverified':milestone(location(g,machine.location)))));if(audited?.[1])requirements.push(audited[1]);if(bw(g)&&machine.item==='tm95')requirements.push('Lock Capsule was never distributed');if(gate!=null)verified.push(gate);
  const [heading,...subareas]=machine.location.split(' · ');
  const place=machine.place||shop||heading.trim().split(',')[0];
- const locationNote=heading.slice(heading.startsWith(place)?place.length:heading.length).replace(/^[, ·]+/,'').trim();
+ const locationNote=(heading.startsWith(place)?heading.slice(place.length):heading).replace(/^[, ·]+/,'').trim();
  const notes=[...new Set([...subareas,locationNote,...requirements].filter(Boolean))];
- const resource=notes.find(note=>/^(?:[₽$]\s*\d|\d[\d,]*\s*(?:BP|coins|shards?)\b)/i.test(note));
- displayRoutes.push({label:machine.item.toUpperCase(),place,resource,rank:gate,
-  details:notes.filter(note=>note!==resource),uncertain:gate==null});
+ const cost=notes.find(note=>/^(?:[₽$]\s*\d|\d[\d,]*\s*(?:BP|coins|shards?)\b|shop,\s*\d)/i.test(note));
+ displayRoutes.push({label:machine.item.toUpperCase(),place,resource:cost?.replace(/^shop,\s*/i,''),rank:gate,
+  details:notes.filter(note=>note!==cost),uncertain:gate==null});
  }else displayRoutes.push({label:'Machine',uncertain:true});}
  return options.length?{text:options.join(' / ')+(requirements.length?' · '+requirements.join(' · '):''),rank:verified.length?Math.min(...verified):null,requirements,displayRoutes}:null;
  }
@@ -6015,18 +6015,13 @@ document.addEventListener('keydown',event=>{
  }
  let recommendationContext='';
  const expandedRecommendations=new Map();
- $('td4Candidates').addEventListener('toggle',event=>{
-  const disclosure=event.target,card=disclosure.closest('[data-candidate-id]');
-  if(!card||!disclosure.isConnected)return;
-  expandedRecommendations.set(Number(card.dataset.candidateId),[
-   card.querySelector('.td773-coverage').open,card.querySelector('.td80-candidate-acquisition').open
-  ]);
- },true);
  async function findCandidates(){
   if(state.approved||!state.game)return;
   const my=token,run=++rankRun,i=chosenSlot,g=state.game,host=$('td4CandidateStatus');
   const candidates=$('td4Candidates');
-  const context=JSON.stringify([token,i,g,movesetView,deadlineRank(),[...filterTypes].sort(),requireAllTypes,state.includeLegendary,improvementType]);
+  const selectedPlan=state.slots[i];
+  const context=JSON.stringify([token,i,g,movesetView,selectedPlan?.id,selectedPlan?.duringTargetId,selectedPlan?.acquisitionRoute?.id,
+   deadlineRank(),[...filterTypes].sort(),requireAllTypes,state.includeLegendary,improvementType]);
   if(recommendationContext!==context)expandedRecommendations.clear();
   recommendationContext=context;
   candidates.innerHTML='';
@@ -6145,6 +6140,13 @@ document.addEventListener('keydown',event=>{
   candidates.onclick=e=>{if(e.target.closest('[data-td77-more-candidates]'))append();};
   append();
  }
+ $('td4Candidates').addEventListener('toggle',event=>{
+  const disclosure=event.target,card=disclosure.closest('[data-candidate-id]');
+  if(!card||!disclosure.isConnected)return;
+  expandedRecommendations.set(Number(card.dataset.candidateId),[
+   card.querySelector('.td773-coverage').open,card.querySelector('.td80-candidate-acquisition').open
+  ]);
+ },true);
  $('td77Availability').addEventListener('change',()=>{state.deadline=$('td77Availability').value;persist();render();if(!$('td4Edit').hidden){renderMoveSlots();if(settings.open)findCandidates();}});
  $('td77Legendary').addEventListener('change',()=>{state.includeLegendary=$('td77Legendary').checked;persist();findCandidates();});
  const settings=$('td4Edit').querySelector(':scope > .td42-settings');
