@@ -1871,7 +1871,6 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 #td4TeamPlannerPage .td79-move-compare .td774-move-lines{padding:5px;align-content:start}
 #td4TeamPlannerPage .td79-move-compare .td774-move-title{align-items:start}
 #td4TeamPlannerPage .td79-move-compare .td774-move-title small{flex-basis:100%}
-#td4TeamPlannerPage .td62-move-timing>summary{min-height:26px;padding:3px 0}
 @media(max-width:360px){
  #td4TeamPlannerPage #td4Candidates .td772-recommendation{padding:6px 7px}
  .td774-move-title strong{font-size:.77rem}
@@ -1895,7 +1894,6 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 #td4TeamPlannerPage #td4Candidates .td772-recommendation{padding-block:9px}
 #td4TeamPlannerPage #td4Candidates .td772-recommendation .td43-candidate-pick{padding-block:3px 7px}
 #td4TeamPlannerPage #td4Candidates .td773-coverage>summary{min-height:33px}
-#td4TeamPlannerPage .td62-move-timing>summary{min-height:28px}
 #td72MoveTypeResults .td72-type-move,
 #td68MoveSuggest button:has(>.td774-move-lines),#tmMoveResults button:has(>.td774-move-lines){min-height:57px}
 @media(max-width:360px){
@@ -1912,7 +1910,20 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 #td775ReplacementLocked{display:block;font-size:.76rem;color:var(--muted);margin:5px 0}
 #td4TeamPlannerPage .td772-evolution-choices{padding:7px;border:1px solid var(--edge);border-radius:8px}
 #td4TeamPlannerPage .td774-preview-actions{align-items:center;justify-content:space-between}
-#td4TeamPlannerPage .td62-move-timing>summary{font-size:.81rem}
+#td4TeamPlannerPage .td62-move-timing>summary{font-size:.81rem;min-height:0;padding:8px 0}
+#td4TeamPlannerPage .td62-move-timing{margin:0}
+#td4TeamPlannerPage small.td62-move-timing{padding-block:8px}
+#td4TeamPlannerPage .td41-move-row:has(> .td62-move-timing),
+#td4TeamPlannerPage .td41-move-row:has(> [data-td42-preview] > .td62-move-timing:last-child){
+ padding-bottom:0;row-gap:0
+}
+/* Use the surrounding row space only when both sides are free of interactive content. */
+#td4TeamPlannerPage #td41MoveSlots .td41-move-row:has(+ .td41-move-row)
+ details.td62-move-timing:not([open]):last-child{display:flow-root}
+#td41MoveSlots .td41-move-row:has(+ .td41-move-row)
+ details.td62-move-timing:not([open]):last-child>summary{
+ margin-block:-6px;padding-block:14px
+}
 #openTypeExplorer{background:var(--td-secondary-bg)!important;color:var(--text)!important;border:1px solid var(--edge)!important;box-shadow:none}
 .td775-improvement-route{display:grid;gap:2px;margin-block:5px}
 .td775-alternative{color:var(--muted);font-size:.73rem}
