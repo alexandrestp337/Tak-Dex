@@ -418,6 +418,7 @@ async function loadDirectory(){
  activeMapGame=game.value; ++activeMapRevision;applyRegions();
  ++detailRequest;selected='';encounterSet=[];encounterPack=null;encounterLoading=null;encounterAttempted=false;mapMachines=[];resetViewport();available=hoenn()?hoennPlaces:game.value==='Platinum'?[...rows.sinnoh]:isUnova()?unovaPlaces(game.value):[];
  if(layout)layout.hidden=!supported();
+ placeMapBack();
  if(!supported()){
   list.replaceChildren();$('mapsCount').textContent='';$('mapsHeading').textContent='Region map';details.replaceChildren();noGame();return;
  }
@@ -486,6 +487,7 @@ function open(g,place){
  returnFrom={id:active?.id||'morePage',scroll:window.scrollY,tab:document.querySelector('.main-tabs .selected')?.id};
  $('backMaps').textContent=returnFrom.id==='morePage'?'← More':'← Back';
  $('backMaps').setAttribute('aria-label',returnFrom.id==='morePage'?'More':'Back');
+ placeMapBack();
  for(const el of document.querySelectorAll('main > section'))el.hidden=el!==page;
  document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));
  if(target&&!['Emerald','Platinum','Black','White','Black 2','White 2'].includes(target)){
@@ -531,7 +533,10 @@ $('openMaps').addEventListener('click',()=>open());
 const mapBack=$('backMaps'),mapToolbarActions=mapBack.parentElement,mapHeader=$('mapsBackFallback').parentElement;
 mapHeader.classList.add('td772-context-heading');
 function placeMapBack(){
- const target=page.classList.contains('td63-map-full')?mapToolbarActions:$('mapsBackFallback');
+ const linked=$('mapsLinkedBack');
+ const target=page.classList.contains('td63-map-full')?mapToolbarActions:
+  returnFrom?.id&&returnFrom.id!=='morePage'&&supported()?linked:$('mapsBackFallback');
+ linked.hidden=target!==linked;
  if(mapBack.parentElement!==target)target.append(mapBack);
 }
 placeMapBack();
@@ -553,6 +558,7 @@ $('backMaps').addEventListener('click',()=>{
  stopAnimation();const previous=returnFrom;returnFrom=null;page.hidden=true;
  if(previous?.id&&$(previous.id)){
   if(previous.id==='morePage')window.takActivate(3);
+  else if(previous.id==='td4TeamPlannerPage'){window.td5ReturnTeamPlanner?.(previous.scroll);return;}
   else if(previous.id==='plannerPage')openTool('plannerPage',3);
   else if(previous.id==='battlePage')window.takActivate(1);
   else {$(previous.id).hidden=false;document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',el.id===previous.tab));}

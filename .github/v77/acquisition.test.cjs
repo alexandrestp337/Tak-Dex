@@ -235,20 +235,20 @@ test('Selected V77 routes keep all verified Flygon stages and native direct alte
  assert.deepEqual(JSON.parse(JSON.stringify(trapinch.steps.map(s=>[s.name,s.level]))),[['vibrava',35],['flygon',45]]);
  assert.equal(trapinch.initial.minLevel,21);
  assert.ok(flygon.some(r=>r.startId===329&&r.initial.minLevel===38));
- assert.ok(!flygon.some(r=>r.startId===330));
+ assert.ok(!flygon.some(r=>r.startId===330&&r.initial.kind!=='link-trade'));
  const golduck=data.plannerRoutes('Black 2',get(55),pack);
  assert.equal(golduck[0].startName,'psyduck');
  assert.ok(golduck.some(r=>r.startName==='golduck'&&r.initial.place==='Village Bridge'&&r.steps.length===0));
  const lucario=data.plannerRoutes('Black 2',get(448),pack);
  assert.ok(lucario.some(r=>r.startName==='riolu'&&/friendship/i.test(r.steps[0].requirement)));
- assert.ok(!lucario.some(r=>r.startName==='lucario'));
+ assert.ok(!lucario.some(r=>r.startName==='lucario'&&r.initial.kind!=='link-trade'));
 });
 
 test('Stone demand follows the exact route and reports blocked demand separately',()=>{
  const pack=require('../../db74/e-black-2.json');
  const arcanine=data.plannerRoutes('Black 2',{id:59,name:'arcanine'},pack);
  const ninetales=data.plannerRoutes('Black 2',{id:38,name:'ninetales'},pack);
- assert.ok(arcanine.every(r=>r.steps[0].resource==='fire-stone'));
+ assert.ok(arcanine.filter(r=>r.startId!==59).every(r=>r.steps[0].resource==='fire-stone'));
  assert.ok(ninetales.some(r=>r.startId===38&&r.steps.length===0));
  assert.ok(ninetales.some(r=>r.startId===37&&r.steps[0].resource==='fire-stone'&&r.rank===10));
  const [budget]=data.resourceBudget('Black 2',3,[
@@ -267,4 +267,26 @@ test('Generation V move reminder conditions distinguish original and sequel game
  assert.match(data.moveReminder('Black 2').text,/Pokémon World Tournament.*One Heart Scale.*After Clay.*kiosks/);
  assert.match(data.moveReminder('White').text,/Mistralton City.*One Heart Scale.*Chargestone Cave/);
  assert.equal(data.moveReminder('Red'),null);
+});
+
+test('Generation V link trades preserve exact stages and the C-Gear gate',()=>{
+ for(const subgame of ['black-2','white-2','black','white']){
+  const pack=require('../../db74/e-'+subgame+'.json');
+  const game=subgame.split('-').map(x=>x[0].toUpperCase()+x.slice(1)).join(' ');
+  const routes=data.plannerRoutes(game,{id:523,name:'zebstrika'},pack);
+  const final=routes.find(r=>r.id==='523|link trade||0|0');
+  const earlier=routes.find(r=>r.id==='522|link trade||0|0');
+  assert.equal(final.rank,1);
+  assert.equal(final.steps.length,0);
+  assert.equal(earlier.steps[0].level,27);
+  assert.match(earlier.initial.note,game.endsWith(' 2')?/Bianca after Aspertia Gym/:/Fennel after Striaton Gym/);
+  assert.ok(routes.some(r=>r.initial.place==='Route 7'&&r.initial.kind!=='link-trade'));
+  if(game.endsWith(' 2')){
+   const grotto=routes.find(r=>r.initial.method==='hidden-grotto');
+   assert.equal(grotto.rank,10);
+   assert.equal(grotto.initial.minLevel,55);
+  }
+ }
+ const johto=require('../../db74/e-crystal.json');
+ assert.ok(!data.plannerRoutes('Crystal',{id:55,name:'golduck'},johto).some(r=>r.initial.kind==='link-trade'));
 });

@@ -39,18 +39,10 @@ test('Legacy duplicates without identity are not assigned by party position', ()
  assert.equal(context.ownershipConflict(slots[1], 1), undefined);
 });
 
-test('Family ranking preserves a reachable earlier stage and distinct branches', () => {
- const parents = { 329: 328, 330: 329, 134: 133, 135: 133 };
- const lineage = id => { const ids = new Set(); while (id) { ids.add(id); id = parents[id]; } return ids; };
- const context = vm.createContext({ lineage, routeFits: (route, cap) => route.level <= cap });
- vm.runInContext(section(' function sameFamily(', ' async function findCandidates('), context);
- const trapinch = { id: 328, types: ['ground'], score: 21, routes: [{ level: 21 }] };
- const vibrava = { id: 329, types: ['ground','dragon'], score: 26, routes: [{ level: 35 }] };
- const flygon = { id: 330, types: ['ground','dragon'], score: 32, routes: [{ level: 45 }] };
- const early = context.rankFamilyEndpoints([trapinch, vibrava], 25);
- assert.ok(early.includes(trapinch));
- const late = context.rankFamilyEndpoints([trapinch, vibrava, flygon], 50);
- assert.deepEqual(Array.from(late, row => row.id), [330]);
- assert.equal(context.redundantFamily(trapinch,flygon),true);
- assert.equal(context.redundantFamily({id:134,types:['water']},{id:135,types:['electric']}),false);
+test('Recommendation index retains terminal branches and excludes ancestors regardless of route feasibility', () => {
+ const pack = {mons:[[328],[329,,,,328],[330,,,,329],[133],[134,,,,133],[135,,,,133]]};
+ const context = vm.createContext({pack});
+ vm.runInContext(section(' let lineagePack,parentsById,terminalSpecies;', ' function progressFor('), context);
+ assert.deepEqual(Array.from(vm.runInContext('buildLineageIndex();terminalSpecies',context), row=>row[0]),[330,134,135]);
+ assert.deepEqual(Array.from(context.lineage(330)),[330,329,328]);
 });

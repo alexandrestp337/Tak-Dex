@@ -457,9 +457,9 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #td68MovePage .td72-move-header-actions{display:flex;align-items:center;gap:6px}
 #td68MovePage .td72-move-header-actions button{font-size:.8rem;padding:8px 10px;white-space:nowrap}
 #td72MoveTypePanel{padding:0 0 12px}
-:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
-:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button{background:var(--type-fill);border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
-:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button{background:var(--type-fill);border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
 #td72MoveTypeResults{display:grid;gap:7px}
 #td72MoveTypeResults .td72-type-move{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:var(--card);border:1px solid var(--edge);color:var(--text);padding:10px 12px;min-width:0}
 #td72MoveTypeResults .td72-type-move>span{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
@@ -472,7 +472,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 @media(max-width:355px){#teams .td72-team-actions{gap:3px}#teams .td72-team-actions button{padding:7px 4px}#teams .td72-team-actions .delete-team-link{font-size:.65rem!important}}
 
 /* V72 DEV2: keep type options hidden when unavailable in selected generation. */
-:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button[hidden]{display:none!important}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button[hidden]{display:none!important}
 
 /* V72 DEV2 — Battle opponent typeahead opens above the input, not behind
    Android's on-screen keyboard. Scope to both single/double opponent fields;
@@ -844,8 +844,8 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 :is(#plannerPage,#pokeForm) .td74-stat-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 8px;margin:7px 0 5px}
 :is(#plannerPage,#pokeForm) .td74-stat-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,62px);align-items:center;gap:3px;font-size:.72rem;line-height:1.2;font-weight:650;min-width:0}
 :is(#plannerPage,#pokeForm) .td74-stat-field>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#plannerPage .td75-stat-footer{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:5px}
-#plannerPage .td75-stat-footer small{font-size:.63rem;color:var(--muted);line-height:1.25}
+:is(#plannerPage,#td77BuilderBattle) .td75-stat-footer{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:5px}
+:is(#plannerPage,#td77BuilderBattle) .td75-stat-footer small{font-size:.63rem;color:var(--muted);line-height:1.25}
 #plannerPage .td74-battle-stats .td75-stat-footer button{flex:none;width:auto;min-height:25px;margin:0;padding:3px 7px;font-size:.68rem;border:1px solid var(--edge);border-radius:6px}
 @media(min-width:650px){:is(#plannerPage,#pokeForm) .td74-stat-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
@@ -1109,7 +1109,7 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile[aria-expanded="true"]{--td52-selection:var(--muted);border:3px solid var(--td52-selection)!important;background:color-mix(in srgb,var(--td52-selection) 24%,var(--card))!important;box-shadow:0 0 9px 1px color-mix(in srgb,var(--td52-selection) 50%,transparent)!important;outline:none!important;padding:3px 0!important}
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile.td42-good[aria-expanded="true"]{--td52-selection:#38a86a}
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile.td42-bad[aria-expanded="true"]{--td52-selection:#d94b59}
-:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button.selected{outline:none!important;border-color:var(--td72-color)!important;background:color-mix(in srgb,var(--td72-color) 55%,var(--card))!important;box-shadow:0 0 7px color-mix(in srgb,var(--td72-color) 55%,transparent),inset 0 0 0 1px var(--td72-color)!important}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button.selected{outline:none!important;border-color:var(--td72-color)!important;background:color-mix(in srgb,var(--td72-color) 55%,var(--card))!important;box-shadow:0 0 7px color-mix(in srgb,var(--td72-color) 55%,transparent),inset 0 0 0 1px var(--td72-color)!important}
 #td4TeamPlannerPage label.td4-check{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important}
 #td4TeamPlannerPage label.td4-check input[type=checkbox]{display:inline-block!important;width:15px!important;height:15px!important;margin:0!important;padding:0!important;flex:none!important}
 #td4TeamPlannerPage .td52-milestone{position:relative;min-width:0}#td4TeamPlannerPage .td52-milestone input{padding-right:38px}#td4TeamPlannerPage .td52-milestone-x{box-shadow:none!important}
@@ -1933,3 +1933,46 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 .td775-gym-header small{color:var(--muted);font-size:.73rem}
 #td4Edit .td77-candidate-search[hidden],#td775ReplacementLocked[hidden]{display:none!important}
 #td4TeamPlannerPage .td775-gym-header .td74-dex-map-link{font-size:inherit;padding:0}
+
+/* DEV2 planner editor and linked map controls. */
+#newDialog .buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#newDialog .buttons button{min-height:44px;margin:0;padding-inline:6px}
+:is(#plannerPage,#td77BuilderBattle) .td74-battle-stats .td75-stat-footer button[data-td74-stat-reset]{
+ display:grid;place-items:center;flex:none;width:44px;height:44px;margin:0;padding:0;border-radius:9px
+}
+#td4TeamPlannerPage .td78-actual-stage{color:var(--muted)}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move>button.td772-filter-button{
+ display:none;position:absolute;inset:100% 0 auto auto;width:44px;height:44px;margin:0;z-index:42
+}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden]))>button.td772-filter-button{display:grid}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{width:calc(100% - 52px);height:44px}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{top:calc(100% + 44px)}
+#td41MoveSlots .td78-move-filter-panel{margin-bottom:6px;padding:5px}
+#td41MoveSlots .td78-move-filter-panel .td72-move-types{margin:2px 0 6px}
+#td41MoveSlots .td78-move-filter-panel button{min-height:32px;text-align:center}
+.td78-move-classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#td41MoveSlots .td78-move-classes button{min-width:0;padding:5px 0;font-size:.78rem}
+#td41MoveSlots .td78-move-classes [aria-pressed="true"],
+#td4TeamPlannerPage .td78-route-picker [aria-pressed="true"]{border-color:var(--accent)!important}
+#td4TeamPlannerPage .td78-route-picker>.td774-route-choice::after{content:''}
+#td4TeamPlannerPage .td78-route-picker:not([open])>.td774-route-choice::after{transform:rotate(-45deg)}
+#td4TeamPlannerPage .td78-route-picker[open]>.td774-route-choice::after{transform:rotate(45deg)}
+.td78-route-group{display:grid;gap:4px;padding:6px 0;border-bottom:1px solid var(--edge);font-size:.79rem}
+.td78-route-group>small{color:var(--muted)}
+.td78-route-area{display:grid;gap:3px;padding-inline-start:5px;min-width:0}
+.td78-route-area>div{display:flex;flex-wrap:wrap;gap:4px}
+#td4TeamPlannerPage .td78-route-picker button{min-height:34px;max-width:100%;margin:0;padding:4px 7px;text-align:left;font-size:.75rem}
+/* Resolve the shared secondary fill against the active theme for these controls. */
+:is(#newDialog,#mapsLinkedBack,.td78-route-picker,.td78-move-filter-panel,.td774-preview-actions){
+ --td-secondary-bg:color-mix(in srgb,var(--text) 6%,var(--card))
+}
+#td4TeamPlannerPage .td78-route-picker button.td5-evo-text{color:#5385db!important}
+#td4TeamPlannerPage .td78-route-area>.td74-dex-map-link{justify-self:start;box-shadow:none}
+#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden])){
+ display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px
+}
+#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden]))>#mapsHeading{grid-area:1/1/2/2}
+#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden]))>#mapsLinkedBack{grid-area:1/2/2/3;justify-content:flex-end}
+#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden])) #mapsZoomValue{grid-area:2/2/3/3}
+#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden])) #mapsSelectionLabel{grid-area:2/1/3/2}
+#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden]))>span:last-child{grid-area:3/1/4/-1}

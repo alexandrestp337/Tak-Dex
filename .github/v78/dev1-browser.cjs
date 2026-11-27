@@ -23,7 +23,7 @@ async function create(page,name){
  await page.locator('#addTeam').click();
  await page.locator('#teamName').fill(name);
  await page.locator('#game').selectOption(game);
- await page.getByRole('button',{name:'Create team',exact:true}).click();
+ await page.getByRole('button',{name:'Create',exact:true}).click();
 }
 async function rename(page,id,name){
  await openTeam(page,id);
@@ -272,8 +272,8 @@ async function recoveryAndNative(browser){
   await p.locator('#newDialog').waitFor({state:'hidden'});
   await p.reload();
   const roundTrip=await State(p);
-  const duplicates=Object.values(roundTrip.teams).filter(row=>row.value?.name==='Defense Curl fixture');
-  assert.equal(duplicates.length,2);
+  const duplicates=Object.values(roundTrip.teams).filter(row=>row.value?.name.startsWith('Defense Curl fixture'));
+  assert.deepEqual(duplicates.map(row=>row.value.name).sort(),['Defense Curl fixture','Defense Curl fixture (2)']);
   for(const {value:team} of duplicates){
    assert.deepEqual(roundTrip.plans[game+':'+team.id].value,localOnly.plan);
    assert.equal(roundTrip.links[team.id],undefined);
