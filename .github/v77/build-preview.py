@@ -31,7 +31,7 @@ def main():
     parser.add_argument('commit')
     parser.add_argument('site', type=Path)
     parser.add_argument('origin', help='Dedicated preview URL')
-    parser.add_argument('--branch', choices=[BRANCH, 'v77.1-maintenance'], default=BRANCH)
+    parser.add_argument('--branch', choices=[BRANCH, 'v77.1-maintenance', 'v77.2-development'], default=BRANCH)
     args = parser.parse_args()
     commit = git('rev-parse', '--verify', args.commit + '^{commit}').decode().strip()
     subprocess.run(['git', '-C', ROOT, 'merge-base', '--is-ancestor', commit, args.branch], check=True)
@@ -52,14 +52,15 @@ def main():
     contents = index.read_text()
     contents = contents.replace('https://alexandrestp337.github.io/Tak-Dex/', origin + '/')
     contents = contents.replace('<title>', '<meta name="robots" content="noindex, nofollow">\n<title>Development preview · ')
+    version = re.search(r'<meta name="takdex-version" content="([^"]+)">', contents).group(1)
+    banner = 'Development preview · ' + html.escape(version) + ' · ' + html.escape(commit[:12])
     contents = contents.replace(
         '<body>',
         '<body>\n<div role="note" style="padding:6px;text-align:center;font-size:.78rem;'
-        'border-bottom:1px solid var(--edge)">Development preview · Web V77 · '
-        + html.escape(commit[:12]) + '</div>',
+        'border-bottom:1px solid var(--edge)">' + banner + '</div>',
         1,
     )
-    assert 'Development preview · Web V77' in contents
+    assert banner in contents
     index.write_text(contents)
     worker = dist / 'sw.js'
     worker.write_text(re.sub(r"const NAME='[^']+'", f"const NAME='takdex-v77-preview-{commit[:12]}'", worker.read_text(), count=1))

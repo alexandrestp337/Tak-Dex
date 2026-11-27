@@ -620,3 +620,9 @@ Planned readiness now stops at the last stage available by the encounter. Moves 
 Final acceptance was granted for maintenance checkpoint `2b379d9` with all three acceptance groups passing. This release changes the version labels, web asset identifiers and service-worker cache name. Storage keys, settings, save compatibility and the “Developed by WHOASP” credit are preserved.
 
 Correction 2 passed its targeted Chromium flow and seven Node checks. Alternate branching evolution confirmation was reviewed in code. Browser testing covered the linear Tepig line. Production publishes from `main` through GitHub Pages.
+
+## V77.2-STABLE release
+
+The user approved RC5 at `e156949aea9721e215640af28835fcea586b8e82`. The [V77.2 audit](V77.2-AUDIT.md#rc5-final-acquisition-spacing) records the accepted changes and rendered comparisons. Stable promotion changes release documentation, version labels, asset URLs and the service-worker cache name `takdex-v77.2-stable`. The approved layout, storage keys, save compatibility and “Developed by WHOASP” credit are preserved.
+
+Syntax and diff checks passed. The same-origin V77.1-STABLE → V77.2-STABLE Chromium check verified the service-worker upgrade, offline boot and retention of saved teams, plans and pack data. Physical Samsung behavior, native Android functionality and full remote pack downloads were untested. Production publishes from `main` through GitHub Pages.
