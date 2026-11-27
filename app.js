@@ -4842,7 +4842,7 @@ document.addEventListener('keydown',event=>{
   const requirement=relevant.at(-1).requirement;
   const level=requirement.match(/^Level (\d+)$/i)?.[1];
   const short=level?'Lv. '+level:/friendship/i.test(requirement)?'Friendship':/trade/i.test(requirement)?'Trade':/stone/i.test(requirement)?'Stone':'';
-  const full=relevant.map(step=>step.requirement).join(' → ');
+  const full=[td41PokemonLabel(from.name),...relevant.map(step=>td41PokemonLabel(step.name)+' ('+step.requirement+')')].join(' → ');
   return `<span class="td42-arrow td774-evolution-arrow" title="${safe(full)}">${short?`<small aria-hidden="true">${safe(short)}</small>`:''}<span aria-hidden="true">→</span><span class="td773-sr-only">${safe(full)}</span></span>`;
  }
  function plannerLockIcon(classes=''){

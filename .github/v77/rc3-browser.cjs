@@ -14,7 +14,7 @@ function fixture(){
   image:'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/'+id+'.png'});
  const plan=(pokemon,moves,extra={})=>({...pokemon,name:pokemon.name.toLowerCase(),confirmedCandidate:true,
   plannedMoves:moves.map(name=>({move:name,purpose:'keep'})),finalManualSlots:[true,true,true,true],...extra});
- const purrloin=mon(509,'Purrloin',['dark'],[move('Scratch','normal',40,'physical')]);
+ const purrloin=mon(509,'Purrloin',['dark'],[move('Scratch','normal',40,'physical'),move('Fury Swipes','normal',18,'physical',80)]);
  const growlithe=mon(58,'Growlithe',['fire']);
  const tepig=mon(498,'Tepig',['fire'],[move('Tackle','normal',50,'physical'),move('Ember','fire',40,'special')]);
  const emboar=mon(500,'Emboar',['fire','fighting']);
@@ -22,7 +22,7 @@ function fixture(){
  const golduck=mon(55,'Golduck',['water']);
  const patrat=mon(504,'Patrat',['normal'],[move('Tackle','normal',50,'physical')],5);
  const espeon=mon(196,'Espeon',['psychic']);
- const first=[plan(growlithe,['flame-wheel'],{originName:'purrloin',originSlot:0}),
+ const first=[plan(growlithe,['flame-wheel','flamethrower'],{originName:'purrloin',originSlot:0}),
   plan(emboar,['hammer-arm','flare-blitz'],{originName:'tepig',originSlot:1}),
   plan(golduck,['water-gun','ice-punch'],{originName:'psyduck',originSlot:2,locked:true})];
  const second=[plan(patrat,[],{originName:'patrat',originSlot:0}),
@@ -90,6 +90,12 @@ function fixture(){
    assert.deepEqual(after[0].rows,after[1].rows);
    assert.ok(after[0].names.find(n=>n.name==='Flame Wheel').lines===1);
    assert.ok(after[1].names.find(n=>n.name==='Hammer Arm').lines===1);
+   assert.ok(after[0].names.some(n=>n.name==='Flamethrower'));
+   assert.ok(await tile(0).locator('.movechip > span').evaluateAll(names=>names.every(el=>{
+    const range=document.createRange();range.selectNodeContents(el);
+    const box=el.parentElement.getBoundingClientRect();
+    return [...range.getClientRects()].every(rect=>rect.left>=box.left-1&&rect.right<=box.right+1);
+   })));
    await page.waitForFunction(()=>document.querySelector('[data-td4-slot="2"] .td774-evolution-arrow')?.textContent.includes('Lv. 33'));
    assert.equal(await tile(0).locator('.td774-evolution-arrow').count(),0);
    await shots('rc3-pairs','#td4Slots');
