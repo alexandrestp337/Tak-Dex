@@ -4623,7 +4623,7 @@ document.addEventListener('keydown',event=>{
   const member=ownedFor(p,slot);
   const target=p;
   const route=chosenRoute(p,true,slot);
-  const chosen=p.duringTargetId;
+  const chosen=p.duringTargetId||pack?.mons?.find(([,name])=>name===p.duringSpecies)?.[0];
   if(chosen&&lineage(p.id).has(chosen))return pack?.mons?.find(([id])=>id===chosen)?.[1]||p.duringSpecies||p.name;
   if(route?.initial.kind!=='owned'&&route)return route.startName;
   return member&&lineage(target.id).has(Number(member.id))?moveKey(member.name):route?.startName||p.duringSpecies||p.name;

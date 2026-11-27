@@ -15,9 +15,11 @@ const widths=baseline?[360]:[360,412];
   const scenario=new URLSearchParams(location.search).get('scenario');
   const game='Black 2',moves=['bite','crunch','dig','earthquake'].map(move=>({move,purpose:'keep'}));
   localStorage.setItem('poketact-teams',JSON.stringify([{id:'ownership',name:'Ownership',game,pokemon:[]}]));
+  const duringMoves=moves.map(move=>({...move}));
+  moves[1]={move:'bite',purpose:'temporary',replacement:'crunch'};
   const slot={
    id:553,name:'krookodile',types:['ground','dark'],originPid:15,originName:'purrloin',confirmedCandidate:true,locked:true,
-   duringTargetId:551,duringSpecies:'sandile',plannedMoves:moves,duringMoves:moves,finalAutoMoves:['bite'],
+   duringTargetId:551,duringSpecies:'sandile',plannedMoves:moves,duringMoves,finalAutoMoves:['bite'],
    acquisitionRoute:{id:'551|walk|Route 4|14|17',startId:551}
   };
   const slots=scenario==='competing'?[slot,{...slot,originPid:91}]:[slot];
@@ -46,6 +48,7 @@ const widths=baseline?[360]:[360,412];
  await sync([original],true);
  await page.locator('[data-td41-team-plan="ownership"]').click();
  await page.waitForFunction(()=>document.querySelector('#td4Slots').children.length===6);
+ const originalIntent=intent(await plan());
  if(!baseline){
   await page.waitForFunction(()=>document.querySelector('#td77Gyms [title^="Actual:"]'));
   const coverage=()=>page.locator('#td77Gyms .td64-league-pair').evaluateAll(nodes=>nodes.slice(0,2).map(node=>[...node.children].map(el=>el.title)));
@@ -59,12 +62,13 @@ const widths=baseline?[360]:[360,412];
  await sync([patrat,original,sandile]);
  if(baseline){
   assert.match(await tile.innerText(),/Purrloin/);
-  assert.doesNotMatch(await tile.innerText(),/Sandile/);
+  assert.match(await tile.innerText(),/Obtain Sandile/);
   await saveEvidence(tile,'baseline');
   console.log('Reproduced: valid imported Purrloin followed by linked Patrat/Purrloin/Sandile remains associated with Purrloin.');
   await page.close();continue;
  }
  // Further reconciliation scenarios run against the corrected candidate.
+ assert.equal(intent(await plan()),originalIntent);
  await checkCandidate({page,tile,sync,mon,original,patrat,sandile,plan,open,width,party});
  for(const scenario of ['direct','competing','duplicates']){
   await page.evaluate(key=>{localStorage.removeItem(key);localStorage.removeItem('poketact-teams')},key);
@@ -107,14 +111,15 @@ const widths=baseline?[360]:[360,412];
  }}finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});
 
+const intent=state=>JSON.stringify({deadline:state.deadline,slots:state.slots.map(p=>p&&[
+  p.id,p.duringTargetId,p.duringSpecies,p.plannedMoves,p.duringMoves,p.locked,p.acquisitionRoute,p.finalAutoMoves
+ ])});
+
 async function checkCandidate({page,tile,sync,mon,original,patrat,sandile,plan,open,width,party}){
  const wait=pattern=>page.waitForFunction(pattern=>new RegExp(pattern).test(document.querySelector('[data-td4-slot="0"]').innerText),pattern);
  await wait('Sandile');
  await saveEvidence(tile,width+'-fulfilled');
  assert.doesNotMatch(await tile.innerText(),/Purrloin/);
- const intent=state=>JSON.stringify({deadline:state.deadline,slots:state.slots.map(p=>p&&[
-  p.id,p.duringTargetId,p.duringSpecies,p.plannedMoves,p.duringMoves,p.locked,p.acquisitionRoute,p.finalAutoMoves
- ])});
  const before=intent(await plan());
  assert.equal((await plan()).slots[0].fulfilledPid,42);
  const sameIntent=async()=>assert.equal(intent(await plan()),before);
@@ -128,6 +133,7 @@ async function checkCandidate({page,tile,sync,mon,original,patrat,sandile,plan,o
  const current=(await party())[2];
  assert.equal(current.level,52);assert.equal(current.saveStats.itemId,287);assert.equal(current.saveStats.abilityId,153);
  assert.match(await tile.innerText(),/Crunch/);
+ assert.ok(await tile.locator('[data-td77-retained=true]').count());
  await sync(reordered,false,'unchanged');await sameIntent();
  await page.locator('[data-td4-slot="0"]').click();
  await page.locator('[data-view="during"]').click();
