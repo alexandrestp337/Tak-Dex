@@ -381,7 +381,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #td71CompareQuick .td71-quick-slot small{display:block;color:var(--muted)}
 #td71CompareQuick .td71-quick-slot strong{display:block;margin-top:3px}
 #td71CompareQuick .td71-quick-slot button{flex:none}
-#td71QuickClose{margin-top:16px;width:100%}
+
 
 
 /* V71 DEV2 — compact collapsed teams and inline Pokédex base stats.
@@ -457,9 +457,9 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #td68MovePage .td72-move-header-actions button{font-size:.8rem;padding:8px 10px;white-space:nowrap}
 #td72MoveTypePanel{padding:0 0 12px}
 #td72MoveTypePanel>label{max-width:440px}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button{background:color-mix(in srgb,var(--td72-color) 25%,var(--card));border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button{background:color-mix(in srgb,var(--td72-color) 25%,var(--card));border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
 #td72MoveTypeResults{display:grid;gap:7px}
 #td72MoveTypeResults .td72-type-move{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;text-align:left;background:var(--card);border:1px solid var(--edge);color:var(--text);padding:10px 12px;min-width:0}
 #td72MoveTypeResults .td72-type-move>span{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
@@ -472,7 +472,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 @media(max-width:355px){#teams .td72-team-actions{gap:3px}#teams .td72-team-actions button{padding:7px 4px}#teams .td72-team-actions .delete-team-link{font-size:.65rem!important}}
 
 /* V72 DEV2: keep type options hidden when unavailable in selected generation. */
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button[hidden]{display:none!important}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button[hidden]{display:none!important}
 
 /* V72 DEV2 — Battle opponent typeahead opens above the input, not behind
    Android's on-screen keyboard. Scope to both single/double opponent fields;
@@ -1114,7 +1114,7 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile[aria-expanded="true"]{--td52-selection:var(--muted);border:3px solid var(--td52-selection)!important;background:color-mix(in srgb,var(--td52-selection) 24%,var(--card))!important;box-shadow:0 0 9px 1px color-mix(in srgb,var(--td52-selection) 50%,transparent)!important;outline:none!important;padding:3px 0!important}
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile.td42-good[aria-expanded="true"]{--td52-selection:#38a86a}
 #td4TeamPlannerPage .td74-mon-row .td42-league-tile.td42-bad[aria-expanded="true"]{--td52-selection:#d94b59}
-:is(#td72MoveTypePanel,#typeExplorerPage) .td72-move-types button.selected{outline:none!important;border-color:var(--td72-color)!important;background:color-mix(in srgb,var(--td72-color) 55%,var(--card))!important;box-shadow:0 0 7px color-mix(in srgb,var(--td72-color) 55%,transparent),inset 0 0 0 1px var(--td72-color)!important}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions) .td72-move-types button.selected{outline:none!important;border-color:var(--td72-color)!important;background:color-mix(in srgb,var(--td72-color) 55%,var(--card))!important;box-shadow:0 0 7px color-mix(in srgb,var(--td72-color) 55%,transparent),inset 0 0 0 1px var(--td72-color)!important}
 #td4TeamPlannerPage label.td4-check{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important}
 #td4TeamPlannerPage label.td4-check input[type=checkbox]{display:inline-block!important;width:15px!important;height:15px!important;margin:0!important;padding:0!important;flex:none!important}
 #td4TeamPlannerPage .td52-milestone{position:relative;min-width:0}#td4TeamPlannerPage .td52-milestone input{padding-right:38px}#td4TeamPlannerPage .td52-milestone-x{box-shadow:none!important}
@@ -1234,7 +1234,7 @@ body.td63-map-full-body{overflow:hidden!important}
 .moveRow.td7-inline-clear,.td65-move-slot.td7-inline-clear{grid-template-columns:auto minmax(0,1fr)!important}
 #td4TeamPlannerPage .td5-inline-goal.td7-inline-clear{grid-template-columns:minmax(60px,1fr) auto minmax(90px,1.45fr)!important}
 #td56ComparePage .td56-combo.td7-input-shell input{padding-right:42px!important}
-.tm-combo.td7-input-shell input,.td74-pokemon-search.td7-input-shell input{padding-right:82px!important}
+.td74-pokemon-search.td7-input-shell input{padding-right:82px!important}
 #td68MovePage #td5FilterFields label{margin-block:0 7px!important}
 #td7FeedbackForm label{display:block;margin:0 0 10px}#td7FeedbackForm textarea{width:100%;min-height:120px;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--edge);border-radius:9px;padding:10px;font:inherit}
 #td7FeedbackForm button{margin:4px 0}#td7FeedbackForm .td7-honeypot{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -1520,3 +1520,200 @@ body.light .td76-battle-warning.td76-battle-opportunity{background:#ecfaf2;color
 .td77-duel-ability,.td77-duel-item{min-height:1em;font-size:.72rem;color:var(--muted);overflow-wrap:anywhere}
 .td77-turn-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center;height:2rem}
 .td77-turn-row [data-side="opp"]{grid-column:2}
+
+#td4TeamPlannerPage .td43-candidate-pick{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y}
+
+#dexResult .td77-dex-ability{grid-column:1/-1;display:grid;gap:4px;max-width:34rem}
+#dexResult .td77-encounter-access{display:block;color:var(--muted)}
+#typeExplorerResults .td61-entry{scroll-margin-top:16px}
+
+#td73DexSelector{overflow:visible;position:relative;z-index:8}
+#td73DexSelector>.tool-card{overflow:visible;border-top:0;border-radius:inherit}
+#dexResults{max-height:min(42vh,19rem);overflow:auto;z-index:40;overscroll-behavior:contain}
+
+#td77Improvements{display:grid;gap:6px}
+#td77Improvements>div{display:grid;gap:3px;justify-items:start}
+#td77MoveViews{gap:5px;flex-wrap:wrap}
+#td77MoveViews button[aria-pressed="true"]{border-color:var(--accent)}
+.td77-inline-check{display:flex;align-items:center;gap:6px}
+.td77-inline-check input{width:auto}
+
+label:has(>input[type="checkbox"]){display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:.5rem}
+label>input[type="checkbox"]{margin:0;flex:0 0 auto;width:auto;min-width:0}
+#td4Edit,#td63ManualCandidate{scroll-margin-top:12px}
+#td4TeamPlannerPage .td77-during-flow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px}
+#td4TeamPlannerPage .td77-during-flow select{min-width:0;max-width:100%}
+#mapsPage .td73-map-toolbar #backMaps{margin-inline-start:auto;white-space:nowrap}
+
+.td77-evolution-path{display:grid;gap:3px;padding:6px 8px;overflow-wrap:anywhere}
+
+#td4TeamPlannerPage .td42-settings>label:has(>input[type=checkbox]), label:has(>input[type=checkbox]+span){
+ display:flex;flex-direction:row;align-items:center;gap:8px;min-height:32px;
+}
+#td4TeamPlannerPage .td42-settings>label>input[type=checkbox], label>input[type=checkbox]{width:16px;height:16px;min-height:0;flex:0 0 16px;padding:0;margin:0}
+#td77MoveViews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:8px 0}
+#td77MoveViews button{border:0;border-bottom:2px solid var(--edge);border-radius:0;background:transparent;color:var(--muted);min-height:42px}
+#td77MoveViews button[aria-selected=true]{border-bottom-color:var(--accent);color:var(--text);font-weight:800}
+#td4TeamPlannerPage .td42-move-flow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.15fr);justify-content:stretch;gap:4px}
+#td4TeamPlannerPage .td42-move-flow .movechip{max-width:100%;white-space:normal;overflow-wrap:normal;word-break:normal;font-size:clamp(.75rem,2.8vw,.85rem);justify-self:start}
+#td4TeamPlannerPage .td42-move-flow .td42-arrow{padding:0;margin:0}
+#td4TeamPlannerPage .td77-analysis-summary{position:relative;display:grid;gap:3px;padding:4px 26px 4px 0;list-style:none;cursor:pointer}
+#td4TeamPlannerPage .td77-analysis-summary::-webkit-details-marker{display:none}
+#td4TeamPlannerPage .td77-analysis-summary::after{content:'⌄';position:absolute;right:5px;top:7px;color:var(--muted)}
+#td4TeamPlannerPage details[open]>.td77-analysis-summary::after{transform:rotate(180deg)}
+#td4TeamPlannerPage .td77-analysis-summary strong{font-size:1rem;font-weight:800}
+#td4TeamPlannerPage .td77-analysis-summary small{font-size:.76rem;font-weight:500}
+#td56ComparePage .td56-cards{scroll-margin-top:12px}
+@media(max-width:600px){
+ #mapsPage .td73-map-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px}
+ #mapsPage #mapsZoomValue{grid-row:1;grid-column:2}
+ #mapsPage #mapsSelectionLabel{grid-column:1/-1;font-size:.72rem;min-width:0}
+ #mapsPage .td73-map-toolbar>span:not(#mapsZoomValue){grid-column:1/-1;display:flex;flex-wrap:nowrap;width:100%;gap:4px}
+ #mapsPage .td73-map-toolbar>span>button{flex:0 0 36px;min-width:36px;height:38px}
+ #mapsPage .td73-map-toolbar button[data-compact-icon]{font-size:0}
+ #mapsPage .td73-map-toolbar button[data-compact-icon]::before{content:attr(data-compact-icon);font-size:1.05rem}
+ #mapsPage .td73-map-toolbar #backMaps{flex:0 0 auto;padding-inline:8px}
+ #mapsPage.td63-map-full #mapsZoomValue{justify-self:end}
+ #mapsPage .td73-map-toolbar :is(#mapsZoomIn,#mapsZoomOut){height:38px}
+}
+
+/* V77 Round 5: shared interaction, Team Planner and Move Checker. */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+#td4Edit #td72MoveHeading .td7-reset-top{justify-content:space-between;align-items:center;gap:8px}
+#td4Edit #td4Clear{margin-left:auto}
+#td77SlotRoute,[data-td77-preview-route]{margin:6px 0}
+#td77SlotRoute select,[data-td77-preview-route] select{width:100%;min-width:0;text-overflow:ellipsis}
+#td4TeamPlannerPage .td77-evolution-path strong,#td4TeamPlannerPage .td77-evolution-path small{min-width:0;overflow-wrap:normal}
+#td4TeamPlannerPage .td42-mon-pair{align-items:stretch}
+#td4TeamPlannerPage .td42-mon-pair>span:not(.td42-arrow){display:grid;grid-template-rows:auto 1em auto;justify-items:center;align-items:start}
+#td4TeamPlannerPage .td42-mon-pair .td42-arrow{align-self:start;margin-top:clamp(25px,7vw,45px)}
+#td4TeamPlannerPage .td42-mon-pair .pills{min-height:32px;align-content:flex-start}
+#td4TeamPlannerPage .td42-mon-pair .pill{white-space:nowrap;overflow-wrap:normal}
+#td4TeamPlannerPage .td42-tile-moves .movechip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#td4TeamPlannerPage .td42-tile-moves .movechip>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#td4TeamPlannerPage .td43-tile-flow>.td42-empty-move{overflow:hidden}
+#td4PlanProgress h4{margin:10px 0 5px}
+#td4PlanProgress>div{display:flex;gap:5px;margin-bottom:5px}
+#td4PlanProgress>div>span{flex:1;min-width:0;text-align:center;padding:5px 2px;border:1px solid var(--edge);border-radius:8px}
+#td4PlanProgress strong,#td4PlanProgress small{display:block}
+#td4PlanProgress small{font-size:.7rem;color:var(--muted)}
+#td77CoverageSummary{color:var(--muted)}
+#td77TypeFilter{min-height:48px;width:42px;padding:3px;background:var(--card);border:1px solid var(--edge);color:var(--muted)}
+#td77TypeFilter.selected,#td77TypeOptions [aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+#td77ActiveTypes{grid-column:1/-1;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+#td77ActiveTypes:empty{display:none}
+#td4Search{width:100%;margin:0}
+#td77ActiveTypes button{padding:2px 7px;min-height:25px}
+#td4Candidates [data-td77-more-candidates]{width:100%;margin:6px 0}
+.td77-move-result-lines,.td77-planner-move-info{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 6px;text-align:left;width:100%;min-width:0}
+.td77-move-result-lines>strong,.td77-planner-move-info>strong{min-width:0;overflow-wrap:normal;line-height:1.12}
+.td77-move-result-lines>.pill,.td77-planner-move-info>.pill{justify-self:end;white-space:nowrap}
+.td77-move-result-lines>small:last-child,.td77-planner-move-info>small:last-child{text-align:right}
+.td77-move-result-lines>small,.td77-planner-move-info>small{font-size:.68rem}
+#td41MoveSlots .td77-planner-move-info{margin:3px 0;padding:3px 4px;min-height:34px;font-size:.8rem;background:var(--card);border:1px solid var(--edge);color:var(--text)}
+#td41MoveSlots .td77-planner-move-info .pill{font-size:.66rem;padding:2px 4px}
+#td41MoveSlots .td77-during-flow .search{min-width:0}
+#td41MoveSlots .search .suggestions{max-height:min(52vh,270px);overflow:auto;z-index:20;min-width:min(208px,68vw);left:auto;right:0}
+#td41MoveSlots .search:has(.suggestions:not([hidden])){z-index:12}
+#td41MoveSlots .td77-move-option{padding:5px 7px}
+#td68MovePage .td77-planning-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:8px 0}
+#td68MovePage .td77-planning-tabs button{border:0;border-bottom:2px solid var(--edge);border-radius:0;background:transparent;color:var(--muted);min-height:42px}
+#td68MovePage .td77-planning-tabs button[aria-selected="true"]{border-bottom-color:var(--accent);color:var(--text);font-weight:800}
+#td68MovePage .td72-type-move{display:block;text-align:left;min-height:46px}
+#td68MovePage #tmMoveResults button,#td68MovePage #td68MoveSuggest button{min-height:44px}
+#td68MovePage .td64-move-heading{align-items:center}
+#dexResult .td681-level{overflow-wrap:normal}
+.td77-quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.td77-quick-actions #td77QuickOpen{background:var(--accent);color:#fff}
+.td77-pokemon-actions{display:grid;gap:5px}
+#td41MoveSlots .td42-move-flow .td77-planner-move-info>small:last-child{grid-column:1/-1;text-align:left}
+#td41MoveSlots .td42-move-flow .td77-planner-move-info>strong{grid-column:1/-1}
+#td41MoveSlots .td42-move-flow .td77-planner-move-info>small:first-of-type{grid-area:2/1/3/2}
+.td77-candidate-search{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:start;gap:4px}
+#td4SearchResults{position:absolute;inset:100% 0 auto;z-index:29}
+#td77TypeOptions{position:absolute;z-index:30;top:100%;left:0;right:0;padding:8px;background:var(--card);border:1px solid var(--edge);border-radius:9px;box-shadow:0 9px 22px #0006}
+
+/* V77 Round 6 uses existing comparison and search proportions. */
+#td4TeamPlannerPage .td43-tile-flow.td77-missing-actual{grid-template-columns:auto auto minmax(0,1fr)}
+#td4TeamPlannerPage .td77-no-actual{color:var(--muted);font-size:.73rem;pointer-events:none}
+.td77-quick-actions{margin-top:12px;align-items:stretch}
+.td77-quick-actions button{margin:0;width:100%;min-height:44px;padding:7px 5px;font-size:.85rem;border-radius:10px}
+#dexResult .td681-move-head.td77-special-learn{grid-template-columns:minmax(0,1fr) auto}
+#dexResult .td77-dex-acquisition{display:grid;gap:2px;margin:4px 0 0;color:var(--muted)}
+#td4TeamPlannerPage .td77-move-comparison{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch}
+#td41MoveSlots .td77-move-comparison .td77-planner-move-info{margin:0;height:100%;border-radius:10px}
+#td41MoveSlots .td77-move-comparison>.td42-arrow{align-self:center}
+#td41MoveSlots .td77-move-comparison{position:relative;overflow:visible}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move{position:static;min-width:0}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move input{position:absolute;inset:0 0 0 auto;width:45%;height:100%;margin:0;opacity:0;cursor:pointer}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{inset:100% 0 auto;width:100%;height:36px;opacity:1;z-index:42;cursor:text}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{position:absolute;top:calc(100% + 36px);left:0;right:0;width:auto;max-width:100%;z-index:42;overflow:auto}
+#td41MoveSlots .td77-move-option{min-width:0;white-space:normal;overflow-wrap:anywhere}
+#td41MoveSlots .td77-editor-empty{align-self:center;justify-self:end;color:var(--muted)}
+#td41MoveSlots .td77-move-comparison:has(.td77-editor-empty){grid-template-columns:auto auto minmax(0,1fr)}
+#td4Edit:has(#td72MoveHeading[hidden])>.td42-settings:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.td77-family-warning,.td77-resource-summary>div>small{display:block}
+#td77GymSummary[data-readiness-status],#td77LeagueSummary [data-readiness-status],.td42-league-group[data-readiness-status]>.bar>b{color:var(--readiness-text,var(--muted))}
+[data-readiness-status="good"]{--readiness-text:#38a965}
+[data-readiness-status="nonstab"]{--readiness-text:#bd7e20}
+[data-readiness-status="bad"]{--readiness-text:#dc5465}
+.td77-candidate-actions{display:grid;gap:4px;margin:6px 0}
+.td77-coverage-line{display:block;line-height:1.35}
+.td77-resource-summary{display:grid;gap:8px;margin-top:10px}
+.td77-resource-summary h4{margin:0}
+.td77-resource-summary>div{border-top:1px solid var(--edge);padding:6px 0 0}
+.td77-resource-summary strong+.note,.td77-resource-summary strong+small{color:var(--muted)}
+.td77-resource-summary dl{margin:4px 0;display:grid;gap:3px;font-size:.82rem}
+.td77-resource-summary dl>div{display:flex;justify-content:space-between;gap:5px}
+.td77-resource-summary dd{margin:0;font-weight:700}
+
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move input{display:none}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{display:block}
+.td78-open-move{position:absolute;inset:0 0 0 auto;width:45%;opacity:0;margin:0}
+.td78-open-move:focus-visible{opacity:1;background:transparent;color:transparent;outline:2px solid var(--accent)}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{max-height:none;overflow:visible;padding:7px;box-sizing:border-box}
+.td78-move-actions{display:flex;gap:4px;margin-bottom:6px}
+#td41MoveSlots .td78-move-actions button{flex:1;min-width:0;text-align:center;white-space:normal}
+.td78-move-results{max-height:min(34vh,230px);overflow:auto;min-width:0}
+.td78-category>details,.td77-resource-summary>details{padding:4px 8px;background:var(--card);border-radius:8px;margin:4px 0}
+.td78-category details>summary,.td78-disclosure>summary{cursor:pointer;overflow-wrap:anywhere}
+.td78-category details>small,.td77-resource-summary details>small,.td78-benefits>small{display:block}
+#td4Edit>.td42-settings:first-of-type:not([open]){margin-top:4px;padding-top:0}
+#td4Edit>.td42-settings:first-of-type:not([open])>summary{padding-block:6px}
+
+/* Planner disclosures share the application's existing chevrons. */
+#td77Improvements .td78-category{margin:0;padding:0}
+#td77Improvements .td78-category>summary{font-size:.86rem;padding:7px 24px 7px 0}
+#td77Improvements .td78-category details{margin:3px 0;padding:0 7px;background:var(--bg);border-radius:8px}
+#td77Improvements .td78-category details>summary{font-size:.78rem;line-height:1.25;padding:6px 24px 6px 0}
+#td77Improvements .td78-category details[open]>:last-child{margin-bottom:5px}
+#td77Improvements .td78-category details>button{width:100%;min-height:32px;padding:4px 6px;font-size:.78rem;margin:4px 0}
+#td77Improvements .td77-resource-summary{gap:0;margin:0}
+.td79-pokemon-compare,.td79-move-compare{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px}
+.td79-pokemon-compare>div{text-align:center;font-size:.78rem}
+.td79-pokemon-compare img{display:block;width:48px;height:48px;object-fit:contain;margin:auto}
+.td79-pokemon-compare .pills{justify-content:center}
+.td79-move-compare{align-items:stretch}
+.td79-move-compare>span{align-self:center}
+.td79-move-compare .td77-planner-move-info{min-width:0;background:var(--card);color:var(--text);margin:0;border:1px solid var(--edge);border-radius:8px;padding:4px}
+.td79-coverage{margin:4px 0}
+#td41MoveSlots .td78-move-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+#td41MoveSlots .td78-move-actions button{display:grid;justify-items:center;gap:2px;min-height:38px;padding:3px 0;font-size:.69rem;line-height:1.1;white-space:nowrap}
+.td78-move-actions svg{width:13px;height:13px}
+#td41MoveSlots .td79-move-choice{border:1px solid var(--edge);border-radius:8px;margin:3px 0;padding:0 5px}
+#td41MoveSlots .td79-move-choice>button{padding:4px 0;border:0}
+.td79-move-choice .td62-move-timing{display:block;font-size:.68rem}
+.td79-move-choice .td62-move-timing summary{padding-block:3px}
+#td4Edit #td77SlotRoute:empty,#td4Edit #td41MoveSlots:empty{display:none}
+#td4TeamPlannerPage #td4Slots>#td4Edit:has(#td72MoveHeading[hidden]){padding-block:4px}
+#td4Edit>.td42-settings:first-of-type>summary{padding-block:6px}
+
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) .td77-planner-move-info,
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move>.suggestions:not([hidden]){border:1px solid var(--accent)}
+#td41MoveSlots .td78-move-results{max-height:min(38vh,260px)}
+#td4Candidates .td80-candidate-acquisition>summary{font-size:.82rem;padding-block:4px}
+#td4Candidates .td80-candidate-acquisition>small{display:block;margin:2px 0}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{border:1px solid var(--accent)}
+#td4Slots>.td4-planned-slot{position:relative}
+.td81-plan-lock{position:absolute;top:6px;right:6px;width:13px;height:13px;color:var(--muted);pointer-events:none}

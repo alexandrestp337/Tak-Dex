@@ -2,8 +2,8 @@
 (function (root) {
  'use strict';
  const layouts = [
-  {size:0x24000, footer:0x8c, trainer:0x68, versions:[20,21]},
-  {size:0x26000, footer:0x94, trainer:0xb0, versions:[22,23]}
+  {size:0x24000, footer:0x8c, trainer:0x68,misc:[0x21200,0xec],events:[0x20100,0x3ec,0x27c],inventory:0x9c0,hof:0x64, versions:[20,21]},
+  {size:0x26000, footer:0x94, trainer:0xb0,misc:[0x21100,0xf0],events:[0x1ff00,0x4e0,0x35e],inventory:0x9ec,hof:0x7c, versions:[22,23]}
  ];
  const games = {20:'White',21:'Black',22:'White 2',23:'Black 2'};
  const keys = ['hp','attack','defense','speed','special-attack','special-defense'];
@@ -53,6 +53,41 @@
    ivs:Object.fromEntries(keys.map((key,i)=>[key,(ivWord>>>(5*i))&31])),
    evs:Object.fromEntries(keys.map((key,i)=>[key,bytes[0x18+i]]))};
  }
+ function progression(bytes,offset,layout,validBlock){
+  const data=view(bytes), sequel=layout.versions.includes(23);
+  const [misc,miscLength]=layout.misc,[events,eventLength,flagOffset]=layout.events;
+  const result={};
+  if(validBlock(offset+misc,miscLength,52)){
+   const names=sequel?['Basic','Toxic','Insect','Bolt','Quake','Jet','Legend','Wave']:
+    ['Trio','Basic','Insect','Bolt','Quake','Jet','Freeze','Legend'];
+   result.badges=names.filter((_,i)=>bytes[offset+misc+4]&(1<<i));
+   result.badgeCount=result.badges.length;
+  }
+  if(validBlock(offset+events,eventLength,45)){
+   const flag=i=>Boolean(bytes[offset+events+flagOffset+(i>>3)]&(1<<(i&7)));
+   result.events=sequel?{hallOfFame:flag(2400),trading:flag(106),seasideCaveCrustleGone:flag(868),receivedZorua:flag(289)&&flag(714)}:
+    {firstGameClear:flag(2400),trading:flag(115),victoryRoadObstacleCleared:flag(652),pinwheelObstacleCleared:flag(653)};
+   result.leagueCompleted=flag(2400);
+   result.postgame=flag(2400);
+  }
+  const trainer=offset+0x19400;
+  const hallOfFame=data.getUint16(trainer+0x40,true)===0xc21e&&data.getUint32(trainer+layout.hof,true)>0;
+  if(hallOfFame){
+   result.leagueCompleted=true;
+   result.championCompleted=true;
+   result.postgame=true;
+  }else if(sequel&&result.events)result.championCompleted=result.events.hallOfFame;
+  if(validBlock(offset+0x18400,layout.inventory,25)){
+   const owned=new Set();
+   for(let pos=offset+0x18a24;pos<offset+0x18bd8;pos+=4){
+    const id=data.getUint16(pos,true),count=data.getUint16(pos+2,true);
+    if(count&&id>=420&&id<=425)owned.add(id);
+   }
+   const hms=['cut','fly','surf','strength','waterfall','dive'];
+   result.hms=hms.filter((_,i)=>owned.has(i+420));
+  }
+  return result;
+ }
  function parse(input) {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
   if (bytes.length!==0x80000) throw Error('Choose a 512 KiB raw Black, White, Black 2 or White 2 save.');
@@ -69,7 +104,7 @@
    if (!validBlock(party,0x534,26) || !validBlock(trainer,layout.trainer,27)) continue;
    try {
     const pokemon=Array.from({length:count},(_,i)=>record(bytes.subarray(party+8+i*220,party+8+(i+1)*220)));
-    candidates.push({game:games[version],trainerKey:data.getUint32(trainer+0x14,true),sequence:u16(footer+layout.footer),pokemon});
+    candidates.push({game:games[version],trainerKey:data.getUint32(trainer+0x14,true),sequence:u16(footer+layout.footer),pokemon,progression:progression(bytes,offset,layout,validBlock)});
    } catch { /* An intact backup can survive corruption in the newest bank. */ }
   }
   if (!candidates.length) throw Error('No valid Generation V party and trainer blocks found.');

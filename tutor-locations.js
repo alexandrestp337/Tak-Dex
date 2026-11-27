@@ -110,6 +110,16 @@ add(b2w2,"Humilau City","Yellow Shard tutor",[["bind", "2 Yellow Shards"], ["sno
 add(b2w2,"Nacrene City","Green Shard tutor",[["worry-seed", "6 Green Shards"], ["gastro-acid", "6 Green Shards"], ["helping-hand", "8 Green Shards"], ["after-you", "8 Green Shards"], ["magic-room", "8 Green Shards"], ["wonder-room", "8 Green Shards"], ["spite", "8 Green Shards"], ["recycle", "10 Green Shards"], ["trick", "10 Green Shards"], ["stealth-rock", "10 Green Shards"], ["outrage", "10 Green Shards"], ["endeavor", "10 Green Shards"], ["sleep-talk", "10 Green Shards"], ["skill-swap", "10 Green Shards"], ["snatch", "10 Green Shards"]],b2ref);
 add(b2w2,"Pokémon World Tournament","Special tutor stalls",[["grass-pledge","Free","Eligible starter; sufficient friendship"],["fire-pledge","Free","Eligible starter; sufficient friendship"],["water-pledge","Free","Eligible starter; sufficient friendship"],["frenzy-plant","Free","Eligible fully evolved starter; sufficient friendship"],["blast-burn","Free","Eligible fully evolved starter; sufficient friendship"],["hydro-cannon","Free","Eligible fully evolved starter; sufficient friendship"]],b2ref);
 add(b2w2,"Opelucid City","Drayden’s house",[["draco-meteor","Free","After defeating Drayden; eligible Dragon Pokémon"]],b2ref);
+const bw=['Black','White'],gen5=[...bw,...b2w2];
+const gen5TutorSource='https://bulbapedia.bulbagarden.net/wiki/Move_Tutor#Generation_V';
+const pledge=['grass-pledge','fire-pledge','water-pledge'];
+const ultimate=['frenzy-plant','blast-burn','hydro-cannon'];
+add(bw,'Driftveil City','Pledge tutor',pledge.map(move=>[move,'Free','Eligible starter with sufficient friendship']),gen5TutorSource);
+add(bw,'Route 13','Ultimate starter tutor',ultimate.map(move=>[move,'Free','Eligible fully evolved starter with sufficient friendship']),gen5TutorSource);
+add(bw,'Opelucid City','Tutor in Drayden’s house',[['draco-meteor','Free','Eligible Dragon Pokémon']],gen5TutorSource);
+add(gen5,'Café Sonata','Musician in Castelia City',[['relic-song','Free','Bring an event Meloetta']],gen5TutorSource);
+add(bw,'Moor of Icirrus','Swords of Justice event',[['secret-sword','Free','Bring Keldeo, Cobalion, Terrakion and Virizion in the party']],gen5TutorSource);
+add(b2w2,'Pledge Grove','Stone behind Floccesy Town',[['secret-sword','Free','Bring an event Keldeo']],gen5TutorSource);
 function find(game,move){const key=String(move||'').toLowerCase().trim().replace(/\s+/g,'-');return (data[game]?.[key]||[]).map(e=>({...e}));}
 function at(game,place){const normalized=String(place||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-');
   return Object.entries(data[game]||{}).flatMap(([move,records])=>records.filter(e=>e.place.toLowerCase().replace(/[^a-z0-9]+/g,'-')===normalized).map(e=>({...e,move}))).sort((a,b)=>a.move.localeCompare(b.move));

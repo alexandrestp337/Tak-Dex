@@ -10,7 +10,7 @@ function crc(buffer) {
  }
  return high*256+low;
 }
-function bank(bytes,version,offset,sequence,level) {
+function bank(bytes,version,offset,sequence,level,progress) {
  const [size,footLength,trainerLength]=variants[version>=22?1:0];
  const party=offset+0x18e00, trainer=offset+0x19400, footer=offset+size-256;
  bytes[party+4]=1;
@@ -48,7 +48,15 @@ function bank(bytes,version,offset,sequence,level) {
  encrypt(8,136,checksum);
  encrypt(136,220,personality);
  mon.copy(bytes,party+8);
- for(const [start,length,index] of [[party,0x534,26],[trainer,trainerLength,27]]){
+ const blocks=[[party,0x534,26],[trainer,trainerLength,27]];
+ if(progress){
+  const sequel=version>=22,misc=offset+(sequel?0x21100:0x21200),event=offset+(sequel?0x1ff00:0x20100),bag=offset+0x18400;
+  bytes[misc+4]=progress.mask||0;
+  if(progress.clear)bytes[event+(sequel?0x35e:0x27c)+(2400>>3)]|=1<<(2400&7);
+  if(progress.surf){bytes.writeUInt16LE(422,bag+0x624);bytes.writeUInt16LE(1,bag+0x626);}
+  blocks.push([misc,sequel?0xf0:0xec,52],[event,sequel?0x4e0:0x3ec,45],[bag,sequel?0x9ec:0x9c0,25]);
+ }
+ for(const [start,length,index] of blocks){
   const value=crc(bytes.subarray(start,start+length));
   bytes.writeUInt16LE(value,start+length+2);
   bytes.writeUInt16LE(value,footer+index*2);
@@ -56,10 +64,10 @@ function bank(bytes,version,offset,sequence,level) {
  bytes.writeUInt16LE(sequence,footer+footLength);
  bytes.writeUInt16LE(crc(bytes.subarray(footer,footer+footLength)),footer+footLength+14);
 }
-function makeSave(version=21,sequence=11,level=38){
+function makeSave(version=21,sequence=11,level=38,progress){
  const bytes=Buffer.alloc(524288);
- bank(bytes,version,0,sequence-1&0xffff,level-1);
- bank(bytes,version,variants[version>=22?1:0][0],sequence,level);
+ bank(bytes,version,0,sequence-1&0xffff,level-1,progress);
+ bank(bytes,version,variants[version>=22?1:0][0],sequence,level,progress);
  return bytes;
 }
 module.exports={makeSave,keys};

@@ -131,7 +131,12 @@ const isSequel=g=>g==='Black 2'||g==='White 2';
 const isUnovaGame=g=>['Black','White','Black 2','White 2'].includes(g);
 const isUnova=()=>isUnovaGame(game.value);
 const atlasFor=g=>isSequel(g)?window.takDexB2W2:window.takDexUnovaV74;
-const unovaPlaces=g=>(atlasFor(g)?.places||[]).filter(r=>g.startsWith('Black')?r.name!=='White Forest':r.name!=='Black City');
+const naturePreserve={name:'Nature Preserve',kind:'landmark',offAtlas:true,
+ access:'Travel from Mistralton City with Skyla. Professor Juniper gives the Permit after seeing all non-mythical Pokémon in the Unova Pokédex.'};
+const unovaPlaces=g=>[
+ ...(atlasFor(g)?.places||[]).filter(r=>g.startsWith('Black')?r.name!=='White Forest':r.name!=='Black City'),
+ ...(isSequel(g)?[naturePreserve]:[])
+];
 const unovaMachines=g=>atlasFor(g)?.machines||[];
 const sequelAlias=(name,g)=>isSequel(g)?Object.entries(window.takDexB2W2?.aliases||{}).find(([n,v])=>v&&locKey(n)===locKey(name))?.[1]||name:name;
 const unovaRoads=()=>atlasFor(game.value)?.routePaths||{};
@@ -275,7 +280,7 @@ function loadEncounters(){
  encounterLoading=(async()=>{let p=await window.takDexEncounterV55?.get?.(requested);if(revision!==activeMapRevision||requested!==activeMapGame)return;encounterPack=p?.hasSource?p:null;const row=selected&&getRow(selected),host=$('td73-location-record');if(row&&host&&encounterPack&&row.kind!=='gym'){const records=encounterRowsFor(row.name);if(records.length)host.innerHTML=encounterHTML(mergeLocal(records,row.name,requested));}if(search.value&&page.hidden===false)showSuggestions();return encounterPack;})().catch(()=>null).finally(()=>{if(requested===activeMapGame&&revision===activeMapRevision)encounterLoading=null;});return encounterLoading;
 }
 function encounteredPlaces(mon){const records=encounterPack?.entries?.[mon[0]]||[],out=new Map();for(const row of records){const loc=available.filter(r=>r.kind!=='gym').slice().sort((a,b)=>b.name.length-a.name.length).find(r=>placeMatches(row[0],r.name));if(!loc)continue;const detail=recordDescription(row);if(!out.has(loc.name))out.set(loc.name,{name:loc.name,detail});}for(const local of localEncounters(activeMapGame).filter(x=>x.name===mon[1]))if(!out.has(local.place)&&getRow(local.place))out.set(local.place,{name:local.place,detail:recordDescription(local.records[0])});return [...out.values()];}
-function recordDescription(r){const sub=String(r[0]||'').split(' · ')[1],lvl=Number(r[2]);return (sub?pretty(sub)+' · ':'')+pretty(r[1]||'Encounter')+(Number.isFinite(lvl)&&lvl>0?' · Lv '+lvl+(r[3]!==r[2]?'–'+r[3]:''):'')+(r[4]?.length?' · '+r[4].map(pretty).join(', '):'');}
+function recordDescription(r){const sub=String(r[0]||'').split(' · ')[1],lvl=Number(r[2]);return (sub?pretty(sub)+' · ':'')+pretty(r[1]||'Encounter')+(Number.isFinite(lvl)&&lvl>0?' · Lv '+lvl+(r[3]!==r[2]?'–'+r[3]:''):'')+(r[4]?.length?' · '+r[4].map(pretty).join(', '):'')+(window.td62Progress?.encounterAccess(activeMapGame,r)?' · '+window.td62Progress.encounterAccess(activeMapGame,r):'');}
 function encounterHTML(found){return found.length?'<details class="td63-map-encounters"><summary>Wild encounters ('+found.length+')</summary>'+found.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`<div><button type="button" class="td73-tutor-move" data-td63-map-mon="${escape(x.name)}">${escape(pretty(x.name))}</button><small>${[...new Set(x.records.map(recordDescription))].map(escape).join(' · ')}</small></div>`).join('')+'</details>':'';}
 function mapAcquisition(raw,requestedGame=activeMapGame){
  const text=String(raw||'').toLowerCase();
@@ -402,10 +407,10 @@ const roadLabels=available.filter(r=>game.value==='Platinum'&&r.kind==='route').
  }).join('');
 const hoennRegions=hoenn()?plotted.map(r=>`<g class="td76-hoenn-place td76-hoenn-${r.kind}" data-map-place="${escape(r.name)}" role="button" tabindex="0" aria-label="${escape(r.name)}"><title>${escape(r.name)}</title><rect x="${r.left+2}" y="${r.top+2}" width="${r.w-4}" height="${r.h-4}" rx="4"/><text x="${r.x}" y="${r.y}" text-anchor="middle" dominant-baseline="central">${escape(r.kind==='route'?r.name.match(/\d+/)?.[0]||'':'•')}</text></g>`).join(''):'';
 const townLabels=''; // The supplied Black/White maps already contain precise printed city labels.
-const encounterPins=encounterSet.map(r=>getRow(r.name)).filter(Boolean).map(r=>`<g transform="translate(${r.x},${r.y})" class="td74-encounter-ring" data-map-place="${escape(r.name)}"><circle r="27"/></g>`).join('');
+const encounterPins=encounterSet.map(r=>getRow(r.name)).filter(r=>r&&!r.offAtlas).map(r=>`<g transform="translate(${r.x},${r.y})" class="td74-encounter-ring" data-map-place="${escape(r.name)}"><circle r="27"/></g>`).join('');
  // Selected destinations are indicated by their highlight and details panel.
  // No extra name callout: fixed-width bubbles clipped long labels and duplicated town names.
- canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${hoenn()?'Hoenn schematic':isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}">${hoenn()?`<rect class="td76-hoenn-water" width="${MAP_W}" height="${MAP_H}"/>${hoennRegions}`:`<image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/>`}<g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${hoenn()?'':pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
+ canvas.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MAP_W} ${MAP_H}" preserveAspectRatio="xMidYMid meet" role="img" data-map-game="${escape(activeMapGame)}" data-map-revision="${activeMapRevision}" aria-label="${hoenn()?'Hoenn schematic':isUnova()?'Black and White Unova map':'Platinum Sinnoh map'} with selectable routes and landmarks" data-selection="${escape(selected)}"><g id="td73MapLayer" transform="${mapTransform()}">${hoenn()?`<rect class="td76-hoenn-water" width="${MAP_W}" height="${MAP_H}"/>${hoennRegions}`:`<image class="td82-map-fallback" href="${isUnova()?mapImageFor(activeMapGame):PLATINUM_IMAGE}" x="0" y="0" width="${MAP_W}" height="${MAP_H}" preserveAspectRatio="none"/>`}<g class="td73-mountain-overlay">${mtCoronetHit}</g><g class="td73-route-overlay">${routes}</g><g class="td73-pins">${hoenn()?'':pins}</g><g class="td75-unova-town-labels">${townLabels}</g><g class="td74-road-labels">${roadLabels}</g><g class="td74-encounter-overlays">${encounterPins}</g></g>${isUnova()&&selected&&!getRow(selected)?.offAtlas?`<g id="td78MapFocusLabel" class="td78-map-focus-label" aria-hidden="true"><text text-anchor="middle">${escape(getRow(selected)?.name||'')}</text></g>`:''}</svg>`;
  td82InstallMapBitmap();
  updateViewport();
 }
@@ -432,6 +437,7 @@ async function openLocation(name,origin='user'){
  if(origin==='move-checker')requestAnimationFrame(()=>canvas.scrollIntoView({behavior:'smooth',block:'center'}));
  if(origin!=='search')fitEncounterGroup=false;
  if(fitEncounterGroup)fitEncounters();
+ else if(row.offAtlas)resetViewport();
  else if(selected==='mount-coronet'){
   // Frame the full mountain from Route 207/208 north to Route 216.
   focusPoint(577,627,2.0);
@@ -445,7 +451,7 @@ async function openLocation(name,origin='user'){
  const gymDetail=row.kind==='gym'?`<p><b>Gym leader / badge:</b> ${escape(gymLabel||'Gym Badge')}</p>`:'';
  const trainer=row.kind==='gym'?gymLabel.split(' · ')[0]:'';
  const gymButton=trainer&&!trainer.includes('/')?`<button type="button" class="td73-gym-battle-button" data-td73-gym-trainer="${escape(trainer)}">⚔ Open in 6v6 Battle</button>`:'';
- details.innerHTML=`<h3>${escape(row.name)}</h3>${gymDetail}${gymButton}${tutors.length?`<p><b>Move Tutor:</b> ${escape(tutors[0].detail)}</p>`:''}${viewTutorRows(tutors)}${locationExtras(row.name)}<div id="td73-location-record"></div>`;
+ details.innerHTML=`<h3>${escape(row.name)}</h3>${row.offAtlas?`<p class="note">${escape(row.access)}</p>`:''}${gymDetail}${gymButton}${tutors.length?`<p><b>Move Tutor:</b> ${escape(tutors[0].detail)}</p>`:''}${viewTutorRows(tutors)}${locationExtras(row.name)}<div id="td73-location-record"></div>`;
  const status=$('td73-location-record'),valid=()=>mine===detailRequest&&detailGame===activeMapGame&&status?.isConnected;
  const initial=mergeLocal(encounterRowsFor(row.name),row.name,detailGame);status.innerHTML=encounterHTML(initial)||'<small>Checking encounter records…</small>';
  if(row.kind==='gym'){status.innerHTML='';return;}
@@ -477,7 +483,9 @@ function open(g,place){
  let target=g;
  if(!target){try{const id=localStorage.getItem('takdex-v71-active-team');const saved=JSON.parse(localStorage.getItem('poketact-teams')||'[]');const t=saved.find(t=>t.id===id);if(t?.game)target=t.game;}catch{}}
  const active=[...document.querySelectorAll('main > section')].find(el=>!el.hidden&&el.id!=='mapsPage');
- returnFrom={id:active?.id||'morePage',scroll:window.scrollY};
+ returnFrom={id:active?.id||'morePage',scroll:window.scrollY,tab:document.querySelector('.main-tabs .selected')?.id};
+ $('backMaps').textContent=returnFrom.id==='morePage'?'← More':'← Back';
+ $('backMaps').setAttribute('aria-label',returnFrom.id==='morePage'?'More':'Back');
  for(const el of document.querySelectorAll('main > section'))el.hidden=el!==page;
  document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));
  if(target&&!['Emerald','Platinum','Black','White','Black 2','White 2'].includes(target)){
@@ -520,13 +528,18 @@ for(const tabId of ['teamsTab','battleTab','dexTab','moreTab'])$(tabId).addEvent
 const offlineMenuButton=$('td59OpenOffline');
 if(offlineMenuButton?.parentElement)offlineMenuButton.before($('openMaps'));
 $('openMaps').addEventListener('click',()=>open());
+const mapBack=$('backMaps'),mapToolbarActions=mapBack.parentElement;
+new MutationObserver(()=>{
+ const target=$('mapsContent').hidden?$('mapsBackFallback'):mapToolbarActions;
+ if(mapBack.parentElement!==target)target.append(mapBack);
+}).observe($('mapsContent'),{attributes:true,attributeFilter:['hidden']});
 $('backMaps').addEventListener('click',()=>{
  stopAnimation();const previous=returnFrom;returnFrom=null;page.hidden=true;
  if(previous?.id&&$(previous.id)){
   if(previous.id==='morePage')window.takActivate(3);
   else if(previous.id==='plannerPage')openTool('plannerPage',3);
   else if(previous.id==='battlePage')window.takActivate(1);
-  else {$(previous.id).hidden=false;document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',i===3));}
+  else {$(previous.id).hidden=false;document.querySelectorAll('.main-tabs button').forEach((el,i)=>el.classList.toggle('selected',el.id===previous.tab));}
   requestAnimationFrame(()=>window.scrollTo(0,previous.scroll));
  }else window.takActivate(3);
 });
@@ -549,7 +562,7 @@ function zoomTo(next,px=CX,py=CY){
 }
 function clientToMap(e){const {b,s:scale}=mapGeometry();return {x:(e.clientX-b.left-(b.width-MAP_W*scale)/2)/scale,y:(e.clientY-b.top-(b.height-MAP_H*scale)/2)/scale};}
 function fitEncounters(){
- const points=encounterSet.map(place=>getRow(place.name)).filter(Boolean);
+ const points=encounterSet.map(place=>getRow(place.name)).filter(p=>p&&!p.offAtlas);
  if(points.length<2)return;
  const left=Math.min(...points.map(p=>p.x)),right=Math.max(...points.map(p=>p.x));
  const top=Math.min(...points.map(p=>p.y)),bottom=Math.max(...points.map(p=>p.y));
@@ -557,7 +570,7 @@ function fitEncounters(){
  const zoom=Math.min(MAP_W/(right-left+2*padding),MAP_H/(bottom-top+2*padding));
  focusPoint((left+right)/2,(top+bottom)/2,zoom,false);
 }
-function setFull(on,restoreScroll=true){if(on===mapFull)return;mapFull=on;const bar=$('mapsFullscreen');if(on){fullScroll=window.scrollY;page.classList.add('td63-map-full');document.body.classList.add('td63-map-full-body');page.scrollTop=0;fullDetails.append(details);}else{regularDetails.prepend(details);fullDetails.open=false;page.classList.remove('td63-map-full');document.body.classList.remove('td63-map-full-body');if(restoreScroll)requestAnimationFrame(()=>window.scrollTo(0,fullScroll));}bar.textContent=on?'Exit fullscreen':'Fullscreen';bar.setAttribute('aria-pressed',String(on));showSelection();requestAnimationFrame(()=>fitEncounterGroup?fitEncounters():updateViewport());}
+function setFull(on,restoreScroll=true){if(on===mapFull)return;mapFull=on;const bar=$('mapsFullscreen');if(on){fullScroll=window.scrollY;page.classList.add('td63-map-full');document.body.classList.add('td63-map-full-body');page.scrollTop=0;fullDetails.append(details);}else{regularDetails.prepend(details);fullDetails.open=false;page.classList.remove('td63-map-full');document.body.classList.remove('td63-map-full-body');if(restoreScroll)requestAnimationFrame(()=>window.scrollTo(0,fullScroll));}bar.textContent=on?'Exit fullscreen':'Fullscreen';bar.setAttribute('aria-label',bar.textContent);bar.title=bar.textContent;bar.setAttribute('aria-pressed',String(on));showSelection();requestAnimationFrame(()=>fitEncounterGroup?fitEncounters():updateViewport());}
 $('mapsFullscreen').onclick=()=>setFull(!mapFull);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mapFull&&!page.hidden)setFull(false)});new MutationObserver(()=>{if(page.hidden&&mapFull)setFull(false,false)}).observe(page,{attributes:true,attributeFilter:['hidden']});
 $('mapsZoomIn').onclick=()=>zoomTo(zoom*1.35);
 $('mapsZoomOut').onclick=()=>zoomTo(zoom/1.35);
@@ -597,7 +610,7 @@ document.addEventListener('click',e=>{
 },true);
 applyRegions();noGame();
 window.takDexMapsV73={open,openSpecies,openLocation,mapAcquisition,setGameContext(g){setGame(g);},hasLocation:(name,g)=>{const ar=isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:g==='Emerald'?hoennPlaces:[];return ar.some(r=>locKey(r.name)===locKey(name));},resolveLocation:(name,g='Platinum')=>{
- const raw=String(name||'').split(' · ')[0].trim(),route=raw.match(/route\s+\d{3}/i);
+ const raw=window.takDexAcquisitionV77?.placeName(String(name||'').trim(),g)?.split(' · ')[0]||String(name||'').split(' · ')[0].trim(),route=raw.match(/route\s+\d{3}/i);
  const places=(isUnovaGame(g)?unovaPlaces(g):g==='Platinum'?rows.sinnoh:g==='Emerald'?hoennPlaces:[]).filter(r=>r.kind!=='gym').sort((a,b)=>b.name.length-a.name.length);
  if(route)return places.find(r=>locKey(r.name)===locKey(route[0]))?.name||null;
  const q=locKey(sequelAlias(raw,g));

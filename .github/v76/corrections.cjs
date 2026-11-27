@@ -295,7 +295,7 @@ async function capture(locator,options){
    await page.locator('#tmPokemonResults [data-value="magikarp"]').click();
    await page.locator('#tmResults .td5-tm-later').waitFor();
    assert.match(await page.locator('#tmResults .td5-tm-later').textContent(),/Gyarados/);
-   await page.locator('[data-move-catalog="tm"]').click();
+   await page.locator('[data-move-catalog="machines"]').click();
    await page.locator('#tmMoveSearch').fill('26');
    await page.locator('#tmMoveResults button').filter({hasText:'Earthquake'}).click();
    await page.waitForFunction(()=>document.querySelector('#td68MoveResult h2')?.textContent.includes('Earthquake'));

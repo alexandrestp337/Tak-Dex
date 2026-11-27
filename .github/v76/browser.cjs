@@ -63,7 +63,7 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   const battleMarkup=await page.locator('#matchups').textContent();
   const matchNode=await page.locator('#matchups .td74-clash').elementHandle();
   await attack.click();
-  await page.locator('#td68MoveBack:visible,.td64-move-back:visible').first().click();
+  await page.locator('.td64-move-back:visible').first().click();
   await page.waitForFunction(y=>Math.abs(scrollY-y)<5,battleScroll);
   assert.equal(await page.locator('#matchups').textContent(),battleMarkup);
   assert.equal(await matchNode.evaluate(node=>node.isConnected),true);
@@ -94,7 +94,7 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   assert.equal(await page.locator('#td74Focus [data-td76-move]').count(),1);
   const focusedMove=page.locator('#td74Focus [data-td76-move]').first();
   await focusedMove.click();
-  await page.locator('#td68MoveBack:visible,.td64-move-back:visible').first().click();
+  await page.locator('.td64-move-back:visible').first().click();
   assert.equal(await page.locator('#plannerPage').isVisible(),true);
   assert.equal(await page.locator('#planMode').inputValue(),'custom');
   await opp.locator('.td74-battle-stats > summary').click();
@@ -169,7 +169,7 @@ const save=(level=38,version=21)=>({name:'party.sav',mimeType:'application/octet
   await dexMove.scrollIntoViewIfNeeded();
   const dexScroll=await page.evaluate(()=>scrollY);
   await dexMove.click();
-  await page.locator('#td68MoveBack:visible,.td64-move-back:visible').first().click();
+  await page.locator('.td64-move-back:visible').first().click();
   await page.waitForFunction(y=>Math.abs(scrollY-y)<6,dexScroll);
   await dexActions.locator('[data-td76-species-map]').click();
   assert.equal(await page.locator('#mapsGame').inputValue(),'Emerald');

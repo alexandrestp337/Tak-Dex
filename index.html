@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="takdex-version" content="V77-STABLE">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tak-Dex | Pokémon Team Builder, Battle Calculator & Pokédex</title>
 <meta name="description" content="Free Pokémon team builder and battle planner with type effectiveness, damage estimates, moveset planning, Pokédex, TM/HM compatibility, and interactive Sinnoh and Unova maps.">
@@ -12,8 +13,8 @@
 <meta property="og:url" content="https://alexandrestp337.github.io/Tak-Dex/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://alexandrestp337.github.io/Tak-Dex/icon-512.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tak-Dex","url":"https://alexandrestp337.github.io/Tak-Dex/","applicationCategory":"GameApplication","operatingSystem":"Web browser","description":"Pokémon team builder, battle planner, move checker, Pokédex and interactive region maps.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-<link rel="stylesheet" href="styles.css?v=76.0.5">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tak-Dex","url":"https://alexandrestp337.github.io/Tak-Dex/","softwareVersion":"V77-STABLE","applicationCategory":"GameApplication","operatingSystem":"Web browser","description":"Pokémon team builder, battle planner, move checker, Pokédex and interactive region maps.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<link rel="stylesheet" href="styles.css?v=77.0.0-stable">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -132,22 +133,18 @@
 
 <section id="dexPage" hidden>
   <h2>Pokédex</h2>
-  <details id="td73DexSelector" class="td73-dex-selector" open>
-    <summary><strong>Find a Pokémon</strong><span aria-hidden="true">⌄</span></summary>
+  <div id="td73DexSelector">
     <div class="tool-card">
     <label>Game<select id="dexGame"></select></label>
-    <label>Saved team<select id="dexTeam"></select></label>
-    <label>Team Pokémon<select id="dexTeamPoke"></select></label>
-    <label>Or search Pokémon
+    <label>Search Pokémon
       <div class="search dex-search">
         <input id="dexInput" placeholder="Start typing…" autocomplete="off">
         <button type="button" class="battle-clear" id="dexClear" aria-label="Clear Pokédex search" hidden>×</button>
         <div id="dexResults" class="suggestions" hidden></div>
       </div>
     </label>
-    <button type="button" id="dexSearch">View Pokémon</button>
     </div>
-  </details>
+  </div>
   <button type="button" id="td73DexReturn" class="td73-back-button" hidden>← Back</button>
   <div id="dexResult" aria-live="polite"></div>
 </section>
@@ -170,7 +167,7 @@
 </section>
 
 <section id="mapsPage" hidden>
-  <div class="bar"><h2>Interactive Maps</h2><button type="button" id="backMaps">← More</button></div>
+  <div class="bar"><h2>Interactive Maps</h2><span id="mapsBackFallback"></span></div>
   <div class="tool-card td73-map-filters">
     <label>Game<select id="mapsGame"></select></label>
     <input id="mapsRegion" type="hidden" value="">
@@ -178,7 +175,7 @@
     <label>Show<select id="mapsCategory"><option value="all">All landmarks</option><option value="town">Cities &amp; towns</option><option value="route">Routes</option><option value="landmark">Special locations</option><option value="tutor">Move Tutors</option><option value="gym">Gyms &amp; Badges</option></select></label>
   </div>
   <div id="mapsContent" class="td73-map-layout" hidden>
-    <div class="card td73-map-card"><div class="td73-map-toolbar"><strong id="mapsHeading">Region map</strong><small id="mapsSelectionLabel" aria-live="polite">Select a destination</small><span><button id="mapsFullscreen" type="button" aria-pressed="false">Fullscreen</button><button id="mapsZoomOut" type="button" aria-label="Zoom out">−</button><button id="mapsZoomIn" type="button" aria-label="Zoom in">+</button><button id="mapsClearSelection" type="button" aria-label="Clear selection without changing zoom" title="Clear search and selection, keep current view" disabled>✕ Clear</button><button id="mapsZoomReset" type="button">Reset</button><span id="mapsZoomValue" class="td73-map-zoom-value">100%</span></span></div><div id="mapsCanvas" class="td73-map-canvas" role="group" aria-label="Interactive Platinum Sinnoh map with location pins"></div></div>
+    <div class="card td73-map-card"><div class="td73-map-toolbar"><strong id="mapsHeading">Region map</strong><span id="mapsZoomValue" class="td73-map-zoom-value">100%</span><small id="mapsSelectionLabel" aria-live="polite">Select a destination</small><span><button id="mapsFullscreen" type="button" aria-pressed="false" aria-label="Fullscreen" title="Fullscreen" data-compact-icon="⛶">Fullscreen</button><button id="mapsZoomOut" type="button" aria-label="Zoom out">−</button><button id="mapsZoomIn" type="button" aria-label="Zoom in">+</button><button id="mapsClearSelection" type="button" aria-label="Clear selection without changing zoom" title="Clear search and selection, keep current view" data-compact-icon="✕" disabled>✕ Clear</button><button id="mapsZoomReset" type="button" aria-label="Reset zoom and selection" title="Reset zoom and selection" data-compact-icon="↺">Reset</button><button type="button" id="backMaps">← More</button></span></div><div id="mapsCanvas" class="td73-map-canvas" role="group" aria-label="Interactive Platinum Sinnoh map with location pins"></div></div>
     <details id="td76FullMapDetails" hidden><summary>Location details</summary></details>
     <div class="td73-map-side"><article class="card" id="mapsDetails"><h3>Select a location</h3><p class="note">Tap a map pin or a location below for details.</p></article><details class="card td74-map-directory" id="mapsDirectory"><summary>Browse all locations <span id="mapsCount">Select a game</span></summary><div id="mapsList" class="td73-map-location-list"></div></details></div>
   </div>
@@ -230,7 +227,6 @@
     <label>Move / TM / HM
       <div class="search tm-combo">
         <input id="tmMoveSearch" placeholder="Search or choose TM/HM…" autocomplete="off" aria-label="Search or choose TM or HM" aria-expanded="false" aria-controls="tmMoveResults">
-        <button type="button" id="tmMoveBrowse" class="tm-combo-arrow" aria-label="Browse all TM and HM moves" aria-expanded="false">▾</button>
         <div id="tmMoveResults" class="suggestions" hidden></div>
       </div>
       <select id="tmMove" hidden aria-hidden="true" tabindex="-1"></select>
@@ -355,20 +351,21 @@
 <script src="sprite-ids-v77.js?v=74.5.2.20261124"></script>
 <script src="unova-b2w2-v74.js?v=74.0.0"></script>
 <script src="db74.js?v=74.0.0"></script>
-<script src="gen5-save.js?v=76.0.0"></script>
-<script src="app.js?v=76.0.4"></script>
-<script src="save-sync.js?v=76.0.4"></script>
+<script src="gen5-save.js?v=77.0.0"></script>
+<script src="acquisition-v77.js?v=77.9.0"></script>
+<script src="app.js?v=77.0.0-stable"></script>
+<script src="save-sync.js?v=77.1.0"></script>
 <script src="unova-v74.js?v=74.5.2.20261124"></script>
 <script src="bw-trainer-moves-v76.js?v=74.5.2.20261124"></script>
 <script src="unova-trainer-reference.js?v=76.0.0"></script>
 <script src="trainer-abilities-v76.js?v=76.0.3"></script>
 <script src="platinum-league-v77.js?v=74.5.2.20261124"></script>
-<script src="tutor-locations.js?v=74.0.0"></script>
-<script src="v73-ui.js?v=74.0.0"></script>
+<script src="tutor-locations.js?v=77.6.0"></script>
+<script src="v73-ui.js?v=77.6.0"></script>
 <script src="hoenn-map.js?v=76.0.0"></script>
-<script src="maps.js?v=76.0.0"></script>
+<script src="maps.js?v=77.6.0"></script>
 <script src="feedback-config.js?v=74.0.0"></script>
 <script src="battle-outcomes.js?v=76.0.6"></script>
-<script src="v74-ux.js?v=76.0.6"></script>
+<script src="v74-ux.js?v=77.6.0"></script>
 </body>
 </html>

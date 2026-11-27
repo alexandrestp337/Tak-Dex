@@ -362,7 +362,7 @@ const recentPanel=document.createElement('details');recentPanel.className='card 
 function renderRecent(){const row=$('td74RecentContents');row.innerHTML=recent().length?recent().map((n,i)=>`<button type="button" data-td74-recent="${i}">${escape(td41PokemonLabel(n.name))}${n.game?' · '+escape(n.game):''}</button>`).join(''):'<p class="note">No recently viewed Pokémon.</p>';}
 renderRecent();let lastRecentHero=null;
 new MutationObserver(()=>{const hero=$('dexResult').querySelector('[data-td71-quick-compare]');if(hero&&hero!==lastRecentHero){lastRecentHero=hero;rememberPokemon(hero.dataset.td71QuickCompare,$('dexGame').value);}}).observe($('dexResult'),{childList:true,subtree:true});
-recentPanel.addEventListener('click',e=>{const b=e.target.closest('[data-td74-recent]');if(!b)return;const record=recent()[Number(b.dataset.td74Recent)];if(!record)return;recentPanel.open=false;const g=record.game||$('dexGame').value||selectedGame();if(g&&[...$('dexGame').options].some(o=>o.value===g))$('dexGame').value=g;$('dexTeam').value='';$('dexTeamPoke').value='';$('dexInput').value=pretty(record.name);$('dexSearch').click();});
+recentPanel.addEventListener('click',e=>{const b=e.target.closest('[data-td74-recent]');if(!b)return;const record=recent()[Number(b.dataset.td74Recent)];if(!record)return;recentPanel.open=false;const g=record.game||$('dexGame').value||selectedGame();if(g&&[...$('dexGame').options].some(o=>o.value===g))$('dexGame').value=g;$('dexInput').value=pretty(record.name);td77SearchDex();});
 // Save and restore search strings without forcefully triggering a new data fetch.
 for(const id of ['tmMoveSearch','tmPokemon','dexInput']){
  const field=$(id);if(!field)continue;const key='takdex-v74-input-'+id;
@@ -385,15 +385,14 @@ refresh();
 
 // All Pokédex encounter locations for Platinum link to the active Sinnoh map.
 const dexRecords=$('dexResult');
-function linkDexEncounters(){const region=dexRecords.querySelector('#td56DexEncounters .td66-section-body');
- if(!region||!['Platinum','Black','White'].includes($('dexGame').value))return;
- for(const bold of region.querySelectorAll('p > b')){if(bold.querySelector('button'))continue;
- const raw=bold.textContent.trim(),name=raw.split(' · ')[0].trim();
- // Acquisition evidence labels summarize records; they are not geographical locations.
- // Leave the individual, actual encounter location links above them untouched.
- if(/^(recorded encounter|starter|evolution route|trade evolution|external trade required|event-only(?:.+)?|gift|availability unverified):?$/i.test(raw))continue;
- const mapped=window.takDexMapsV73?.resolveLocation?.(name,$('dexGame').value);
- bold.innerHTML=mapped?`<button type="button" class="td74-dex-map-link" data-td74-dex-map="${escape(mapped)}" title="Show ${escape(name)} on the map">${escape(raw)} <span aria-hidden="true">⌖</span></button>`:`<button type="button" class="td74-dex-map-link" data-td74-dex-map-search="${escape(name)}" title="Search ${escape(name)} on the map">${escape(raw)} <span aria-hidden="true">⌖</span></button>`;
+function linkDexEncounters(){
+ const region=dexRecords.querySelector('#td56DexEncounters .td66-section-body');
+ if(!region)return;
+ for(const bold of region.querySelectorAll('p > b:not([data-map-checked])')){
+  bold.dataset.mapChecked='';
+  if(bold.querySelector('button'))continue;
+  const raw=bold.textContent.trim(),mapped=window.takDexMapsV73?.resolveLocation(raw,$('dexGame').value);
+  if(mapped)bold.innerHTML=`<button type="button" class="td74-dex-map-link" data-td74-dex-map="${escape(mapped)}">${escape(raw)} <span aria-hidden="true">⌖</span></button>`;
  }
 }
 function linkDexActions(){const hero=dexRecords.querySelector('.td71-dex-hero'),name=hero?.querySelector('[data-td71-quick-compare]')?.dataset.td71QuickCompare||hero?.querySelector('h3')?.textContent.trim(),game=$('dexGame').value;
@@ -439,6 +438,7 @@ const $=id=>document.getElementById(id);
 const fields='input:not([type]),input[type=text],input[type=search],input[type=email]';
 const stateful='.battle-clear,.td74-item-clear,.td65-clear,[data-clear],[data-plan-clear],[data-td44-clear]';
 function decorate(input){
+ if(input.closest('.td77-edit-move'))return;
  if(input.disabled||input.readOnly||input.inputMode==='numeric'||input.matches('[data-td2-level],[data-td74-stat],[name="_gotcha"]'))return;
  let shell=input.parentElement;
  if(!shell.matches('.search,.td74-map-search-wrap,.td7-input-shell')){
