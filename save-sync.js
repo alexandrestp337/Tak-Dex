@@ -162,7 +162,7 @@
     if(linked||relink)updated.nativeSaveCheckpoint=updated.saveLink;
     const saved=td78Store.replace(state,'teams',teamId,updated);
     const lifecycle=relink?{generation:generation+1,intent:'linked',pending:null,
-     confirmed:requestId?{id:requestId,generation:generation+1}:null,relinkObservation:requestId?next:null}:{};
+     confirmed:requestId?{id:requestId,generation:generation+1}:null,relinkObservation:requestId?next:null,cancelled:[]}:{};
     td78Store.replace(state,'links',teamId,{...link,...lifecycle,mark:linkedRead||relink?next:link.mark,
      manualRevision:(link.manualRevision||0)+Number(manual||relink),publishedRevision:saved.revision});
     return {code:actualChanged||progressChanged||!previous?'updated':'unchanged',actualChanged,progressChanged,published:true};
@@ -175,7 +175,7 @@
    td78AcceptTeam(outcome.state,teamId);
    const team=teams.find(t=>t.id===teamId);
    if(!team)return code;
-   if(progressChanged||actualChanged)td78NotifyTeamSaved();
+   if(progressChanged||actualChanged)td78NotifyTeamSaved([teamId]);
    if(progressChanged)window.dispatchEvent(new CustomEvent('td77:progression',{detail:{teamId}}));
    if(actualChanged){
     window.dispatchEvent(new CustomEvent('td76:save-synced',{detail:{teamId}}));
@@ -202,7 +202,7 @@
   if(status==='corrupt'||status==='missing'||status==='empty')
    return {status:'quarantined',reason:status};
   if(link?.intent==='deleted'||link?.intent==='unlinked'){
-   if(link.generation-1===sourceGeneration)return {status:'release-authorized',generation:sourceGeneration};
+   if((link.releaseGenerations||[link.generation-1]).includes(sourceGeneration))return {status:'release-authorized',generation:sourceGeneration};
    return {status:'quarantined',reason:'unmatched-release-generation'};
   }
   if(!team)return {status:'quarantined',reason:'unassociated'};
@@ -228,6 +228,7 @@
     return {status:'committed',generation:link.generation};
    }
    if(sourceGeneration!==link.generation)throw invalid('The save source changed. Recheck the active link.','SOURCE');
+   if(link.cancelled?.includes(requestId))return {status:'cancelled',generation:link.generation};
    if(link.confirmed)throw invalid('A committed replacement needs acknowledgement.','RELINK_PENDING');
    if(link.pending&&!td78Store.same(link.pending,{id:requestId,observation:next}))
     throw invalid('A replacement is already pending. Resume or cancel it first.','RELINK_PENDING');
@@ -243,7 +244,7 @@
    if(cancel&&(link.confirmed?.id===requestId||link.acknowledged===requestId))return 'committed';
    if(sourceGeneration!==link.generation)return 'stale';
    if(cancel){
-    if(link.pending?.id===requestId)td78Store.replace(state,'links',teamId,{...link,pending:null});
+    if(link.pending?.id===requestId)td78Store.replace(state,'links',teamId,{...link,pending:null,cancelled:[...(link.cancelled||[]),requestId]});
     return 'cancelled';
    }
    if(link.acknowledged===requestId)return 'acknowledged';
@@ -259,7 +260,7 @@
    if(link.intent==='unlinked'&&link.generation-1===sourceGeneration)return 'unlinked';
    if(link.generation!==sourceGeneration)return 'stale';
    if(link.pending||link.confirmed)throw invalid('Finish or cancel the pending replacement before unlinking.','RELINK_PENDING');
-   td78Store.replace(state,'links',teamId,{game:team.game,generation:link.generation+1,intent:'unlinked'});
+   td78Store.replace(state,'links',teamId,td78Store.endLink(link,'unlinked',team.game));
    return 'unlinked';
   });
   td78ProjectionWarning(outcome);return outcome.result;

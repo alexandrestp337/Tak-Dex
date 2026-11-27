@@ -126,7 +126,7 @@
   if(!object(plan)||plan.game!==game||!Array.isArray(plan.slots)||plan.slots.length>6)fail('plan');
   if(plan.mode!=null)enumValue(plan.mode,'plan.mode',['during','final']);
   if(plan.progress!=null)string(plan.progress,'plan.progress',200);
-  if(plan.deadline!=null&&!/^(?:|start|badge-[1-8]|pre-league|post-league|postgame)$/.test(plan.deadline))fail('plan.deadline');
+  if(plan.deadline!=null&&!/^(?:|actual|start|badge-[1-8]|pre-league|post-league|postgame)$/.test(plan.deadline))fail('plan.deadline');
   optionalInteger(plan,'editorSlot','plan',0,5);
   const fulfilled=new Set();
   plan.slots.forEach((slot,i)=>{
@@ -168,6 +168,7 @@
   const team=envelope?data.team:data;
   if(!object(team)||!games.includes(team.game)||!Array.isArray(team.pokemon)||team.pokemon.length>6)fail('team');
   string(team.name,'team.name',200,true);
+  if(team.id!=null)string(team.id,'team.id',128,true);
   const caught=new Set(),warnings=new Set();
   team.pokemon.forEach((member,i)=>{
    if(member===null)return;
@@ -183,6 +184,10 @@
   if(progression!=null){
    if(!object(progression))fail('progression');
    optionalInteger(progression,'badgeCount','progression',0,8);
+   for(const key of ['leagueCompleted','championCompleted','postgame'])
+    if(progression[key]!=null&&typeof progression[key]!=='boolean')fail('progression.'+key);
+   if(progression.events!=null&&(!object(progression.events)||
+    Object.entries(progression.events).some(([name,value])=>!/^[a-zA-Z]{1,80}$/.test(name)||typeof value!=='boolean')))fail('progression.events');
    for(const key of ['badges','hms'])if(progression[key]!=null&&(!Array.isArray(progression[key])||
     progression[key].length>8||progression[key].some(x=>typeof x!=='string'||x.length>40)))fail('progression.'+key);
   }

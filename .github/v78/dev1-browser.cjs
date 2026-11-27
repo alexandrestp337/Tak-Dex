@@ -51,6 +51,7 @@ async function teamsAndPlans(browser){
   await Promise.all([rename(a,'left','Edited left'),rename(b,'right','Edited right')]);
   await waitState(a,()=>JSON.parse(localStorage.getItem('poketact-teams')).filter(t=>t.name.startsWith('Edited')).length===2);
   await Promise.all([plan(a,'left'),plan(b,'right')]);
+  await waitState(a,key=>{const p=JSON.parse(localStorage.getItem(key)).plans;return !!p['Black 2:left']&&!!p['Black 2:right'];},key);
   await a.locator('#td77Availability').selectOption('badge-3');
   await b.locator('#td77Availability').selectOption('badge-5');
   await waitState(a,()=>{const p=JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans')||'{}');return p['Black 2:left']?.deadline==='badge-3'&&p['Black 2:right']?.deadline==='badge-5';});
@@ -82,7 +83,7 @@ async function teamsAndPlans(browser){
 }
 
 async function request(page,id,bytes,options={}){
- return page.evaluate(({id,bytes,options})=>takDexSaveSync.synchronize({teamId:id,bytes:new Uint8Array(bytes),...options}),{id,bytes:[...bytes],options});
+ return page.evaluate(({id,bytes,options})=>takDexSaveSync.synchronize({teamId:id,bytes:Uint8Array.from(atob(bytes),character=>character.charCodeAt(0)),...options}),{id,bytes:bytes.toString('base64'),options});
 }
 async function syncTests(browser){
  const context=await browser.newContext({serviceWorkers:'block'});
@@ -120,15 +121,17 @@ async function syncTests(browser){
   assert.equal(await request(a,'wrap',fixture(0,551),{linked:true}), 'updated');
   assert.equal(await request(a,'wrap',fixture(0x8000),{linked:true}), 'stale');
 
+  console.log('Sequence and manual override checks passed.');
   await a.evaluate(()=>{
    const original=takDexDB74.encounter;window.hydrationWaiters=[];
-   takDexDB74.encounter=(...args)=>new Promise(resolve=>hydrationWaiters.push(()=>resolve(original(...args))));
+   takDexDB74.encounter=(...args)=>new Error().stack.includes('hydrateParty')?
+    new Promise(resolve=>hydrationWaiters.push(()=>resolve(original(...args)))):original(...args);
   });
   const pause=async(id,seq,species=509,options={linked:true})=>{
    await a.evaluate(({id,bytes,options})=>{
-    const call=takDexSaveSync.synchronize({teamId:id,bytes:new Uint8Array(bytes),...options});
+    const call=takDexSaveSync.synchronize({teamId:id,bytes:Uint8Array.from(atob(bytes),character=>character.charCodeAt(0)),...options});
     (window.pausedRequests??=[]).push(call.then(code=>({code}),error=>({error:error.message})));
-   },{id,bytes:[...fixture(seq,species)],options});
+   },{id,bytes:fixture(seq,species).toString('base64'),options});
   };
   const ready=n=>a.waitForFunction(n=>hydrationWaiters.length===n,n);
   const release=i=>a.evaluate(i=>{hydrationWaiters.splice(i,1)[0]();},i);
@@ -140,19 +143,24 @@ async function syncTests(browser){
   assert.deepEqual(await result(0),{code:'updated'});
   assert.equal(await a.evaluate(()=>current.id),'other');
   assert.equal(await a.evaluate(()=>auditEvents.filter(e=>e.name==='td76:save-synced'&&e.teamId==='race').length),1);
+  console.log('Invalid manual overlap and team switch passed.');
   await pause('race',2,551);await ready(1);
   await pause('race',3,552);await ready(2);
   await release(1);assert.deepEqual(await result(2),{code:'updated'});
   await release(0);assert.deepEqual(await result(1),{code:'stale'});
+  console.log('Reverse hydration completion passed.');
+  await b.reload();
   await pause('race',4,553);await ready(1);
   await rename(b,'race','Edited during hydration');
   await waitState(b,key=>JSON.parse(localStorage.getItem(key)).teams.race.value.name==='Edited during hydration',key);
   await release(0);assert.match((await result(3)).error,/team was edited/);
   assert.equal((await State(a)).teams.race.value.pokemon[0].id,552);
+  console.log('Cross-tab team edit conflict passed.');
   await pause('delete',1);await ready(1);
   await remove(b,'delete');
   await waitState(b,key=>JSON.parse(localStorage.getItem(key)).teams.delete.value===null,key);
   await release(0);assert.deepEqual(await result(4),{code:'superseded'});
+  console.log('Delete during hydration passed.');
   await pause('race',4,553);await ready(1);
   assert.equal(await request(b,'race',fixture(1,551),{relink:true,linked:true}),'updated');
   await release(0);assert.deepEqual(await result(5),{code:'stale'});
@@ -171,14 +179,21 @@ async function recoveryAndNative(browser){
    await p.evaluate(raw=>{if(raw===null)localStorage.removeItem('poketact-teams');else localStorage.setItem('poketact-teams',raw);},raw);
    assert.deepEqual(await inspect(),{status:'quarantined',reason});
   }
+  const inaccessible=await p.evaluate(()=>{
+   const read=Storage.prototype.getItem;
+   Storage.prototype.getItem=function(){throw new DOMException('Simulated access denial','SecurityError');};
+   try{return takDexSaveSync.nativeLinks.inspect({teamId:'native',sourceGeneration:0});}
+   finally{Storage.prototype.getItem=read;}
+  });
+  assert.deepEqual(inaccessible,{status:'quarantined',reason:'corrupt'});
   const initial=[{id:'native',name:'Native test',game,pokemon:[]}];
   await p.evaluate(initial=>localStorage.setItem('poketact-teams',JSON.stringify(initial)),initial);
   await p.reload();
   assert.equal((await inspect()).status,'associated');
   assert.equal((await inspect('other')).reason,'unassociated');
   assert.equal(await request(p,'native',fixture(100),{linked:true}), 'updated');
-  const args={teamId:'native',requestId:'replacement-1',sourceGeneration:0};
-  const prepare=(args,bytes)=>p.evaluate(({args,bytes})=>takDexSaveSync.nativeLinks.prepareRelink({...args,bytes:new Uint8Array(bytes)}),{args,bytes:[...bytes]});
+  let args={teamId:'native',requestId:'replacement-1',sourceGeneration:0};
+  const prepare=(args,bytes)=>p.evaluate(({args,bytes})=>takDexSaveSync.nativeLinks.prepareRelink({...args,bytes:Uint8Array.from(atob(bytes),character=>character.charCodeAt(0))}),{args,bytes:bytes.toString('base64')});
   const finish=args=>p.evaluate(args=>takDexSaveSync.nativeLinks.finishRelink(args),args);
   const replacement=fixture(20,551);
   assert.deepEqual(await prepare(args,replacement),{status:'pending',generation:0,nextGeneration:1});
@@ -186,6 +201,8 @@ async function recoveryAndNative(browser){
   assert.equal((await State(p)).teams.native.value.saveLink.sequence,100);
   assert.equal(await finish({...args,cancel:true}),'cancelled');
   assert.equal((await inspect()).status,'associated');
+  assert.deepEqual(await prepare(args,replacement),{status:'cancelled',generation:0});
+  args={...args,requestId:'replacement-2'};
   await prepare(args,replacement);
   await p.evaluate(key=>{
    window.originalSet=Storage.prototype.setItem;
@@ -233,9 +250,20 @@ async function recoveryAndNative(browser){
    assert.match(await dialog,/Could not import team/);
    await p.locator('#cancelNew').click();
   };
+  await upload(JSON.stringify({format:'takdex-team',version:1,team:{name:'Legacy v1',game,pokemon:[]}}));
+  await p.locator('#newDialog').waitFor({state:'hidden'});
+  assert.ok(Object.values((await State(p)).teams).some(row=>row.value?.name==='Legacy v1'));
   const count=Object.values((await State(p)).teams).filter(row=>row.value).length;
   await rejectFile(JSON.stringify({...imported,team:{...imported.team,pokemon:[{id:9,name:'Blastoise',types:['water'],moves:[{name:'Surf',accuracy:999}]}]}}));
   await rejectFile(' '.repeat(2000001));
+  await p.evaluate(key=>{
+   window.originalSet=Storage.prototype.setItem;
+   Storage.prototype.setItem=function(k,v){if(k===key)throw new DOMException('Simulated import quota','QuotaExceededError');return originalSet.call(this,k,v);};
+  },key);
+  const failedImport=JSON.stringify({...imported,team:{...imported.team,name:'Must roll back'}});
+  await rejectFile(failedImport);
+  await p.reload();
+  assert.equal(Object.values((await State(p)).plans).filter(row=>row.value).length,1);
   assert.equal(Object.values((await State(p)).teams).filter(row=>row.value).length,count);
   const fallback=await p.evaluate(async()=>{
    const reader=takDexStorageV78.create({storage:localStorage});
@@ -248,6 +276,7 @@ async function recoveryAndNative(browser){
 
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
- try{await teamsAndPlans(browser);await syncTests(browser);await recoveryAndNative(browser);}
+ const suites={storage:teamsAndPlans,sync:syncTests,recovery:recoveryAndNative};
+ try{for(const [name,suite] of Object.entries(suites))if(!process.env.TAKDEX_FOCUS||process.env.TAKDEX_FOCUS===name)await suite(browser);}
  finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

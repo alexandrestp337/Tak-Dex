@@ -58,6 +58,14 @@
    throw fault('CONFLICT','This '+(table==='plans'?'plan':'team')+' changed in another operation. Your changes were not applied.');
   return current;
  }
+ function endLink(link,intent,game){
+  const generation=link?.generation||0;
+  const authorizations=new Set(link?.releaseGenerations||[]);
+  authorizations.add(generation);
+  if(link?.confirmed)authorizations.add(generation-1);
+  if(link?.invalidatedGeneration!=null)authorizations.add(link.invalidatedGeneration);
+  return {game,generation:generation+1,intent,releaseGenerations:[...authorizations]};
+ }
  function mirror(storage,state){
   // Compatibility projections for the legacy adapter and pre-V78 readers.
   // The authoritative envelope always wins if projecting or recovering is interrupted.
@@ -105,7 +113,7 @@
   }
   return {read:()=>read(storage),commit};
  }
- const api={KEY,TEAM_KEY,PLAN_KEY,read,entry,values,replace,expect,copy,same,fault,create};
+ const api={KEY,TEAM_KEY,PLAN_KEY,read,entry,values,replace,expect,endLink,copy,same,fault,create};
  if(typeof module==='object')module.exports=api;
  else{
   let storage,indexedDB;

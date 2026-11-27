@@ -22,15 +22,18 @@ function td70ReadTeams(){
   if(!Array.isArray(data)||!data.every(t=>t&&typeof t==='object'&&typeof t.id==='string'&&typeof t.name==='string'&&games.includes(t.game)&&Array.isArray(t.pokemon)))throw Error('Saved team data is not a valid team array');
   return data;
  }catch(e){
-  td70TeamRecovery=raw;
-  try{if(raw!==null&&localStorage.getItem('takdex-v78-state-v1')===null)localStorage.setItem('takdex-v70-team-recovery-'+new Date().toISOString(),raw)}catch{}
+  td70TeamRecovery=raw||'Stored state is inaccessible.';
+  try{
+   td70TeamRecovery=JSON.stringify({canonical:localStorage.getItem(takDexStorageV78.KEY),
+    teams:localStorage.getItem(takDexStorageV78.TEAM_KEY),plans:localStorage.getItem(takDexStorageV78.PLAN_KEY)},null,2);
+  }catch{}
   console.warn('Tak-Dex: invalid saved teams preserved for recovery',e);
   return [];
  }
 }
 let teams=td70ReadTeams(),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const td78Store=window.takDexStorageV78;
 const td78TeamWrites=new Map(Object.entries(td78Store.read().state.teams).map(([id,row])=>[id,{row,proposed:row.value}]));
-const td78NotifyTeamSaved=()=>window.dispatchEvent(new CustomEvent('td74:team-saved'));
+const td78NotifyTeamSaved=teamIds=>window.dispatchEvent(new CustomEvent('td74:team-saved',{detail:{teamIds}}));
 let td78Drafts=[];
 function td78WriteWarning(error,draft){
  if(draft)td78Drafts.push(td78Store.copy(draft));
@@ -93,13 +96,13 @@ function save({deletedId=null,expectedPlans={}}={}){
      td78Store.replace(state,'plans',key,null);
     }
     const link=td78Store.entry(state,'links',deletedId).value;
-    td78Store.replace(state,'links',deletedId,{generation:(link?.generation||0)+1,intent:'deleted'});
+    td78Store.replace(state,'links',deletedId,td78Store.endLink(link,'deleted'));
    }
    for(const {id,write} of edits){
     const previous=td78Store.entry(state,'teams',id).value;
     if(previous&&write.proposed&&previous.game!==write.proposed.game){
      const link=td78Store.entry(state,'links',id).value;
-     td78Store.replace(state,'links',id,{game:write.proposed.game,generation:(link?.generation||0)+1,intent:'game-changed'});
+     td78Store.replace(state,'links',id,{game:write.proposed.game,generation:(link?.generation||0)+1,intent:'game-changed',invalidatedGeneration:link?.invalidatedGeneration??link?.generation??0});
     }
     td78Store.replace(state,'teams',id,write.proposed);
    }
@@ -110,7 +113,7 @@ function save({deletedId=null,expectedPlans={}}={}){
    write.row=td78Store.entry(result.state,'teams',id);write.pending=null;
   }
   td78RefreshUnrelatedTeams(result.state,new Set(edits.map(edit=>edit.id)));
-  td78ProjectionWarning(result);showTeams();td78NotifyTeamSaved();return true;
+  td78ProjectionWarning(result);showTeams();td78NotifyTeamSaved(edits.map(edit=>edit.id));return true;
  },error=>{
   for(const {write} of edits)write.pending?.catch(()=>{});
   td78WriteWarning(error,edits.map(({id,write})=>({id,team:write.proposed,deleteRequested:id===deletedId})));
@@ -300,7 +303,7 @@ function search(input,results,choose,accept=()=>true){let token=0;input.addEvent
 const td71ExpandedTeams=new Set();
 let td72DetailsTeam=null;
 let td74InlineSlot=null,td74InlineTeam=null,td74DraftDirty=false,td75Preview=null;
-function td71NewTeamId(){return String(Date.now())+Math.random().toString(36).slice(2)}
+function td71NewTeamId(){return globalThis.crypto?.randomUUID?.()||String(Date.now())+Math.random().toString(36).slice(2)}
 function td74CloseInline(force=false){
  if(!force&&td74DraftDirty&&!confirm('Discard unsaved Pokémon changes?'))return false;
  ++lookupVersion;td74InlineSlot=null;td74InlineTeam=null;td74DraftDirty=false;td75Preview=null;
@@ -409,7 +412,7 @@ $('pokeInput').addEventListener('input',()=>{++lookupVersion;chosen=null;$('save
 $('tdDev1PokeClear').onclick=()=>{const nickname=$('pokeNickname').value;clearForm();$('pokeNickname').value=nickname;$('pokeResults').hidden=true;$('pokeInput').dispatchEvent(new Event('input',{bubbles:true}));$('pokeInput').focus();};
 $('pokeForm').addEventListener('input',e=>{td74DraftDirty=true;if(e.target.id==='pokeNickname'&&chosen)td75UpdateBuilderPreview({...chosen,nickname:e.target.value.trim()});});$('pokeForm').addEventListener('change',()=>{td74DraftDirty=true});$('td74BuilderDex').onclick=()=>td70OpenSlotDex(slotIndex);
 $('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen||!current||$('savePoke').disabled)return;if(window.td77BuilderProfile?.stale(current.pokemon[slotIndex])){editSlot(slotIndex);return;}current.pokemon[slotIndex]={...(current.pokemon[slotIndex]?.id===chosen.id?current.pokemon[slotIndex]:{}),...chosen,...window.td77BuilderProfile?.read(),ability:td2AllAbilities(chosen).includes($('td2TeamAbility')?.value)?$('td2TeamAbility').value:'',nickname:$('pokeNickname').value.trim(),moves:selectedMoves.filter(Boolean)};td74CloseInline(true);save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close();};$('evolvePoke').onclick=()=>evolveSlot(slotIndex);$('removePoke').onclick=()=>{if(!confirm('Remove this Pokémon from the team?'))return;current.pokemon[slotIndex]=null;td74CloseInline(true);save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close()};$('cancelPoke').onclick=()=>{if(!td74CloseInline())return;showTeams();if($('pokeDialog').open)$('pokeDialog').close()};
-$('game').innerHTML='<option value="">Choose game…</option>'+games.map(g=>`<option>${g}</option>`).join('');$('game').value='';$('game').required=true;const td71TeamName=$('teamName');function td71UpdateTeamPlaceholder(){td71TeamName.placeholder=games.includes($('game').value)?'My '+$('game').value+' team':'My Pokémon team'}$('game').addEventListener('change',td71UpdateTeamPlaceholder);td71UpdateTeamPlaceholder();$('addTeam').onclick=()=>{$('game').value='';td71UpdateTeamPlaceholder();$('newDialog').showModal()};$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();if(!games.includes($('game').value)){$('game').reportValidity();return}const t={id:String(Date.now())+Math.random().toString(36).slice(2),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id);showTeams()};$('closeTeam').onclick=td70CloseTeam;$('editTeamGame').innerHTML=games.map(g=>`<option>${g}</option>`).join('');
+$('game').innerHTML='<option value="">Choose game…</option>'+games.map(g=>`<option>${g}</option>`).join('');$('game').value='';$('game').required=true;const td71TeamName=$('teamName');function td71UpdateTeamPlaceholder(){td71TeamName.placeholder=games.includes($('game').value)?'My '+$('game').value+' team':'My Pokémon team'}$('game').addEventListener('change',td71UpdateTeamPlaceholder);td71UpdateTeamPlaceholder();$('addTeam').onclick=()=>{$('game').value='';td71UpdateTeamPlaceholder();$('newDialog').showModal()};$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();if(!games.includes($('game').value)){$('game').reportValidity();return}const t={id:td71NewTeamId(),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id);showTeams()};$('closeTeam').onclick=td70CloseTeam;$('editTeamGame').innerHTML=games.map(g=>`<option>${g}</option>`).join('');
 $('editTeam').onclick=()=>{if(!current)return;$('editTeamName').value=current.name;$('editTeamGame').value=current.game;$('editTeamDialog').showModal()};
 $('cancelEditTeam').onclick=()=>$('editTeamDialog').close();
 $('editTeamForm').onsubmit=e=>{e.preventDefault();if(!current)return;const name=$('editTeamName').value.trim();if(!name)return;if(!games.includes($('editTeamGame').value)){alert('Choose a valid game.');return}current.name=name;current.game=$('editTeamGame').value;save();showTeams();openTeam(current.id);$('editTeamDialog').close()};
@@ -433,7 +436,6 @@ function td70ShowCopyExport(filename,contents){
  $('td70ExportName').textContent=filename;$('td70ExportText').value=contents;
  $('td70ExportCopy').textContent='Copy JSON';dialog.showModal();
 }
-const td77PlanStorage='takdex-v74-playthrough-plans';
 function td77ReadPlans(){
  return td78Store.values(td78Store.read().state,'plans');
 }
@@ -486,7 +488,7 @@ $('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)r
   td78Store.replace(state,'teams',team.id,team);
   if(plan)td78Store.replace(state,'plans',team.game+':'+team.id,plan);
  });
- td78AcceptTeam(commit.state,team.id);td78ProjectionWarning(commit);td78NotifyTeamSaved();showTeams();$('newDialog').close();openTeam(team.id);if(warnings.length)alert(warnings.join('\n'));}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
+ td78AcceptTeam(commit.state,team.id);td78ProjectionWarning(commit);td78NotifyTeamSaved([team.id]);showTeams();$('newDialog').close();openTeam(team.id);if(warnings.length)alert(warnings.join('\n'));}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
 
 search($('pokeInput'),$('pokeResults'),n=>{td74DraftDirty=true;const previous=td75Preview||current?.pokemon?.[slotIndex];if(td51Canonical(previous?.name)!==td51Canonical(n))$('pokeNickname').value='';loadPokemon(n)});search($('foeInput'),$('foeResults'),name=>td76ChooseQuickOpponent(name,1));
 
@@ -1736,7 +1738,7 @@ function td74ChallengeProfile(game,version,roster){
 }
 function td74EntryStats(base,entry,adjustments=entry?.statAdjustments){
  const imported=entry?.saveStats;
- if(imported&&!imported.egg){
+ if(imported?.stats&&!imported.egg){
   const level=tdDev1Level(entry.level,imported.level);
   const at=(key,l)=>{
    if(key==='hp'&&entry.id===292)return 1;
@@ -3509,7 +3511,7 @@ function td772BindFilter(button,panel){
    // CacheStorage.match checks all existing game packs; no per-image enumeration of
    // thousands of image records or sequential open() of every game cache.
    let preferred=null;
-   try{const selectedId=localStorage.getItem('takdex-v71-active-team');const t=JSON.parse(localStorage.getItem('poketact-teams')||'[]').find(x=>x.id===selectedId);const g=t?.game||localStorage.getItem('takdex-v66-game')||'';
+   try{const selectedId=localStorage.getItem('takdex-v71-active-team');const t=td78Store.entry(td78Store.read().state,'teams',selectedId).value;const g=t?.game||localStorage.getItem('takdex-v66-game')||'';
     if(g)preferred=await caches.open('takdex-artwork-v60-'+String(g).toLowerCase().replace(/[^a-z0-9]+/g,'-'));
    }catch{}
    for(const candidate of [src,alternate]){
@@ -6497,8 +6499,8 @@ document.addEventListener('keydown',event=>{
   else stageCandidate(p.name);
  });
 
- window.addEventListener('td74:team-saved',()=>{
-  if(!state||!plannerActive)return;
+ window.addEventListener('td74:team-saved',event=>{
+  if(!state||!plannerActive||event.detail?.teamIds&&!event.detail.teamIds.includes($('td4Team').value))return;
   reconcileOwnership();
   if(page.hidden){plannerDirty=true;return;}
   const old=$('td4Team').value;

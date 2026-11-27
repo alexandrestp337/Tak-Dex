@@ -481,7 +481,7 @@ function setGame(g){
 }
 function open(g,place){
  let target=g;
- if(!target){try{const id=localStorage.getItem('takdex-v71-active-team');const saved=JSON.parse(localStorage.getItem('poketact-teams')||'[]');const t=saved.find(t=>t.id===id);if(t?.game)target=t.game;}catch{}}
+ if(!target){try{const id=localStorage.getItem('takdex-v71-active-team');const t=td78Store.entry(td78Store.read().state,'teams',id).value;if(t?.game)target=t.game;}catch{}}
  const active=[...document.querySelectorAll('main > section')].find(el=>!el.hidden&&el.id!=='mapsPage');
  returnFrom={id:active?.id||'morePage',scroll:window.scrollY,tab:document.querySelector('.main-tabs .selected')?.id};
  $('backMaps').textContent=returnFrom.id==='morePage'?'← More':'← Back';
