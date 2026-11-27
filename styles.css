@@ -1717,3 +1717,6 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{border:1px solid var(--accent)}
 #td4Slots>.td4-planned-slot{position:relative}
 .td81-plan-lock{position:absolute;top:6px;right:6px;width:13px;height:13px;color:var(--muted);pointer-events:none}
+.td82-base-stats table{width:100%;font-size:.76rem;text-align:right;border-collapse:collapse}
+.td82-base-stats :is(th,td){padding:3px;border-bottom:1px solid var(--edge)}
+.td82-base-stats th:first-child{text-align:left}

@@ -53,7 +53,7 @@ test('Two ordinary sturdy resistances can cover two shared weaknesses',()=>{
 test('Trainer summaries use the same coverage classification as the opponent tiles',()=>{
  const context=vm.createContext({leagueHits:(_,row)=>({status:row})});
  vm.runInContext(part(' function readinessStatus(', ' const readinessLabels='),context);
- const classify=rows=>context.readinessStatus({rows},[]);
+ const classify=rows=>context.readinessStatus(rows);
  assert.equal(classify(['good','good']),'good');
  assert.equal(classify(['good','nonstab']),'nonstab');
  assert.equal(classify(['good','unknown']),'unknown');
