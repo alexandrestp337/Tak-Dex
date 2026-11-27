@@ -614,3 +614,9 @@ Planned readiness now stops at the last stage available by the encounter. Moves 
 **Pass** · One targeted Black 2 Chromium flow at 412 CSS px verified Pignite and Emboar as separate targets, automatic Final advancement, mode switching and reload persistence, no devolution, retained Tackle and existing Clear/Reset behavior. It also verified that Riolu's level 6 Counter is eligible against Cheren, level 15 Force Palm is too late for the encounter's level window, and an unverified route is gray.
 
 **Pass** · Seven directly related Node tests, including positive, negative and zero BST headings. The mobile flow verified the comparison table and lack of page overflow. Alternate branching confirmation was reviewed in code. Physical hardware and other games were outside the targeted run.
+
+## V77.1-STABLE release
+
+Final acceptance was granted for maintenance checkpoint `2b379d9` with all three acceptance groups passing. This release changes the version labels, web asset identifiers and service-worker cache name. Storage keys, settings, save compatibility and the “Developed by WHOASP” credit are preserved.
+
+Correction 2 passed its targeted Chromium flow and seven Node checks. Alternate branching evolution confirmation was reviewed in code. Browser testing covered the linear Tepig line. Production publishes from `main` through GitHub Pages.
