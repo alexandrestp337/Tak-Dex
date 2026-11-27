@@ -15,7 +15,7 @@ function ownership(party, slots) {
   sameMon: (a, b) => a?.id === b.id,
   lineage: id => new Set(id === 55 ? [55, 54] : [id]),
  });
- vm.runInContext(section(' function ownedAssignments', ' function sameMon'), context);
+ vm.runInContext(section(' function eligibleAcquisition', ' function sameMon'), context);
  return context;
 }
 test('A duplicate legacy PID can satisfy only one slot after party reordering', () => {
@@ -30,13 +30,13 @@ test('A duplicate legacy PID can satisfy only one slot after party reordering', 
  assert.deepEqual(Array.from(reordered.ownedAssignments()), [0, 1, -1]);
 });
 
-test('Two identical independently owned Pokémon can be reserved separately', () => {
+test('Legacy duplicates without identity are not assigned by party position', () => {
  const party = [{ id: 54, name: 'psyduck' }, { id: 54, name: 'psyduck' }];
  const slots = [{ id: 54, originSlot: 0, originName: 'psyduck' }, { id: 55, originSlot: 1, originName: 'psyduck' }];
  const context = ownership(party, slots);
- assert.equal(context.ownedFor(slots[0], 0), party[0]);
- assert.equal(context.ownedFor(slots[1], 1), party[1]);
- assert.equal(context.ownershipConflict(slots[1], 1), null);
+ assert.equal(context.ownedFor(slots[0], 0), null);
+ assert.equal(context.ownedFor(slots[1], 1), null);
+ assert.equal(context.ownershipConflict(slots[1], 1), undefined);
 });
 
 test('Family ranking preserves a reachable earlier stage and distinct branches', () => {
