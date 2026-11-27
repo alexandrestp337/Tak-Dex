@@ -31,9 +31,10 @@ def main():
     parser.add_argument('commit')
     parser.add_argument('site', type=Path)
     parser.add_argument('origin', help='Dedicated preview URL')
+    parser.add_argument('--branch', choices=[BRANCH, 'v77.1-maintenance'], default=BRANCH)
     args = parser.parse_args()
     commit = git('rev-parse', '--verify', args.commit + '^{commit}').decode().strip()
-    subprocess.run(['git', '-C', ROOT, 'merge-base', '--is-ancestor', commit, BRANCH], check=True)
+    subprocess.run(['git', '-C', ROOT, 'merge-base', '--is-ancestor', commit, args.branch], check=True)
     origin = args.origin.rstrip('/')
     if not re.fullmatch(r'https://[a-z0-9.-]+', origin) or origin.endswith('.github.io'):
         parser.error('Pass the dedicated HTTPS preview origin.')
@@ -62,7 +63,7 @@ def main():
     index.write_text(contents)
     worker = dist / 'sw.js'
     worker.write_text(re.sub(r"const NAME='[^']+'", f"const NAME='takdex-v77-preview-{commit[:12]}'", worker.read_text(), count=1))
-    (dist / 'preview-build.json').write_text(json.dumps({'branch': BRANCH, 'commit': commit}) + '\n')
+    (dist / 'preview-build.json').write_text(json.dumps({'branch': args.branch, 'commit': commit}) + '\n')
     print(commit)
 
 

@@ -588,3 +588,35 @@ From `8efad09`. The focused Chromium case reproduced the editor closing on conte
 Final user acceptance was granted for checkpoint `f1d8ae6` on `v77-development`. The release commit adds stable web identifiers, a fresh service-worker cache and release documentation to the accepted checkpoint. Production is published from `main` by GitHub Pages.
 
 The release keeps the existing local save and planner storage keys, JSON compatibility and “Developed by WHOASP” credit. Installed web clients receive the new cache on their next service-worker update. Android is released separately.
+
+## V77.1 maintenance candidate
+
+Based on `V77-STABLE` at `a5c9eec`. The shared evolution selector includes eligible intermediate and final stages, starts at the owned or selected acquisition stage, and preserves the selected route where still applicable. An evolved owned Pokémon cannot be selected back to an earlier form. Unverified acquisition paths remain unavailable in the selector.
+
+Next-Gym status and counts use actual moves. Expanded Gym comparisons and planned Elite Four readiness retain their respective behavior. Potential STAB uses the intended roster in both modes. During game had previously used the learner's earlier species for this total. Typing and effectiveness rules still apply, so Normal STAB gives Patrat no super-effective targets.
+
+Collapsed rows distinguish deliberate Clear from newly planned moves. Reset writes the same actual moves to both planner modes before rendering. The resource audit confirmed that assigned legally retained moves already bypass tutor and Reminder allocation. Their timing and unverified-acquisition notices now also stay hidden. Pokémon improvement comparisons show generation-specific base stats and signed BST differences when both records are available.
+
+### Targeted verification
+
+- **Pass** · Chromium at 412 CSS px verified Tepig → Pignite → Emboar in both modes, earlier endpoint selection while Tepig is still owned, route and lock retention, and no Tepig option after the owned Pokémon became Pignite.
+- **Pass** · Unowned Espeon added two potential STAB targets without changing actual coverage or next-Gym readiness. The actual Gym summary stayed red at 0/2 against Cheren with only Tackle known.
+- **Pass** · Tackle remained retained without a timing notice or Heart Scale charge. Clear persisted across modes and Reset restored the collapsed and expanded moves in both modes.
+- **Pass** · The Base stats disclosure began closed, showed six stat rows and BST, and displayed correct differences. The mobile page had no horizontal overflow.
+- **Pass** · Six targeted ranking and readiness tests. Physical device and native Android were outside this maintenance verification.
+
+### V77.1 Correction 2
+
+During game and Final can now target different stages on one plan slot and acquisition path. Selecting a later During game target advances Final as needed. Selecting an earlier During game stage leaves Final intact. Final choices incompatible with During game are disabled. A During game branch change that would replace Final requires confirmation and keeps the manual moves for review. Legacy plans keep their existing learner until a During game target is chosen. Resource allocation continues to use the shared Final route.
+
+Planned readiness now stops at the last stage available by the encounter. Moves outside that window do not register as missing data. Gray is reserved for unresolved evidence that could affect coverage. The actual-team Gym summary is unchanged. Base stats headings and rows use the same signed difference colors.
+
+**Pass** · One targeted Black 2 Chromium flow at 412 CSS px verified Pignite and Emboar as separate targets, automatic Final advancement, mode switching and reload persistence, no devolution, retained Tackle and existing Clear/Reset behavior. It also verified that Riolu's level 6 Counter is eligible against Cheren, level 15 Force Palm is too late for the encounter's level window, and an unverified route is gray.
+
+**Pass** · Seven directly related Node tests, including positive, negative and zero BST headings. The mobile flow verified the comparison table and lack of page overflow. Alternate branching confirmation was reviewed in code. Physical hardware and other games were outside the targeted run.
+
+## V77.1-STABLE release
+
+Final acceptance was granted for maintenance checkpoint `2b379d9` with all three acceptance groups passing. This release changes the version labels, web asset identifiers and service-worker cache name. Storage keys, settings, save compatibility and the “Developed by WHOASP” credit are preserved.
+
+Correction 2 passed its targeted Chromium flow and seven Node checks. Alternate branching evolution confirmation was reviewed in code. Browser testing covered the linear Tepig line. Production publishes from `main` through GitHub Pages.
