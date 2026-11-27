@@ -604,3 +604,13 @@ Collapsed rows distinguish deliberate Clear from newly planned moves. Reset writ
 - **Pass** · Tackle remained retained without a timing notice or Heart Scale charge. Clear persisted across modes and Reset restored the collapsed and expanded moves in both modes.
 - **Pass** · The Base stats disclosure began closed, showed six stat rows and BST, and displayed correct differences. The mobile page had no horizontal overflow.
 - **Pass** · Six targeted ranking and readiness tests. Physical device and native Android were outside this maintenance verification.
+
+### V77.1 Correction 2
+
+During game and Final can now target different stages on one plan slot and acquisition path. Selecting a later During game target advances Final as needed. Selecting an earlier During game stage leaves Final intact. Final choices incompatible with During game are disabled. A During game branch change that would replace Final requires confirmation and keeps the manual moves for review. Legacy plans keep their existing learner until a During game target is chosen. Resource allocation continues to use the shared Final route.
+
+Planned readiness now stops at the last stage available by the encounter. Moves outside that window do not register as missing data. Gray is reserved for unresolved evidence that could affect coverage. The actual-team Gym summary is unchanged. Base stats headings and rows use the same signed difference colors.
+
+**Pass** · One targeted Black 2 Chromium flow at 412 CSS px verified Pignite and Emboar as separate targets, automatic Final advancement, mode switching and reload persistence, no devolution, retained Tackle and existing Clear/Reset behavior. It also verified that Riolu's level 6 Counter is eligible against Cheren, level 15 Force Palm is too late for the encounter's level window, and an unverified route is gray.
+
+**Pass** · Seven directly related Node tests, including positive, negative and zero BST headings. The mobile flow verified the comparison table and lack of page overflow. Alternate branching confirmation was reviewed in code. Physical hardware and other games were outside the targeted run.

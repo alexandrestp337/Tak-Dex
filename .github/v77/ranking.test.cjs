@@ -75,3 +75,12 @@ test('Only the chosen individual can carry known moves across a planned evolutio
  assert.equal(context.retainsMove({}, {id:55},'scratch',1,owned),false);
  assert.equal(context.retainsMove({}, {id:19},'scratch',0,owned),false);
 });
+
+test('Improvement BST headings use signed positive, negative and neutral differences',()=>{
+ const c=vm.createContext({});
+ vm.runInContext(part(' function improvementBaseStats(', ' function renderImprovements('),c);
+ const tepig=pokemon(498,['fire']),pignite=pokemon(499,['fire','fighting']);
+ assert.match(c.improvementBaseStats(tepig,pignite),/BST <span class="td41-good">\+\d+/);
+ assert.match(c.improvementBaseStats(pignite,tepig),/BST <span class="td63-danger">-\d+/);
+ assert.match(c.improvementBaseStats(tepig,tepig),/BST <span class="">0/);
+});

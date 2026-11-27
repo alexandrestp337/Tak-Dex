@@ -43,11 +43,16 @@ const {chromium}=require('playwright-core');
   assert.equal((await read()).slots[0].acquisitionRoute.id,route);
   assert.equal((await read()).slots[0].locked,true);
   await evolution.selectOption('499');
-  await species(0,499);
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'))['Black 2:maintenance'].slots[0].duringTargetId===499);
+  assert.equal((await read()).slots[0].id,500);
   assert.equal((await read()).slots[0].plannedMoves[0].move,'tackle');
+  assert.match(await tile(0).textContent(),/Pignite/);
+  await page.locator('[data-view="final"]').click();
+  assert.match(await tile(0).textContent(),/Emboar/);
+  assert.equal(await evolution.locator('option[value="498"]').isDisabled(),true);
+  await page.locator('[data-view="during"]').click();
+  assert.match(await tile(0).textContent(),/Pignite/);
   assert.equal(await gym.getAttribute('data-readiness-status'),'bad');
-  await evolution.selectOption('500');
-  await species(0,500);
   const emboar=(await read()).slots[0];
 
   await page.locator('[data-view="final"]').click();
@@ -99,6 +104,8 @@ const {chromium}=require('playwright-core');
   assert.equal(rows.length,7);
   for(const [,left,right,delta] of rows)assert.equal(Number(delta),Number(right)-Number(left));
   assert.match(await stats.locator('summary').textContent(),/BST [+-]?\d+/);
+  const bst=Number(rows.at(-1)[3]);
+  if(bst)assert.equal(await stats.locator('summary span').first().getAttribute('class'),bst>0?'td41-good':'td63-danger');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),412);
   await page.evaluate(emboar=>{
    const teams=JSON.parse(localStorage.getItem('poketact-teams'));
@@ -112,12 +119,41 @@ const {chromium}=require('playwright-core');
   await page.reload({waitUntil:'domcontentloaded'});
   if(!await planner.isVisible())await page.locator('[data-td71-toggle="maintenance"]').click();
   await planner.click();
-  await evolution.locator('option[value="499"]').waitFor({state:'attached'});
+  await page.waitForFunction(()=>document.querySelector('#td77FinalForm select')?.textContent.includes('Pignite'));
+  assert.equal((await read()).slots[0].duringTargetId,499);
+  assert.match(await tile(0).textContent(),/Pignite/);
+  await page.locator('[data-view="final"]').click();
   assert.equal(await evolution.locator('option[value="498"]').count(),0);
   await evolution.selectOption('499');
   await species(0,499);
   assert.equal((await read()).slots[0].acquisitionRoute.startId,499);
+  async function cheren(move,status,unverified=false){
+   await page.evaluate(({move,unverified})=>{
+    const plans=JSON.parse(localStorage.getItem('takdex-v74-playthrough-plans'));
+    const game=plans['Black 2:maintenance'];
+    const slot={id:447,name:'riolu',types:['fighting'],confirmedCandidate:true,
+     plannedMoves:[{move,purpose:'keep'}],duringMoves:[{move,purpose:'keep'}]};
+    if(unverified)slot.acquisitionRoute={id:'unverified-route',startId:447};
+    game.slots=[null,null,slot];game.mode='final';delete game.editorSlot;
+    localStorage.setItem('takdex-v74-playthrough-plans',JSON.stringify(plans));
+   },{move,unverified});
+   await page.reload({waitUntil:'domcontentloaded'});
+   if(!await planner.isVisible())await page.locator('[data-td71-toggle="maintenance"]').click();
+   await planner.click();
+   await page.waitForFunction(()=>document.querySelector('#td4PlanProgress')?.textContent.includes('1/6'));
+   const cheren=page.locator('#td77Gyms .td42-league-group').filter({hasText:'Cheren'}).first();
+   await cheren.waitFor({state:'attached'});
+   await page.waitForFunction(expected=>{
+    const group=Array.from(document.querySelectorAll('#td77Gyms .td42-league-group')).find(el=>el.textContent.includes('Cheren'));
+    return !!group&&group.dataset.readinessStatus===expected&&Array.from(group.querySelectorAll('.td64-league-pair span:last-child')).every(el=>el.classList.contains('td64-cover-'+expected));
+   },status);
+   assert.equal(await gym.getAttribute('data-readiness-status'),'bad');
+  }
+  // Black 2 Riolu learns Counter at level 6 and Force Palm at 15.
+  await cheren('counter','good');
+  await cheren('force-palm','bad');
+  await cheren('counter','unknown',true);
   assert.deepEqual(errors,[]);
-  console.log('412px: shared intermediate evolution, actual Gym, intended Espeon STAB, retained Tackle, clear/reset and dynamic base stats passed.');
+  console.log('412px: separate evolution targets, route and retention, no devolution, Cheren eligible/late/unverified cases and BST layout passed.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
