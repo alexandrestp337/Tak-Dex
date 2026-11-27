@@ -1641,9 +1641,6 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td41MoveSlots .td77-move-comparison>.td42-arrow{align-self:center}
 #td41MoveSlots .td77-move-comparison{position:relative;overflow:visible}
 #td4TeamPlannerPage #td41MoveSlots .td77-edit-move{position:static;min-width:0}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move input{position:absolute;inset:0 0 0 auto;width:45%;height:100%;margin:0;opacity:0;cursor:pointer}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{inset:100% 0 auto;width:100%;height:36px;opacity:1;z-index:42;cursor:text}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{position:absolute;top:calc(100% + 36px);left:0;right:0;width:auto;max-width:100%;z-index:42;overflow:auto}
 #td41MoveSlots .td77-move-option{min-width:0;white-space:normal;overflow-wrap:anywhere}
 #td41MoveSlots .td77-editor-empty{align-self:center;justify-self:end;color:var(--muted)}
 #td41MoveSlots .td77-move-comparison:has(.td77-editor-empty){grid-template-columns:auto auto minmax(0,1fr)}
@@ -1663,11 +1660,11 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .td77-resource-summary dl>div{display:flex;justify-content:space-between;gap:5px}
 .td77-resource-summary dd{margin:0;font-weight:700}
 
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move input{display:none}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{display:block}
 .td78-open-move{position:absolute;inset:0 0 0 auto;width:45%;opacity:0;margin:0}
 .td78-open-move:focus-visible{opacity:1;background:transparent;color:transparent;outline:2px solid var(--accent)}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{max-height:none;overflow:visible;padding:7px;box-sizing:border-box}
+#td4TeamPlannerPage #td41MoveSlots .td78-editor-shell .suggestions{
+ position:static;width:100%;min-width:0;max-height:none;overflow:visible;border:0;background:transparent;box-shadow:none
+}
 .td78-move-actions{display:flex;gap:4px;margin-bottom:6px}
 #td41MoveSlots .td78-move-actions button{flex:1;min-width:0;text-align:center;white-space:normal}
 .td78-move-results{max-height:min(34vh,230px);overflow:auto;min-width:0}
@@ -1705,11 +1702,9 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4Edit>.td42-settings:first-of-type>summary{padding-block:6px}
 
 #td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) .td77-planner-move-info,
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move>.suggestions:not([hidden]){border:1px solid var(--accent)}
 #td41MoveSlots .td78-move-results{max-height:min(38vh,260px)}
 #td4Candidates .td80-candidate-acquisition>summary{font-size:.82rem;padding-block:4px}
 #td4Candidates .td80-candidate-acquisition>small{display:block;margin:2px 0}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{border:1px solid var(--accent)}
 #td4Slots>.td4-planned-slot{position:relative}
 .td81-plan-lock{position:absolute;top:6px;right:6px;width:13px;height:13px;color:var(--muted);pointer-events:none}
 .td82-base-stats table{width:100%;font-size:.76rem;text-align:right;border-collapse:collapse}
@@ -1938,15 +1933,23 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 #newDialog .buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 #newDialog .buttons button{min-height:44px;margin:0;padding-inline:6px}
 :is(#plannerPage,#td77BuilderBattle) .td74-battle-stats .td75-stat-footer button[data-td74-stat-reset]{
- display:grid;place-items:center;flex:none;width:44px;height:44px;margin:0;padding:0;border-radius:9px
+ display:grid;place-items:center;position:relative;flex:none;width:32px;height:32px;min-height:32px;margin:6px;padding:0;border-radius:9px
 }
 #td4TeamPlannerPage .td78-actual-stage{color:var(--muted)}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move>button.td772-filter-button{
- display:none;position:absolute;inset:100% 0 auto auto;width:44px;height:44px;margin:0;z-index:42
+[data-td74-stat-reset]::after{content:'';position:absolute;inset:-6px}
+#td41MoveSlots .td78-editor-shell{
+ display:none;position:absolute;inset:100% 0 auto;z-index:42;
+ padding:7px;background:var(--card);border:1px solid var(--accent);border-radius:8px
 }
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden]))>button.td772-filter-button{display:grid}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) input{width:calc(100% - 52px);height:44px}
-#td4TeamPlannerPage #td41MoveSlots .td77-edit-move .suggestions{top:calc(100% + 44px)}
+#td41MoveSlots .td78-editor-shell:has(>.suggestions:not([hidden])){display:block}
+#td41MoveSlots .td78-editor-search{margin:0 0 6px}
+#td41MoveSlots .td78-editor-search input{height:44px;margin:0;border-color:var(--accent)}
+#td41MoveSlots .td79-move-choice{position:relative;cursor:pointer}
+#td41MoveSlots .td79-move-choice .td78-suggestion-name{
+ position:absolute;top:4px;left:5px;width:auto;max-width:74%;margin:0;
+ padding:0;text-decoration:underline;text-underline-offset:2px;font-weight:700;line-height:1.12;overflow-wrap:anywhere
+}
+#td41MoveSlots .td77-move-option .td77-move-result-lines>strong{min-height:1.12em}
 #td41MoveSlots .td78-move-filter-panel{margin-bottom:6px;padding:5px}
 #td41MoveSlots .td78-move-filter-panel .td72-move-types{margin:2px 0 6px}
 #td41MoveSlots .td78-move-filter-panel button{min-height:32px;text-align:center}
@@ -1957,22 +1960,22 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 #td4TeamPlannerPage .td78-route-picker>.td774-route-choice::after{content:''}
 #td4TeamPlannerPage .td78-route-picker:not([open])>.td774-route-choice::after{transform:rotate(-45deg)}
 #td4TeamPlannerPage .td78-route-picker[open]>.td774-route-choice::after{transform:rotate(45deg)}
+#td4TeamPlannerPage .td78-route-picker>.td774-route-choice{padding-inline:12px}
+.td78-route-options{padding:4px 8px;background:var(--bg);border-radius:8px}
 .td78-route-group{display:grid;gap:4px;padding:6px 0;border-bottom:1px solid var(--edge);font-size:.79rem}
-.td78-route-group>small{color:var(--muted)}
-.td78-route-area{display:grid;gap:3px;padding-inline-start:5px;min-width:0}
-.td78-route-area>div{display:flex;flex-wrap:wrap;gap:4px}
+.td78-route-group:last-child{border-bottom:0}
+.td78-route-area{display:grid;gap:2px;min-width:0}
+.td78-route-area + .td78-route-area{margin-top:3px}
+.td78-route-area>small,.td78-route-location{color:var(--muted);overflow-wrap:anywhere}
 #td4TeamPlannerPage .td78-route-picker button{min-height:34px;max-width:100%;margin:0;padding:4px 7px;text-align:left;font-size:.75rem}
+#td4TeamPlannerPage .td78-route-location .td74-dex-map-link{box-shadow:none}
+#td4TeamPlannerPage .td78-route-area select{min-width:0;margin:2px 0;font-size:.75rem}
 /* Resolve the shared secondary fill against the active theme for these controls. */
-:is(#newDialog,#mapsLinkedBack,.td78-route-picker,.td78-move-filter-panel,.td774-preview-actions){
+:is(#newDialog,#backMaps,#mapsPage .td73-map-toolbar,.td78-route-picker,.td78-move-filter-panel,.td774-preview-actions){
  --td-secondary-bg:color-mix(in srgb,var(--text) 6%,var(--card))
 }
 #td4TeamPlannerPage .td78-route-picker button.td5-evo-text{color:#5385db!important}
-#td4TeamPlannerPage .td78-route-area>.td74-dex-map-link{justify-self:start;box-shadow:none}
-#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden])){
- display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px
+#mapsPage .td73-map-toolbar>span>button{height:36px}
+@media(max-width:720px){
+ #mapsPage .td73-map-toolbar>span>button{height:38px}
 }
-#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden]))>#mapsHeading{grid-area:1/1/2/2}
-#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden]))>#mapsLinkedBack{grid-area:1/2/2/3;justify-content:flex-end}
-#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden])) #mapsZoomValue{grid-area:2/2/3/3}
-#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden])) #mapsSelectionLabel{grid-area:2/1/3/2}
-#mapsPage .td73-map-toolbar:has(#mapsLinkedBack:not([hidden]))>span:last-child{grid-area:3/1/4/-1}

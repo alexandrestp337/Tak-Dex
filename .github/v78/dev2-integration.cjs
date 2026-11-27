@@ -77,8 +77,8 @@ async function storage(browser){
   await attack.fill('150');
   assert.match(await source.innerText(),/Manually adjusted/);
   const [sourceBox,resetBox]=await Promise.all([source.boundingBox(),reset.boundingBox()]);
-  assert.equal(resetBox.height,44);
-  assert.equal(resetBox.width,44);
+  assert.equal(resetBox.height,32);
+  assert.equal(resetBox.width,32);
   assert.ok(sourceBox.x+sourceBox.width<=resetBox.x);
   await reset.tap();
   assert.equal(await attack.inputValue(),initialAttack);
@@ -134,13 +134,12 @@ async function navigation(browser){
   await maps.waitFor();
   await page.locator('#mapsCanvas svg[data-map-game="Black 2"]').waitFor();
   assert.equal(await page.getByRole('button',{name:'Back',exact:true}).count(),1);
-  const [title,rect,controls]=await page.evaluate(()=>['mapsHeading','backMaps','mapsFullscreen'].map(id=>document.getElementById(id).getBoundingClientRect().toJSON()));
-  assert.ok(rect.x>title.x&&Math.abs((rect.y+rect.height/2)-(title.y+title.height/2))<2,JSON.stringify({title,rect,controls}));
-  assert.ok(controls.y>=rect.y+rect.height);
+  const [rect,controls]=await page.evaluate(()=>['backMaps','mapsFullscreen'].map(id=>document.getElementById(id).getBoundingClientRect().toJSON()));
+  assert.ok(rect.x>controls.x&&rect.top===controls.top&&rect.height===controls.height,JSON.stringify({rect,controls}));
   if(mode==='fullscreen'){
    await page.locator('#mapsFullscreen').tap();
    await page.locator('.td63-map-full .td73-map-toolbar #backMaps').waitFor();
-   assert.equal(await page.locator('#mapsLinkedBack #backMaps').count(),0);
+   assert.equal(await page.locator('#mapsBackFallback #backMaps').count(),0);
   }
   await back.tap();
   await source.waitFor();
@@ -190,7 +189,7 @@ async function navigation(browser){
  await page.locator('#moreTab').tap();
  await page.locator('#openMaps').tap();
  assert.equal(await back.getAttribute('aria-label'),'More');
- assert.equal(await page.locator('#mapsLinkedBack #backMaps').count(),0);
+ assert.equal(await page.locator('#mapsBackFallback #backMaps').count(),1);
  assert.deepEqual(errors,[]);
  console.log('Contextual Back geometry and fullscreen from Pokédex Village Bridge, tutor, TM and HM; original Pokédex disclosure, move, and scroll restored; More remains distinct.');
  await page.close();

@@ -57,9 +57,7 @@ function renderChips(side){
 strip.addEventListener('error',e=>{const img=e.target;if(!img.matches?.('img[data-td62-sprite]')||img.dataset.td62Fallback)return;img.dataset.td62Fallback='1';const fallback='https://play.pokemonshowdown.com/sprites/gen5/'+encodeURIComponent(img.dataset.td62Sprite)+'.png';if(img.src!==fallback)img.src=fallback;},true);
 function typeBadges(p){const raw=p?.types||[];return raw.length?`<span class="td75-types">${raw.map(t=>pill(t)).join('')}</span>`:'<span class="td75-type-unknown">Types unavailable</span>';}
 function quickOrder(a,d,gen){
- const level=a?.level||50;
- const speed=p=>p?.baseStats?.speed&&((p.battleStats?.speed&&p.level?p.battleStats.speed-td74StatEstimate(p.baseStats.speed,level):0)+p.baseStats.speed)*(gen>=4&&p.heldItem==='Choice Scarf'?1.5:1);
- const first=speed(a),second=speed(d);
+ const first=td2Speed(a,gen,'base'),second=td2Speed(d,gen,'base');
  if(!(first>0&&second>0))return null;
  return Math.abs(first-second)>=Math.max(5,Math.max(first,second)*.05)?Math.sign(first-second):0;
 }
@@ -77,13 +75,18 @@ function moveCard(m,a,d,gen,{incoming=false,battle=false,outcome=null,standardOr
  const report=td72AbilityReport(m,d,gen,a), status=m.damageClass==='status';
  const stab=status?1:td2Stab(m,a,gen);
  const multiplier=td2Combined(m,a,d,gen);
- const power=td2Power(m,a,d,gen);
- const score=expectedPower(m,a,d,gen), highScore=expectedPower(m,a,d,gen,'max');
- const damage=battle||status?null:estimateDamage(a,d,m,gen);
- const boosted=outcome?.boost>0&&Number.isFinite(outcome.minimum);
- const high=boosted?outcome.maximum:damage;
- const low=boosted?outcome.minimum:damage===null?null:damage===0||['Seismic Toss','Night Shade','Dragon Rage','Sonic Boom'].includes(m.name)?damage:Math.max(1,Math.floor(damage*.85));
- const hp=estimatedHP(d);
+ const policy=battle?'base':'context';
+ const attacker=battle?a:{...a,currentHP:outcomes.hp(a)},defender=battle?d:{...d,currentHP:outcomes.hp(d)};
+ const power=td2Power(m,attacker,defender,gen,policy);
+ const score=expectedPower(m,attacker,defender,gen,'min',policy),highScore=expectedPower(m,attacker,defender,gen,'max',policy);
+ const rolls=battle||status?null:td78DamageRolls(attacker,defender,m,gen,'min',power);
+ const modeledHit=Number.isFinite(outcome?.minimum);
+ const boosted=outcome?.boost>0&&modeledHit;
+ const high=modeledHit?outcome.maximum:rolls?.at(-1)??null;
+ const low=modeledHit?outcome.minimum:rolls?.[0]??null;
+ const label=battle?'Score '+(score===null?'—':Math.round(score)+(highScore>score?'–'+Math.round(highScore):'')):
+  outcome?.verifiedThreat&&!outcome.uncertain?(incoming?'Est. opponent win ':'Est. win ')+(Math.round(outcome.win*1000)/10)+'%':'';
+ const hp=battle?null:estimatedHP(d);
  const percent=n=>Math.round(n*100/hp);
  const bound=n=>Math.min(100,percent(n));
  const order=comparison?outcomes.orderChance(a,d,m,comparison,gen):null;
@@ -92,6 +95,7 @@ function moveCard(m,a,d,gen,{incoming=false,battle=false,outcome=null,standardOr
   if(TD2_RECHARGE.has(m.name))notes.push('Recharge after hit');
   else if(td2Turns(m,a,gen)>1)notes.push('Charges first');
   if(boosted)notes.push('Boost '+Math.round(outcome.boost*100)+'%');
+  if((m.meta?.max_hits||0)>1)notes.push('One hit modeled');
   if(outcome){
    const knockout=outcome.verifiedThreat?outcomes.koLabel(outcome):'';
    if(knockout)notes.push(knockout);
@@ -101,16 +105,18 @@ function moveCard(m,a,d,gen,{incoming=false,battle=false,outcome=null,standardOr
    }
   }
   if(order!==null&&standardOrder!==null&&order!==standardOrder)notes.push(order===.5?'Speed tie':order?'Moves first':'Moves second');
-  const ability=td2OffensiveModifier(m,a,gen);
+  const ability=td2OffensiveModifier(m,attacker,gen,power?.min);
   if(ability!==1)notes.push(pretty(td2ActualAbility(a))+' ×'+ability);
  }
  if(report.possibleImmune.length)notes.push('Possible immunity: '+report.possibleImmune.map(pretty).join(' / '));
- return `<article class="td74-move-detail td76-move-card td74-effect-${effectivenessClass(status?null:report.effective,incoming)}" data-type-effect="${report.base??''}" data-move-type="${escape(m.type||'')}"><div class="td76-move-head"><button type="button" class="td76-move-link" data-td76-move="${escape(m.name)}">${escape(m.name)}</button>${m.type?pill(m.type):''}</div><small class="td76-move-category">${escape(pretty(m.damageClass||''))}</small><span class="td76-move-effect">${status?'—':multiplier===null?'—':multiplier===0?'Immune':multiplier+'×'}${td3Stab(stab>1)}</span><small>PWR ${power?(power.min===power.max?power.min:power.min+'–'+power.max):'—'} · ACC ${escape(accuracyLabel(m))}</small><small class="td76-move-score">Score ${score===null?'—':Math.round(score)+(highScore>score?'–'+Math.round(highScore):'')}</small>${high===null?'':`<small class="td76-damage-text">Est. ${low}–${high} HP · ${percent(low)}–${percent(high)}%</small><div class="td76-damage-track ${incoming?'incoming':''}" style="--low:${bound(low)}%;--high:${bound(high)}%" aria-hidden="true"></div>`}${notes.length?`<small>${escape(notes.join(' · '))}</small>`:''}</article>`;
+ else if(report.possibleReduced.length)notes.push('Possible damage reduction');
+ if(battle&&power?.min!==power?.max&&power?.note)notes.push(power.note);
+ return `<article class="td74-move-detail td76-move-card td74-effect-${effectivenessClass(status?null:report.effective,incoming)}" data-type-effect="${report.base??''}" data-move-type="${escape(m.type||'')}"><div class="td76-move-head"><button type="button" class="td76-move-link" data-td76-move="${escape(m.name)}">${escape(m.name)}</button>${m.type?pill(m.type):''}</div><small class="td76-move-category">${escape(pretty(m.damageClass||''))}</small><span class="td76-move-effect">${status?'—':multiplier===null?'—':multiplier===0?'Immune':multiplier+'×'}${td3Stab(stab>1)}</span><small>PWR ${power?(power.min===power.max?power.min:power.min+'–'+power.max):'—'} · ACC ${escape(accuracyLabel(m))}</small>${label?`<small class="td76-move-score">${label}</small>`:''}${high===null?'':`<small class="td76-damage-text">Est. ${low}–${high} HP · ${percent(low)}–${percent(high)}%</small><div class="td76-damage-track ${incoming?'incoming':''}" style="--low:${bound(low)}%;--high:${bound(high)}%" aria-hidden="true"></div>`}${notes.length?`<small>${escape(notes.join(' · '))}</small>`:''}</article>`;
 }
 function moveCards(a,d,gen,{incoming=false,battle=false,ranked=[],first=null,standardOrder=null,comparison=null}={}){
  if(!a?.moves||!d)return [];
- const moves=moveSummary(a,d,gen).map(row=>row.m);
- const score=m=>expectedPower(m,a,d,gen)??-1;
+ const moves=battle?a.moves.filter(m=>m?.name):moveSummary(a,d,gen).map(row=>row.m);
+ const score=m=>expectedPower(m,a,d,gen,'min','base')??-1;
  if(battle)moves.sort((x,y)=>score(y)-score(x));
  else if(first)moves.sort((x,y)=>Number(y===first)-Number(x===first));
  return [...new Map(moves.map(m=>[td73MoveKey(m.name),m])).values()].map(m=>moveCard(m,a,d,gen,{incoming,battle,outcome:incoming?outcomes.against(a,d,m,comparison,gen):ranked.find(row=>row.m===m),standardOrder,comparison}));
@@ -147,7 +153,7 @@ function duelCard(own,foe,a,d,gen,status,context='planner'){
   (best.beforeReplyKo>=1-1e-10?' will OHKO before the opponent attacks':' can OHKO before the opponent attacks'):'';
  const moves=battle?`<div class="td74-clash-columns td76-quick-grid"><section><h4>Your attacks</h4>${outgoing.join('')||'<small>No moves entered.</small>'}</section>${a&&d?potentialThreat(a,d,gen):''}</div>`:
  `<div class="td76-duel-grid"><h4>Your attacks</h4><h4>Incoming threats</h4>${Array.from({length:Math.max(1,outgoing.length,incoming.length)},(_,i)=>(outgoing[i]||`<div>${i===0?'<small>No moves entered.</small>':''}</div>`)+(incoming[i]||`<div>${i===0?'<small>No moves entered.</small>':''}</div>`)).join('')}</div>`;
- return `<article class="card td74-clash"><div class="td75-duel-title${battle?'':' td77-duel-six'}">${mon(own,a,'own')}<span class="td75-vs">vs</span>${mon(foe,d,'opp')}</div>${order}${warning?`<aside class="td76-battle-warning"><span aria-hidden="true">⚠</span> ${escape(warning)}</aside>`:''}${opportunity?`<aside class="td76-battle-warning td76-battle-opportunity"><span aria-hidden="true">✓</span> ${escape(opportunity)}</aside>`:''}${status||''}${moves}</article>`;
+ return `<article class="card td74-clash"><div class="td75-duel-title${battle?'':' td77-duel-six'}">${mon(own,a,'own')}<span class="td75-vs">vs</span>${mon(foe,d,'opp')}</div>${order}${warning?`<aside class="td76-battle-warning"><span aria-hidden="true">⚠</span> ${escape(warning)}</aside>`:''}${opportunity?`<aside class="td76-battle-warning td76-battle-opportunity"><span aria-hidden="true">✓</span> ${escape(opportunity)}</aside>`:''}${status||''}${battle?'':'<p class="note td76-outcome-model">Two-turn estimates repeat entered attacks and replies. Critical hits and other effects can change the outcome.</p>'}${moves}</article>`;
 }
 
 function renderFocus(){if(window.td3HoldActive?.())return;const own=roster('own')[ownSelection]||{},foe=roster('opp')[oppSelection]||{};
@@ -175,7 +181,7 @@ window.td3RenderSingleBattle=function(team,target,ranked,gen){
  }
  window.td76RenderBattleStrip(team,ranked);
  const selected=rows[battleOwnIndex];
- host.innerHTML=selected?duelCard(selected,target,td33BaseBattleMon(selected,team,battleOwnIndex),td33BaseBattleMon(target),gen,'','battle'):'<p>Add Pokémon to your team.</p>';
+ host.innerHTML=selected?duelCard(selected,target,td33BaseBattleMon(selected),td33BaseBattleMon(target),gen,'','battle'):'<p>Add Pokémon to your team.</p>';
 };
 battleStrip.addEventListener('click',e=>{
  const button=e.target.closest('[data-td3-battle-slot]');
@@ -248,7 +254,7 @@ function renderStatEditor(host,entry,base){
   host.appendChild(pane);
  }
  if(!pane.querySelector('.td74-stat-fields')){
-  pane.insertAdjacentHTML('beforeend',`<div class="td74-stat-fields">${Object.entries(STAT_NAMES).map(([key,name])=>`<label class="td74-stat-field"><span class="td76-stat-name">${name}<small class="td76-base-stat"></small></span><span class="td3-header-level td76-stat-stepper"><button type="button" data-td76-stat-step="-1" aria-label="Decrease ${name}">−</button><input type="text" maxlength="3" inputmode="numeric" data-td74-stat="${key}" aria-label="${name} battle stat"><button type="button" data-td76-stat-step="1" aria-label="Increase ${name}">+</button></span></label>`).join('')}</div><div class="td75-stat-footer"><small data-td76-stat-source></small><button type="button" data-td74-stat-reset aria-label="Reset manual battle stat adjustments" title="Reset manual battle stat adjustments"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 5v7h7"/></svg></button></div>`);
+  pane.insertAdjacentHTML('beforeend',`<div class="td74-stat-fields">${Object.entries(STAT_NAMES).map(([key,name])=>`<label class="td74-stat-field"><span class="td76-stat-name">${name}<small class="td76-base-stat"></small></span><span class="td3-header-level td76-stat-stepper"><button type="button" data-td76-stat-step="-1" aria-label="Decrease ${name}">−</button><input type="text" maxlength="3" inputmode="numeric" data-td74-stat="${key}" aria-label="${name} battle stat"><button type="button" data-td76-stat-step="1" aria-label="Increase ${name}">+</button></span></label>`).join('')}</div><div class="td75-stat-footer"><small data-td76-stat-source></small><button type="button" data-td74-stat-reset aria-label="Reset manual battle stat adjustments" title="Reset manual battle stat adjustments"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 7M3 5v7h7"/></svg></button></div>`);
  }
  const provenance=entry.saveStats&&!entry.saveStats.egg?(entry.level===entry.saveStats.level?'Imported from save':'Calculated from imported IVs, EVs and nature'):entry.challengeOffset?'Challenge Mode stat level · estimated':'Estimated · 15 IV / 0 EV / neutral';
  pane.querySelector('[data-td76-stat-source]').textContent=provenance+(Object.values(entry.statAdjustments||{}).some(Boolean)?' · Manually adjusted':'');

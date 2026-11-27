@@ -73,7 +73,7 @@ test('Knockout labels distinguish first-turn certainty, rolls and move accuracy'
  const target=mon(80,[move('Scratch',20)]);
  const prediction=attack=>outcomes.attacks(mon(120,[attack]),target,5)[0];
  assert.equal(outcomes.koLabel(prediction(move('Fire Punch',75,{effect:4}))),'Guaranteed OHKO');
- assert.equal(outcomes.koLabel(prediction(move('Fire Punch',100,{effect:2.3}))),'OHKO chance: 25%');
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',100,{effect:2.3}))),'OHKO chance: 31.3%');
  assert.equal(outcomes.koLabel(prediction(move('Fire Punch',75,{effect:4,accuracy:90}))),'OHKO chance: 90%');
 });
 test('A faster lethal opponent prevents a guaranteed OHKO label',()=>{
@@ -88,7 +88,7 @@ test('Two-hit labels require two landed attacks and distinguish charge and recha
  const target=mon(80,[move('Scratch',20)]);
  const prediction=attack=>outcomes.attacks(mon(120,[attack]),target,5)[0];
  assert.equal(outcomes.koLabel(prediction(move('Fire Punch',50,{effect:2.5}))),'Guaranteed 2HKO');
- assert.equal(outcomes.koLabel(prediction(move('Fire Punch',50,{effect:2.5,accuracy:75}))),'2HKO chance: 56%');
+ assert.equal(outcomes.koLabel(prediction(move('Fire Punch',50,{effect:2.5,accuracy:75}))),'2HKO chance: 56.3%');
  assert.equal(outcomes.koLabel(prediction(move('Hyper Beam',150,{effect:3,accuracy:90}))),'OHKO chance: 90%');
  const charge=prediction(move('Solar Beam',120,{effect:3}));
  assert.equal(charge.win,1);
@@ -99,7 +99,7 @@ test('Conditional power contributes to two hits without implying an OHKO',()=>{
  const attacker=mon(110,[move('Revenge',60,{priority:-4})]);
  const result=outcomes.attacks(attacker,foe,5)[0];
  assert.equal(result.boost,1);
- assert.equal(outcomes.koLabel(result),'2HKO chance: 31%');
+ assert.equal(outcomes.koLabel(result),'2HKO chance: 43.8%');
 });
 
 test('Preemptive recommendation distinguishes order, uncertainty and survival protection',()=>{
@@ -110,13 +110,13 @@ test('Preemptive recommendation distinguishes order, uncertainty and survival pr
  assert.equal(chance(fast,slow),1);
  assert.equal(chance({...fast,moves:[{...shot,accuracy:90}]},slow),.9);
  const roll=move('Fire Punch',100,{effect:2.3});
- assert.equal(chance({...fast,moves:[roll]},slow),.25);
+ assert.equal(chance({...fast,moves:[roll]},slow),.3125);
  assert.equal(chance(mon(70,[shot]),slow),0);
  assert.equal(chance(mon(80,[shot]),slow),.5);
  assert.equal(chance(mon(70,[{...shot,priority:1}]),slow),1);
  assert.equal(chance(fast,{...slow,ability:'sturdy'}),0);
  assert.equal(chance(fast,{...slow,heldItem:'Focus Sash'}),0);
- assert.equal(chance(fast,{...slow,heldItem:'Focus Band'}),.99);
+ assert.equal(chance(fast,{...slow,heldItem:'Focus Band'}),.9);
  assert.equal(chance(fast,{...slow,abilities:['sturdy','rock-head']}),0);
  assert.equal(chance(fast,{...slow,ability:'sturdy',currentHP:80}),1);
  assert.equal(chance(fast,{...slow,moves:[reply,{name:'Endure',priority:4,damageClass:'status'}]}),0);
@@ -127,7 +127,7 @@ test('The worst reply is selected by victory probability before damage and survi
  // Controlled powers and accuracies isolate the comparator from cartridge move data.
  const attack=move('Fire Punch',60,{effect:2.5,accuracy:70});
  const recharge=move('Hyper Beam',80,{effect:3,accuracy:70});
- const sustained=move('Scratch',50,{effect:2.5,accuracy:90});
+ const sustained=move('Scratch',50,{effect:2.5,accuracy:80});
  const a=mon(120,[attack]),d=mon(130,[recharge,sustained]);
  const softReply=outcomes.attacks(a,{...d,moves:[recharge]},5)[0];
  const hardReply=outcomes.attacks(a,{...d,moves:[sustained]},5)[0];

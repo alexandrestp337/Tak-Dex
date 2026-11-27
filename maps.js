@@ -533,10 +533,8 @@ $('openMaps').addEventListener('click',()=>open());
 const mapBack=$('backMaps'),mapToolbarActions=mapBack.parentElement,mapHeader=$('mapsBackFallback').parentElement;
 mapHeader.classList.add('td772-context-heading');
 function placeMapBack(){
- const linked=$('mapsLinkedBack');
- const target=page.classList.contains('td63-map-full')?mapToolbarActions:
-  returnFrom?.id&&returnFrom.id!=='morePage'&&supported()?linked:$('mapsBackFallback');
- linked.hidden=target!==linked;
+ const linked=returnFrom?.id&&returnFrom.id!=='morePage'&&supported();
+ const target=linked||page.classList.contains('td63-map-full')?mapToolbarActions:$('mapsBackFallback');
  if(mapBack.parentElement!==target)target.append(mapBack);
 }
 placeMapBack();

@@ -808,16 +808,36 @@ function movePowerRange(m){
  return null;
 }
 // DEV2: conditional power from verified move metadata and available matchup context.
-function td2Power(m,a,d,g){
+function td2Stat(mon,key,policy){
+ return (policy==='base'?mon?.baseStats:mon?.battleStats)?.[key];
+}
+function td2Speed(mon,gen,policy){
+ const speed=td2Stat(mon,'speed',policy);
+ if(!(speed>0))return null;
+ const ability=td2ActualAbility(mon);
+ const active=policy!=='base'&&mon.status&&mon.status!=='none';
+ const weatherAbility={rain:'swift-swim',sun:'chlorophyll',sand:'sand-rush',hail:'slush-rush'}[mon.weather];
+ const weather=ability&&ability===weatherAbility?2:1;
+ const scarf=gen>=4&&td73MoveKey(mon.heldItem)==='choice-scarf'?1.5:1;
+ const status=active&&gen>=4&&ability==='quick-feet'?1.5:active&&mon.status==='paralysis'?(gen>=7?.5:.25):1;
+ return Math.max(1,Math.floor(speed*scarf*weather*status));
+}
+function td2Power(m,a,d,g,policy){
  const n=m.name;let r=movePowerRange(m);const extra={'Crush Grip':[1,120],'Wring Out':[1,120],'Trump Card':[40,200],'Natural Gift':[60,100],'Weather Ball':[50,100],'Wake Up Slap':[m.power||60,(m.power||60)*2],'Smelling Salts':[m.power||60,(m.power||60)*2],'Pursuit':[40,80],'Stomp':[65,130],'Stomping Tantrum':[75,150],'Retaliate':[70,140],'Round':[60,120],'Echoed Voice':[40,200],'Rollout':[30,480],'Ice Ball':[30,480],'Spit Up':[100,300],'Beat Up':[1,100],'Punishment':[60,200],'Stored Power':[20,860],'Power Trip':[20,860],'Water Shuriken':[15,15],'Triple Kick':[10,60]};if(extra[n]&&!['Natural Gift','Beat Up','Triple Kick','Water Shuriken'].includes(n)){const [min,max]=extra[n];r={min,max,note:'Conditional'};}if(['Natural Gift','Beat Up','Triple Kick','Water Shuriken','Counter','Mirror Coat','Metal Burst','Bide','Endeavor','Super Fang','Final Gambit','Psywave','Fissure','Guillotine','Horn Drill','Sheer Cold','Present'].includes(n))return null;if(!r)return null;const fixed=p=>({min:p,max:p,note:'Resolved from matchup'});const base=n==='Assurance'&&g>=4&&g<=5?50:Number.isFinite(m.power)&&m.power>0?m.power:r.min;
- const stat=(p,k)=>p?.battleStats?.[k];const hp=p=>Number.isFinite(p?.currentHP)&&stat(p,'hp')>0?p.currentHP/stat(p,'hp'):null;
+ const hp=p=>policy!=='base'&&Number.isFinite(p?.currentHP)&&p.battleStats?.hp>0?p.currentHP/p.battleStats.hp:null;
  if(['Low Kick','Grass Knot'].includes(n)&&!(n==='Low Kick'&&g<=2)&&d?.weight>0){const w=d.weight/10;return fixed(w<10?20:w<25?40:w<50?60:w<100?80:w<200?100:120)}
  if(n==='Low Kick'&&g<=2)return fixed(base);
  if(['Heavy Slam','Heat Crash'].includes(n)&&a?.weight>0&&d?.weight>0){const w=a.weight/d.weight;return fixed(w>=5?120:w>=4?100:w>=3?80:w>=2?60:40)}
- if(n==='Gyro Ball'&&stat(a,'speed')>0&&stat(d,'speed')>0)return fixed(Math.min(150,Math.floor(25*stat(d,'speed')/stat(a,'speed'))+1));
- if(n==='Electro Ball'&&stat(a,'speed')>0&&stat(d,'speed')>0){const q=stat(a,'speed')/stat(d,'speed');return fixed(q>=4?150:q>=3?120:q>=2?80:q>=1?60:40)}
+ if(n==='Gyro Ball'||n==='Electro Ball'){
+  const own=td2Speed(a,g,policy),other=td2Speed(d,g,policy);
+  if(own>0&&other>0){
+   if(n==='Gyro Ball')return fixed(Math.min(150,Math.floor(25*other/own)+1));
+   const q=own/other;
+   return fixed(q>=4?150:q>=3?120:q>=2?80:q>=1?60:40);
+  }
+ }
  if(n==='Acrobatics'&&a&&Object.hasOwn(a,'heldItem'))return fixed(a.heldItem?base:base*2);
- if(n==='Return'||n==='Frustration'){if(Number.isFinite(a?.friendship))return fixed(Math.max(1,Math.floor((n==='Return'?a.friendship:255-a.friendship)*2/5)));}
+ if(n==='Return'||n==='Frustration'){if(policy!=='base'&&Number.isFinite(a?.friendship))return fixed(Math.max(1,Math.floor((n==='Return'?a.friendship:255-a.friendship)*2/5)));}
  if(['Eruption','Water Spout'].includes(n)&&hp(a)!==null)return fixed(Math.max(1,Math.floor(150*hp(a))));
  if(['Flail','Reversal'].includes(n)&&hp(a)!==null){const h=Math.floor(48*hp(a));return fixed(h<2?200:h<5?150:h<10?100:h<17?80:h<33?40:20)}
  if(n==='Brine'&&hp(d)!==null)return fixed(base*(hp(d)<=.5?2:1));
@@ -832,14 +852,17 @@ function td2Power(m,a,d,g){
  if(['Assurance','Payback','Avalanche','Revenge','Facade','Brine','Hex','Venoshock','Acrobatics'].includes(n))r={...r,min:base,max:base*2};
  if(n==='Fury Cutter')r={...r,min:base,max:Math.min(160,base*16)};
  if(n==='Hidden Power'&&g>=6)return fixed(60);
- if(n==='Hidden Power'&&g>=3&&a?.ivs){
+ if(n==='Hidden Power'&&g>=3&&policy!=='base'&&a?.ivs){
   const order=['hp','attack','defense','speed','special-attack','special-defense'];
   const bits=order.reduce((word,k,i)=>word|(((a.ivs[k]>>>1)&1)<<i),0);
   return fixed(30+Math.floor(bits*40/63));
  }
  if(n==='Hidden Power'&&g===2)return {...r,min:31,max:70};
- if(['Crush Grip','Wring Out'].includes(n)&&hp(d)!==null)return fixed(Math.max(1,Math.floor(120*hp(d))));
- if(n==='Trump Card'&&Number.isInteger(m.remainingPP))return fixed([200,80,60,50][m.remainingPP]??40);
+ if(['Crush Grip','Wring Out'].includes(n)&&hp(d)!==null){
+  const fraction=hp(d);
+  return fixed(Math.max(1,g===5?Math.floor((12000*Math.floor(fraction*4096)+2047)/409600):Math.floor(120*fraction)));
+ }
+ if(n==='Trump Card'&&policy!=='base'&&Number.isInteger(m.remainingPP))return fixed([200,80,60,50][m.remainingPP]??40);
  if(n==='Weather Ball'&&a?.weather)return fixed(a.weather==='none'?50:100);
  if(n==='Stored Power'||n==='Power Trip'){if(a?.boosts)return fixed(20+20*Object.values(a.boosts).reduce((t,x)=>t+Math.max(0,x),0));}
  if(n==='Punishment'&&d?.boosts)return fixed(Math.min(200,60+20*Object.values(d.boosts).reduce((t,x)=>t+Math.max(0,x),0)));
@@ -847,7 +870,7 @@ function td2Power(m,a,d,g){
  if(n==='Foul Play')return fixed(base);
  return r;
 }
-function td2OffensiveModifier(m,a,g,resolvedPower){const ability=td2ActualAbility(a);if(!ability)return 1;
+function td2OffensiveModifier(m,a,g,resolvedPower,policy){const ability=td2ActualAbility(a);if(!ability)return 1;
  const sheer=new Set(['Flamethrower','Fire Blast','Fire Fang','Ice Fang','Thunder Fang','Rock Slide','Iron Head','Crunch','Shadow Ball','Psychic','Energy Ball','Bug Buzz','Air Slash','Waterfall','Poison Jab','Ice Beam','Blizzard','Thunderbolt','Thunder','Body Slam','Sludge Bomb','Flare Blitz','Fire Punch','Ice Punch','Thunder Punch','Rock Smash','Headbutt','Zen Headbutt','Focus Blast','Ancient Power','Dragon Breath','Dragon Rush','Extrasensory','Signal Beam','Charge Beam','Discharge','Lava Plume','Heat Wave','Scald','Hurricane','Earth Power','Flash Cannon','Metal Claw','Steel Wing','Muddy Water','Octazooka','Acid','Acid Spray','Mud Bomb','Mud Slap','Snarl','Icy Wind','Bulldoze','Low Sweep','Crush Claw','Twister','Bite','Astonish','Dark Pulse','Fake Out','Stomp','Tri Attack','Secret Power','Ominous Wind','Silver Wind','Razor Shell','Flame Charge','Dynamic Punch','Zap Cannon','Inferno','Nuzzle','Power Up Punch','Charge Beam','Octazooka','Bubble Beam','Bubble','Sludge','Smog','Poison Sting','Lick','Ember','Psybeam','Aurora Beam','Confusion']);
  if(g>=5&&ability==='sheer-force'&&(sheer.has(m.name)||m.meta?.flinch_chance>0||m.meta?.ailment_chance>0&&['burn','paralysis','freeze','poison','confusion','sleep'].includes(m.meta?.ailment?.name)))return 1.3;
  if(g>=4&&ability==='technician'&&(resolvedPower??td2Power(m,a,null,g)?.min)<=60)return 1.5;
@@ -856,7 +879,7 @@ function td2OffensiveModifier(m,a,g,resolvedPower){const ability=td2ActualAbilit
  if(g>=5&&ability==='reckless'&&['Take Down','Double Edge','Submission','Volt Tackle','Wood Hammer','Brave Bird','Flare Blitz','Head Smash','Wild Charge','Jump Kick','High Jump Kick','Head Charge','Wave Crash'].includes(m.name))return 1.2;
  if(g>=6&&ability==='strong-jaw'&&['Bite','Crunch','Fire Fang','Ice Fang','Thunder Fang','Poison Fang','Psychic Fangs','Hyper Fang','Jaw Lock','Fishious Rend'].includes(m.name))return 1.5;
  if(g>=5&&ability==='sand-force'&&a?.weather==='sand'&&['ground','rock','steel'].includes(m.type))return 1.3;
- if(g>=3&&['blaze','torrent','overgrow','swarm'].includes(ability)&&({blaze:'fire',torrent:'water',overgrow:'grass',swarm:'bug'})[ability]===m.type&&Number.isFinite(a?.currentHP)&&a?.battleStats?.hp>0&&a.currentHP<=a.battleStats.hp/3)return 1.5;
+ if(g>=3&&['blaze','torrent','overgrow','swarm'].includes(ability)&&({blaze:'fire',torrent:'water',overgrow:'grass',swarm:'bug'})[ability]===m.type&&policy!=='base'&&Number.isFinite(a?.currentHP)&&a?.battleStats?.hp>0&&a.currentHP<=a.battleStats.hp/3)return 1.5;
  return 1;
 }
 function td2Stab(m,a,g){return a?.types?.includes(m.type)?(g>=4&&td2ActualAbility(a)==='adaptability'?2:1.5):1;}
@@ -873,15 +896,15 @@ function accuracyLabel(m){
  return 'N/A / conditional';
 }
 function movePowerText(m){if(['Rollout','Ice Ball'].includes(m.name))return '30 first hit; doubles if consecutive (max 480 on turn 5)';const r=movePowerRange(m);return r?(r.min===r.max?String(r.min):r.min+'–'+r.max)+(r.note?' ('+r.note+')':''):'Variable / special';}
-function expectedPower(m,attacker,target,gen,bound='min'){
+function expectedPower(m,attacker,target,gen,bound='min',policy=attacker?.level&&target?.level?'context':'base'){
  if(!attacker||!target||!m?.type||!['physical','special'].includes(m.damageClass)||!target.types?.length||!attacker.types?.length)return null;
- const eff=defensiveEffect(m,target,gen,attacker),r=td2Power(m,attacker,target,gen),acc=td2Accuracy(m);
+ const eff=defensiveEffect(m,target,gen,attacker),r=td2Power(m,attacker,target,gen,policy),acc=td2Accuracy(m);
  if(eff===null||eff===0||td72AbilityReport(m,target,gen,attacker).possibleImmune.length||m.damageClass==='status'||!r||acc===null)return null;
  const special=m.damageClass==='special',source=m.name==='Foul Play'?target:attacker;
- const useBattleStats=!!attacker.level&&!!target.level;
- const a=(useBattleStats?source.battleStats:source.baseStats)?.[special?'special-attack':'attack'],b=(useBattleStats?target.battleStats:target.baseStats)?.[special&&m.name!=='Psyshock'&&m.name!=='Psystrike'&&m.name!=='Secret Sword'?'special-defense':'defense'];
+ const a=td2Stat(source,special?'special-attack':'attack',policy);
+ const b=td2Stat(target,special&&!['Psyshock','Psystrike','Secret Sword'].includes(m.name)?'special-defense':'defense',policy);
  const statFactor=Number.isFinite(a)&&Number.isFinite(b)?Math.sqrt((a*td77Intimidate(attacker,target,m,gen)+30)/(b+30)):1;
- return r[bound]*td2Stab(m,attacker,gen)*eff*acc*statFactor*td2OffensiveModifier(m,attacker,gen,r[bound])*td77HeldDamage(attacker,target,m,gen)/td2Turns(m,attacker,gen);
+ return r[bound]*td2Stab(m,attacker,gen)*eff*acc*statFactor*td2OffensiveModifier(m,attacker,gen,r[bound],policy)*td77HeldDamage(attacker,target,m,gen)/td2Turns(m,attacker,gen);
 }
 function effectivePowerLabel(m){if(m.powerIndex===null||m.powerIndex===undefined)return 'Estimated score —';return 'Attack score '+Math.round(m.powerIndex)+(m.powerIndexMax>m.powerIndex?'–'+Math.round(m.powerIndexMax):'')}
 function moveStats(m){return `<span class="move-stats">PWR ${safe(movePowerText(m))} · ACC ${safe(accuracyLabel(m))}</span>`}
@@ -917,7 +940,7 @@ function analyze(p,opponent,gen){
   const stab=td2Stab(m,p,gen);
   return {...m,effectiveness,stab,total:effectiveness===null?null:effectiveness*stab};
  }).filter(m=>m.total!==null);
- const scored=offense.map(m=>({...m,powerIndex:expectedPower(m,p,opponent,gen),powerIndexMax:expectedPower(m,p,opponent,gen,'max')}));
+ const scored=offense.map(m=>({...m,powerIndex:expectedPower(m,p,opponent,gen,'min','base'),powerIndexMax:expectedPower(m,p,opponent,gen,'max','base')}));
  const best=scored.filter(m=>m.powerIndex!==null).sort((a,b)=>b.powerIndex-a.powerIndex)[0]||null;
  const threats=opponent.types.map(t=>({type:t,multiplier:matchup(t,p.types,gen)}));
  const worst=Math.max(...threats.map(t=>t.multiplier??1),.25);
@@ -934,13 +957,13 @@ function moveValue(move,attacker,target,gen,ally){
  if(move.damageClass==='status'||move.power===0)return null;
  const stab=td2Stab(move,attacker,gen);
  if(!Number.isFinite(move.power)||move.power<=0||(!Number.isFinite(move.accuracy)&&!(move.accuracy===null&&ALWAYS_HIT_MOVES.has(move.name)))||!movePowerRange(move))return null;
- const power=td2Power(move,attacker,target,gen)?.min;
+ const power=td2Power(move,attacker,target,gen,'base')?.min;
  const spread=spreadTargets.has(move.target);
  const penalty=spread&&gen>=4?.75:1;
  const a=attacker.baseStats?.[move.damageClass==='special'?'special-attack':'attack'];
  const d=target.baseStats?.[move.damageClass==='special'?'special-defense':'defense'];
  const statFactor=Number.isFinite(a)&&Number.isFinite(d)?Math.sqrt((a+30)/(d+30)):1;
- const value=mult*stab*(power/60)*penalty*((move.accuracy===null?100:move.accuracy)/100)*statFactor*td2OffensiveModifier(move,attacker,gen)/td2Turns(move,attacker,gen);
+ const value=mult*stab*(power/60)*penalty*((move.accuracy===null?100:move.accuracy)/100)*statFactor*td2OffensiveModifier(move,attacker,gen,power,'base')/td2Turns(move,attacker,gen);
  const allyRisk=ally&&allyHitTargets.has(move.target)?defensiveEffect(move,ally,gen,attacker):0;
  return {move,value,mult,spread,allyRisk,priority:move.priority||0};
 }
@@ -983,14 +1006,10 @@ function pairCard(plan,index,opponents){
  return `<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${index+1}</span><div class="pair-identities">${who(a)}${who(b)}</div></div>${actions}<p class="note">Potential incoming STAB risk: ${safe(a.name)} ${effectText(plan.risks[0])} · ${safe(b.name)} ${effectText(plan.risks[1])}. Speed tie-breaker uses base Speed only, not actual turn order.</p></article>`;
 }
 // DEV3.3: regular Battle uses species base stats, never level-derived stats or HP.
-function td33BaseBattleMon(p,team=null,index=-1){
+function td33BaseBattleMon(p){
  if(!p)return null;
- const {level,levelEstimated,battleStats,statAdjustments,currentHP,maxHP,baseSpeed,...rest}=p;
- const baseStats={...(p.baseStats||{})};
- const useSaved=!!team&&!p.saveStats?.egg;
- return {...rest,level:useSaved?tdDev1Level(p.level,p.saveStats?.level||50):undefined,baseStats,
-  battleStats:useSaved?td74EntryStats(baseStats,p):baseStats,currentHP:p.saveStats?.currentHP,
-  friendship:p.saveStats?.friendship,ivs:p.saveStats?.ivs,baseSpeed:baseStats.speed,heldItem:p.item??p.heldItem??''};
+ const {level,battleStats,statAdjustments,currentHP,maxHP,saveStats,status,ivs,evs,nature,friendship,...base}=p;
+ return {...base,heldItem:p.item??p.heldItem??''};
 }
 function showBattle(){
  if(!foe||doubleMode)window.td76RenderBattleStrip?.(current);
@@ -999,14 +1018,14 @@ function showBattle(){
  if(doubleMode&&!foe2){$('matchups').innerHTML='<p>Select the second opponent to compare both threats.</p>';return}
  const gen=gameGeneration(current.game),opponents=(doubleMode?[foe,foe2]:[foe]).map(p=>td33BaseBattleMon(p));
  const ranked=current.pokemon.filter(p=>p&&!p.saveStats?.egg).map(p=>{
-  const reports=opponents.map(o=>analyze(td33BaseBattleMon(p,current,current.pokemon.indexOf(p)),o,gen));
+  const reports=opponents.map(o=>analyze(td33BaseBattleMon(p),o,gen));
   const score=reports.reduce((s,r)=>s+r.score,0)/reports.length;
   return {p,reports,score,worst:Math.max(...reports.map(r=>r.worst))};
  }).sort((a,b)=>b.score-a.score);
  let pairSection='';
  if(doubleMode){
   window.td76RenderBattleStrip?.(current,ranked);
-  const members=current.pokemon.map((p,i)=>p?.saveStats?.egg?null:td33BaseBattleMon(p,current,i)).filter(Boolean),plans=[];
+  const members=current.pokemon.map((p,i)=>p?.saveStats?.egg?null:td33BaseBattleMon(p)).filter(Boolean),plans=[];
   for(let i=0;i<members.length;i++)for(let k=i+1;k<members.length;k++){
    const plan=pairPlan(members[i],members[k],opponents,gen);if(plan)plans.push(plan);
   }
@@ -1019,7 +1038,7 @@ function showBattle(){
 
 
  const defense=r.worst>=4?'HIGH RISK':r.worst>=2?'WEAK DEFENSE':r.worst<1?'RESISTS ATTACKS':'NEUTRAL DEFENSE';
- const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${window.td76QuickMoveCards?.(td33BaseBattleMon(r.p,current,current.pokemon.indexOf(r.p)),opponents[k],gen)||'<p>No attacks saved</p>'}</div>`).join('');
+ const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${window.td76QuickMoveCards?.(td33BaseBattleMon(r.p),opponents[k],gen)||'<p>No attacks saved</p>'}</div>`).join('');
  return `<article data-td76-battle-card="${current.pokemon.indexOf(r.p)}" class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div><details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
  }).join('')||'<p>Add Pokémon to your team to see recommendations.</p>';
 
@@ -2072,21 +2091,85 @@ async function loadPlannerPokemon(e,gen,game){
  const abilities=historicalAbilities(p,game);
  return {weight:p.weight??e.weight??null,id:p.id||e.id||bw?.ids?.[name],canonicalName:name,sourceMoves:td73MoveSignature(e.moves),name:pretty(p.name||name),types:historicalTypes(p,game),baseStats,
    battleStats:td74EntryStats(baseStats,e),currentHP:e.saveStats?.level===e.level?e.saveStats?.currentHP:undefined,friendship:e.saveStats?.friendship,statAdjustments:{...(e.statAdjustments||{})},
-   abilities,level:e.level,moves,heldItem:e.item||'',
+   abilities,level:e.level,moves,heldItem:e.item||'',status:td78ImportedStatus(e.saveStats,gen),
    selectedAbility:td2ResolveAbility({abilities},e.ability)||null};
 }
+function td78ImportedStatus(saved,gen){
+ const word=saved?.statusWord;
+ if(gen!==5||saved?.egg||!Number.isInteger(word)||word<0)return undefined;
+ const flag=word&255;
+ if(flag>=1&&flag<=7)return 'sleep';
+ return ({0:'none',8:'poison',16:'burn',32:'freeze',64:'paralysis',128:'toxic',136:'toxic'})[flag];
+}
 function estimateDamage(a,d,m,gen,bound='min'){
- if(!a||!d||a.dataMissing||d.dataMissing||!m?.type||!['physical','special'].includes(m.damageClass)||!d.types?.length||!a.types?.length||td72AbilityReport(m,d,gen,a).possibleImmune.length)return null;
- const eff=defensiveEffect(m,d,gen,a);if(eff===null)return null;if(eff===0)return 0;
- const l=tdDev1Level(a.level,50),al=tdDev1Level(d.level,50);
- if(['Seismic Toss','Night Shade'].includes(m.name))return l;
- if(m.name==='Dragon Rage')return 40;if(m.name==='Sonic Boom')return 20;
- const range=td2Power(m,a,d,gen);if(!range)return null;const power=range[bound];if(power<=0)return 0;
- const special=m.damageClass==='special',ak=special?'special-attack':'attack',dk=special&&!['Psyshock','Psystrike','Secret Sword'].includes(m.name)?'special-defense':'defense',source=m.name==='Foul Play'?d:a;
- const atk=source.battleStats?.[ak],def=d.battleStats?.[dk];if(!Number.isFinite(atk)||!Number.isFinite(def)||atk<=0||def<=0)return null;
- const stab=td2Stab(m,a,gen),item=td77HeldDamage(a,d,m,gen);
- const effectiveAttack=atk*td77Intimidate(a,d,m,gen);
- return Math.max(1,Math.floor((Math.floor((Math.floor(2*l/5)+2)*power*effectiveAttack*td2OffensiveModifier(m,a,gen,power)/Math.max(1,def)/50)+2)*eff*stab*item));
+ return td78DamageRolls(a,d,m,gen,bound)?.at(-1)??null;
+}
+const TD78_PERCENT_ROLLS=Array.from({length:16},(_,i)=>85+i);
+const TD78_BYTE_ROLLS=Array.from({length:39},(_,i)=>217+i);
+const td78Round=value=>Math.ceil(value-.5);
+const td78ApplyModifier=(value,modifier)=>td78Round(value*modifier/4096);
+function td78ChainModifiers(modifiers){
+ return modifiers.reduce((total,modifier)=>Math.floor((total*modifier+2048)/4096),4096);
+}
+function td78DamageRolls(a,d,m,gen,bound='min',range){
+ if(!a||!d||a.dataMissing||d.dataMissing||!m?.type||!['physical','special'].includes(m.damageClass)||!d.types?.length||!a.types?.length)return null;
+ const report=td72AbilityReport(m,d,gen,a);
+ const eff=report.effective??defensiveEffect(m,d,gen,a);
+ if(eff===null||report.possibleImmune.length)return null;
+ if(eff===0)return [0];
+ const level=tdDev1Level(a.level,50);
+ if(['Seismic Toss','Night Shade'].includes(m.name))return [level];
+ if(m.name==='Dragon Rage')return [40];
+ if(m.name==='Sonic Boom')return [20];
+ if(m.name==='Dream Eater'&&d.status!=='sleep')return null;
+ range??=td2Power(m,a,d,gen);
+ if(!range)return null;
+ const power=range[bound];
+ if(power<=0)return [0];
+ const special=m.damageClass==='special',ak=special?'special-attack':'attack',dk=special&&!['Psyshock','Psystrike','Secret Sword'].includes(m.name)?'special-defense':'defense';
+ const atk=(m.name==='Foul Play'?d:a).battleStats?.[ak],def=d.battleStats?.[dk];
+ if(!(atk>0&&def>0))return null;
+ const stab=td2Stab(m,a,gen),offense=td2OffensiveModifier(m,a,gen,power),held=td77HeldDamage(a,d,m,gen);
+ const intimidation=td77Intimidate(a,d,m,gen);
+ const base=(bp,attack,defense)=>Math.floor(Math.floor((Math.floor(2*level/5)+2)*bp*attack/defense)/50)+2;
+ if(gen!==5){
+  // Historical fallback retains the prior maximum estimate. The sampled
+  // random factors are verified, but this is not historical formula parity.
+  const max=base(power,atk*intimidation*offense,Math.max(1,def))*eff*stab*held;
+  return (gen<=2?TD78_BYTE_ROLLS:TD78_PERCENT_ROLLS).map(roll=>Math.max(1,Math.floor(Math.floor(max)*roll/(gen<=2?255:100))));
+ }
+ const item=td73MoveKey(a.heldItem),ability=td2ActualAbility(a),defenderAbility=report.knownAbility;
+ const powerMods=[],attackMods=[],finalMods=[];
+ if(['blaze','overgrow','torrent','swarm','huge-power','pure-power'].includes(ability)){
+  if(offense!==1)attackMods.push(offense*4096);
+ }else if(offense!==1)powerMods.push(offense===1.3?5325:offense===1.2?4915:offense*4096);
+ if(!special&&ability==='guts'&&a.status&&a.status!=='none')attackMods.push(6144);
+ if(defenderAbility==='thick-fat'&&['fire','ice'].includes(m.type))attackMods.unshift(2048);
+ if(defenderAbility==='heatproof'&&m.type==='fire')powerMods.push(2048);
+ if(defenderAbility==='dry-skin'&&m.type==='fire')powerMods.push(5120);
+ if(item==='choice-band'||item==='choice-specs'){
+  if(held>1)attackMods.push(6144);
+ }else if(item==='life-orb')finalMods.push(5324);
+ else if(item==='expert-belt'){if(held>1)finalMods.push(4915);}
+ else if(held>1)powerMods.push(held===1.1?4505:4915);
+ const types=report.base??eff;
+ if(['filter','solid-rock'].includes(defenderAbility)&&types>1)finalMods.unshift(3072);
+ if(defenderAbility==='multiscale'&&(!Number.isFinite(d.currentHP)||d.currentHP>=estimatedHP(d)))finalMods.unshift(2048);
+ const final=td78ChainModifiers(finalMods);
+ if(m.name==='Solar Beam'&&['rain','sand','hail'].includes(a.weather))powerMods.unshift(2048);
+ const adjustedPower=Math.max(1,td78ApplyModifier(power,td78ChainModifiers(powerMods)));
+ const attack=Math.max(1,td78ApplyModifier(Math.floor(atk*intimidation),td78ChainModifiers(attackMods)));
+ const weather=a.weather;
+ const rainSun=weather==='rain'||weather==='sun';
+ const strengthened=weather==='rain'?'water':'fire',weakened=weather==='rain'?'fire':'water';
+ const weatherMod=rainSun&&m.type===strengthened?6144:rainSun&&m.type===weakened?2048:4096;
+ const sandBoost=(weather==='sand'||d.weather==='sand')&&special&&dk==='special-defense'&&d.types.includes('rock');
+ const damage=td78ApplyModifier(base(adjustedPower,attack,sandBoost?td78ApplyModifier(def,6144):def),weatherMod);
+ const burn=!special&&a.status==='burn'&&ability!=='guts';
+ return TD78_PERCENT_ROLLS.map(roll=>{
+  const typed=Math.floor(td78Round(Math.floor(damage*roll/100)*stab)*types);
+  return td78Round(Math.max(1,(burn?Math.floor(typed/2):typed)*final/4096));
+ });
 }
 function td77Intimidate(a,d,m,gen){
  if(gen<3||m.damageClass!=='physical'||m.name==='Foul Play'||td2ActualAbility(d)!=='intimidate')return 1;
@@ -2101,7 +2184,7 @@ function td77HeldDamage(a,d,m,gen){
  return item;
 }
 function estimatedHP(p){const hp=p.baseStats?.hp||70,level=Math.max(1,Math.min(100,p.level||50));return p.battleStats?.hp||td74StatEstimate(hp,level,true)}
-function plannerDamageLabel(a,d,m,gen){const high=estimateDamage(a,d,m,gen);if(high===null)return 'Damage varies';const hp=estimatedHP(d);const low=high===0?0:['Seismic Toss','Night Shade','Dragon Rage','Sonic Boom'].includes(m.name)?high:Math.max(1,Math.floor(high*.85));
+function plannerDamageLabel(a,d,m,gen){const rolls=td78DamageRolls(a,d,m,gen);if(!rolls)return 'Damage varies';const hp=estimatedHP(d),low=rolls[0],high=rolls.at(-1);
  if(['Rollout','Ice Ball'].includes(m.name)){
   // One hit is 30 BP. Full five-hit sequence doubles 30→60→120→240→480,
   // but is never assumed in rankings or one-turn damage estimates.
@@ -3757,7 +3840,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V78 DEV2 RC1</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
+ <p><strong>Web version:</strong> V78 DEV3 RC1</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
 </div>
  <div class="card td70-about-card"><h3>Storage &amp; offline reference</h3><p class="note" id="td70AboutStorage">Checking local storage…</p></div>
  <div class="tool-card"><button type="button" id="td68OpenCoverage" class="tool-link">▦ Database Coverage ›</button></div>
@@ -4371,13 +4454,12 @@ document.addEventListener('keydown',event=>{
   if(saved?.token===token&&saved.slot===chosenSlot&&!$('td4Edit').hidden){
    const input=$('td41MoveSlots').querySelector(`[data-td45-move="${saved.field}"]`);
    if(input){
-    const box=input.nextElementSibling;
+    const box=moveBox(input);
     if(box.hidden||input.value!==saved.search){
      input.value=saved.search;
      moveFilters.set(input,saved.filters);
-     showMoveOptions(input,clean(saved.search));
-    }
-    box.querySelector('.td78-move-results').scrollTop=saved.scroll;
+     showMoveOptions(input,clean(saved.search),saved.scroll);
+    }else box.querySelector('.td78-move-results').scrollTop=saved.scroll;
    }
   }
   requestAnimationFrame(()=>{if(!page.hidden)window.scrollTo(0,plannerScroll);});
@@ -4539,34 +4621,44 @@ document.addEventListener('keydown',event=>{
    '" data-td77-route="'+context+'" data-route-id="'+safe(row.id)+'" aria-pressed="'+(row.id===r?.id)+'">'+safe(label)+'</button>';
   const sameArea=row=>row.initial.method==='hidden-grotto'?row.initial.place?.split(' · ')[0]:row.initial.place;
   const options=groups.filter(([, , routes])=>routes.length).map(([title,tone,routes])=>{
-   const species=new Map();
+   const paths=new Map();
    for(const row of routes){
-    const heading=other(row)?'':'Obtain '+td41PokemonLabel(row.startName)+(row.steps.length?'':' directly');
-    if(!species.has(heading))species.set(heading,new Map());
-    const key=other(row)?row.id:JSON.stringify([sameArea(row),row.initial.rank,row.rank]);
-    const areas=species.get(heading);
-    if(!areas.has(key))areas.set(key,[]);
-    areas.get(key).push(row);
+    const key=other(row)?row.id:JSON.stringify([row.startId,sameArea(row),row.initial.rank,row.rank]);
+    if(!paths.has(key))paths.set(key,[]);
+    paths.get(key).push(row);
    }
-   return '<div class="td78-route-group"><b class="'+tone+'">'+title+'</b>'+[...species].map(([heading,areas])=>
-    (heading?'<small>'+safe(heading)+'</small>':'')+[...areas.values()].map(area=>{
-     const [first]=area;
-     if(other(first)){
-      const level=first.steps.map(step=>step.requirement).join(' · ').replace(/^Level (\d+)$/i,'evolves at Lv. $1');
-      return choice(first,[routeChoice(first),level,!routeFits(first)?routeRestriction(first):''].filter(Boolean).join(' · '));
-     }
-     return '<div class="td78-route-area">'+td77AcquisitionLinks(sameArea(first),state.game)+'<div>'+
-      area.map(row=>{
-       const repeat=area.filter(option=>option.initial.method===row.initial.method).length>1;
-       const label=methodName(row.initial.method);
-       const detail=[row.initial.minLevel?'Lv. '+row.initial.minLevel+(row.initial.maxLevel!==row.initial.minLevel?'–'+row.initial.maxLevel:''):'',
-        row.initial.conditions?.join(', '),row.initial.note].filter(Boolean).join(' · ');
-       return choice(row,repeat&&detail?label+' · '+detail:label);
-      }).join('')+'</div></div>';
-    }).join('')).join('')+'</div>';
+   return '<div class="td78-route-group"><b class="'+tone+'">'+title+'</b>'+[...paths.values()].map(area=>{
+    const selected=area.find(row=>row.id===r?.id);
+    const walk=area.find(row=>row.initial.method==='walk'&&!row.initial.note&&!row.initial.conditions?.length);
+    const first=selected||walk||area[0];
+    const level=first.steps.map(step=>step.requirement).join(' · ').replace(/^Level (\d+)$/i,'evolves at Lv. $1');
+    if(other(first))return choice(first,[routeChoice(first),level,!routeFits(first)?routeRestriction(first):''].filter(Boolean).join(' · '));
+    const label='Obtain '+td41PokemonLabel(first.startName)+(first.steps.length?'':' directly');
+    const methods=[...new Set(area.map(row=>row.initial.method))];
+    const preferred=['walk','dark-grass','hidden-grotto'];
+    const methodLabel=[...preferred.filter(key=>methods.includes(key)),...methods.filter(key=>!preferred.includes(key))]
+     .map(methodName).join(', ');
+    const requirements=row=>{
+     // The standard grotto spawn note adds no route gate if unrestricted walking is available.
+     const grotto=walk&&row.initial.method==='hidden-grotto'&&
+      row.initial.note==='Hidden Grotto encounter. Check after the Route 5 tutorial; spawns are random.';
+     return JSON.stringify([grotto?'':row.initial.note||'',row.initial.conditions||[],
+      row.steps.filter(step=>step.level>0&&row.initial.minLevel>=step.level).map(step=>step.id)]);
+    };
+    const needsMethod=area.length>1&&new Set(area.map(requirements)).size>1;
+    const exactMethod=needsMethod?`<select data-td77-route="${context}" aria-label="Encounter method at ${safe(sameArea(first))}">
+     <option value="" ${selected?'':'selected'} disabled>Choose encounter method</option>
+     ${area.map(row=>`<option value="${safe(row.id)}" ${row.id===selected?.id?'selected':''}>${safe([
+      methodName(row.initial.method),row.initial.minLevel?'Lv. '+row.initial.minLevel+(row.initial.maxLevel!==row.initial.minLevel?'–'+row.initial.maxLevel:''):'',
+      row.initial.conditions?.join(', '),row.initial.note].filter(Boolean).join(' · '))}</option>`).join('')}</select>`:'';
+    return `<div class="td78-route-area">
+     ${needsMethod?`<strong>${safe(label)}</strong>`:choice(first,label)}
+     <div class="td78-route-location">${td77AcquisitionLinks(sameArea(first),state.game)} · ${safe(methodLabel)}</div>
+     ${level?`<small>${safe(level)}</small>`:''}${exactMethod}</div>`;
+   }).join('')+'</div>';
   }).join('');
   const selector=rows.length?`<details class="td773-disclosure td78-route-picker"><summary class="td774-route-choice"><span>${safe(fulfilled?'Selected acquisition route':method)}
-   ${!fulfilled&&(requirement||location)?`<small>${safe(requirement||location)}</small>`:''}</span></summary>${options}</details>`:'';
+   ${!fulfilled&&(requirement||location)?`<small>${safe(requirement||location)}</small>`:''}</span></summary><div class="td78-route-options">${options}</div></details>`:'';
   return (fulfilled?'<small class="td41-good">'+(ownedFor(slot,chosenSlot)?'Acquisition fulfilled · On team':'Previously matched · Not in party')+'</small>':'')+selector+
    (r?`<details class="td78-disclosure td773-disclosure td774-route-details"><summary><span>${fulfilled?'Selected route history':'Acquisition details'}</span></summary>${routeDescription(r,r.steps.length>1,fulfilled)}</details>${fulfilled||routeFits(r)?'':`<small class="td63-danger">${safe(routeRestriction(r))}</small>`}`:
     fulfilled?'':`<small class="note">${td77AcquisitionLinks(availability(slot),state.game)}</small>`);
@@ -4604,7 +4696,7 @@ document.addEventListener('keydown',event=>{
  }
  function rememberMoveEditor(){
   const box=$('td41MoveSlots').querySelector('.suggestions:not([hidden])');
-  const input=box?.previousElementSibling;
+  const input=box?.closest('.td78-editor-shell').querySelector('input');
   clearTimeout(moveBlurTimer);
   checkerEditor=input?{token,slot:chosenSlot,field:input.dataset.td45Move,search:input.value,
    scroll:box.querySelector('.td78-move-results').scrollTop,filters:moveFilters.get(input)}:null;
@@ -5238,8 +5330,9 @@ document.addEventListener('keydown',event=>{
   const mode=during?'during':'goal';
   return `<div class="td42-move-flow td77-move-comparison ${during?'td77-during-flow':''}">${!old&&target?'<span class="td77-editor-empty" aria-label="No actual move">×</span>':moveChip(old,true)}<span class="td42-arrow">→</span>
    <div class="search td45-move-search td77-edit-move">
-    <div class="td77-planner-move-info">${stats}</div><input autocomplete="off" aria-label="${during?'During-game':'Goal'} move ${index+1}" ${during?'data-td77-during="'+index+'"':''} data-td45-move="${index}:${mode}" placeholder="Search moves…" value="${safe(target?text:'')}" ${available?'':'disabled'}>
-    <div class="suggestions" hidden></div>${td772FilterButton('td78MoveFilters-'+index,'Move filters','td78MoveFilterPanel-'+index)}<button class="td78-open-move" type="button" data-td78-open-move aria-label="Change planned move ${index+1}" ${available?'':'disabled'}></button>
+    <div class="td77-planner-move-info">${stats}</div><div class="td78-editor-shell">
+     <div class="td78-editor-search td772-filter-line"><input autocomplete="off" aria-label="${during?'During-game':'Goal'} move ${index+1}" ${during?'data-td77-during="'+index+'"':''} data-td45-move="${index}:${mode}" placeholder="Search moves…" value="${safe(target?text:'')}" ${available?'':'disabled'}>
+     ${td772FilterButton('td78MoveFilters-'+index,'Move filters','td78MoveFilterPanel-'+index)}</div><div class="suggestions" hidden></div></div><button class="td78-open-move" type="button" data-td78-open-move aria-label="Change planned move ${index+1}" ${available?'':'disabled'}></button>
    </div></div>`;
  }
  page.addEventListener('click',event=>{
@@ -5374,10 +5467,9 @@ document.addEventListener('keydown',event=>{
    {...selected,initial:{...selected.initial,minLevel:member.level}}:selected;
   return {target,moves:await suggestedMoves(form,i,g,false,earlier,trainingRoute)};
  }
- page.addEventListener('click',async e=>{
-  const select=e.target.closest('[data-td77-route]');
-  if(!select)return;
-  const {td77Route,routeId}=select.dataset;
+ async function applyAcquisitionRoute(select,routeId){
+  if(!routeId)return;
+  const {td77Route}=select.dataset;
   if(td77Route==='preview'&&manualCandidate){stageCandidate(manualCandidate.name,routeId,{scroll:false});return;}
   const i=chosenSlot,g=state.game,p=state.slots[i],stamp=token;
   const route=routeOptions(p).find(row=>row.id===routeId);
@@ -5410,6 +5502,14 @@ document.addEventListener('keydown',event=>{
    }
    refreshMoveInfo();
   }catch{if(stamp===token&&state.slots[i]===p){say('Acquisition route could not be updated.');renderMoveSlots();}}
+ }
+ page.addEventListener('click',e=>{
+  const select=e.target.closest('button[data-td77-route]');
+  if(select)applyAcquisitionRoute(select,select.dataset.routeId);
+ });
+ page.addEventListener('change',e=>{
+  const select=e.target.closest('select[data-td77-route]');
+  if(select)applyAcquisitionRoute(select,select.value);
  });
  $('td77FinalForm').addEventListener('change',async e=>{
   const select=e.target.closest('select'),p=state?.slots[chosenSlot];
@@ -5600,16 +5700,17 @@ document.addEventListener('keydown',event=>{
  const moveFilters=new WeakMap();
  const moveClasses=['physical','special','status'];
  let moveBlurTimer;
- function showMoveOptions(input,q=''){
+ function moveBox(input){return input.closest('.td78-editor-shell').querySelector('.suggestions');}
+ function showMoveOptions(input,q='',scroll=0){
   const p=state?.slots[chosenSlot];
   if(!p)return;
-  const [index,mode]=input.dataset.td45Move.split(':'),box=input.nextElementSibling;
+  const [index,mode]=input.dataset.td45Move.split(':'),box=moveBox(input);
   const learner=mode==='during'?duringLearner(p,chosenSlot):finalLearner(p);
   const opts=legalOptions(p,+index,mode,q);
   const filter=moveFilters.get(input)||{open:false,type:'',damageClass:''};
   moveFilters.set(input,filter);
   const filtered=Boolean(filter.type||filter.damageClass);
-  const funnel=box.nextElementSibling;
+  const funnel=input.closest('.td78-editor-search').querySelector('.td772-filter-button');
   funnel.classList.toggle('selected',filter.open||filtered);
   funnel.setAttribute('aria-expanded',String(filter.open));
   const classes=moveClasses.map(value=>`<button type="button" class="td774-secondary" data-td78-move-class="${value}" aria-pressed="${filter.damageClass===value}">${pretty(value)}</button>`).join('');
@@ -5624,7 +5725,7 @@ document.addEventListener('keydown',event=>{
   const clear=action('Clear',selected?'data-td77-clear-move aria-label="Clear planned move"':'disabled','m6 6 12 12 M18 6 6 18');
   const checker=action('Checker',selected?`data-td77-plan-move="${safe(selected)}" data-td77-reminder="${safe(timing?.text||'')}"`:'disabled','M13 5h6v6 M19 5l-8 8 M19 13v6H5V5h6');
   const close=action('Close','data-td79-close-move','m5 12 4 4L19 6');
-  const render=(n,move)=>move?td77MoveResultLines({...move,name:n}):'<strong>'+safe(pretty(n))+'</strong>';
+  const render=(n,move)=>move?td77MoveResultLines({...move,name:n},''):'<strong></strong>';
   box.innerHTML=filterPanel+`<div class="td78-move-actions">${keep}${clear}${checker}${close}</div><strong>Available moves</strong><div class="td78-move-results"></div>`;
   box.hidden=false;
   const game=state.game,list=box.querySelector('.td78-move-results');
@@ -5633,8 +5734,15 @@ document.addEventListener('keydown',event=>{
     const move=info(name);
     return (!filter.type||move?.type===filter.type)&&(!filter.damageClass||move?.damageClass===filter.damageClass);
    });
-   list.innerHTML=names.map(n=>`<div class="td79-move-choice"><button type="button" class="td77-move-option" data-td45-pick="${safe(n)}"><span class="td77-move-result-lines">${render(n,info(n))}</span></button>${learner.legalMoves?.includes(n)?moveTimingMarkup(learner,n):'<small>Learn on a later planned form</small>'}</div>`).join('')+
-    (names.length?'':'<p class="note">No compatible moves</p>');
+   list.innerHTML=names.map(n=>{
+    const learned=learner.legalMoves?.includes(n);
+    const timing=learned?plannerMoveTiming(learner,n):null;
+    return `<div class="td79-move-choice">
+     <button type="button" class="td78-suggestion-name" data-td77-plan-move="${safe(n)}" data-td77-reminder="${safe(timing?.text||'')}" aria-label="Open ${safe(pretty(n))} in Move Checker">${safe(pretty(n))}</button>
+     <button type="button" class="td77-move-option" data-td45-pick="${safe(n)}" aria-label="Select ${safe(pretty(n))}"><span class="td77-move-result-lines">${render(n,info(n))}</span></button>
+     ${learned?moveTimingMarkup(learner,n):'<small>Learn on a later planned form</small>'}</div>`;
+   }).join('')+(names.length?'':'<p class="note">No compatible moves</p>');
+   list.scrollTop=scroll;
   };
   const load=async name=>{
    const move=await enrichMove({name:pretty(name)},gameGeneration(game),game).catch(()=>null);
@@ -5671,9 +5779,14 @@ document.addEventListener('keydown',event=>{
 
  moveHost.addEventListener('focusin',e=>{
   if(!e.target.matches('[data-td45-move]'))return;
-  if(e.target.nextElementSibling.hidden)showMoveOptions(e.target);
+  if(moveBox(e.target).hidden)showMoveOptions(e.target);
  });
  moveHost.addEventListener('click',e=>{
+  const option=e.target.closest('.td79-move-choice');
+  if(option&&!e.target.closest('button,a,summary,details')){
+   option.querySelector('[data-td45-pick]').click();
+   return;
+  }
   const filterButton=e.target.closest('.td772-filter-button,[data-td78-move-type],[data-td78-move-class]');
   if(filterButton){
    const input=filterButton.closest('.td77-edit-move').querySelector('input');
@@ -5684,14 +5797,14 @@ document.addEventListener('keydown',event=>{
    else if(damageClass)filter.damageClass=filter.damageClass===damageClass?'':damageClass;
    else {
     filter.open=!filter.open;
-    input.nextElementSibling.querySelector('.td78-move-filter-panel').hidden=!filter.open;
+    moveBox(input).querySelector('.td78-move-filter-panel').hidden=!filter.open;
     filterButton.setAttribute('aria-expanded',String(filter.open));
     filterButton.classList.toggle('selected',Boolean(filter.open||filter.type||filter.damageClass));
     return;
    }
    showMoveOptions(input,clean(input.value));
    const attribute=type?'data-td78-move-type':'data-td78-move-class';
-   input.nextElementSibling.querySelector(`[${attribute}="${type||damageClass}"]`)?.focus({preventScroll:true});
+   moveBox(input).querySelector(`[${attribute}="${type||damageClass}"]`)?.focus({preventScroll:true});
    return;
   }
   const trigger=e.target.closest('[data-td78-open-move]');
@@ -5699,12 +5812,12 @@ document.addEventListener('keydown',event=>{
    for(const other of moveHost.querySelectorAll('.suggestions:not([hidden])'))other.hidden=true;
    const field=trigger.parentElement.querySelector('input');
    field.value='';showMoveOptions(field);
-   const box=field.nextElementSibling;
-   if(box.getBoundingClientRect().bottom>window.innerHeight-72)box.scrollIntoView({block:'center'});
+   const shell=field.closest('.td78-editor-shell');
+   if(shell.getBoundingClientRect().bottom>window.innerHeight-72)shell.scrollIntoView({block:'center'});
    return;
   }
   const input=e.target.closest('[data-td45-move]');
-  if(input&&input.nextElementSibling.hidden)showMoveOptions(input);
+  if(input&&moveBox(input).hidden)showMoveOptions(input);
   const close=e.target.closest('[data-td79-close-move]');
   if(close){
    const editor=close.closest('.td77-edit-move');
@@ -5734,9 +5847,9 @@ document.addEventListener('keydown',event=>{
  moveHost.addEventListener('keydown',e=>{
   const input=e.target.closest('.td77-edit-move')?.querySelector('[data-td45-move]');
   if(!input?.matches('[data-td45-move]'))return;
-  const box=input.nextElementSibling;
+  const box=moveBox(input);
   if(e.key==='Escape'){
-   const funnel=box.nextElementSibling;
+   const funnel=input.closest('.td78-editor-search').querySelector('.td772-filter-button');
    if(moveFilters.get(input)?.open){
     e.preventDefault();funnel.click();funnel.focus({preventScroll:true});return;
    }
@@ -5757,7 +5870,7 @@ document.addEventListener('keydown',event=>{
   if(!container||checkerEditor||container.contains(e.relatedTarget))return;
   const input=container.querySelector('[data-td45-move]');
   if(!input)return;
-  const box=input.nextElementSibling,contents=box.firstElementChild;
+  const box=moveBox(input),contents=box.firstElementChild;
   clearTimeout(moveBlurTimer);
   moveBlurTimer=setTimeout(()=>{
    if(checkerEditor||contents!==box.firstElementChild||!input.isConnected||container.contains(document.activeElement))return;
@@ -5786,7 +5899,7 @@ document.addEventListener('keydown',event=>{
   (p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;
   if(p.finalAutoMoves)p.finalAutoMoves[+i]='';
   persist();render();renderMoveSlots();refreshMoveInfo();return;
- }if(!legalOptions(p,+i,k,n).includes(n))return;if(k==='during'){applyDuring(input,n);return;}let confirmedFrom='';const slot=chosenSlot,g=state.game,stamp=token,prev=goal(m),others=p.plannedMoves.filter((_,j)=>j!==+i).map(goal).filter(Boolean);if(prev&&prev!==n){for(const name of [prev,n])if(!info(name)){try{const v=await enrichMove({name:pretty(name)},gameGeneration(g),g);if(v?.type&&v.damageClass)moveInfo.set(g+':'+name,v)}catch{}}if(stamp!==token||slot!==chosenSlot||state.slots[slot]!==p||p.plannedMoves[+i]!==m||goal(m)!==prev)return;const reasons=downgradeReasons(finalLearner(p),slot,prev,n,others,g);if(reasons.length&&!confirm('Potential moveset downgrade: '+pretty(prev)+' → '+pretty(n)+'\n'+reasons.join('\n')+'\nKeep replacement?')){input.value=pretty(prev);input.nextElementSibling.hidden=true;return;}if(reasons.length)confirmedFrom=m.warningTarget===prev&&m.warningFrom?m.warningFrom:prev;}if(k==='move'){p.plannedMoves[+i]={move:n,purpose:'keep',replacement:'',milestone:'',usefulness:'unknown'}}else if(m.purpose==='temporary'&&m.move!==n&&p.duringMoves?.some(move=>goal(move)===m.move)){m.replacement=n}else{m.move=n;m.purpose='keep';m.replacement=''}const chosen=p.plannedMoves[+i];(p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;if(p.finalAutoMoves)p.finalAutoMoves[+i]='';chosen.warningFrom=confirmedFrom;chosen.warningTarget=confirmedFrom?n:'';persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();});
+ }if(!legalOptions(p,+i,k,n).includes(n))return;if(k==='during'){applyDuring(input,n);return;}let confirmedFrom='';const slot=chosenSlot,g=state.game,stamp=token,prev=goal(m),others=p.plannedMoves.filter((_,j)=>j!==+i).map(goal).filter(Boolean);if(prev&&prev!==n){for(const name of [prev,n])if(!info(name)){try{const v=await enrichMove({name:pretty(name)},gameGeneration(g),g);if(v?.type&&v.damageClass)moveInfo.set(g+':'+name,v)}catch{}}if(stamp!==token||slot!==chosenSlot||state.slots[slot]!==p||p.plannedMoves[+i]!==m||goal(m)!==prev)return;const reasons=downgradeReasons(finalLearner(p),slot,prev,n,others,g);if(reasons.length&&!confirm('Potential moveset downgrade: '+pretty(prev)+' → '+pretty(n)+'\n'+reasons.join('\n')+'\nKeep replacement?')){input.value=pretty(prev);moveBox(input).hidden=true;return;}if(reasons.length)confirmedFrom=m.warningTarget===prev&&m.warningFrom?m.warningFrom:prev;}if(k==='move'){p.plannedMoves[+i]={move:n,purpose:'keep',replacement:'',milestone:'',usefulness:'unknown'}}else if(m.purpose==='temporary'&&m.move!==n&&p.duringMoves?.some(move=>goal(move)===m.move)){m.replacement=n}else{m.move=n;m.purpose='keep';m.replacement=''}const chosen=p.plannedMoves[+i];(p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;if(p.finalAutoMoves)p.finalAutoMoves[+i]='';chosen.warningFrom=confirmedFrom;chosen.warningTarget=confirmedFrom?n:'';persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();});
  $('td4HM').addEventListener('click',e=>{const b=e.target.closest('[data-td41-carrier]');if(!b)return;if($('td4Edit').hidden||chosenSlot!==Number(b.dataset.td41Carrier))$('td4Slots').querySelector(`[data-td4-slot="${Number(b.dataset.td41Carrier)}"]`)?.click();$('td41MoveSlots').scrollIntoView({block:'start'});});
 
  async function refreshLeagueInfo(){const g=state.game,stamp=token;const missing=[...new Set(leagueTargets(g).flatMap(t=>t.rows.filter(r=>!r.types?.length||!r.id||clean(r.name)==='jellicent').map(r=>clean(r.name))))];for(let i=0;i<missing.length;i+=6){if(stamp!==token)return;await Promise.all(missing.slice(i,i+6).map(async n=>{try{const d=await details(n,g);leagueInfo.set(g+':'+n,d)}catch{}}));}if(stamp===token&&state?.game===g&&!$('td41MoveSlots').contains(document.activeElement))render();}
