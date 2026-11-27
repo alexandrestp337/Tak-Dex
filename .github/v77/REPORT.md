@@ -582,3 +582,9 @@ Syntax checks for `app.js` and `sw.js` and inspection of the modified code passe
 From `8efad09`. The focused Chromium case reproduced the editor closing on contextual Back. Tracing showed that return restored the editor, then a deferred focusout handler from navigation hid the suggestions after the saved state had been consumed. The planner now cancels pending focusout work before opening Checker, suppresses new dismissal work during the transition and hides the planner while Checker is visible.
 
 **Pass** · One targeted Chromium case at 412 CSS px opened Flame Wheel, used Checker and returned through contextual Back. After the return frames and focusout window, the same Pokémon and editor were open, the search and both scroll positions were preserved, and the search field remained unfocused. No broad regression suite or native device check was run.
+
+## V77-STABLE release
+
+Final user acceptance was granted for checkpoint `f1d8ae6` on `v77-development`. The release commit adds stable web identifiers, a fresh service-worker cache and release documentation to the accepted checkpoint. Production is published from `main` by GitHub Pages.
+
+The release keeps the existing local save and planner storage keys, JSON compatibility and “Developed by WHOASP” credit. Installed web clients receive the new cache on their next service-worker update. Android is released separately.

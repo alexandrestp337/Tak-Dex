@@ -3650,7 +3650,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V77</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "V8 native update pending"}</p>
+ <p><strong>Web version:</strong> V77-STABLE</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
  <p><strong>Build:</strong> 2026-11-24</p>
 
 </div>
