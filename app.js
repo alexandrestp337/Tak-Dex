@@ -534,6 +534,11 @@ function td77MoveResultLines(move,label=pretty(move.name),comparison){
  const stats=td77MoveStatsText(move,comparison);
  return '<strong>'+safe(label)+'</strong>'+pill(move.type)+'<small>'+safe(pretty(move.damageClass))+'</small><small>'+(comparison?stats:safe(stats))+'</small>';
 }
+function compactMoveLines(move,label=pretty(move.name),comparison){
+ const stats=td77MoveStatsText(move,comparison);
+ return `<span class="td774-move-title"><strong>${safe(label)}</strong><small>${safe(pretty(move.damageClass))}</small></span>${pill(move.type)}
+  <small class="td774-move-metrics">${comparison?stats:safe(stats)}</small>`;
+}
 function td77HydrateMoveRows(host,key,game){
  host.moveObserver?.disconnect();
  const observer=new IntersectionObserver(entries=>{
@@ -542,7 +547,7 @@ function td77HydrateMoveRows(host,key,game){
    observer.unobserve(target);
    const name=target.dataset[key];
    enrichMove({name:pretty(name)},game?gameGeneration(game):9,game).then(move=>{
-    if(move?.type&&target.isConnected)target.firstElementChild.innerHTML=td77MoveResultLines({...move,name},target.dataset.td77MoveLabel||pretty(name));
+    if(move?.type&&target.isConnected)target.firstElementChild.innerHTML=compactMoveLines({...move,name},target.dataset.td77MoveLabel||pretty(name));
    }).catch(()=>{});
   }
  },{root:host});
@@ -2137,7 +2142,7 @@ function machineMatches(q){
 }
 function showMachineResults(q='',all=false){
  const results=$('tmMoveResults');const found=machineMatches(q).slice(0,all?machineEntries.length:25);
- results.innerHTML=found.map(m=>`<button type="button" data-machine="${m.i}" data-td77-machine-move="${safe(m.move)}" data-td77-move-label="${safe(machineLabel(m))}"><span class="td77-move-result-lines"><strong>${safe(machineLabel(m))}</strong></span></button>`).join('')||'<p class="note">No matching TM/HM</p>';
+ results.innerHTML=found.map(m=>`<button type="button" data-machine="${m.i}" data-td77-machine-move="${safe(m.move)}" data-td77-move-label="${safe(machineLabel(m))}"><span class="td774-move-lines"><strong>${safe(machineLabel(m))}</strong></span></button>`).join('')||'<p class="note">No matching TM/HM</p>';
  setMachineResults(true);
  td77HydrateMoveRows(results,'td77MachineMove',$('tmGame').value);
 }
@@ -3644,7 +3649,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V77.2 RC2</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
+ <p><strong>Web version:</strong> V77.2 RC3</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
 </div>
  <div class="card td70-about-card"><h3>Storage &amp; offline reference</h3><p class="note" id="td70AboutStorage">Checking local storage…</p></div>
  <div class="tool-card"><button type="button" id="td68OpenCoverage" class="tool-link">▦ Database Coverage ›</button></div>
@@ -3678,7 +3683,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  $('td70AboutBack').addEventListener('click',()=>{aboutStorageToken++;aboutPage.hidden=true;window.takActivate(3)});
  for(const id of ['teamsTab','battleTab','dexTab','moreTab'])$(id).addEventListener('click',()=>{aboutPage.hidden=true},true);
  const page=document.createElement('section');page.id='td68MovePage';page.hidden=true;
- page.innerHTML=`<div class="bar td772-context-heading"><h2 id="td72MoveHeading">Move Checker</h2><div class="td72-move-header-actions"><button type="button" id="td72MoveTypeToggle" aria-pressed="false">◈ By Type</button><button type="button" id="td68MoveBack">← More</button></div></div>
+ page.innerHTML=`<div class="bar td772-context-heading"><h2 id="td774CheckerHeading">Move Checker</h2><div class="td72-move-header-actions"><button type="button" id="td72MoveTypeToggle" aria-pressed="false">◈ By Type</button><button type="button" id="td68MoveBack">← More</button></div></div>
  <div class="td76-move-filters td77-planning-tabs" role="tablist" aria-label="Move catalog"><button type="button" role="tab" data-move-catalog="" aria-selected="true">All Moves</button><button type="button" role="tab" data-move-catalog="machines" aria-selected="false">TM / HM</button></div>
  <div id="td68MoveSearchPanel" class="tool-card"><label>Search any move<div class="search td68-search"><input type="text" id="td68MoveInput" placeholder="Future Sight, Rollout, Earthquake…" autocomplete="off"><div id="td68MoveSuggest" class="suggestions" hidden></div></div></label><button type="button" id="td68MoveGo">View move</button></div>
  <div id="td68MoveResult" aria-live="polite"><p class="note">Select a move to see its power, accuracy, PP, effect, and generation changes.</p></div>
@@ -3778,7 +3783,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
   return stillValid;
  }
  function td72SwitchMoveView(byType){
-  td72TypeMode=Boolean(byType);$('td72MoveHeading').textContent=td72TypeMode?'Moves by Type':'Move Checker';td72TypeToggle.setAttribute('aria-pressed',String(td72TypeMode));
+  td72TypeMode=Boolean(byType);$('td774CheckerHeading').textContent=td72TypeMode?'Moves by Type':'Move Checker';td72TypeToggle.setAttribute('aria-pressed',String(td72TypeMode));
   td72TypeToggle.textContent=td72TypeMode?'⌕ Search Moves':'◈ By Type';
   $('td68MoveSearchPanel').hidden=td72TypeMode;res.hidden=td72TypeMode;td72TypePanel.hidden=!td72TypeMode;
   if(td72TypeMode){td72Game.value=td72Game.value||current?.game||td66SavedGame()||'';filterMenus();td72SyncGameTypes();if(td72Type)td72LoadType();else td72TypeStatus.textContent='Select a game and a move type.'}
@@ -3793,7 +3798,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
   td72MoveGameOverride=td72Game.value;
   // Preserve the entire By Type DOM, selection and search results in place for Back.
   td72TypePanel.hidden=true;$('td68MoveSearchPanel').hidden=true;res.hidden=false;
-  td72TypeToggle.hidden=true;$('td72MoveHeading').textContent='Move Checker';
+  td72TypeToggle.hidden=true;$('td774CheckerHeading').textContent='Move Checker';
   query.value=pretty(btn.dataset.td72TypeMove);load(btn.dataset.td72TypeMove);
   window.scrollTo(0,0);
  });
@@ -3820,7 +3825,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
    if(request!==td72TypeRequest)return;
    collected.sort((a,b)=>a.name.localeCompare(b.name));
    td72TypeStatus.textContent=`${collected.length} ${pretty(type)} move${collected.length===1?'':'s'} · ${game} (Gen ${gen})${missing.length?' · '+missing.length+' records unavailable offline':''}. Generation-valid move catalog; learnability and in-game acquisition still depend on the selected version.`;
-   td72TypeResults.innerHTML=collected.length?collected.map(m=>`<button type="button" class="td72-type-move ${td52EvolutionOnly(compatible,m.name)?'td52-evo-only':''}" data-td72-type-move="${safe(m.name)}"><span class="td77-move-result-lines">${td77MoveResultLines(m)}</span>${filterLabel(compatible,m.name)?`<small class="td51-filter-members">${td52FilterMarkup(compatible,m.name)}</small>`:''}</button>`).join(''):'<p class="note">No confirmed moves in the available records for this generation. This is not proof the game has none.</p>';
+   td72TypeResults.innerHTML=collected.length?collected.map(m=>`<button type="button" class="td72-type-move ${td52EvolutionOnly(compatible,m.name)?'td52-evo-only':''}" data-td72-type-move="${safe(m.name)}"><span class="td774-move-lines">${compactMoveLines(m)}</span>${filterLabel(compatible,m.name)?`<small class="td51-filter-members">${td52FilterMarkup(compatible,m.name)}</small>`:''}</button>`).join(''):'<p class="note">No confirmed moves in the available records for this generation. This is not proof the game has none.</p>';
   }catch(e){if(request===td72TypeRequest)td72TypeStatus.textContent='Could not load this type. Download its data or reconnect.'}
  }
  async function td72RenderMoveTeamCompatibility(moveName,teamId,request){
@@ -3839,7 +3844,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  function back(){
   if(td72DetailOrigin==='type'){
    ++req;td72DetailOrigin=null;td72MoveGameOverride=$('td5FilterMode').value?td72Game.value:null;
-   td72TypePanel.hidden=false;$('td72MoveHeading').textContent='Moves by Type';$('td68MoveSearchPanel').hidden=true;res.hidden=true;
+   td72TypePanel.hidden=false;$('td774CheckerHeading').textContent='Moves by Type';$('td68MoveSearchPanel').hidden=true;res.hidden=true;
    td72TypeToggle.hidden=false;td72TypeMode=true;
    requestAnimationFrame(()=>window.scrollTo(0,td72DetailScroll));
    return;
@@ -3886,7 +3891,6 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
     load(m);
   }else{
     res.innerHTML='<p class="note">Choose or search for a move above.</p>';
-    query.focus();
   }
 }
  window.takDexOpenMoveFromMapsV73=(move,game)=>launch(move,'maps',game);
@@ -3896,7 +3900,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  $('dexResult').addEventListener('click',e=>{const b=e.target.closest('[data-td68-move]');if(!b)return;e.preventDefault();tak67CaptureDexSections();launch(b.dataset.td68Move,'dex',$('dexGame').value,b.dataset.td77Reminder)});
  $('moveFields').addEventListener('click',e=>{const b=e.target.closest('[data-td74-builder-move]');if(b){e.preventDefault();launch(b.dataset.td74BuilderMove,'team',current?.game)}});$('slots').addEventListener('click',e=>{const b=e.target.closest('[data-td5-team-move]');if(b){e.preventDefault();launch(b.dataset.td5TeamMove,'team',current?.game)}});$('slots').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.matches('[data-td5-team-move]')){e.preventDefault();e.target.click()}});
  async function moveList(){if(!list){list=api('move?limit=2000').then(x=>(x.results||[]).map(v=>v.name)).catch(e=>{list=null;throw e});}return list}
- async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2||/^(?:(?:tm|hm)?-?\d+)$/.test(q)){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const compatible=await filterRecords();const values=(await moveList()).filter(n=>n.includes(q)&&filterNames(compatible,n)).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" class="${td52EvolutionOnly(compatible,n)?'td52-evo-only':''}" data-td68-select="${safe(n)}"><span class="td77-move-result-lines"><strong>${safe(pretty(n))}</strong></span>${filterLabel(compatible,n)?`<small class="td51-search-members">${td52FilterMarkup(compatible,n)}</small>`:''}</button>`).join('')||'<p class="note">No matching compatible move.</p>';td77HydrateMoveRows(suggest,'td68Select',td72MoveGameOverride||current?.game||td66SavedGame());}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
+ async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2||/^(?:(?:tm|hm)?-?\d+)$/.test(q)){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const compatible=await filterRecords();const values=(await moveList()).filter(n=>n.includes(q)&&filterNames(compatible,n)).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" class="${td52EvolutionOnly(compatible,n)?'td52-evo-only':''}" data-td68-select="${safe(n)}"><span class="td774-move-lines"><strong>${safe(pretty(n))}</strong></span>${filterLabel(compatible,n)?`<small class="td51-search-members">${td52FilterMarkup(compatible,n)}</small>`:''}</button>`).join('')||'<p class="note">No matching compatible move.</p>';td77HydrateMoveRows(suggest,'td68Select',td72MoveGameOverride||current?.game||td66SavedGame());}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
  query.addEventListener('click',()=>{if(query.value)query.select()});
  query.addEventListener('input',findSuggestions);query.addEventListener('focus',()=>{if(query.value.length>=2)findSuggestions()});
  suggest.addEventListener('click',e=>{const b=e.target.closest('[data-td68-select]');if(!b)return;query.value=pretty(b.dataset.td68Select);suggest.hidden=true;load(b.dataset.td68Select)});
@@ -4317,7 +4321,7 @@ document.addEventListener('keydown',event=>{
     const weight=bulk<55?.75:bulk>=100?1.15:1;
     return sum+(m<=.25?1.35:1)*weight;
    },0);
-   return {type,weak:vulnerable.length,resist:resistant.length+immune.length,immune:immune.length,
+   return {type,members:vulnerable.map(({p})=>p),weak:vulnerable.length,resist:resistant.length+immune.length,immune:immune.length,
     gap:Math.max(0,need-capacity),severity:need?capacity===0?'uncovered':capacity<need?'partial':'compensated':'covered'};
   }).filter(row=>row.weak);
   return {covered:ts.filter(t=>filled.some(p=>p.types.some(a=>matchup(a,[t],gen)>1))),weak,filled};
@@ -4393,10 +4397,14 @@ document.addEventListener('keydown',event=>{
   const later=rows.filter(row=>!fits(row));
   const option=(row,restricted)=>'<option value="'+safe(row.id)+'" '+(row.id===r?.id?'selected':'')+'>'+safe(routeChoice(row)+(restricted?' · after deadline':''))+'</option>';
   const missing=slot.acquisitionRoute&&!r?'<option value="" selected>Saved route needs review</option>':'';
-  const select=rows.length?'<label>Acquisition method<select data-td77-route="'+context+'">'+missing+
-   allowed.map(row=>option(row,false)).join('')+(later.length?'<optgroup label="Outside the planning deadline">'+later.map(row=>option(row,true)).join('')+'</optgroup>':'')+'</select></label>':'';
+  const [method,location]=r?routeChoice(r).split(' · '):['Saved route needs review',''];
   const requirements=r?.steps.map(step=>step.requirement).join(' · ');
-  return select+(r?`<details class="td42-settings td78-disclosure td773-disclosure"><summary><span>${safe(evolutionPath(r))}${requirements?`<small>${safe(requirements)}</small>`:''}</span></summary>${routeDescription(r,r.steps.length>1)}</details>${routeFits(r)?'':`<small class="td63-danger">${safe(routeRestriction(r))}</small>`}`:'<small>'+td77AcquisitionLinks(availability(slot),state.game)+'</small>');
+  const condition=requirements?.replace(/^Level (\d+)$/i,'Evolve at Lv. $1');
+  const select=rows.length?`<label class="td774-route-choice"><span aria-hidden="true">${safe(method)}
+   ${condition||location?`<small>${safe(condition||location)}</small>`:''}</span>
+   <select data-td77-route="${context}" aria-label="Acquisition method">${missing}${allowed.map(row=>option(row,false)).join('')}
+   ${later.length?'<optgroup label="Outside the planning deadline">'+later.map(row=>option(row,true)).join('')+'</optgroup>':''}</select></label>`:'';
+  return select+(r?`<details class="td78-disclosure td773-disclosure td774-route-details"><summary><span>Acquisition details</span></summary>${routeDescription(r,r.steps.length>1)}</details>${routeFits(r)?'':`<small class="td63-danger">${safe(routeRestriction(r))}</small>`}`:'<small>'+td77AcquisitionLinks(availability(slot),state.game)+'</small>');
  }
  function candidateAcquisition(slot,open=false){
   const game=state.game,progress=window.td62Progress;
@@ -4427,7 +4435,7 @@ document.addEventListener('keydown',event=>{
   $('td77SlotRoute').innerHTML=p?routeEditor(p,'slot'):'';
   $('td77SlotRoute').hidden=Boolean(settings.open&&manualCandidate?.confirmed);
   const indicator=$('td63SelectedReplacement');
-  if(indicator)indicator.textContent=p&&!sameMon(a,p)?'Planned: '+td41PokemonLabel(p.name):'';
+  if(indicator)indicator.textContent=p&&!manualCandidate?.confirmed&&!sameMon(a,p)?'Planned: '+td41PokemonLabel(p.name):'';
  }
  page.addEventListener('click',e=>{
   const link=e.target.closest('[data-td74-dex-map]');
@@ -4476,10 +4484,14 @@ document.addEventListener('keydown',event=>{
    if(timing?.text)routes.push({label:'Acquisition requirements',rank:timing.rank,details:timing.requirements||[timing.text]});
    if(!routes.length&&methods.length)routes.push({label:'Acquisition timing unverified'});
   }
+  if(methods.some(([method,n])=>method==='level-up'&&n===0)&&lineage(p.id).size>1)
+   routes.push({label:'Learns upon evolution'});
   if(!routes.length&&!before)return '';
-  const index=routes.findIndex(route=>/^(?:TM|HM)\d*\b/.test(route.label));
+  const index=routes.findIndex(route=>/^(?:TM|HM)\d*\b/.test(route.label)||route.label==='Learns upon evolution');
   if(index>0)routes.unshift(...routes.splice(index,1));
   const heading=route=>{
+   if(route.label==='Tutor')return 'Move Tutor';
+   if(route.label==='Move Reminder')return route.label;
    if(!route.level)return [route.label,route.place].filter(Boolean).join(' · ');
    if(level!=null&&level>=route.level)return 'Level-up at Lv. '+route.level+' · Level reached';
    return 'Learns at Lv. '+route.level+(level!=null?' · '+(route.level-level)+' to go':'');
@@ -4661,6 +4673,11 @@ document.addEventListener('keydown',event=>{
    <table><thead><tr><th>Stat</th><th>Before</th><th>After</th><th>Δ</th></tr></thead><tbody>${[...rows,['BST',before,after]].map(([label,x,y])=>
     `<tr><th scope="row">${label}</th><td>${x}</td><td>${y}</td><td class="${y>x?'td41-good':y<x?'td63-danger':''}">${signed(y-x)}</td></tr>`).join('')}</tbody></table></details>`;
  }
+ function improvementMoveCard(name,against){
+  const move=info(name);
+  if(!move)return moveChip(name,true);
+  return `<button type="button" class="td77-planner-move-info td774-move-lines" data-td77-plan-move="${safe(name)}">${compactMoveLines({...move,name},pretty(name),against?info(against):null)}</button>`;
+ }
  function renderImprovements(profile){
   const host=$('td77Improvements'),proposals=[],gen=gameGeneration(state.game),g=state.game;
   const selected=host.querySelector('[data-td77-apply-move]:focus')?.dataset.td77ApplyMove;
@@ -4674,7 +4691,7 @@ document.addEventListener('keydown',event=>{
    const move=(r.prev?safe(pretty(r.prev))+' → ':'Add ')+safe(pretty(r.name));
    proposals.push({kind:"move",score:r.score+2,html:`<details><summary>${safe(td41PokemonLabel(r.p.name))} · ${move}</summary>
     <div class="td79-move-compare">
-     ${moveChip(r.prev,true)}<span aria-hidden="true">→</span>${moveChip(r.name,true,r.prev)}
+     ${improvementMoveCard(r.prev)}<span aria-hidden="true">→</span>${improvementMoveCard(r.name,r.prev)}
     </div>
     ${improvementTypes('Coverage gained',r.added)}${improvementTypes('Coverage lost',r.lost,true)}
     ${!r.added.length?`<small>${safe(reason)}</small>`:''}
@@ -4721,15 +4738,14 @@ document.addEventListener('keydown',event=>{
      window.td62Progress.describe(route,effectiveProgress(),$('td77Availability').value),
      ...(route.steps||[]).map(step=>step.requirement)].filter(Boolean).join(' · ');
     const monCard=mon=>`<div><img src="${safe(sprite(mon))}" alt=""><strong>${safe(td41PokemonLabel(mon.name))}</strong><div class="pills">${mon.types.map(pill).join('')}</div></div>`;
-    const active=movesetView==='during'?duringLearner(p,i):p;
-    proposals.push({score:best.gain,render:rank=>`<details class="td772-team-proposal"><summary><span>${best.evolves?'Evolve ':''}${safe(td41PokemonLabel(p.name))} → ${safe(td41PokemonLabel(best.name))}</span></summary><div class="td43-candidate-pick">${recommendationHeader(best,active,{rank})}</div><div class="td79-pokemon-compare">${monCard(p)}<span aria-hidden="true">→</span>${monCard(best)}</div>${improvementBaseStats(p,best)}<div class="td78-benefits">${benefits}</div><small>${td77AcquisitionLinks(timing,g)}</small>${alternative?`<small>Also considered: ${safe(td41PokemonLabel(alternative.name))}</small>`:''}<button type="button" data-td77-improve="${i}" data-target="${safe(best.name)}">Preview ${best.evolves?'evolution':'replacement'}</button></details>`});
+    proposals.push({score:best.gain,html:`<details class="td772-team-proposal"><summary><span>${best.evolves?'Evolve ':''}${safe(td41PokemonLabel(p.name))} → ${safe(td41PokemonLabel(best.name))}</span></summary><div class="td79-pokemon-compare">${monCard(p)}<span aria-hidden="true">→</span>${monCard(best)}</div>${improvementBaseStats(p,best)}<div class="td78-benefits">${benefits}</div><small>${td77AcquisitionLinks(timing,g)}</small>${alternative?`<small>Also considered: ${safe(td41PokemonLabel(alternative.name))}</small>`:''}<button type="button" class="td774-secondary" data-td77-improve="${i}" data-target="${safe(best.name)}">Preview ${best.evolves?'evolution':'replacement'}</button></details>`});
    }
   }
   const shared=profile.weak.filter(r=>r.weak>1&&r.severity==='uncovered').sort((a,b)=>b.gap-a.gap)[0];
   if(shared){
-   const affected=state.slots.map((p,i)=>({p,i})).filter(r=>r.p&&matchupDefense(r.p,shared.type,gen)>1);
-   const open=affected.find(r=>!r.p.locked);
-   if(open)proposals.push({score:shared.weak*3,html:`<details><summary>Shared ${safe(pretty(shared.type))} weakness</summary><div class="td79-coverage">${pill(shared.type)} <small>${affected.map(r=>safe(td41PokemonLabel(r.p.name))).join(', ')}</small></div><button type="button" data-td77-improve="${open.i}" data-resist="${safe(shared.type)}">Review resistant replacements</button></details>`});
+    const affected=shared.members;
+   const open=affected.find(member=>!state.slots[member.planSlot]?.locked);
+   proposals.push({score:shared.weak*3,html:`<details data-td774-shared-weakness="${safe(shared.type)}"><summary>Shared ${safe(pretty(shared.type))} weakness</summary><div class="td79-coverage">${pill(shared.type)} <small>${shared.weak} weak · ${affected.map(member=>safe(td41PokemonLabel(member.name))).join(', ')}</small></div>${open?`<button type="button" class="td774-secondary" data-td77-improve="${open.planSlot}" data-resist="${safe(shared.type)}">Review resistant replacements</button>`:''}</details>`});
   }
   const resourceNotes=[];
   for(const [name,users] of plannedMachineCopies(g)){
@@ -4751,7 +4767,7 @@ document.addEventListener('keydown',event=>{
   const resourceCount=(resources.match(/data-td77-resource=/g)||[]).length+resourceNotes.length;
   const category=(title,count,content)=>`<details class="td42-settings td78-category"><summary>${title} <small>(${count})</small></summary>${content||'<small>None identified</small>'}</details>`;
   $('td77ImprovementSummary').textContent=(!pack||!improvementIndex||!result.ready)?'Checking improvements…':proposals.length?proposals.length+' to review':'Review team changes';
-  host.innerHTML=category('Pokémon improvements',pokemon.length,pokemon.map((p,i)=>p.render?p.render(i+1):p.html).join(''))+
+  host.innerHTML=category('Pokémon improvements',pokemon.length,pokemon.map(p=>p.html).join(''))+
    category('Move improvements',moves.length,result&&!result.ready?'<small>Evaluating Pokémon moves…</small>':moves.map(p=>p.html).join(''))+
    category('Required resources',resourceCount,resources+resourceNotes.map(note=>`<details><summary class="td41-warn">${safe(note.split(': ')[0])} · allocation conflict</summary><small>${safe(note)}</small></details>`).join(''));
   for(const summary of host.querySelectorAll('details > summary')){
@@ -4781,9 +4797,56 @@ document.addEventListener('keydown',event=>{
    if(!p)return [];
    const learner=movesetView==='during'?duringLearner(p,i):p;
    const member=ownedFor(p,i);
-   return [chosenRoute(p,true,i)?.initial.kind==='owned'&&sameMon(member,learner)?
-    {...learner,ability:member.ability,baseStats:learner.baseStats||member.baseStats}:learner];
+   const planned={...learner,planSlot:i};
+   if(chosenRoute(p,true,i)?.initial.kind==='owned'&&sameMon(member,learner)){
+    planned.ability=member.ability;planned.baseStats=learner.baseStats||member.baseStats;
+   }
+   return [planned];
   });
+ }
+ const moveNameWidth=document.createElement('canvas').getContext('2d');
+ function fitTileMoves(){
+  const grid=$('td4Slots');
+  const widths=new Map();
+  for(const chip of grid.querySelectorAll('.td42-tile-moves .movechip')){
+   const label=chip.firstElementChild;
+   if(!label||!chip.clientWidth)continue;
+   label.style.removeProperty('font-size');label.classList.remove('td774-single-line');
+   const css=getComputedStyle(label),box=getComputedStyle(chip);
+   const fontSize=parseFloat(css.fontSize),padding=parseFloat(box.paddingLeft)+parseFloat(box.paddingRight);
+   moveNameWidth.font=`${css.fontWeight} ${fontSize}px ${css.fontFamily}`;
+   widths.set(chip,{label,fontSize,padding,required:moveNameWidth.measureText(label.textContent).width});
+  }
+  for(const row of grid.querySelectorAll('.td43-tile-flow')){
+   const [from,to]=[row.firstElementChild,row.lastElementChild].map(chip=>widths.get(chip));
+   if(!from||!to)continue;
+   const share=Math.max(.32,Math.min(.68,(from.required+4)/(from.required+to.required+8)));
+   row.style.setProperty('--td774-from',share+'fr');
+   row.style.setProperty('--td774-to',1-share+'fr');
+  }
+  for(const [chip,{label,fontSize,padding,required}] of widths){
+   const width=chip.clientWidth-padding;
+   if(required<=width){label.classList.add('td774-single-line');continue;}
+   const fitted=Math.floor(fontSize*(width-1)/required*10)/10;
+   if(fitted>=10){label.style.fontSize=fitted+'px';label.classList.add('td774-single-line');}
+  }
+ }
+ new ResizeObserver(fitTileMoves).observe($('td4Slots'));
+ function evolutionArrow(from,to,route){
+  const steps=route?.steps||[];
+  const path=[{id:route?.startId},...steps];
+  const start=path.findIndex(stage=>stage.id===Number(from.id));
+  const end=path.findIndex(stage=>stage.id===Number(to.id));
+  const relevant=start>=0&&end>start?steps.slice(start,end):[];
+  if(!relevant.length)return '<span class="td42-arrow" aria-hidden="true">→</span>';
+  const requirement=relevant.at(-1).requirement;
+  const level=requirement.match(/^Level (\d+)$/i)?.[1];
+  const short=level?'Lv. '+level:/friendship/i.test(requirement)?'Friendship':/trade/i.test(requirement)?'Trade':/stone/i.test(requirement)?'Stone':'';
+  const full=relevant.map(step=>step.requirement).join(' → ');
+  return `<span class="td42-arrow td774-evolution-arrow" title="${safe(full)}">${short?`<small aria-hidden="true">${safe(short)}</small>`:''}<span aria-hidden="true">→</span><span class="td773-sr-only">${safe(full)}</span></span>`;
+ }
+ function plannerLockIcon(classes=''){
+  return `<svg class="${classes}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`;
  }
  function planArtwork(mon,stage='',active=false){
   return `<span class="td772-stage${active?' td772-active-stage':''}"${active?' aria-current="true"':''}><img alt="" src="${safe(sprite(mon))}"><strong>${safe(td41PokemonLabel(mon.name))}</strong><span class="pills">${(mon.types||[]).map(pill).join('')}</span><small class="td773-sr-only">${stage}</small></span>`;
@@ -4793,14 +4856,15 @@ document.addEventListener('keydown',event=>{
   if(!p)return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}"><strong>＋ Slot ${i+1}</strong></button>`;
   const during=duringLearner(p,i),isDuring=movesetView==='during',display=isDuring?during:p;
   const owned=ownedFor(p,i),transition=owned&&!sameMon(owned,display),route=chosenRoute(p,true,i);
-  const arrow='<span class="td42-arrow" aria-hidden="true">→</span>';
+  const arrow=evolutionArrow(transition?owned:during,transition?display:p,route);
   const dual=!owned&&p.duringTargetId&&!sameMon(during,p);
   const artwork=dual?planArtwork(during,'During game',isDuring)+arrow+planArtwork(p,'Final',!isDuring):
    transition?planArtwork(owned,'Actual')+arrow+planArtwork(display,isDuring?'During game':'Final',true):planArtwork(display);
-  const lock=p.locked?'<svg class="td81-plan-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Locked"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>':'';
+  const lock=p.locked?plannerLockIcon('td81-plan-lock')+'<span class="td773-sr-only">Locked</span>':'';
   const status=transition?(lineage(display.id).has(Number(owned.id))?'Planned evolution':'Planned replacement'):safe(progressFor(p));
   return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}" data-td77-hold>${lock}<div class="td42-mon-pair">${artwork}</div><div class="td772-plan-status"><small>${status}</small>${route?.steps.length&&route.initial.kind!=='owned'?`<small>Obtain ${safe(td41PokemonLabel(route.startName))}</small>`:''}${(route||acquisition(p)).rank>(deadlineRank()??10)?'<small class="td63-danger">After planning deadline</small>':''}</div><div class="td42-tile-moves">${alignedMoves(p,i).map(tileMove).join('')}</div></button>`;
  }).join('');
+ fitTileMoves();
  const filled=state.slots.filter(Boolean);
  const count=filled.filter((p)=>progressFor(p)==='On team').length;
  const acquired=filled.filter(p=>progressFor(p)!=='Planned').length;
@@ -4808,11 +4872,11 @@ document.addEventListener('keydown',event=>{
  const plannedMoveCount=activeMoves().length;
  const counter=(label,n,total)=>`<span><strong class="${countTone(n,total)}">${n}/${total}</strong><small>${label}</small></span>`;
  $('td4PlanProgress').innerHTML='<h4>Team Progress</h4><div>'+counter('Planned',filled.length,6)+counter('Acquired',acquired,6)+counter('Final forms',count,6)+'</div><div>'+counter('Moves planned',plannedMoveCount,24)+counter('Planned moves already known',learned,plannedMoveCount)+'</div>';
- const m=metrics(intendedTeam(),state.game),potentialStab=m.covered;$('td4Coverage').innerHTML=state.game?`${coveragePair('Potential STAB coverage',{types:metrics(actual()?.pokemon||[],state.game).covered},{types:potentialStab})}${coveragePair('Moveset coverage',coverageFor((actual()?.pokemon||[]).flatMap(p=>(p?.moves||[]).map(moveKey)).filter(Boolean)),coverageFor(activeMoves()))}<h4>Intended team · Defensive coverage</h4>${['uncovered','partial','compensated'].map((status,index)=>{
+ const m=metrics(intendedTeam(),state.game),potentialStab=m.covered;$('td4Coverage').innerHTML=state.game?`${coveragePair('Potential STAB coverage',{types:metrics(actual()?.pokemon||[],state.game).covered},{types:potentialStab})}${coveragePair('Moveset coverage',coverageFor((actual()?.pokemon||[]).flatMap(p=>(p?.moves||[]).map(moveKey)).filter(Boolean)),coverageFor(activeMoves()))}<section class="td774-defensive"><h4>Intended team · Defensive coverage</h4>${['uncovered','partial','compensated'].map((status,index)=>{
  const rows=m.weak.filter(x=>x.weak>1&&x.severity===status);
  return rows.length?'<h5>'+['Uncovered weaknesses','Partially compensated','Well compensated'][index]+'</h5>'+
  rows.map(x=>`<p>${pill(x.type)} ${x.weak} weak · ${x.resist-x.immune} resist · ${x.immune} immune</p>`).join(''):'';
- }).join('')||'<p>No shared weaknesses.</p>'}${m.filled.some(p=>roleTags(p).length)?`<details class="td42-settings"><summary>Team roles</summary>${['Physical','Special','Fast','Defensive'].map(r=>{const names=m.filled.filter(p=>roleTags(p).includes(r)).map(p=>safe(td41PokemonLabel(p.name)));return names.length?`<p><b>${r}</b> · ${names.join(', ')}</p>`:'';}).join('')}</details>`:''}`:'Choose a game.';placeInlineEditor();
+ }).join('')||'<p>No shared weaknesses.</p>'}</section>${m.filled.some(p=>roleTags(p).length)?`<details class="td42-settings"><summary>Team roles</summary>${['Physical','Special','Fast','Defensive'].map(r=>{const names=m.filled.filter(p=>roleTags(p).includes(r)).map(p=>safe(td41PokemonLabel(p.name)));return names.length?`<p><b>${r}</b> · ${names.join(', ')}</p>`:'';}).join('')}</details>`:''}`:'Choose a game.';placeInlineEditor();
  const typeCount=typesFor(state.game).length,moveCount=coverageFor(activeMoves()).types.length;
  const gaps=m.weak.filter(x=>x.weak>1&&x.severity==='uncovered').length;
  const partial=m.weak.filter(x=>x.weak>1&&x.severity==='partial').length;
@@ -4955,7 +5019,7 @@ document.addEventListener('keydown',event=>{
   const p=state?.slots[chosenSlot];
   if(!p)return;
   p.locked=!p.locked;persist();render();renderMoveSlots();
-  if(settings.open)findCandidates();
+  if(settings.open){restoreConfirmedPreview();findCandidates();}
  };
  let movesetView='final';
  $('td77MoveViews').onclick=e=>{
@@ -5093,6 +5157,7 @@ document.addEventListener('keydown',event=>{
  });
 
  function renderMoveSlots(){const host=$('td41MoveSlots'),p=state?.slots[chosenSlot],a=ownedFor(p,chosenSlot);$('td77Lock').hidden=!p;
+ $('td77Legendary').closest('label').hidden=!!p?.locked;
  renderFinalFormChoice(p);
  $('td77Lock').textContent=p?.locked?'Unlock Pokémon':'Lock Pokémon';
  $('td77Lock').setAttribute('aria-pressed',String(!!p?.locked));
@@ -5138,10 +5203,10 @@ document.addEventListener('keydown',event=>{
  }
  $('td5TeamProposals').addEventListener('click',e=>{
   const button=e.target.closest('[data-td64-alt]');
-  if(button)applyMoveImprovement(suggestedMoveProposals[+button.dataset.td64Alt]);
+  if(button)applyMoveImprovement(suggestedMoveProposals[+button.dataset.td64Alt],{fromSlot:true});
  });
- function applyMoveImprovement(r){
-  if(!r||r.view!==movesetView||r.p.locked||state.slots[r.i]!==r.p)return;
+ function applyMoveImprovement(r,{fromSlot=false}={}){
+  if(!r||r.view!==movesetView||state.slots[r.i]!==r.p||(fromSlot?r.i!==chosenSlot:r.p.locked))return;
   const planned=displayedMoves(r.p),move=planned[r.j];
   if(goal(move)!==r.prev||!moveRecommendations(r.i).proposals.some(p=>p.j===r.j&&p.name===r.name))return;
   const loss=r.lost.length?' Loses coverage against '+r.lost.map(pretty).join(', ')+'.':'';
@@ -5212,7 +5277,7 @@ document.addEventListener('keydown',event=>{
    .map(name=>({name,mon:td5Attacker(learner,i),slot:i})));
   const proposals=[];
   for(const [index,{i,p,learner,moves,pool,route}] of plans.entries()){
-   if(p.locked||onlySlot!=null&&i!==onlySlot)continue;
+   if(onlySlot==null?p.locked:i!==onlySlot)continue;
    const others=teamMoves.flatMap((rows,j)=>index===j?[]:rows),used=new Set(moves.map(goal).filter(Boolean));
    let best;
    for(const [j,move] of moves.entries()){
@@ -5446,22 +5511,31 @@ document.addEventListener('keydown',event=>{
  const conflict=ownershipConflict(d,i);
  const familyWarning=state.slots.some((p,slot)=>slot!==i&&p&&redundantFamily(d,p));
  manualCandidate={...d,acquisitionRoute:routeStore(route)||(selected?priorPlan.acquisitionRoute:null),confirmed:selected};
- const prior=selected?baseline:activePlan;
+ const previous=selected?baseline:activePlan;
+ const prior=previous&&!previous.baseStats&&previous.id!==d.id?
+  {...previous,baseStats:(await details(previous.canonicalName||previous.name,g).catch(()=>null))?.baseStats}:previous;
+ if(stamp!==token||run!==manualRun||i!==chosenSlot)return;
  const weaknesses=p=>p?typesFor(g).filter(t=>matchup(t,p.types,gameGeneration(g))>1):[];
  const oldWeak=weaknesses(prior),newWeak=weaknesses(d);
  const gains=oldWeak.filter(t=>!newWeak.includes(t)),losses=newWeak.filter(t=>!oldWeak.includes(t));
- const statChanges=prior?['attack','special-attack','speed'].map(key=>{
-  const start=prior.baseStats?.[key],end=d.baseStats?.[key];
-  return start!=null&&end!=null&&start!==end?pretty(key)+' '+start+' → '+end:'';
- }).filter(Boolean):[];
- const impact=[gains.length?'Removes weakness: '+gains.map(pretty).join(', '):'',
-  losses.length?'Adds weakness: '+losses.map(pretty).join(', '):'',...statChanges].filter(Boolean).join(' · ');
+ const statOrder=['attack','special-attack','speed','hp','defense','special-defense'];
+ const offense=statOrder.slice(0,3);
+ const changed=statOrder.flatMap(key=>{
+  const start=prior?.baseStats?.[key],end=d.baseStats?.[key];
+  return Number.isFinite(start)&&Number.isFinite(end)&&start!==end?[[key,start,end]]:[];
+ });
+ const relevant=changed.filter(([key])=>offense.includes(key));
+ const statChanges=relevant.length?relevant:changed;
+ const comparison=gains.length||losses.length||statChanges.length?`<details class="td773-disclosure td774-comparison"><summary><span>Comparison details</span></summary>
+  ${gains.length||losses.length?`<div class="td774-weak-compare">${[['Weaknesses removed',gains,'td41-good'],['Weaknesses added',losses,'td63-danger']].map(([title,types,tone])=>
+   types.length?`<div><small class="${tone}">${title}</small><div class="pills">${types.map(pill).join('')}</div></div>`:'').join('')}</div>`:''}
+  ${statChanges.length?`<div class="td774-stat-tiles">${statChanges.map(([key,start,end])=>`<div><small>${safe(key==='special-attack'?'Sp. Attack':key==='special-defense'?'Sp. Defense':pretty(key))}</small><b>${start} → ${end}</b><small class="${end>start?'td41-good':'td63-danger'}">${end>start?'+':'−'}${Math.abs(end-start)}</small></div>`).join('')}</div>`:''}</details>`:'';
  const endpoints=selected?[]:manualEndpoints(d,route);
  const evolution=endpoints.length?`<div class="td77-candidate-actions td772-evolution-choices"><strong>Evolution options</strong>${endpoints.map(({target,path})=>
-  `<div><b>${safe(evolutionPath(path))}</b><small>${evolutionRequirements(path)}</small>${routeFits(path)?'':`<small class="td63-danger">${safe(routeRestriction(path))}</small>`}<button type="button" data-td77-plan-endpoint="${safe(target.name)}" data-route="${safe(path.id)}">Plan ${safe(td41PokemonLabel(target.name))}</button></div>`).join('')}</div>`:'';
+  `<div><div class="td774-evolution-choice"><b>${safe(evolutionPath(path))}</b><button type="button" class="td774-secondary" aria-label="Plan ${safe(td41PokemonLabel(target.name))}" data-td77-plan-endpoint="${safe(target.name)}" data-route="${safe(path.id)}">Plan ›</button></div><small>${evolutionRequirements(path)}</small>${routeFits(path)?'':`<small class="td63-danger">${safe(routeRestriction(path))}</small>`}</div>`).join('')}</div>`:'';
  const conflictNotice=conflict&&!selected?`<div class="td77-candidate-actions"><small class="td41-warn">${safe(td41PokemonLabel(conflict.member.name))} is assigned to another team slot.</small><button type="button" data-td77-evolve-slot="${conflict.slot}">Plan evolution in ${safe(td41PokemonLabel(conflict.member.name))}’s slot</button></div>`:'';
  const actionLabel=selected?'Selected':endpoints.length?'Keep '+td41PokemonLabel(d.name):conflict&&route?'Obtain another '+td41PokemonLabel(d.name):'Select '+td41PokemonLabel(d.name);
- host.innerHTML=`<div class="td43-candidate" data-td77-preview-context><div class="td43-candidate-pick" tabindex="0">${recommendationHeader(d,activePlan,{action:selected?'Selected':''})}</div>${impact?`<small>${safe(impact)}</small>`:''}<div data-td77-preview-route>${routeEditor(manualCandidate,selected?'confirmed':'preview')}</div>${selected?'':coverageDisclosure(i,d)}${conflictNotice}${earlierStage(d,priorPlan)?'<small class="td41-warn">'+safe(td41PokemonLabel(d.name))+' is an earlier evolutionary stage of planned '+safe(td41PokemonLabel(priorPlan.name))+'.</small>':''}${evolution}${familyWarning?'<small class="td63-danger td77-family-warning">This evolutionary family is already represented in the plan.</small>':''}<div class="bar"><button type="button" data-td63-manual-select ${selected||conflict&&!route?'disabled':''}>${safe(actionLabel)}</button>${selected?'':'<button type="button" data-td77-cancel-preview>Cancel</button>'}</div></div>`;
+ host.innerHTML=`<div class="td43-candidate" data-td77-preview-context><div class="td43-candidate-pick" tabindex="0">${recommendationHeader(d,activePlan,{action:selected?'✓ Selected':''})}</div>${comparison}<div data-td77-preview-route>${routeEditor(manualCandidate,selected?'confirmed':'preview')}</div>${selected?'':coverageDisclosure(i,d)}${conflictNotice}${earlierStage(d,priorPlan)?'<small class="td41-warn">'+safe(td41PokemonLabel(d.name))+' is an earlier evolutionary stage of planned '+safe(td41PokemonLabel(priorPlan.name))+'.</small>':''}${evolution}${familyWarning?'<small class="td63-danger td77-family-warning">This evolutionary family is already represented in the plan.</small>':''} ${selected?'':`<div class="bar td774-preview-actions"><button type="button" data-td63-manual-select ${conflict&&!route?'disabled':''}>${safe(actionLabel)}</button><button type="button" class="td774-secondary" data-td77-cancel-preview>Cancel</button></div>`}</div>`;
  if(!selected&&route)recommendationAttacks(d,i,g,movesetView==='during',route).then(attacks=>{
   if(stamp===token&&run===manualRun&&attacks)host.querySelector('.td773-coverage-body').innerHTML=candidateCoverageCopy(i,d,attacks);
  }).catch(()=>{});
@@ -5660,13 +5734,21 @@ document.addEventListener('keydown',event=>{
    ];
    return [[label,gained,lost]];
   }).filter(([,gained,lost])=>gained.length||lost.length);
+  if(!state.slots[index]){
+   const short=['Defense','Potential offense','STAB types','Potential SE STAB','Coverage gains STAB'];
+   const names=[...Object.values(labels),'Existing coverage gains STAB'];
+   const gains=groups.filter(([,types])=>types.length);
+   return gains.length?`<div class="td774-gains">${gains.map(([label,types])=>
+    `<section><h4 title="${label}">${short[names.indexOf(label)]}</h4><div>${types.map(pill).join('')}</div></section>`).join('')}</div>`:
+    `<small>${attackTypes?'No coverage gained':'No defensive gains. Move coverage may still be loading or unverified.'}</small>`;
+  }
   const badges=types=>types.length?types.map(pill).join(''):'<span aria-label="None">—</span>';
   return groups.length?`<div class="td773-coverage-grid"><span class="td41-good">+ Gained</span><span class="td63-danger">− Lost</span>
    ${groups.map(([label,gained,lost])=>`<section><h4>${label}</h4><div>${badges(gained)}</div><div>${badges(lost)}</div></section>`).join('')}</div>`:
    `<small>${attackTypes?'No coverage changes':'No defensive changes. Move coverage may still be loading or unverified.'}</small>`;
  }
  function coverageDisclosure(index,mon,open=false){
-  return `<details class="td773-coverage td773-disclosure"${open?' open':''}><summary><span>Coverage changes</span></summary><div class="td773-coverage-body">${candidateCoverageCopy(index,mon,null)}</div></details>`;
+  return `<details class="td773-coverage td773-disclosure"${open?' open':''}><summary><span>${state.slots[index]?'Coverage changes':'Coverage gained'}</span></summary><div class="td773-coverage-body">${candidateCoverageCopy(index,mon,null)}</div></details>`;
  }
  async function recommendationAttacks(mon,slot,g,during,route){
   if(!route)return null;
@@ -6025,7 +6107,7 @@ document.addEventListener('keydown',event=>{
   if(recommendationContext!==context)expandedRecommendations.clear();
   recommendationContext=context;
   candidates.innerHTML='';
-  if(state.slots[i]?.locked){host.textContent='Locked Pokémon · Unlock for replacement suggestions.';return;}
+  if(state.slots[i]?.locked){host.innerHTML=plannerLockIcon('td774-lock-status')+' Replacement locked';return;}
   host.textContent='Loading candidates…';
   const valid=()=>my===token&&run===rankRun&&i===chosenSlot;
   let catalog=pack;
