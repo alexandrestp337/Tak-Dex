@@ -645,3 +645,9 @@ The focused browser runner uses synthetic, checksum-valid Black 2 raw saves thro
 | V76/V77 Node suites with four reference saves | 60 passed. |
 | Same-origin stable-to-RC cache upgrade | Pass. Offline boot and retention of saved teams, plans and pack data. |
 | Physical Samsung, native file access, PC boxes and full remote pack downloads | Not tested. |
+
+## V77.2.1-STABLE release
+
+The user accepted RC1 at `0635cb17175f7f23350bd0b09b5e5990e5ac13f2`. Manual checks passed for plan preservation, replacement recognition and general stability. Temporary party members and Gym readiness passed focused browser verification and were not tested manually.
+
+Stable promotion changes only release documentation, version labels, asset URLs and the cache namespace `takdex-v77.2.1-stable`. Syntax and diff checks passed. A same-origin browser upgrade from V77.2-STABLE verified offline boot and retained saved teams, plans and pack data. Production publishes through GitHub Pages from `main`.
