@@ -11,7 +11,9 @@ const {chromium}=require('playwright-core');
   await page.goto(url,{waitUntil:'domcontentloaded'});
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-  assert.ok(await page.evaluate(async()=>(await caches.keys()).includes('takdex-v77.2-rc.1')));
+  const version=await page.locator('meta[name="takdex-version"]').getAttribute('content');
+  const cache='takdex-'+version.toLowerCase().replace(/ rc(\d+)$/,'-rc.$1');
+  assert.ok(await page.evaluate(async name=>(await caches.keys()).includes(name),cache));
   const open=async(game)=>{
    await page.locator('#moreTab').click();
    await page.locator('#td59OpenOffline').click();

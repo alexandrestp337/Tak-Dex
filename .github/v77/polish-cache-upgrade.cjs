@@ -4,6 +4,9 @@ const {chromium}=require('playwright-core');
 
 (async()=>{
  const [stable,candidate]=process.argv.slice(2).map(url=>new URL(url));
+ const priorCache=process.env.TAKDEX_PRIOR_CACHE||'takdex-v77.1-stable';
+ const nextCache=process.env.TAKDEX_NEXT_CACHE||'takdex-v77.2-rc.1';
+ const nextVersion=process.env.TAKDEX_NEXT_VERSION||'V77.2 RC1';
  let upstream=stable;
  const server=http.createServer((req,res)=>{
   const source=http.get(new URL(req.url,upstream),response=>{
@@ -29,7 +32,7 @@ const {chromium}=require('playwright-core');
    }
    throw new Error('Service worker did not finish activating '+name);
   };
-  await controlled('takdex-v77.1-stable');
+  await controlled(priorCache);
   const data=await page.evaluate(async()=>{
    const teams=JSON.stringify([{id:'upgrade',game:'Black 2',name:'Upgrade sample',pokemon:[null,null,null,null,null,null]}]);
    const plans=JSON.stringify({'Black 2:upgrade':{game:'Black 2',slots:[],mode:'during'}});
@@ -43,15 +46,15 @@ const {chromium}=require('playwright-core');
    const registration=await navigator.serviceWorker.getRegistration();
    await registration.update();
   });
-  await controlled('takdex-v77.2-rc.1','takdex-v77.1-stable');
+  await controlled(nextCache,priorCache);
   await page.context().setOffline(true);
   await page.reload({waitUntil:'domcontentloaded'});
-  assert.equal(await page.locator('meta[name="takdex-version"]').getAttribute('content'),'V77.2 RC1');
+  assert.equal(await page.locator('meta[name="takdex-version"]').getAttribute('content'),nextVersion);
   assert.deepEqual(await page.evaluate(async()=>({
    teams:localStorage.getItem('poketact-teams'),
    plans:localStorage.getItem('takdex-v74-playthrough-plans'),
    pack:await (await (await caches.open('takdex-reference-v58-black-2')).match('/retained-pack-test')).text()
   })),{...data,pack:'saved'});
-  console.log('V77.1 → V77.2 service worker update, retired shell cache, offline boot, saved team, plan and pack retention passed.');
+  console.log(priorCache+' → '+nextCache+': service worker update, offline boot, saved team, plan and pack retention passed.');
  }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
