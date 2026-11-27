@@ -636,3 +636,12 @@ A confirmed acquisition now records its fulfilled PID and last observed stage se
 [Stable reproduction](ownership-evidence/baseline.png) · [360 px fulfilled](ownership-evidence/360-fulfilled.png) · [412 px fulfilled](ownership-evidence/412-fulfilled.png) · [360 px ambiguity](ownership-evidence/360-ambiguity.png) · [412 px ambiguity](ownership-evidence/412-ambiguity.png)
 
 The focused browser runner uses synthetic, checksum-valid Black 2 raw saves through the file picker and shared linked-save synchronization API. The selected Sandile route is the existing Route 4 record. The Node suites also use four reference saves. These checks exercise web parsing and ingestion. Native file access, physical Samsung behavior, PC-box contents and complete remote pack downloads were outside verification. The service-worker cache is `takdex-v77.2.1-rc.1`. Production remains on V77.2-STABLE.
+
+| Verification | Result |
+| --- | --- |
+| Stable browser reproduction | Pass. The before image shows actual Purrloin and “Obtain Sandile” after both Pokémon were imported. |
+| Focused ownership browser at 360 and 412 CSS px | Pass. Covered initial import, linked refresh, an unplanned Patrat changing Actual Gym coverage, unchanged Planned Gym coverage, empty slots, coexisting origin and target, later-stage acquisition, same-PID evolution, absence and return, order changes, competing plans, distinct PIDs of the same species, persisted confirmation and dismissal, move retention and preserved intent. |
+| Existing targeted planner, maintenance and Move Checker flows | Pass. Independent evolution targets, explicit replacement and Reset, readiness, resource accounting, scroll anchors and contextual return. |
+| V76/V77 Node suites with four reference saves | 60 passed. |
+| Same-origin stable-to-RC cache upgrade | Pass. Offline boot and retention of saved teams, plans and pack data. |
+| Physical Samsung, native file access, PC boxes and full remote pack downloads | Not tested. |
