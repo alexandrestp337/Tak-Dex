@@ -76,7 +76,14 @@ const store = 'takdex-v74-playthrough-plans';
    await choice.selectOption('196');
    await expect(0,196,133);
    await view('during');
+   const plannedTypeCount=page.locator('#td4Coverage .td42-coverage').filter({hasText:'Potential STAB coverage'})
+    .locator('.td44-cover-col').last().locator('strong');
+   assert.match(await plannedTypeCount.textContent(),/^0\//);
    await pair(0,'Eevee','Espeon');
+   assert.match(await plannedTypeCount.textContent(),/^2\//);
+   assert.equal((await tile(0).textContent()).match(/Obtain Eevee/g).length,1);
+   const modes=(await read()).slots[0];
+   assert.notDeepEqual(modes.duringMoves,modes.plannedMoves);
 
    await select(1,'espeon',196);
    await view('during');
