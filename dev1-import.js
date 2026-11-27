@@ -8,7 +8,7 @@
  const string=(v,path,max,required=false)=>{if(typeof v!=='string'||v.length>max||required&&!v.trim())fail(path);};
  const integer=(v,path,min,max)=>{if(!Number.isInteger(v)||v<min||v>max)fail(path);};
  const enumValue=(v,path,allowed)=>{if(!allowed.includes(v))fail(path);};
- function inspect(value,path,depth=0){
+ function inspect(value,path,depth=0,learnsetKeys=false){
   if(depth>14)fail(path);
   if(typeof value==='string'){string(value,path,12000);return;}
   if(typeof value==='number'){if(!Number.isFinite(value)||Math.abs(value)>Number.MAX_SAFE_INTEGER)fail(path);return;}
@@ -21,8 +21,9 @@
   for(const [key,item] of Object.entries(value)){
    if(key.length>200||['__proto__','constructor','prototype'].includes(key))fail(path);
    const child=path+'.'+key;
-   if(item!=null&&/(?:^url$|^href$|^image$|^sprite$|url$|^front_)/i.test(key))resource(item,child);
-   inspect(item,child,depth+1);
+   // Learnset dictionaries use move slugs as keys, including defense-curl.
+   if(!learnsetKeys&&item!=null&&/(?:^url$|^href$|^image$|^sprite$|url$|^front_)/i.test(key))resource(item,child);
+   inspect(item,child,depth+1,key==='learnMethods'||key==='learnBefore');
   }
  }
  function resource(value,path){

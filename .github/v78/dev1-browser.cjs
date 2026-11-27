@@ -253,6 +253,34 @@ async function recoveryAndNative(browser){
   await upload(JSON.stringify({format:'takdex-team',version:1,team:{name:'Legacy v1',game,pokemon:[]}}));
   await p.locator('#newDialog').waitFor({state:'hidden'});
   assert.ok(Object.values((await State(p)).teams).some(row=>row.value?.name==='Legacy v1'));
+  const localOnly={format:'takdex-team',version:2,team:{name:'Defense Curl fixture',game,pokemon:[]},
+   plan:{game,deadline:'actual',mode:'during',slots:[null,null,null,{
+    id:500,name:'emboar',types:['fire','fighting'],duringTargetId:499,duringSpecies:'pignite',locked:true,
+    acquisitionRoute:{id:'498|gift|Aspertia City|5|5',startId:498},
+    learnMethods:{'defense-curl':[['level-up',13]]},learnBefore:{'defense-curl':'tepig'},
+    finalLearnset:{legalMoves:['defense-curl'],learnMethods:{'defense-curl':[['level-up',13],['level-up',13]],tackle:[]}},
+    duringMoves:[{move:'tackle',purpose:'keep'}],plannedMoves:[{move:'defense-curl',purpose:'keep'}]
+   }]}};
+  await upload(JSON.stringify(localOnly));
+  await p.locator('#newDialog').waitFor({state:'hidden'});
+  const originalId=Object.values((await State(p)).teams).find(row=>row.value?.name==='Defense Curl fixture').value.id;
+  const download=p.waitForEvent('download');
+  await p.locator('[data-export-card="'+originalId+'"]').click();
+  const raw=require('node:fs').readFileSync(await (await download).path(),'utf8');
+  assert.deepEqual(JSON.parse(raw).plan,localOnly.plan);
+  await upload(raw);
+  await p.locator('#newDialog').waitFor({state:'hidden'});
+  await p.reload();
+  const roundTrip=await State(p);
+  const duplicates=Object.values(roundTrip.teams).filter(row=>row.value?.name==='Defense Curl fixture');
+  assert.equal(duplicates.length,2);
+  for(const {value:team} of duplicates){
+   assert.deepEqual(roundTrip.plans[game+':'+team.id].value,localOnly.plan);
+   assert.equal(roundTrip.links[team.id],undefined);
+  }
+  await rejectFile(JSON.stringify({...localOnly,plan:{...localOnly.plan,slots:[{...localOnly.plan.slots[3],
+   learnMethods:{'defense-curl':[['level-up','13']]}}]}}));
+  console.log('Defense Curl: normal file picker, exporter, reimport, distinct IDs and persisted plan passed.');
   const count=Object.values((await State(p)).teams).filter(row=>row.value).length;
   await rejectFile(JSON.stringify({...imported,team:{...imported.team,pokemon:[{id:9,name:'Blastoise',types:['water'],moves:[{name:'Surf',accuracy:999}]}]}}));
   await rejectFile(' '.repeat(2000001));
@@ -263,7 +291,7 @@ async function recoveryAndNative(browser){
   const failedImport=JSON.stringify({...imported,team:{...imported.team,name:'Must roll back'}});
   await rejectFile(failedImport);
   await p.reload();
-  assert.equal(Object.values((await State(p)).plans).filter(row=>row.value).length,1);
+  assert.equal(Object.values((await State(p)).plans).filter(row=>row.value).length,3);
   assert.equal(Object.values((await State(p)).teams).filter(row=>row.value).length,count);
   const fallback=await p.evaluate(async()=>{
    const reader=takDexStorageV78.create({storage:localStorage});
