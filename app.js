@@ -2932,7 +2932,8 @@ update();
  async function clearAll(){MEM.clear();if('caches' in window)await caches.delete(CACHE);window.dispatchEvent(new Event('td58-pack-update'))}
  async function count(){let total=0;for(const g of games)if(await cached(g))total++;return total}
  function format(records,game,routes=[]){
-  return (records||[]).map(r=>{
+  return (records||[]).map(raw=>{
+   const r=window.takDexAcquisitionV77?.encounterDisplay(game,raw)||raw;
    const progress=window.td62Progress;
    const audited=routes.find(route=>td77SameAcquisition(r,route,game));
    const detail=audited?[progress.milestone(audited.rank),audited.note].filter(Boolean).join(' · '):

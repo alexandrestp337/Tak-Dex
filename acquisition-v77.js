@@ -298,10 +298,18 @@
   const note=[area?.[1],gate[1]].filter(Boolean).join(' ');
   return {...early(Math.max(area?.[0]??0,gate[0]),placeName(place),method,note),source:'xy-opening-area-and-method'};
  }
+ // The bundled X/Y fossil rows describe the fossil pickup rather than Pokémon revival.
+ function encounterDisplay(game,row){
+  if(isKalos(game)&&row[0]==='glittering-cave · unknown-area-303'&&row[1]==='gift'&&row[2]===20&&row[3]===20){
+   return ['ambrette-town','fossil',...row.slice(2)];
+  }
+  return row;
+ }
  // A Safari depends on the player's friend list, so it is never an unconditional planner route.
  function conditionalEncounterNote(game,row){
   const [place,method,min,max,conditions=[]]=row;
   if(!isKalos(game))return '';
+  if(method==='fossil'&&place==='ambrette-town')return 'After badge 1 · Choose the matching Jaw or Sail Fossil in Glittering Cave and revive it at the Ambrette Fossil Lab.';
   if(method==='gift'&&place==='aquacorde-town')return 'Start of game · Choose one Kalos starter.';
   if(method==='gift'&&place==='lumiose-city')return 'After badge 1 · Battle Professor Sycamore and choose one Kanto starter.';
   if(method==='static'&&conditions.includes('story-progress-hall-of-fame'))return 'Postgame · Enter the Hall of Fame.';
@@ -1653,5 +1661,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  }
  root.takDexAcquisitionV77={coverage:game=>['Black','White','Black 2','White 2'].includes(game)?'Curated Unova locations, requirements and evolution paths · Partial':
   ['Platinum','HeartGold','SoulSilver','Emerald'].includes(game)?'Selected routes and progression rules · Partial':'Encounter and evolution records where indexed',
-  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,conditionalEncounterNote,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
+  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,encounterDisplay,conditionalEncounterNote,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
 })(globalThis);
