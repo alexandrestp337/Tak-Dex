@@ -76,7 +76,8 @@ async function ui(browser,width,light){
  });
  assert.ok(contrast>=4.5,contrast);
  await openPlanner(page);
- assert.equal(await page.locator('#td4Slots [data-td4-slot]').filter({hasText:'＋ Slot'}).count(),6);
+ assert.equal(await page.locator('#td4Slots [data-td4-slot]').filter({hasText:'＋ Slot'}).count(),5);
+ assert.ok((await plan(page)).slots.every(p=>p===null));
  await page.locator('#td77MoveViews [data-view="during"]').click();
  await page.locator('#td77Availability').selectOption('badge-3');
  await openSlot(page,0);
@@ -141,7 +142,7 @@ async function ui(browser,width,light){
  await page.locator('#td78RemovePlan').evaluate(el=>el.scrollIntoView({block:'center'}));
  await page.locator('#td78RemovePlan').click();
  await confirm(page,'Remove');
- await tile(page,0).getByText('＋ Slot 1').waitFor();
+ await tile(page,0).getByText('＋ Plan Final').waitFor();
  assert.equal((await plan(page)).slots[0],null);
  await page.locator('#td77MoveViews [data-view="during"]').click();
  await tile(page,0).getByText('Psyduck').waitFor();
@@ -203,6 +204,6 @@ async function ui(browser,width,light){
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
-  for(const [width,light] of [[360,false],[360,true],[412,false],[412,true]])await ui(browser,width,light);
+  for(const [width,light] of (process.env.TAKDEX_WIDTH?[[Number(process.env.TAKDEX_WIDTH),false]]:[[360,false],[360,true],[412,false],[412,true]]))await ui(browser,width,light);
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

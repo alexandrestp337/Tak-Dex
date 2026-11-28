@@ -1753,15 +1753,22 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td59Legend li span:first-child{flex:none}
 #td4TeamPlannerPage #td4Slots{row-gap:2px}
 #td4TeamPlannerPage #td4Slots>.td42-plan-tile{
- display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 8;
+ display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 9;
  row-gap:2px;min-height:0;margin-bottom:6px;padding:6px;align-content:start;
 }
 #td4TeamPlannerPage #td4Slots>.td42-plan-tile>strong{grid-row:1/-1;align-self:center;min-height:84px;display:grid;place-items:center}
 #td4TeamPlannerPage #td4Slots .td42-mon-pair{
- display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 3;min-height:0;row-gap:2px
+ display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 4;min-height:0;row-gap:2px
 }
 #td4TeamPlannerPage #td4Slots .td42-mon-pair:has(>.td42-arrow){grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
-#td4TeamPlannerPage #td4Slots .td42-mon-pair .td773-sr-only{grid-row:2}
+#td4TeamPlannerPage #td4Slots .td42-mon-pair>.td772-stage{display:grid;grid-template-rows:subgrid}
+#td4TeamPlannerPage #td4Slots .td42-mon-pair .td78-stage-label{
+ grid-row:1;color:var(--muted);font-size:.62rem;line-height:1.1;text-align:center
+}
+#td4TeamPlannerPage #td4Slots .td42-mon-pair img{grid-row:2}
+#td4TeamPlannerPage #td4Slots .td42-mon-pair strong{grid-row:3}
+#td4TeamPlannerPage #td4Slots .td42-mon-pair .pills{grid-row:4}
+#td4TeamPlannerPage #td4Slots .td42-mon-pair>.td42-arrow{grid-row:2}
 #td4TeamPlannerPage #td4Slots .td42-tile-moves{grid-template-rows:subgrid;grid-row:span 4;row-gap:2px;margin:0}
 #td4TeamPlannerPage #td4Slots .td42-tile-moves>*{min-height:0;align-content:center}
 #td4TeamPlannerPage #td4Slots .td42-tile-moves .movechip{margin:0;padding-block:3px}
@@ -1807,7 +1814,7 @@ button:is(.td774-secondary,.td64-move-back,#td73DexReturn,#typeExplorerBack,#td4
  #cancelPoke,#td74BuilderDex,#td77Lock,[data-compare-cancel],[data-compare-confirm],[data-td77-action-dex]){
  background:var(--td-secondary-bg)!important;color:var(--text)!important;border:1px solid var(--edge)!important;box-shadow:none
 }
-button:is(#td4Clear,#td78RemovePlan,#td4Seed,#td59Delete,#td59Clear,.td7-danger-button,[data-delete]){
+button:is(.td78-remove-stage,#td4Seed,#td59Delete,#td59Clear,.td7-danger-button,[data-delete]){
  background:transparent!important;color:var(--danger,#ff6975)!important;border:1px solid var(--danger,#df465c)!important;box-shadow:none
 }
 button:is(.td774-secondary,#td77Lock,#mapsFullscreen):is([aria-pressed="true"],.selected){
@@ -2023,4 +2030,33 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
  border-color:var(--accent)
 }
 #td4Edit #td72MoveHeading .td7-reset-top #td78RemovePlan{position:static;white-space:nowrap}
-#td4Edit #td72MoveHeading .td7-reset-top{flex-wrap:wrap}
+#td4Edit #td72MoveHeading .td7-reset-top{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px
+}
+#td4Edit #td72MoveHeading .td7-reset-top button{width:100%!important;height:32px;justify-content:center;white-space:nowrap}
+#td63ManualCandidate .td78-remove-stage{min-height:28px;margin:2px 0 0;padding:2px 6px;font-size:.73rem}
+#td77ActiveTypes,.td78-move-badges{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0}
+.td78-move-badges:empty{display:none}
+.td78-move-badges:not(:empty){margin-bottom:5px}
+#td4TeamPlannerPage .td78-filter-chip{
+ display:inline-flex;align-items:center;gap:4px;min-height:27px;padding:0 4px 0 6px;font-size:.73rem;border:1px solid var(--c,var(--edge));border-radius:6px
+}
+#td4TeamPlannerPage .td78-filter-chip button{
+ margin:0;padding:0;width:20px;height:24px;min-height:0;background:transparent;color:inherit;border:0;box-shadow:none;font-size:1rem
+}
+#td4TeamPlannerPage #td77TypeOptions,#td4TeamPlannerPage #td4SearchResults{position:static;grid-column:1/-1;margin:0}
+#td4TeamPlannerPage #td77TypeOptions .td72-move-types{margin:3px 0}
+#td4TeamPlannerPage #td77FinalForm .td78-evolution-control{text-align:left;width:100%}
+.td78-evolution-dialog{width:min(94vw,420px);max-height:85dvh}
+.td78-evolution-options{display:grid;gap:5px;margin-bottom:8px}
+.td78-evolution-options button{width:100%;text-align:left}
+.td78-evolution-options small{display:block;padding-inline:6px}
+.td78-evolution-dialog [data-td78-evolution-cancel]{width:100%}
+#mapsPage{--td78-map-inset:8px}
+#mapsPage.td63-map-full :is(.td73-map-toolbar,#td76FullMapDetails){
+ left:var(--td78-map-inset);right:var(--td78-map-inset);width:min(calc(100% - 2 * var(--td78-map-inset)),440px);margin-inline:auto
+}
+#mapsPage.td63-map-full .td73-map-toolbar>span:not(#mapsZoomValue){width:100%;justify-content:space-between}
+@media(max-width:720px){
+ #mapsPage:not(.td63-map-full) #mapsDetails{margin-inline:13px}
+}

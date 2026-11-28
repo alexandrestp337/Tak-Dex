@@ -38,3 +38,35 @@ Independent stage selections are an additive field in version 2 team exports. Th
 4. Type “Dra” in Move Checker and open a result. Follow an acquisition location link and return. In Maps, try two Down arrows, Enter and Escape. In 6v6 confirm the chance still appears on the card.
 
 Production release and Android application work are outside this checkpoint.
+
+# V78 DEV4 RC2
+
+RC2 starts at `a46bd98d3c06f2cd408137c9ed87a7bb9198a1b7` and continues [draft PR #6](https://github.com/alexandrestp337/Tak-Dex/pull/6). The app cache is `takdex-v78.0.0-dev4-rc2`. The [private preview stamp](https://tak-dex-v77-development.freeclout8.chatgpt.site/preview-build.json) contains the packaged GitHub commit.
+
+## Implementation and evidence
+
+| Area | RC2 behavior |
+| --- | --- |
+| Planning stages | A single main card shows both distinct species in both tabs. Shared species use one artwork. The active tab displays its moves and controls. After removal, the other stage appears as a display fallback, with its moves available only in its own tab. When both stages are clear, any actual-party fallback remains display-only. Each stage retains its own acquisition, identity, lock and moves. |
+| Planner actions | Lock or Unlock, Reset, and Remove share an equal-width, text-only row. Disabled controls stay in place. Reset clears only active planned moves; Remove clears the active planned stage. The selected candidate card has the same Remove action beside its selected context, with acquisition controls preserved. |
+| Filters | Removed the match-all checkbox. Pokémon types and move types each use inclusive OR. Move categories use OR within their dedicated three-button row and AND against types, search and legal options. Compact badges retain individual clear targets when the panel closes. The shared funnel retains all three visual states. |
+| Recommendations | RC1 used a one-badge cap when no observed progress was present, limited the whole team to three results, and ranked against replacements before prioritizing empty move slots. RC2 uses the chosen deadline, or observed progress when no deadline was set, and projects the relevant acquisition stage. It offers each unlocked member’s best eligible fill before suggesting replacements. The team list also evaluates an open slot and weak-member replacements using verified acquisition and type-based composition. A needed, unused story HM can qualify in During game. Combat merit still gates Final HM replacements. |
+| Evolution selector | Eevee choices use the app’s custom dialog surface with current choice, Cancel, Escape, focus restoration, requirements, availability tones and verified map links. Timing-unverified options stay unavailable. A traced late path is labeled with its restriction. |
+| Move Checker | Direct search from More had assigned itself a contextual origin. Earthquake now opens without a contextual Back. Genuine origins keep the title-row Back and existing return state. The direct More page keeps its parent-menu control. |
+| Map and acquisition | The fullscreen toolbar and location details use shared horizontal extents. The corresponding mobile regular panels also align. Claydol’s route heading expresses level 36 once. The location, encounter levels and Relic Passage requirement remain visible. |
+| Identity | A PID or fallback name has to resolve to one party member, and a party member has to resolve to one active plan slot. Duplicate or indistinguishable matches stay unassigned. Distinct PIDs retain their own assignments after reordering. This uses the existing transaction, import format and read-only save workflow. |
+
+## Targeted verification
+
+- Rendered the supplied HTML at 360 and 412 CSS px. The reference uses three equal action columns, stage artwork side by side, badges directly below search, a separate category row and equal map insets. Chromium checked the corresponding geometry and flows at both widths in both themes. App action height is 32 px and funnels are 44 px square. The existing six-slot grid, artwork proportions, typography, theme palette and During game / Final tabs remain the production components. The illustrated demo buttons and tab styling are absent from the candidate.
+- Actual screenshots: [paired During artwork](rc2-evidence/360-dark-dual-during.png), [paired Final artwork](rc2-evidence/412-light-dual-final.png), [action row](rc2-evidence/360-dark-actions.png), [collapsed badges](rc2-evidence/360-dark-pokemon-badges.png), [opened Pokémon filters](rc2-evidence/412-light-pokemon-filters.png), [dedicated move categories](rc2-evidence/360-dark-move-filters.png), [Eevee dialog](rc2-evidence/412-light-evolution.png), [fullscreen map](rc2-evidence/412-light-fullscreen-map.png).
+- The same five-member Black 2 fixture returned three move suggestions on RC1, with no Purrloin suggestion. RC2 returned Psyduck Surf (11.91), Patrat Thunderbolt (11.50), Purrloin Sucker Punch (10.09) and Growlithe Strength (7.10). It also surfaced Add Nidoking for Slot 6 (77.19) and Patrat → Nidoking (58.52) as separate alternatives. No recommendation changed the saved plan. A start-of-game deadline excluded the later HMs and moves. A separate Final fixture with Zoroark and Espeon excluded weaker Cut replacements, and locked Patrat returned no move upgrade.
+- Synthetic save fixtures covered distinct Psyduck PIDs after reordering and duplicate PID ambiguity. The stage fixture exercised remove, reset, reload and save synchronization without converting a fallback into an explicit plan. The Claydol route fixture confirmed one level heading, the wild level range and navigation to Relic Castle. The previous DEV4 browser smoke passed at 360 CSS px. The focused import and save test suites passed all 10 cases. Syntax and diff checks passed.
+- Physical Android rendering and ActionMode remain DEV8 validation. These browser results are automated verification.
+
+## RC2 owner acceptance checklist
+
+1. Inspect a slot with different During and Final Pokémon in both tabs. Use Lock, Reset and Remove, including Remove from the selected preview. Reload and check the other stage, actual party and moves.
+2. Use multiple Pokémon and move filters. Collapse the panel and remove one badge. Check the dedicated category row and return from Move Checker with the previous editor state.
+3. Review a three-move Patrat, Purrloin or Growlithe and a five-member team. Inspect the proposed fill or replacement in each mode. Open Eevee’s evolution options and cancel or return from a linked location.
+4. Open Earthquake directly from More. Verify Map panel alignment and the Baltoy → Claydol route heading, encounter levels, requirement and Relic Castle link.
