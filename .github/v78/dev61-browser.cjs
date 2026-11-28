@@ -31,14 +31,17 @@ const url=process.argv[2]||'http://localhost:8919/';
      const check=(pack,id)=>pack.entries[id].filter(row=>row[0]===place).map(row=>provider.encounterRoute(pack.game,row)?.rank);
      const opening=new Set([place,'santalune-forest','kalos-route-3']);
      const counts=[x,y].map(pack=>Object.values(pack.entries).flat().filter(row=>opening.has(row[0])&&provider.encounterRoute(pack.game,row)).length);
-     const safari=[x,y].map(pack=>Object.values(pack.entries).flat().filter(row=>provider.conditionalEncounterNote(pack.game,row)).length);
+     const safari=[x,y].map(pack=>Object.values(pack.entries).flat().filter(row=>row[0].startsWith('friend-safari · ')&&provider.conditionalEncounterNote(pack.game,row)).length);
      const tutors=['X','Y','Omega Ruby'].map(game=>window.takDexTutorV73.inventory(game));
-     return {counts,safari,tutors,xWeedle:check(x,13),yWeedle:check(y,13),xCaterpie:check(x,10),yCaterpie:check(y,10),
+     const story=[x,y].map(pack=>Object.entries(pack.entries).flatMap(([id,rows])=>rows.map(row=>[Number(id),provider.encounterRoute(pack.game,row)]))
+      .filter(([,route])=>route?.source==='xy-story-gift-and-static').map(([id,route])=>[id,route.rank]).sort((a,b)=>a[0]-b[0]));
+     return {counts,safari,tutors,story,xWeedle:check(x,13),yWeedle:check(y,13),xCaterpie:check(x,10),yCaterpie:check(y,10),
       surf:provider.encounterRoute('X',x.entries[284].find(row=>row[0]==='kalos-route-3')),
       reminder:provider.moveReminder('Y'),oras:provider.moveReminder('Omega Ruby')};
     });
     assert.deepEqual(records.counts,[31,31]);
     assert.deepEqual(records.safari,[194,194]);
+    assert.deepEqual(records.story,[[[131,3],[143,1],[448,3],[716,7]],[[131,3],[143,1],[448,3],[717,7]]]);
     assert.deepEqual(records.tutors,[9,9,0]);
     assert.deepEqual([records.xWeedle,records.yWeedle,records.xCaterpie,records.yCaterpie],[[0],[],[],[0]]);
     assert.equal(records.surf.rank,3);
@@ -91,7 +94,7 @@ const url=process.argv[2]||'http://localhost:8919/';
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
    assert.equal(await page.evaluate(()=>window.takDexAcquisitionV77.machineLocation('Omega Ruby','hm03')),null);
    if(width===412&&light){
-    await page.waitForFunction(async()=>navigator.serviceWorker.controller&&await caches.has('takdex-v78.0.0-dev6.1.5'));
+    await page.waitForFunction(async()=>navigator.serviceWorker.controller&&await caches.has('takdex-v78.0.0-dev6.1.6'));
     await page.context().setOffline(true);
     await page.reload();
     assert.equal(await page.locator('meta[name="takdex-version"]').getAttribute('content'),'V78 DEV6.1');

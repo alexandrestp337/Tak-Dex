@@ -266,9 +266,18 @@
   'good-rod':[3,'Obtain the Good Rod at Coumarine City’s marina.'],
   'super-rod':[6,'Clear the Poké Ball Factory and obtain the Super Rod at the Route 16 Fishing Shack.']
  };
- function kalosOpeningRoute(row){
+ const kalosStoryEncounters={
+  'kalos-route-12':{gift:[3,'Receive Lapras west of the water after leaving Shalour City.']},
+  'tower-of-mastery':{gift:[3,'Earn the Rumble Badge and complete Korrina’s Mega Evolution battle.']},
+  'kalos-route-7':{static:[1,'Retrieve the Poké Flute from Parfum Palace to wake Snorlax.']},
+  'team-flare-secret-hq':{static:[7,'After the Psychic Badge, progress through Team Flare’s Secret HQ.']}
+ };
+ function kalosEncounterRoute(row){
   const [place,method,,,conditions=[]]=row;
-  if(!kalosOpeningAreas.has(place)||conditions.length)return null;
+  if(conditions.length)return null;
+  const story=kalosStoryEncounters[place]?.[method];
+  if(story)return {...early(story[0],placeName(place),method,story[1]),source:'xy-story-gift-and-static'};
+  if(!kalosOpeningAreas.has(place))return null;
   const gate=method==='walk'?[0,'']:place==='kalos-route-3'?kalosRoute3Methods[method]:null;
   if(!gate)return null;
   return {...early(gate[0],placeName(place),method,gate[1]),source:'xy-opening-area-and-method'};
@@ -276,14 +285,22 @@
  // A Safari depends on the player's friend list, so it is never an unconditional planner route.
  function conditionalEncounterNote(game,row){
   const [place,method,min,max,conditions=[]]=row;
-  if(!isKalos(game)||!place.startsWith('friend-safari · ')||method!=='walk'||min!==30||max!==30)return '';
+  if(!isKalos(game))return '';
+  if(method==='gift'&&place==='aquacorde-town')return 'Start of game · Choose one Kalos starter.';
+  if(method==='gift'&&place==='lumiose-city')return 'After badge 1 · Battle Professor Sycamore and choose one Kanto starter.';
+  if(method==='static'&&conditions.includes('story-progress-hall-of-fame'))return 'Postgame · Enter the Hall of Fame.';
+  if(method==='static'&&place==='sea-spirits-den'&&conditions.includes('other-found-11-times-roaming')){
+   return 'Postgame · Follow the roaming bird 11 times. The bird depends on your Kalos starter.';
+  }
+  if(method==='static'&&place==='roaming-kalos')return 'Postgame · Roaming sighting. Catch the bird later in Sea Spirit’s Den.';
+  if(!place.startsWith('friend-safari · ')||method!=='walk'||min!==30||max!==30)return '';
   const slot=conditions.length===1&&/^friend-safari-slot-([123])$/.exec(conditions[0]);
   if(!slot)return '';
   const access='Postgame · Kiloude City · Requires a registered friend with the matching Safari.';
   return slot[1]==='3'?access+' Slot 3 must already be unlocked or unlocked by meeting a Hall of Fame friend in local play.':access;
  }
  function encounterRoute(game,row){
-  if(isKalos(game))return kalosOpeningRoute(row);
+  if(isKalos(game))return kalosEncounterRoute(row);
   if(isKanto(game))return kantoRoute(game,row);
   if(isJohto(game))return johtoRoute(game,row);
   if(!['Black','White','Black 2','White 2'].includes(game))return null;

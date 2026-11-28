@@ -2,7 +2,7 @@
 import csv
 import json
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2] / 'db74'
@@ -38,6 +38,19 @@ def learnsets(group, index):
     }
 
 
+def encounter_groups(version, records, slots, areas, conditions):
+    grouped = {}
+    for row in records:
+        if row['version_id'] != version:
+            continue
+        key = (row['pokemon_id'], areas[row['location_area_id']], slots[row['encounter_slot_id']],
+               tuple(sorted(conditions[row['id']])))
+        low, high = int(row['min_level']), int(row['max_level'])
+        before = grouped.get(key)
+        grouped[key] = (min(low, before[0]), max(high, before[1])) if before else (low, high)
+    return grouped
+
+
 def inventory():
     index = bundled('index')
     machines = bundled('machines')
@@ -53,13 +66,27 @@ def inventory():
     methods = {r['id']: r['identifier'] for r in rows('encounter_methods')}
     slots = {r['id']: methods[r['encounter_method_id']] for r in rows('encounter_slots')}
     encounter_rows = list(rows('encounters'))
+    places = {r['id']: r['identifier'] for r in rows('locations')}
+    areas = {r['id']: ' · '.join(filter(None, (places[r['location_id']], r['identifier'])))
+             for r in rows('location_areas')}
+    values = {r['id']: r['identifier'] for r in rows('encounter_condition_values')}
+    conditions = defaultdict(list)
+    for row in rows('encounter_condition_value_map'):
+        conditions[row['encounter_id']].append(values[row['encounter_condition_value_id']])
     version_ids = {'x': '23', 'y': '24', 'omega-ruby': '25', 'alpha-sapphire': '26'}
     result = {'forms': {'base_and_non_battle_pokemon_ids_by_xy': len(ordinary),
                         'missing_from_index': sorted(ordinary - indexed)}}
     for game, version in version_ids.items():
         pack = bundled('e-' + game)
         source = Counter(slots[r['encounter_slot_id']] for r in encounter_rows if r['version_id'] == version)
-        result[game] = {'inventory': index['coverage'][game],
+        pinned = encounter_groups(version, encounter_rows, slots, areas, conditions)
+        local = {(pokemon, place, method, tuple(sorted(requirements))): (low, high)
+                 for pokemon, entries in pack['entries'].items()
+                 for place, method, low, high, requirements in entries}
+        parity = {'missing': len(pinned.keys() - local.keys()), 'extra': len(local.keys() - pinned.keys()),
+                  'level_range_disagreements': sum(local[k] != pinned[k] for k in local.keys() & pinned.keys()),
+                  'duplicate_keys': sum(len(entries) for entries in pack['entries'].values()) - len(local)}
+        result[game] = {'grouped_source_parity': parity, 'inventory': index['coverage'][game],
                         'bundled_method_groups': dict(sorted(Counter(row[1] for entries in pack['entries'].values() for row in entries).items())),
                         'source_method_rows': dict(sorted(source.items()))}
     for group in (15, 16):
