@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id), games=['Red','Blue','Yellow','Gold','Si
 const vg={'Red':'red-blue','Blue':'red-blue','Yellow':'yellow','Gold':'gold-silver','Silver':'gold-silver','Crystal':'crystal','Ruby':'ruby-sapphire','Sapphire':'ruby-sapphire','Emerald':'emerald','FireRed':'firered-leafgreen','LeafGreen':'firered-leafgreen','Diamond':'diamond-pearl','Pearl':'diamond-pearl','Platinum':'platinum','HeartGold':'heartgold-soulsilver','SoulSilver':'heartgold-soulsilver','Black':'black-white','White':'black-white','Black 2':'black-2-white-2','White 2':'black-2-white-2','X':'x-y','Y':'x-y','Omega Ruby':'omega-ruby-alpha-sapphire','Alpha Sapphire':'omega-ruby-alpha-sapphire','Sun':'sun-moon','Moon':'sun-moon','Ultra Sun':'ultra-sun-ultra-moon','Ultra Moon':'ultra-sun-ultra-moon','Sword':'sword-shield','Shield':'sword-shield','Brilliant Diamond':'brilliant-diamond-and-shining-pearl','Shining Pearl':'brilliant-diamond-and-shining-pearl','Scarlet':'scarlet-violet','Violet':'scarlet-violet'};
 const colors={normal:'#A8A77A',fire:'#EE8130',water:'#6390F0',electric:'#F7D02C',grass:'#7AC74C',ice:'#96D9D6',fighting:'#C22E28',poison:'#A33EA1',ground:'#E2BF65',flying:'#A98FF3',psychic:'#F95587',bug:'#A6B91A',rock:'#B6A136',ghost:'#735797',dragon:'#6F35FC',dark:'#705746',steel:'#B7B7CE',fairy:'#D685AD'};
 const chart={normal:{rock:.5,ghost:0,steel:.5},fire:{fire:.5,water:.5,grass:2,ice:2,bug:2,rock:.5,dragon:.5,steel:2},water:{fire:2,water:.5,grass:.5,ground:2,rock:2,dragon:.5},electric:{water:2,electric:.5,grass:.5,ground:0,flying:2,dragon:.5},grass:{fire:.5,water:2,grass:.5,poison:.5,ground:2,flying:.5,bug:.5,rock:2,dragon:.5,steel:.5},ice:{fire:.5,water:.5,grass:2,ice:.5,ground:2,flying:2,dragon:2,steel:.5},fighting:{normal:2,ice:2,rock:2,dark:2,steel:2,poison:.5,flying:.5,psychic:.5,bug:.5,ghost:0,fairy:.5},poison:{grass:2,poison:.5,ground:.5,rock:.5,ghost:.5,steel:0,fairy:2},ground:{fire:2,electric:2,grass:.5,poison:2,flying:0,bug:.5,rock:2,steel:2},flying:{electric:.5,grass:2,fighting:2,bug:2,rock:.5,steel:.5},psychic:{fighting:2,poison:2,psychic:.5,dark:0,steel:.5},bug:{fire:.5,grass:2,fighting:.5,poison:.5,flying:.5,psychic:2,ghost:.5,dark:2,steel:.5,fairy:.5},rock:{fire:2,ice:2,fighting:.5,ground:.5,flying:2,bug:2,steel:.5},ghost:{normal:0,psychic:2,ghost:2,dark:.5},dragon:{dragon:2,steel:.5,fairy:0},dark:{fighting:.5,psychic:2,ghost:2,dark:.5,fairy:.5},steel:{fire:.5,water:.5,electric:.5,ice:2,rock:2,steel:.5,fairy:2},fairy:{fire:.5,fighting:2,poison:.5,dragon:2,dark:2,steel:.5}};
-const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const td51DefaultForms={'darmanitan-standard':'Darmanitan','darmanitan-zen':'Darmanitan (Zen Mode)','jellicent-male':'Jellicent','frillish-male':'Frillish','basculin-red-striped':'Basculin','deoxys-normal':'Deoxys','giratina-altered':'Giratina','shaymin-land':'Shaymin','wormadam-plant':'Wormadam','landorus-incarnate':'Landorus','thundurus-incarnate':'Thundurus','tornadus-incarnate':'Tornadus','keldeo-ordinary':'Keldeo','meloetta-aria':'Meloetta','aegislash-shield':'Aegislash','zygarde-50':'Zygarde','pumpkaboo-average':'Pumpkaboo','gourgeist-average':'Gourgeist','meowstic-male':'Meowstic','indeedee-male':'Indeedee','wishiwashi-solo':'Wishiwashi','lycanroc-midday':'Lycanroc','toxtricity-amped':'Toxtricity','urshifu-single-strike':'Urshifu','oricorio-baile':'Oricorio','eiscue-ice':'Eiscue','morpeko-full-belly':'Morpeko','palafin-zero':'Palafin','maushold-family-of-four':'Maushold','dudunsparce-two-segment':'Dudunsparce','squawkabilly-green-plumage':'Squawkabilly','tatsugiri-curly':'Tatsugiri','oinkologne-male':'Oinkologne','basculegion-male':'Basculegion','enamorus-incarnate':'Enamorus'};const td51NameKey=s=>String(s??'').trim().toLowerCase().replace(/\s+/g,'-');const td51Canonical=s=>Object.keys(td51DefaultForms).find(k=>td51NameKey(td51DefaultForms[k])===td51NameKey(s))||td51NameKey(s);const pretty=s=>td51DefaultForms[td51NameKey(s)]||String(s??'').split('-').map(w=>w?w[0].toUpperCase()+w.slice(1):'').join(' ');const pill=t=>`<span class="pill" style="--c:${colors[t]||'#777'}">${pretty(t)}</span>`;const chip=m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`;
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const td51DefaultForms={'darmanitan-standard':'Darmanitan','darmanitan-zen':'Darmanitan (Zen Mode)','jellicent-male':'Jellicent','frillish-male':'Frillish','basculin-red-striped':'Basculin','deoxys-normal':'Deoxys','giratina-altered':'Giratina','shaymin-land':'Shaymin','wormadam-plant':'Wormadam','landorus-incarnate':'Landorus','thundurus-incarnate':'Thundurus','tornadus-incarnate':'Tornadus','keldeo-ordinary':'Keldeo','meloetta-aria':'Meloetta','aegislash-shield':'Aegislash','zygarde-50':'Zygarde','pumpkaboo-average':'Pumpkaboo','gourgeist-average':'Gourgeist','meowstic-male':'Meowstic','indeedee-male':'Indeedee','wishiwashi-solo':'Wishiwashi','lycanroc-midday':'Lycanroc','toxtricity-amped':'Toxtricity','urshifu-single-strike':'Urshifu','oricorio-baile':'Oricorio','eiscue-ice':'Eiscue','morpeko-full-belly':'Morpeko','palafin-zero':'Palafin','maushold-family-of-four':'Maushold','dudunsparce-two-segment':'Dudunsparce','squawkabilly-green-plumage':'Squawkabilly','tatsugiri-curly':'Tatsugiri','oinkologne-male':'Oinkologne','basculegion-male':'Basculegion','enamorus-incarnate':'Enamorus'};const td51NameKey=s=>String(s??'').trim().toLowerCase().replace(/\s+/g,'-');const td51Canonical=s=>Object.keys(td51DefaultForms).find(k=>td51NameKey(td51DefaultForms[k])===td51NameKey(s))||td51NameKey(s);const pretty=s=>td51DefaultForms[td51NameKey(s)]||String(s??'').split('-').map(w=>w?w[0].toUpperCase()+w.slice(1):'').join(' ');const pill=t=>`<span class="pill" style="--c:${colors[t]||'#777'}">${safe(pretty(t))}</span>`;const chip=m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`;
 // V74 DEV4.1: presentation only; never use a label as a canonical form identifier.
 function td71StoredArt(p){const img=String(p?.image||'');const id=Number(p?.id)||window.takDexBWCoreV75?.ids?.[td51Canonical(p?.name)]||window.takDexSpriteIdsV77?.[td51Canonical(p?.name)]||0;return img&&!img.startsWith('blob:')?img:id?'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/'+id+'.png':'';}
 function td73IdentityKey(p){return td51Canonical(typeof p==='string'?p:(p?.canonicalName||p?.name||''));}
@@ -15,19 +15,133 @@ let td70TeamRecovery=null;
 function td70ReadTeams(){
  let raw=null;
  try{
-  raw=localStorage.getItem('poketact-teams');
-  if(raw===null)return [];
-  const data=JSON.parse(raw);
+  raw=localStorage.getItem(takDexStorageV78.KEY)??localStorage.getItem(takDexStorageV78.TEAM_KEY);
+  const snapshot=takDexStorageV78.read();
+  if(snapshot.status==='corrupt')throw snapshot.error;
+  const data=Object.values(takDexStorageV78.values(snapshot.state,'teams'));
   if(!Array.isArray(data)||!data.every(t=>t&&typeof t==='object'&&typeof t.id==='string'&&typeof t.name==='string'&&games.includes(t.game)&&Array.isArray(t.pokemon)))throw Error('Saved team data is not a valid team array');
   return data;
  }catch(e){
-  td70TeamRecovery=raw;
-  try{if(raw!==null)localStorage.setItem('takdex-v70-team-recovery-'+new Date().toISOString(),raw)}catch{}
+  td70TeamRecovery=raw||'Stored state is inaccessible.';
+  try{
+   td70TeamRecovery=JSON.stringify({canonical:localStorage.getItem(takDexStorageV78.KEY),
+    teams:localStorage.getItem(takDexStorageV78.TEAM_KEY),plans:localStorage.getItem(takDexStorageV78.PLAN_KEY)},null,2);
+  }catch{}
   console.warn('Tak-Dex: invalid saved teams preserved for recovery',e);
   return [];
  }
 }
-let teams=td70ReadTeams(),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const save=()=>{localStorage.setItem('poketact-teams',JSON.stringify(teams));queueMicrotask(()=>window.dispatchEvent(new CustomEvent('td74:team-saved')));};
+let teams=td70ReadTeams(),current=null,slotIndex=0,chosen=null,foe=null,foe2=null,doubleMode=false,names=null,validMoves=[],selectedMoves=[null,null,null,null],lookupVersion=0;const td78Store=window.takDexStorageV78;
+const td78TeamWrites=new Map(Object.entries(td78Store.read().state.teams).map(([id,row])=>[id,{row,proposed:row.value}]));
+const td78NotifyTeamSaved=teamIds=>window.dispatchEvent(new CustomEvent('td74:team-saved',{detail:{teamIds}}));
+let td78Drafts=[];
+function td78WriteWarning(error,draft){
+ if(draft)td78Drafts.push(td78Store.copy(draft));
+ let warning=$('td78WriteWarning');
+ if(!warning){
+  warning=document.createElement('aside');warning.id='td78WriteWarning';warning.className='card';warning.setAttribute('role','alert');
+  const message=document.createElement('p'),download=document.createElement('button');
+  download.type='button';download.textContent='Download unsaved changes';
+  download.onclick=()=>td70DownloadFile('takdex-unsaved-changes.json',JSON.stringify(td78Drafts,null,2));
+  warning.append(message,download);document.querySelector('main').before(warning);
+ }
+ warning.firstElementChild.textContent=(error?.message||'Could not save local changes.')+(draft?' Download your unsaved changes before reloading.':'');
+ warning.lastElementChild.hidden=!td78Drafts.length;
+}
+async function td78CreateTeam(team,plan){
+ await td70EnsureMigrated();
+ const result=await td78Store.commit(state=>{
+  td78Store.expect(state,'teams',team.id,{revision:0,value:null});
+  const names=new Set(Object.values(td78Store.values(state,'teams')).map(row=>row.name.trim().toLowerCase()));
+  const base=team.name.trim().slice(0,40);
+  let name=base;
+  for(let i=2;names.has(name.toLowerCase());i++){
+   const suffix=' ('+i+')';
+   name=base.slice(0,40-suffix.length).trimEnd()+suffix;
+  }
+  td78Store.replace(state,'teams',team.id,{...team,name});
+  if(plan)td78Store.replace(state,'plans',team.game+':'+team.id,plan);
+ });
+ td78AcceptTeam(result.state,team.id);
+ td78ProjectionWarning(result);
+ td78NotifyTeamSaved([team.id]);
+}
+function td78ProjectionWarning(result){
+ if(result.projectionError)td78WriteWarning(Error('Changes are saved in Tak-Dex. Compatibility copies could not be refreshed because storage is full or unavailable.'));
+}
+function td78AcceptTeam(state,id,{render=false}={}){
+ const row=td78Store.entry(state,'teams',id);
+ const before=td78TeamWrites.get(id);
+ if(before?.pending||before&&!td78Store.same(before.proposed,teams.find(team=>team.id===id)))return;
+ const local=teams.find(team=>team.id===id);
+ if(row.value){
+  if(local){for(const key of Object.keys(local))if(!Object.hasOwn(row.value,key))delete local[key];Object.assign(local,td78Store.copy(row.value));}
+  else teams.push(td78Store.copy(row.value));
+ }else{
+  teams=teams.filter(team=>team.id!==id);
+  if(current===local)current=null;
+ }
+ td78TeamWrites.set(id,{row,proposed:row.value});
+ if(render)showTeams();
+}
+function td78RefreshUnrelatedTeams(state,excluded){
+ for(const [id,row] of Object.entries(state.teams)){
+  if(excluded.has(id))continue;
+  const local=teams.find(team=>team.id===id);
+  if(local===current||local&&row.value)continue;
+  td78AcceptTeam(state,id);
+ }
+}
+function save({deletedId=null,expectedPlans={}}={}){
+ const desired=new Map(teams.map(team=>[team.id,td78Store.copy(team)])),edits=[];
+ for(const id of new Set([...td78TeamWrites.keys(),...desired.keys()])){
+  if(!desired.has(id)&&id!==deletedId)continue;
+  const before=td78TeamWrites.get(id)||{row:{revision:0,value:null},proposed:null};
+  const proposed=desired.get(id)||null;
+  if(td78Store.same(before.proposed,proposed))continue;
+  const write={proposed};
+  td78TeamWrites.set(id,write);
+  edits.push({id,before,write});
+ }
+ if(!edits.length)return Promise.resolve(true);
+ const operation=Promise.all(edits.map(async ({before})=>before.pending?await before.pending:before.row)).then(expected=>
+  td78Store.commit(state=>{
+   edits.forEach(({id},i)=>td78Store.expect(state,'teams',id,expected[i]));
+   if(deletedId){
+    for(const [key,row] of Object.entries(state.plans)){
+     if(row.value===null||key.slice(key.indexOf(':')+1)!==deletedId)continue;
+     td78Store.expect(state,'plans',key,expectedPlans[key]||{revision:0,value:null});
+     td78Store.replace(state,'plans',key,null);
+    }
+    const link=td78Store.entry(state,'links',deletedId).value;
+    td78Store.replace(state,'links',deletedId,td78Store.endLink(link,'deleted'));
+   }
+   for(const {id,write} of edits){
+    const previous=td78Store.entry(state,'teams',id).value;
+    if(previous&&write.proposed&&previous.game!==write.proposed.game){
+     const link=td78Store.entry(state,'links',id).value;
+     td78Store.replace(state,'links',id,{game:write.proposed.game,generation:(link?.generation||0)+1,intent:'game-changed',invalidatedGeneration:link?.invalidatedGeneration??link?.generation??0});
+    }
+    td78Store.replace(state,'teams',id,write.proposed);
+   }
+  }));
+ for(const {id,write} of edits)write.pending=operation.then(result=>td78Store.entry(result.state,'teams',id));
+ return operation.then(result=>{
+  for(const {id,write} of edits){
+   write.row=td78Store.entry(result.state,'teams',id);write.pending=null;
+  }
+  td78RefreshUnrelatedTeams(result.state,new Set(edits.map(edit=>edit.id)));
+  td78ProjectionWarning(result);showTeams();td78NotifyTeamSaved(edits.map(edit=>edit.id));return true;
+ },error=>{
+  for(const {write} of edits)write.pending?.catch(()=>{});
+  td78WriteWarning(error,edits.map(({id,write})=>({id,team:write.proposed,deleteRequested:id===deletedId})));
+  return false;
+ });
+}
+function td78TeamWriteState(id){
+ const queued=td78TeamWrites.get(id);
+ return queued?.pending?queued.pending:Promise.resolve(queued?.row||{revision:0,value:null});
+}
 // CacheStorage is larger than localStorage and survives network outages for downloaded records.
 const OFFLINE_CACHE='takdex-pokeapi-records-v1';
 // V27: resolve name-based lookups to the numbered records stored by the offline downloader.
@@ -104,45 +218,55 @@ async function td70ClearAPICache(){
  await td70IDB('clear');
 }
 async function td70HasAPICache(){try{return (await td70IDB('count'))>0}catch{return false}}
+const td79ApiPending=new Map();
+const td79Data=window.takDexOfflineData;
 async function offlineRecord(path){
  if(!('caches' in window))return null;
- const globalCache=await caches.open(OFFLINE_CACHE);
- const names=[OFFLINE_CACHE,...(await caches.keys()).filter(k=>k.startsWith('takdex-reference-v58-'))];
- const refCaches=[globalCache,...await Promise.all(names.slice(1).map(k=>caches.open(k)))];
+ const names=(await caches.keys()).filter(key=>key===OFFLINE_CACHE||key.startsWith('takdex-reference-v58-'));
+ const stores=await Promise.all(names.map(key=>caches.open(key)));
  const clean=path.replace(/^\/+|\/+$/g,'');
- const direct=[API_ROOT+path,API_ROOT+clean,API_ROOT+clean+'/'];
- for(const cache of refCaches)for(const url of direct){const r=await cache.match(url);if(r)return r.json()}
- const match=clean.match(/^(pokemon|pokemon-species|move|evolution-chain|machine)\/(.+)$/);
+ const read=(response,record=clean)=>td79Data.read(response,data=>td79Data.apiShape(record,data));
+ const direct=new Set([API_ROOT+path,API_ROOT+clean,API_ROOT+clean+'/']);
+ for(const store of stores)for(const url of direct){
+  const data=await read(await store.match(url));
+  if(data)return data;
+ }
+ const match=clean.match(/^(pokemon|pokemon-species|move|evolution-chain|machine)\/([^/]+)$/);
  if(!match||/^\d+$/.test(match[2]))return null;
- const listUrl=API_ROOT+match[1]+'?limit='+(['machine'].includes(match[1])?'3000':'2000');
- const wanted=decodeURIComponent(match[2]).toLowerCase();
- for(const cache of refCaches){const list=await cache.match(listUrl);if(!list)continue;const names=(await list.json()).results||[];const entry=names.find(x=>x.name===wanted);if(!entry)continue;const record=await cache.match(entry.url);if(record)return record.json()}
+ const kind=match[1],wanted=decodeURIComponent(match[2]).toLowerCase();
+ const listPath=kind+'?limit='+({machine:3000,'evolution-chain':1000}[kind]||2000);
+ for(const store of stores){
+  const list=await read(await store.match(API_ROOT+listPath),listPath);
+  const entry=list?.results.find(row=>row.name===wanted);
+  if(!entry)continue;
+  const data=await read(await store.match(entry.url),entry.url.slice(API_ROOT.length));
+  if(data)return data;
+ }
  return null;
 }
-async function api(path){
- const alias=/^pokemon\/([^/?]+)\/?$/.exec(path);if(alias){try{const n=decodeURIComponent(alias[1]);if(!/^\d+$/.test(n))path='pokemon/'+encodeURIComponent(td51Canonical(n));}catch{}}
- try{const bundled=await window.takDexDB74?.api(path);if(bundled)return bundled}catch(e){console.warn('Bundled database fallback:',e.message)}
- const key='pt-v2:'+path,url=API_ROOT+path;
- const cached=await td70APICacheGet(key);
- if(cached!==null)return cached;
- try{const offline=await offlineRecord(path);if(offline)return offline}catch{}
- try{
-  const res=await fetch(url);if(!res.ok)throw Error('Pokédex request failed');
-  const data=await res.json();
-  await td70APICachePut(key,data);
-  return data;
- }catch(e){
-  try{const offline=await offlineRecord(path);if(offline)return offline}catch{}
-  throw e;
+function api(path){
+ path=String(path).replace(/^\/+|\/+$/g,'');
+ const alias=/^pokemon\/([^/?]+)$/.exec(path);
+ if(alias)try{
+  const name=decodeURIComponent(alias[1]);
+  if(!/^\d+$/.test(name))path='pokemon/'+encodeURIComponent(td51Canonical(name));
+ }catch{}
+ if(!td79ApiPending.has(path)){
+  const task=td79ResolveApi(path).finally(()=>td79ApiPending.delete(path));
+  td79ApiPending.set(path,task);
  }
+ return td79ApiPending.get(path);
 }
-// Force refresh during an explicit offline pack download, even for previously cached entries.
-async function offlineFetch(path){
- const url='https://pokeapi.co/api/v2/'+path;
- const response=await fetch(url,{cache:'reload'});if(!response.ok)throw Error('Download failed: '+path);
- if(!('caches' in window))throw Error('Offline storage unavailable');
- await (await caches.open(OFFLINE_CACHE)).put(url,response.clone());
- return await response.json();
+async function td79ResolveApi(path){
+ try{const bundled=await window.takDexDB74?.api(path);if(bundled)return bundled}catch(e){console.warn('Bundled database fallback:',e.message)}
+ const key='pt-v2:'+path,cached=await td70APICacheGet(key);
+ if(td79Data.apiShape(path,cached))return cached;
+ const offline=await offlineRecord(path).catch(()=>null);
+ if(offline)return offline;
+ const data=await td79Data.request(API_ROOT+path,{},response=>response.json());
+ if(!td79Data.apiShape(path,data))throw Error('Pokédex response failed validation');
+ await td70APICachePut(key,data);
+ return data;
 }
 // V74 DEV1: PokéAPI history entries end INCLUSIVELY at the named generation.
 // Explicit fallback for cached pre-Fairy records lacking past_types.
@@ -202,14 +326,51 @@ let td7NameIndex=null;
 async function listNames(g){if(!td7NameIndex){const rows=(await api('pokemon?limit=2000')).results;td7NameIndex=rows.map((x,i)=>({name:x.name,id:Number(x.url?.match(/\/(\d+)\/?$/)?.[1]||i+1)}));names=td7NameIndex.map(x=>x.name);}return g?td7NameIndex.filter(x=>td7PokemonAllowed(x.name,x.id,g)).map(x=>x.name):names;}
 function td7SearchGame(input){const ids={dexInput:'dexGame',tmPokemon:'tmGame',td4Search:'td4Game',td5MonInput:'td72MoveTypeGame',td56A:'td56Game',td56B:'td56Game'};return ids[input.id]?$(ids[input.id])?.value:current?.game||td66SavedGame()||'';}
 
-function search(input,results,choose,accept=()=>true){let token=0;input.addEventListener('input',async()=>{const mine=++token,q=input.value.trim().toLowerCase().replace(/\s+/g,'-');results.hidden=true;if(q.length<2)return;results.innerHTML='<p class="note">Searching…</p>';results.hidden=false;try{const found=(await listNames(td7SearchGame(input))).filter(n=>n.includes(q)&&accept(n)).slice(0,12);if(mine!==token||input.value.trim().toLowerCase().replace(/\s+/g,'-')!==q)return;results.innerHTML=found.map(n=>`<button type="button" data-value="${safe(n)}">${safe(td41PokemonLabel(n))}</button>`).join('')||'<p class="note">No matches</p>'}catch{results.innerHTML='<p class="error">Internet needed for first lookup.</p>'}});results.addEventListener('click',e=>{const b=e.target.closest('[data-value]');if(b){results.hidden=true;input.value=td41PokemonLabel(b.dataset.value);choose(b.dataset.value)}})}
+function td78SearchKey(value){
+ return String(value??'').normalize('NFKD').toLowerCase().replaceAll('♀','f').replaceAll('♂','m').replace(/[^a-z0-9]/g,'');
+}
+function td78SearchMatches(values,value,label=String){
+ const query=td78SearchKey(value);
+ if(!query)return [...values];
+ const score=name=>name===query?0:name.startsWith(query)?1:2;
+ return Array.from(values,item=>({item,name:td78SearchKey(label(item))}))
+  .filter(row=>row.name.includes(query))
+  .sort((a,b)=>score(a.name)-score(b.name)||a.name.localeCompare(b.name))
+  .map(row=>row.item);
+}
+function search(input,results,choose,accept=()=>true){let token=0;input.addEventListener('input',async()=>{const mine=++token,q=input.value.trim().toLowerCase().replace(/\s+/g,'-');results.hidden=true;if(q.length<2)return;results.innerHTML='<p class="note">Searching…</p>';results.hidden=false;try{const found=td78SearchMatches((await listNames(td7SearchGame(input))).filter(accept),q).slice(0,12);if(mine!==token||input.value.trim().toLowerCase().replace(/\s+/g,'-')!==q)return;results.innerHTML=found.map(n=>`<button type="button" data-value="${safe(n)}">${safe(td41PokemonLabel(n))}</button>`).join('')||'<p class="note">No matches</p>'}catch{results.innerHTML='<p class="error">Internet needed for first lookup.</p>'}});results.addEventListener('click',e=>{const b=e.target.closest('[data-value]');if(b){results.hidden=true;input.value=td41PokemonLabel(b.dataset.value);choose(b.dataset.value)}})}
 // V71: independent collapsible cards; active editor remains a separate working panel.
 const td71ExpandedTeams=new Set();
 let td72DetailsTeam=null;
+function td78Confirmation(title,detail='',action='Confirm'){
+ if($('td78Confirmation'))return Promise.resolve(false);
+ const dialog=document.createElement('dialog');
+ dialog.id='td78Confirmation';
+ dialog.setAttribute('aria-labelledby','td78ConfirmationTitle');
+ if(detail)dialog.setAttribute('aria-describedby','td78ConfirmationDetail');
+ const previous=document.activeElement;
+ dialog.innerHTML=`<form method="dialog"><h3 id="td78ConfirmationTitle">${safe(title)}</h3>
+  ${detail?`<p id="td78ConfirmationDetail">${safe(detail)}</p>`:''}<div class="buttons">
+  ${action?`<button type="submit" value="cancel" class="td774-secondary" autofocus>Cancel</button>`:''}
+  <button type="submit" value="accept"${action?'':' autofocus'}>${safe(action||'OK')}</button></div></form>`;
+ document.body.append(dialog);
+ return new Promise(resolve=>{
+  dialog.addEventListener('close',()=>{
+   const accepted=dialog.returnValue==='accept';
+   dialog.remove();
+   if(previous?.isConnected)previous.focus({preventScroll:true});
+   resolve(accepted);
+  },{once:true});
+  dialog.showModal();
+ });
+}
 let td74InlineSlot=null,td74InlineTeam=null,td74DraftDirty=false,td75Preview=null;
-function td71NewTeamId(){return String(Date.now())+Math.random().toString(36).slice(2)}
-function td74CloseInline(force=false){
- if(!force&&td74DraftDirty&&!confirm('Discard unsaved Pokémon changes?'))return false;
+function td71NewTeamId(){return globalThis.crypto?.randomUUID?.()||String(Date.now())+Math.random().toString(36).slice(2)}
+async function td74ConfirmCloseInline(){
+ if(td74DraftDirty&&!await td78Confirmation('Discard unsaved Pokémon changes?', '', 'Discard'))return false;
+ return td74CloseInline();
+}
+function td74CloseInline(){
  ++lookupVersion;td74InlineSlot=null;td74InlineTeam=null;td74DraftDirty=false;td75Preview=null;
  const form=$('pokeForm');if(form&&form.parentElement!==$('pokeDialog'))$('pokeDialog').appendChild(form);
  return true;
@@ -234,21 +395,21 @@ function showTeams(){
  }).join(''):'<p>No teams yet.</p>');
  const host=$('teams').querySelector('[data-td74-builder-editor]');if(host&&form)host.appendChild(form);
 }
-$('teams').onclick=e=>{
- const plan=e.target.closest('[data-td41-team-plan]');if(plan){if(!td74CloseInline())return;showTeams();window.td41OpenTeamPlan?.(plan.dataset.td41TeamPlan);return;}
+$('teams').onclick=async e=>{
+ const plan=e.target.closest('[data-td41-team-plan]');if(plan){if(!await td74ConfirmCloseInline())return;showTeams();window.td41OpenTeamPlan?.(plan.dataset.td41TeamPlan);return;}
  const tile=e.target.closest('[data-td74-builder-team]'),toggle=e.target.closest('[data-td71-toggle]'),edit=e.target.closest('[data-edit-card]'),exp=e.target.closest('[data-export-card]'),del=e.target.closest('[data-delete]');
- if(tile){const id=tile.dataset.td74BuilderTeam,i=Number(tile.dataset.td74BuilderSlot),same=td74InlineTeam===id&&td74InlineSlot===i;if(!td74CloseInline())return;if(current?.id!==id)openTeam(id);if(same){showTeams();return;}td74InlineTeam=id;td74InlineSlot=i;showTeams();editSlot(i);return;}
- if(toggle){const id=toggle.dataset.td71Toggle;if(!td74CloseInline())return;if(td71ExpandedTeams.has(id)){td71ExpandedTeams.delete(id);}else openTeam(id);showTeams();return}
- if(edit){if(!td74CloseInline())return;openTeam(edit.dataset.editCard);$('editTeam').click();return}
+ if(tile){const id=tile.dataset.td74BuilderTeam,i=Number(tile.dataset.td74BuilderSlot),same=td74InlineTeam===id&&td74InlineSlot===i;if(!await td74ConfirmCloseInline())return;if(current?.id!==id)openTeam(id);if(same){showTeams();return;}td74InlineTeam=id;td74InlineSlot=i;showTeams();editSlot(i);return;}
+ if(toggle){const id=toggle.dataset.td71Toggle;if(!await td74ConfirmCloseInline())return;if(td71ExpandedTeams.has(id)){td71ExpandedTeams.delete(id);}else openTeam(id);showTeams();return}
+ if(edit){if(!await td74ConfirmCloseInline())return;openTeam(edit.dataset.editCard);$('editTeam').click();return}
  if(exp){const team=teams.find(t=>t.id===exp.dataset.exportCard);if(team)td70ExportTeam(team);return}
- if(del&&confirm('Permanently delete this team? This cannot be undone.')){
-  const id=del.dataset.delete,wasActive=current?.id===id;if(wasActive)td74CloseInline(true);teams=teams.filter(t=>t.id!==id);td71ExpandedTeams.delete(id);save();
+ if(del&&await td78Confirmation('Delete this team?','This cannot be undone.','Delete')){
+  const id=del.dataset.delete,wasActive=current?.id===id,expectedPlans=td78Store.read().state.plans;if(wasActive)td74CloseInline();teams=teams.filter(t=>t.id!==id);td71ExpandedTeams.delete(id);save({deletedId:id,expectedPlans});
   if(wasActive)td70CloseTeam();showTeams();return;
  }
  if(e.target.closest('[data-td70-recover]')&&td70TeamRecovery)td70DownloadFile('takdex-team-recovery.json',td70TeamRecovery);
 };
 function openTeam(id){
- const changedTeam=current?.id!==id;if(changedTeam)td74CloseInline(true);
+ const changedTeam=current?.id!==id;if(changedTeam)td74CloseInline();
  current=teams.find(t=>t.id===id)||null;if(!current)return;
  const gameBefore=$('planGame')?.value;
  if(td71ExpandedTeams.size!==1||!td71ExpandedTeams.has(id))td72DetailsTeam=null;
@@ -315,11 +476,24 @@ $('pokeInput').addEventListener('focus',e=>{if(e.target.value)e.target.select()}
 $('pokeInput').addEventListener('input',()=>{++lookupVersion;chosen=null;$('savePoke').disabled=true;$('td74BuilderDex').hidden=true;});
 $('tdDev1PokeClear').onclick=()=>{const nickname=$('pokeNickname').value;clearForm();$('pokeNickname').value=nickname;$('pokeResults').hidden=true;$('pokeInput').dispatchEvent(new Event('input',{bubbles:true}));$('pokeInput').focus();};
 $('pokeForm').addEventListener('input',e=>{td74DraftDirty=true;if(e.target.id==='pokeNickname'&&chosen)td75UpdateBuilderPreview({...chosen,nickname:e.target.value.trim()});});$('pokeForm').addEventListener('change',()=>{td74DraftDirty=true});$('td74BuilderDex').onclick=()=>td70OpenSlotDex(slotIndex);
-$('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen||!current||$('savePoke').disabled)return;if(window.td77BuilderProfile?.stale(current.pokemon[slotIndex])){editSlot(slotIndex);return;}current.pokemon[slotIndex]={...(current.pokemon[slotIndex]?.id===chosen.id?current.pokemon[slotIndex]:{}),...chosen,...window.td77BuilderProfile?.read(),ability:td2AllAbilities(chosen).includes($('td2TeamAbility')?.value)?$('td2TeamAbility').value:'',nickname:$('pokeNickname').value.trim(),moves:selectedMoves.filter(Boolean)};td74CloseInline(true);save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close();};$('evolvePoke').onclick=()=>evolveSlot(slotIndex);$('removePoke').onclick=()=>{if(!confirm('Remove this Pokémon from the team?'))return;current.pokemon[slotIndex]=null;td74CloseInline(true);save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close()};$('cancelPoke').onclick=()=>{if(!td74CloseInline())return;showTeams();if($('pokeDialog').open)$('pokeDialog').close()};
-$('game').innerHTML='<option value="">Choose game…</option>'+games.map(g=>`<option>${g}</option>`).join('');$('game').value='';$('game').required=true;const td71TeamName=$('teamName');function td71UpdateTeamPlaceholder(){td71TeamName.placeholder=games.includes($('game').value)?'My '+$('game').value+' team':'My Pokémon team'}$('game').addEventListener('change',td71UpdateTeamPlaceholder);td71UpdateTeamPlaceholder();$('addTeam').onclick=()=>{$('game').value='';td71UpdateTeamPlaceholder();$('newDialog').showModal()};$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=e=>{e.preventDefault();if(!games.includes($('game').value)){$('game').reportValidity();return}const t={id:String(Date.now())+Math.random().toString(36).slice(2),name:$('teamName').value.trim(),game:$('game').value,pokemon:Array(6).fill(null)};teams.push(t);save();showTeams();$('newDialog').close();$('teamName').value='';openTeam(t.id);showTeams()};$('closeTeam').onclick=td70CloseTeam;$('editTeamGame').innerHTML=games.map(g=>`<option>${g}</option>`).join('');
+$('pokeForm').onsubmit=e=>{e.preventDefault();if(!chosen||!current||$('savePoke').disabled)return;if(window.td77BuilderProfile?.stale(current.pokemon[slotIndex])){editSlot(slotIndex);return;}current.pokemon[slotIndex]={...(current.pokemon[slotIndex]?.id===chosen.id?current.pokemon[slotIndex]:{}),...chosen,...window.td77BuilderProfile?.read(),ability:td2AllAbilities(chosen).includes($('td2TeamAbility')?.value)?$('td2TeamAbility').value:'',nickname:$('pokeNickname').value.trim(),moves:selectedMoves.filter(Boolean)};td74CloseInline();save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close();};$('evolvePoke').onclick=()=>evolveSlot(slotIndex);$('removePoke').onclick=async()=>{const team=current,i=slotIndex;if(!await td78Confirmation('Remove this Pokémon from the team?','','Remove')||team!==current||i!==slotIndex)return;current.pokemon[slotIndex]=null;td74CloseInline();save();showSlots();showTeams();if($('pokeDialog').open)$('pokeDialog').close()};$('cancelPoke').onclick=async()=>{if(!await td74ConfirmCloseInline())return;showTeams();if($('pokeDialog').open)$('pokeDialog').close()};
+$('game').innerHTML='<option value="">Choose game…</option>'+games.map(g=>`<option>${g}</option>`).join('');$('game').value='';$('game').required=true;const td71TeamName=$('teamName');function td71UpdateTeamPlaceholder(){td71TeamName.placeholder=games.includes($('game').value)?'My '+$('game').value+' team':'My Pokémon team'}$('game').addEventListener('change',td71UpdateTeamPlaceholder);td71UpdateTeamPlaceholder();$('addTeam').onclick=()=>{$('game').value='';td71UpdateTeamPlaceholder();$('newDialog').showModal()};$('cancelNew').onclick=()=>$('newDialog').close();$('newForm').onsubmit=async e=>{
+ e.preventDefault();
+ const game=$('game').value,name=$('teamName').value.trim();
+ if(!games.includes(game)){$('game').reportValidity();return;}
+ if(!name){$('teamName').focus();return;}
+ const create=e.submitter||$('newForm').querySelector('button[type=submit]');
+ create.disabled=true;
+ const team={id:td71NewTeamId(),name,game,pokemon:Array(6).fill(null)};
+ try{
+  await td78CreateTeam(team);
+  $('newDialog').close();$('teamName').value='';showTeams();openTeam(team.id);
+ }catch(error){td78WriteWarning(error,team);}
+ finally{create.disabled=false;}
+};$('closeTeam').onclick=td70CloseTeam;$('editTeamGame').innerHTML=games.map(g=>`<option>${g}</option>`).join('');
 $('editTeam').onclick=()=>{if(!current)return;$('editTeamName').value=current.name;$('editTeamGame').value=current.game;$('editTeamDialog').showModal()};
 $('cancelEditTeam').onclick=()=>$('editTeamDialog').close();
-$('editTeamForm').onsubmit=e=>{e.preventDefault();if(!current)return;const name=$('editTeamName').value.trim();if(!name)return;if(!games.includes($('editTeamGame').value)){alert('Choose a valid game.');return}current.name=name;current.game=$('editTeamGame').value;save();showTeams();openTeam(current.id);$('editTeamDialog').close()};
+$('editTeamForm').onsubmit=e=>{e.preventDefault();if(!current)return;const name=$('editTeamName').value.trim();if(!name)return;if(!games.includes($('editTeamGame').value)){td78Confirmation('Choose a valid game.','',null);return}current.name=name;current.game=$('editTeamGame').value;save();showTeams();openTeam(current.id);$('editTeamDialog').close()};
 function td70DownloadFile(filename,contents){
  const blob=new Blob([contents],{type:'application/json'}),url=URL.createObjectURL(blob);
  const link=document.createElement('a');link.href=url;link.download=filename;
@@ -340,24 +514,8 @@ function td70ShowCopyExport(filename,contents){
  $('td70ExportName').textContent=filename;$('td70ExportText').value=contents;
  $('td70ExportCopy').textContent='Copy JSON';dialog.showModal();
 }
-const td77PlanStorage='takdex-v74-playthrough-plans';
 function td77ReadPlans(){
- try{const plans=JSON.parse(localStorage.getItem(td77PlanStorage)||'{}');return plans&&typeof plans==='object'&&!Array.isArray(plans)?plans:{};}catch{return {};}
-}
-function td77ValidatePlan(plan,game){
- if(plan==null)return null;
- if(plan.game!==game||!Array.isArray(plan.slots)||plan.slots.length>6||plan.progress!=null&&typeof plan.progress!=='string')throw Error('Invalid Team Planner data');
- for(const slot of plan.slots){
-  if(slot===null)continue;
-  if(!slot||!Number.isInteger(slot.id)||typeof slot.name!=='string'||!Array.isArray(slot.types)||slot.types.some(type=>typeof type!=='string'))throw Error('Invalid planned Pokémon');
-  if(slot.acquisitionRoute!=null&&(typeof slot.acquisitionRoute.id!=='string'||
-   slot.acquisitionRoute.id.length>300||!Number.isInteger(slot.acquisitionRoute.startId)))throw Error('Invalid acquisition route');
-  for(const key of ['plannedMoves','duringMoves']){
-   if(slot[key]===undefined)continue;
-   if(!Array.isArray(slot[key])||slot[key].length>4||slot[key].some(m=>!m||typeof m.move!=='string'||m.replacement!=null&&typeof m.replacement!=='string'))throw Error('Invalid planned moves');
-  }
- }
- return plan;
+ return td78Store.values(td78Store.read().state,'plans');
 }
 function td77ProgressSnapshot(value){
  if(value==null)return undefined;
@@ -395,16 +553,14 @@ async function td70ExportTeam(team){
 }
 $('exportTeam').onclick=()=>td70ExportTeam(current);
 $('importTeam').onclick=()=>$('importTeamFile').click();
-$('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2000000)throw Error('File is too large');const data=JSON.parse(await file.text());const t=data?.format==='takdex-team'?data.team:data;if(!t||typeof t.name!=='string'||!games.includes(t.game)||!Array.isArray(t.pokemon)||t.pokemon.length>6)throw Error('Invalid Tak-Dex team file');const pokemon=Array.from({length:6},(_,i)=>{const mon=t.pokemon[i];if(mon==null)return null;if(typeof mon.id!=='number'||typeof mon.name!=='string'||!Array.isArray(mon.moves)||mon.moves.length>4||!Array.isArray(mon.types))throw Error('Invalid Pokémon data');return {...mon,nickname:typeof mon.nickname==='string'?mon.nickname.slice(0,30):''}});const team={id:String(Date.now())+Math.random().toString(36).slice(2),name:t.name.slice(0,40),game:t.game,pokemon};const envelope=data?.format==='takdex-team';
- if(envelope&&![1,2].includes(data.version??1))throw Error('Unsupported team export version');
- const plan=envelope?td77ValidatePlan(data.plan,team.game):null;
- const progression=envelope?td77ProgressSnapshot(data.progression):undefined;
+$('importTeamFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{
+ if(file.size>2000000)throw Error('File is too large');
+ const {team:source,plan,progression:observed,warnings}=window.takDexImportV78.validate(JSON.parse(await file.text()),games);
+ const pokemon=Array.from({length:6},(_,i)=>source.pokemon[i]?{...source.pokemon[i],nickname:source.pokemon[i].nickname?.slice(0,30)||''}:null);
+ const team={id:td71NewTeamId(),name:source.name.slice(0,40),game:source.game,pokemon};
+ const progression=td77ProgressSnapshot(observed);
  if(progression)team.saveLink={progression,exportedSnapshot:true};
- await td70EnsureMigrated();const updated=[...teams,team],priorPlans=localStorage.getItem(td77PlanStorage);
- if(plan)localStorage.setItem(td77PlanStorage,JSON.stringify({...td77ReadPlans(),[team.game+':'+team.id]:plan}));
- try{localStorage.setItem('poketact-teams',JSON.stringify(updated));}
- catch(error){if(plan){if(priorPlans==null)localStorage.removeItem(td77PlanStorage);else localStorage.setItem(td77PlanStorage,priorPlans);}throw error;}
- teams=updated;showTeams();$('newDialog').close();openTeam(team.id)}catch(err){alert('Could not import team: '+err.message+'\nYour existing teams were not changed.')}finally{e.target.value=''}};
+ await td78CreateTeam(team,plan);showTeams();$('newDialog').close();openTeam(team.id);if(warnings.length)td78Confirmation('Team imported',warnings.join('\n'),null);}catch(err){td78Confirmation('Could not import team',err.message,null)}finally{e.target.value=''}};
 
 search($('pokeInput'),$('pokeResults'),n=>{td74DraftDirty=true;const previous=td75Preview||current?.pokemon?.[slotIndex];if(td51Canonical(previous?.name)!==td51Canonical(n))$('pokeNickname').value='';loadPokemon(n)});search($('foeInput'),$('foeResults'),name=>td76ChooseQuickOpponent(name,1));
 
@@ -417,13 +573,13 @@ async function evolveSlot(i){
  try{
   const choices=await tdDev1EvolutionOptions(old,game);
   if(current!==team||team.game!==game||team.pokemon[i]!==old)return;
-  if(!choices.length){alert('No evolution data found for this Pokémon in '+current.game+'.');return}
+  if(!choices.length){td78Confirmation('No evolution data found for this Pokémon in '+current.game+'.','',null);return}
   let chosenOption=choices[0];
   if(choices.length>1){
    const names=choices.map((c,n)=>`${n+1}. ${pretty(c.candidate.name)}`).join('\n');
    const answer=prompt('Choose an evolution:\n'+names,'1');
    if(answer===null)return;
-   chosenOption=choices[Number(answer)-1];if(!chosenOption){alert('Invalid selection');return}
+   chosenOption=choices[Number(answer)-1];if(!chosenOption){td78Confirmation('Invalid selection','',null);return}
   }
   const detail=chosenOption.details?.[0];
   const hints=[];
@@ -433,12 +589,12 @@ async function evolveSlot(i){
   if(detail?.trigger?.name==='trade')hints.push('Trade required');
   if(detail?.min_happiness)hints.push('Friendship requirement');
   const note=hints.length?hints.join(', '):'Evolution conditions may apply';
-  if(!confirm(`Evolve ${old.name} into ${pretty(chosenOption.candidate.name)}?\n${note}\n\nPokéTact does not verify that conditions are met. Existing moves will stay unchanged.`))return;
+  if(!await td78Confirmation(`Evolve ${old.name} into ${pretty(chosenOption.candidate.name)}?`,note,'Evolve'))return;
   const p=chosenOption.candidate;
   if(current!==team||team.game!==game||team.pokemon[i]!==old)return;
   current.pokemon[i]={...old,id:p.id,name:pretty(p.name),canonicalName:p.name,level:tdDev1Level(old.level,old.saveStats?.level||50),saveStats:undefined,statAdjustments:{},types:historicalTypes(p,game),image:p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'',moves:old.moves,baseSpeed:td76HistoricalStats(p,current.game).find(s=>s.stat.name==='speed')?.base_stat,baseStats:Object.fromEntries(td76HistoricalStats(p,current.game).map(s=>[s.stat.name,s.base_stat])),abilities:historicalAbilities(p,current.game),weight:p.weight??null,ability:(()=>{const next=historicalAbilities(p,game),prior=(old.abilities||[]).find(x=>x?.ability?.name===old.ability);return next.find(x=>x?.ability?.name===old.ability)?.ability?.name||(prior?next.find(x=>x.slot===prior.slot)?.ability?.name:'')||''})()};
   td74DraftDirty=false;save();showSlots();showTeams();if(td74InlineTeam===team.id&&td74InlineSlot===i)editSlot(i);if($('pokeDialog').open)$('pokeDialog').close();
- }catch(e){alert('Could not check evolution. Internet may be needed.')}finally{evolveBusy=false}
+ }catch(e){td78Confirmation('Could not check evolution. Internet may be needed.','',null)}finally{evolveBusy=false}
 }
 async function td76QuickOpponent(name,game){
  const p=await api('pokemon/'+encodeURIComponent(td73IdentityKey(name)));
@@ -699,16 +855,36 @@ function movePowerRange(m){
  return null;
 }
 // DEV2: conditional power from verified move metadata and available matchup context.
-function td2Power(m,a,d,g){
+function td2Stat(mon,key,policy){
+ return (policy==='base'?mon?.baseStats:mon?.battleStats)?.[key];
+}
+function td2Speed(mon,gen,policy){
+ const speed=td2Stat(mon,'speed',policy);
+ if(!(speed>0))return null;
+ const ability=td2ActualAbility(mon);
+ const active=policy!=='base'&&mon.status&&mon.status!=='none';
+ const weatherAbility={rain:'swift-swim',sun:'chlorophyll',sand:'sand-rush',hail:'slush-rush'}[mon.weather];
+ const weather=ability&&ability===weatherAbility?2:1;
+ const scarf=gen>=4&&td73MoveKey(mon.heldItem)==='choice-scarf'?1.5:1;
+ const status=active&&gen>=4&&ability==='quick-feet'?1.5:active&&mon.status==='paralysis'?(gen>=7?.5:.25):1;
+ return Math.max(1,Math.floor(speed*scarf*weather*status));
+}
+function td2Power(m,a,d,g,policy){
  const n=m.name;let r=movePowerRange(m);const extra={'Crush Grip':[1,120],'Wring Out':[1,120],'Trump Card':[40,200],'Natural Gift':[60,100],'Weather Ball':[50,100],'Wake Up Slap':[m.power||60,(m.power||60)*2],'Smelling Salts':[m.power||60,(m.power||60)*2],'Pursuit':[40,80],'Stomp':[65,130],'Stomping Tantrum':[75,150],'Retaliate':[70,140],'Round':[60,120],'Echoed Voice':[40,200],'Rollout':[30,480],'Ice Ball':[30,480],'Spit Up':[100,300],'Beat Up':[1,100],'Punishment':[60,200],'Stored Power':[20,860],'Power Trip':[20,860],'Water Shuriken':[15,15],'Triple Kick':[10,60]};if(extra[n]&&!['Natural Gift','Beat Up','Triple Kick','Water Shuriken'].includes(n)){const [min,max]=extra[n];r={min,max,note:'Conditional'};}if(['Natural Gift','Beat Up','Triple Kick','Water Shuriken','Counter','Mirror Coat','Metal Burst','Bide','Endeavor','Super Fang','Final Gambit','Psywave','Fissure','Guillotine','Horn Drill','Sheer Cold','Present'].includes(n))return null;if(!r)return null;const fixed=p=>({min:p,max:p,note:'Resolved from matchup'});const base=n==='Assurance'&&g>=4&&g<=5?50:Number.isFinite(m.power)&&m.power>0?m.power:r.min;
- const stat=(p,k)=>p?.battleStats?.[k];const hp=p=>Number.isFinite(p?.currentHP)&&stat(p,'hp')>0?p.currentHP/stat(p,'hp'):null;
+ const hp=p=>policy!=='base'&&Number.isFinite(p?.currentHP)&&p.battleStats?.hp>0?p.currentHP/p.battleStats.hp:null;
  if(['Low Kick','Grass Knot'].includes(n)&&!(n==='Low Kick'&&g<=2)&&d?.weight>0){const w=d.weight/10;return fixed(w<10?20:w<25?40:w<50?60:w<100?80:w<200?100:120)}
  if(n==='Low Kick'&&g<=2)return fixed(base);
  if(['Heavy Slam','Heat Crash'].includes(n)&&a?.weight>0&&d?.weight>0){const w=a.weight/d.weight;return fixed(w>=5?120:w>=4?100:w>=3?80:w>=2?60:40)}
- if(n==='Gyro Ball'&&stat(a,'speed')>0&&stat(d,'speed')>0)return fixed(Math.min(150,Math.floor(25*stat(d,'speed')/stat(a,'speed'))+1));
- if(n==='Electro Ball'&&stat(a,'speed')>0&&stat(d,'speed')>0){const q=stat(a,'speed')/stat(d,'speed');return fixed(q>=4?150:q>=3?120:q>=2?80:q>=1?60:40)}
+ if(n==='Gyro Ball'||n==='Electro Ball'){
+  const own=td2Speed(a,g,policy),other=td2Speed(d,g,policy);
+  if(own>0&&other>0){
+   if(n==='Gyro Ball')return fixed(Math.min(150,Math.floor(25*other/own)+1));
+   const q=own/other;
+   return fixed(q>=4?150:q>=3?120:q>=2?80:q>=1?60:40);
+  }
+ }
  if(n==='Acrobatics'&&a&&Object.hasOwn(a,'heldItem'))return fixed(a.heldItem?base:base*2);
- if(n==='Return'||n==='Frustration'){if(Number.isFinite(a?.friendship))return fixed(Math.max(1,Math.floor((n==='Return'?a.friendship:255-a.friendship)*2/5)));}
+ if(n==='Return'||n==='Frustration'){if(policy!=='base'&&Number.isFinite(a?.friendship))return fixed(Math.max(1,Math.floor((n==='Return'?a.friendship:255-a.friendship)*2/5)));}
  if(['Eruption','Water Spout'].includes(n)&&hp(a)!==null)return fixed(Math.max(1,Math.floor(150*hp(a))));
  if(['Flail','Reversal'].includes(n)&&hp(a)!==null){const h=Math.floor(48*hp(a));return fixed(h<2?200:h<5?150:h<10?100:h<17?80:h<33?40:20)}
  if(n==='Brine'&&hp(d)!==null)return fixed(base*(hp(d)<=.5?2:1));
@@ -723,14 +899,17 @@ function td2Power(m,a,d,g){
  if(['Assurance','Payback','Avalanche','Revenge','Facade','Brine','Hex','Venoshock','Acrobatics'].includes(n))r={...r,min:base,max:base*2};
  if(n==='Fury Cutter')r={...r,min:base,max:Math.min(160,base*16)};
  if(n==='Hidden Power'&&g>=6)return fixed(60);
- if(n==='Hidden Power'&&g>=3&&a?.ivs){
+ if(n==='Hidden Power'&&g>=3&&policy!=='base'&&a?.ivs){
   const order=['hp','attack','defense','speed','special-attack','special-defense'];
   const bits=order.reduce((word,k,i)=>word|(((a.ivs[k]>>>1)&1)<<i),0);
   return fixed(30+Math.floor(bits*40/63));
  }
  if(n==='Hidden Power'&&g===2)return {...r,min:31,max:70};
- if(['Crush Grip','Wring Out'].includes(n)&&hp(d)!==null)return fixed(Math.max(1,Math.floor(120*hp(d))));
- if(n==='Trump Card'&&Number.isInteger(m.remainingPP))return fixed([200,80,60,50][m.remainingPP]??40);
+ if(['Crush Grip','Wring Out'].includes(n)&&hp(d)!==null){
+  const fraction=hp(d);
+  return fixed(Math.max(1,g===5?Math.floor((12000*Math.floor(fraction*4096)+2047)/409600):Math.floor(120*fraction)));
+ }
+ if(n==='Trump Card'&&policy!=='base'&&Number.isInteger(m.remainingPP))return fixed([200,80,60,50][m.remainingPP]??40);
  if(n==='Weather Ball'&&a?.weather)return fixed(a.weather==='none'?50:100);
  if(n==='Stored Power'||n==='Power Trip'){if(a?.boosts)return fixed(20+20*Object.values(a.boosts).reduce((t,x)=>t+Math.max(0,x),0));}
  if(n==='Punishment'&&d?.boosts)return fixed(Math.min(200,60+20*Object.values(d.boosts).reduce((t,x)=>t+Math.max(0,x),0)));
@@ -738,7 +917,7 @@ function td2Power(m,a,d,g){
  if(n==='Foul Play')return fixed(base);
  return r;
 }
-function td2OffensiveModifier(m,a,g,resolvedPower){const ability=td2ActualAbility(a);if(!ability)return 1;
+function td2OffensiveModifier(m,a,g,resolvedPower,policy){const ability=td2ActualAbility(a);if(!ability)return 1;
  const sheer=new Set(['Flamethrower','Fire Blast','Fire Fang','Ice Fang','Thunder Fang','Rock Slide','Iron Head','Crunch','Shadow Ball','Psychic','Energy Ball','Bug Buzz','Air Slash','Waterfall','Poison Jab','Ice Beam','Blizzard','Thunderbolt','Thunder','Body Slam','Sludge Bomb','Flare Blitz','Fire Punch','Ice Punch','Thunder Punch','Rock Smash','Headbutt','Zen Headbutt','Focus Blast','Ancient Power','Dragon Breath','Dragon Rush','Extrasensory','Signal Beam','Charge Beam','Discharge','Lava Plume','Heat Wave','Scald','Hurricane','Earth Power','Flash Cannon','Metal Claw','Steel Wing','Muddy Water','Octazooka','Acid','Acid Spray','Mud Bomb','Mud Slap','Snarl','Icy Wind','Bulldoze','Low Sweep','Crush Claw','Twister','Bite','Astonish','Dark Pulse','Fake Out','Stomp','Tri Attack','Secret Power','Ominous Wind','Silver Wind','Razor Shell','Flame Charge','Dynamic Punch','Zap Cannon','Inferno','Nuzzle','Power Up Punch','Charge Beam','Octazooka','Bubble Beam','Bubble','Sludge','Smog','Poison Sting','Lick','Ember','Psybeam','Aurora Beam','Confusion']);
  if(g>=5&&ability==='sheer-force'&&(sheer.has(m.name)||m.meta?.flinch_chance>0||m.meta?.ailment_chance>0&&['burn','paralysis','freeze','poison','confusion','sleep'].includes(m.meta?.ailment?.name)))return 1.3;
  if(g>=4&&ability==='technician'&&(resolvedPower??td2Power(m,a,null,g)?.min)<=60)return 1.5;
@@ -747,7 +926,7 @@ function td2OffensiveModifier(m,a,g,resolvedPower){const ability=td2ActualAbilit
  if(g>=5&&ability==='reckless'&&['Take Down','Double Edge','Submission','Volt Tackle','Wood Hammer','Brave Bird','Flare Blitz','Head Smash','Wild Charge','Jump Kick','High Jump Kick','Head Charge','Wave Crash'].includes(m.name))return 1.2;
  if(g>=6&&ability==='strong-jaw'&&['Bite','Crunch','Fire Fang','Ice Fang','Thunder Fang','Poison Fang','Psychic Fangs','Hyper Fang','Jaw Lock','Fishious Rend'].includes(m.name))return 1.5;
  if(g>=5&&ability==='sand-force'&&a?.weather==='sand'&&['ground','rock','steel'].includes(m.type))return 1.3;
- if(g>=3&&['blaze','torrent','overgrow','swarm'].includes(ability)&&({blaze:'fire',torrent:'water',overgrow:'grass',swarm:'bug'})[ability]===m.type&&Number.isFinite(a?.currentHP)&&a?.battleStats?.hp>0&&a.currentHP<=a.battleStats.hp/3)return 1.5;
+ if(g>=3&&['blaze','torrent','overgrow','swarm'].includes(ability)&&({blaze:'fire',torrent:'water',overgrow:'grass',swarm:'bug'})[ability]===m.type&&policy!=='base'&&Number.isFinite(a?.currentHP)&&a?.battleStats?.hp>0&&a.currentHP<=a.battleStats.hp/3)return 1.5;
  return 1;
 }
 function td2Stab(m,a,g){return a?.types?.includes(m.type)?(g>=4&&td2ActualAbility(a)==='adaptability'?2:1.5):1;}
@@ -764,15 +943,15 @@ function accuracyLabel(m){
  return 'N/A / conditional';
 }
 function movePowerText(m){if(['Rollout','Ice Ball'].includes(m.name))return '30 first hit; doubles if consecutive (max 480 on turn 5)';const r=movePowerRange(m);return r?(r.min===r.max?String(r.min):r.min+'–'+r.max)+(r.note?' ('+r.note+')':''):'Variable / special';}
-function expectedPower(m,attacker,target,gen,bound='min'){
+function expectedPower(m,attacker,target,gen,bound='min',policy=attacker?.level&&target?.level?'context':'base'){
  if(!attacker||!target||!m?.type||!['physical','special'].includes(m.damageClass)||!target.types?.length||!attacker.types?.length)return null;
- const eff=defensiveEffect(m,target,gen,attacker),r=td2Power(m,attacker,target,gen),acc=td2Accuracy(m);
+ const eff=defensiveEffect(m,target,gen,attacker),r=td2Power(m,attacker,target,gen,policy),acc=td2Accuracy(m);
  if(eff===null||eff===0||td72AbilityReport(m,target,gen,attacker).possibleImmune.length||m.damageClass==='status'||!r||acc===null)return null;
  const special=m.damageClass==='special',source=m.name==='Foul Play'?target:attacker;
- const useBattleStats=!!attacker.level&&!!target.level;
- const a=(useBattleStats?source.battleStats:source.baseStats)?.[special?'special-attack':'attack'],b=(useBattleStats?target.battleStats:target.baseStats)?.[special&&m.name!=='Psyshock'&&m.name!=='Psystrike'&&m.name!=='Secret Sword'?'special-defense':'defense'];
+ const a=td2Stat(source,special?'special-attack':'attack',policy);
+ const b=td2Stat(target,special&&!['Psyshock','Psystrike','Secret Sword'].includes(m.name)?'special-defense':'defense',policy);
  const statFactor=Number.isFinite(a)&&Number.isFinite(b)?Math.sqrt((a*td77Intimidate(attacker,target,m,gen)+30)/(b+30)):1;
- return r[bound]*td2Stab(m,attacker,gen)*eff*acc*statFactor*td2OffensiveModifier(m,attacker,gen,r[bound])*td77HeldDamage(attacker,target,m,gen)/td2Turns(m,attacker,gen);
+ return r[bound]*td2Stab(m,attacker,gen)*eff*acc*statFactor*td2OffensiveModifier(m,attacker,gen,r[bound],policy)*td77HeldDamage(attacker,target,m,gen)/td2Turns(m,attacker,gen);
 }
 function effectivePowerLabel(m){if(m.powerIndex===null||m.powerIndex===undefined)return 'Estimated score —';return 'Attack score '+Math.round(m.powerIndex)+(m.powerIndexMax>m.powerIndex?'–'+Math.round(m.powerIndexMax):'')}
 function moveStats(m){return `<span class="move-stats">PWR ${safe(movePowerText(m))} · ACC ${safe(accuracyLabel(m))}</span>`}
@@ -808,7 +987,7 @@ function analyze(p,opponent,gen){
   const stab=td2Stab(m,p,gen);
   return {...m,effectiveness,stab,total:effectiveness===null?null:effectiveness*stab};
  }).filter(m=>m.total!==null);
- const scored=offense.map(m=>({...m,powerIndex:expectedPower(m,p,opponent,gen),powerIndexMax:expectedPower(m,p,opponent,gen,'max')}));
+ const scored=offense.map(m=>({...m,powerIndex:expectedPower(m,p,opponent,gen,'min','base'),powerIndexMax:expectedPower(m,p,opponent,gen,'max','base')}));
  const best=scored.filter(m=>m.powerIndex!==null).sort((a,b)=>b.powerIndex-a.powerIndex)[0]||null;
  const threats=opponent.types.map(t=>({type:t,multiplier:matchup(t,p.types,gen)}));
  const worst=Math.max(...threats.map(t=>t.multiplier??1),.25);
@@ -825,13 +1004,13 @@ function moveValue(move,attacker,target,gen,ally){
  if(move.damageClass==='status'||move.power===0)return null;
  const stab=td2Stab(move,attacker,gen);
  if(!Number.isFinite(move.power)||move.power<=0||(!Number.isFinite(move.accuracy)&&!(move.accuracy===null&&ALWAYS_HIT_MOVES.has(move.name)))||!movePowerRange(move))return null;
- const power=td2Power(move,attacker,target,gen)?.min;
+ const power=td2Power(move,attacker,target,gen,'base')?.min;
  const spread=spreadTargets.has(move.target);
  const penalty=spread&&gen>=4?.75:1;
  const a=attacker.baseStats?.[move.damageClass==='special'?'special-attack':'attack'];
  const d=target.baseStats?.[move.damageClass==='special'?'special-defense':'defense'];
  const statFactor=Number.isFinite(a)&&Number.isFinite(d)?Math.sqrt((a+30)/(d+30)):1;
- const value=mult*stab*(power/60)*penalty*((move.accuracy===null?100:move.accuracy)/100)*statFactor*td2OffensiveModifier(move,attacker,gen)/td2Turns(move,attacker,gen);
+ const value=mult*stab*(power/60)*penalty*((move.accuracy===null?100:move.accuracy)/100)*statFactor*td2OffensiveModifier(move,attacker,gen,power,'base')/td2Turns(move,attacker,gen);
  const allyRisk=ally&&allyHitTargets.has(move.target)?defensiveEffect(move,ally,gen,attacker):0;
  return {move,value,mult,spread,allyRisk,priority:move.priority||0};
 }
@@ -874,14 +1053,10 @@ function pairCard(plan,index,opponents){
  return `<article class="card rank-card"><div class="rank-header"><span class="rank-number">#${index+1}</span><div class="pair-identities">${who(a)}${who(b)}</div></div>${actions}<p class="note">Potential incoming STAB risk: ${safe(a.name)} ${effectText(plan.risks[0])} · ${safe(b.name)} ${effectText(plan.risks[1])}. Speed tie-breaker uses base Speed only, not actual turn order.</p></article>`;
 }
 // DEV3.3: regular Battle uses species base stats, never level-derived stats or HP.
-function td33BaseBattleMon(p,team=null,index=-1){
+function td33BaseBattleMon(p){
  if(!p)return null;
- const {level,levelEstimated,battleStats,statAdjustments,currentHP,maxHP,baseSpeed,...rest}=p;
- const baseStats={...(p.baseStats||{})};
- const useSaved=!!team&&!p.saveStats?.egg;
- return {...rest,level:useSaved?tdDev1Level(p.level,p.saveStats?.level||50):undefined,baseStats,
-  battleStats:useSaved?td74EntryStats(baseStats,p):baseStats,currentHP:p.saveStats?.currentHP,
-  friendship:p.saveStats?.friendship,ivs:p.saveStats?.ivs,baseSpeed:baseStats.speed,heldItem:p.item??p.heldItem??''};
+ const {level,battleStats,statAdjustments,currentHP,maxHP,saveStats,status,ivs,evs,nature,friendship,...base}=p;
+ return {...base,heldItem:p.item??p.heldItem??''};
 }
 function showBattle(){
  if(!foe||doubleMode)window.td76RenderBattleStrip?.(current);
@@ -890,14 +1065,14 @@ function showBattle(){
  if(doubleMode&&!foe2){$('matchups').innerHTML='<p>Select the second opponent to compare both threats.</p>';return}
  const gen=gameGeneration(current.game),opponents=(doubleMode?[foe,foe2]:[foe]).map(p=>td33BaseBattleMon(p));
  const ranked=current.pokemon.filter(p=>p&&!p.saveStats?.egg).map(p=>{
-  const reports=opponents.map(o=>analyze(td33BaseBattleMon(p,current,current.pokemon.indexOf(p)),o,gen));
+  const reports=opponents.map(o=>analyze(td33BaseBattleMon(p),o,gen));
   const score=reports.reduce((s,r)=>s+r.score,0)/reports.length;
   return {p,reports,score,worst:Math.max(...reports.map(r=>r.worst))};
  }).sort((a,b)=>b.score-a.score);
  let pairSection='';
  if(doubleMode){
   window.td76RenderBattleStrip?.(current,ranked);
-  const members=current.pokemon.map((p,i)=>p?.saveStats?.egg?null:td33BaseBattleMon(p,current,i)).filter(Boolean),plans=[];
+  const members=current.pokemon.map((p,i)=>p?.saveStats?.egg?null:td33BaseBattleMon(p)).filter(Boolean),plans=[];
   for(let i=0;i<members.length;i++)for(let k=i+1;k<members.length;k++){
    const plan=pairPlan(members[i],members[k],opponents,gen);if(plan)plans.push(plan);
   }
@@ -910,7 +1085,7 @@ function showBattle(){
 
 
  const defense=r.worst>=4?'HIGH RISK':r.worst>=2?'WEAK DEFENSE':r.worst<1?'RESISTS ATTACKS':'NEUTRAL DEFENSE';
- const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${window.td76QuickMoveCards?.(td33BaseBattleMon(r.p,current,current.pokemon.indexOf(r.p)),opponents[k],gen)||'<p>No attacks saved</p>'}</div>`).join('');
+ const rows=r.reports.map((rep,k)=>`<div class="matchup-details"><h4>VS ${safe(opponents[k].name)}</h4><div class="threat-row">Potential incoming STAB: ${rep.threats.map(t=>`${pretty(t.type)} ${effectText(t.multiplier)}`).join(' · ')}</div>${window.td76QuickMoveCards?.(td33BaseBattleMon(r.p),opponents[k],gen)||'<p>No attacks saved</p>'}</div>`).join('');
  return `<article data-td76-battle-card="${current.pokemon.indexOf(r.p)}" class="card rank-card ${i===0?'rank-winner':''}"><div class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity td73-poke-link" role="button" tabindex="0" data-td73-mon="${safe(r.p.name)}" data-td73-context="battle" title="Tap for Pokédex"><div class="rank-portrait"><img src="${safe(r.p.image||'')}" alt=""></div><div class="rank-info"><strong>${safe(td41PokemonLabel(r.p.name))}</strong>${td3AbilityText(r.p)}<div class="pills">${r.p.types.map(pill).join('')}</div></div></div><div class="rank-risk ${r.worst>=2?'bad':r.worst<1?'good':''}">${defense}</div></div><details class="expand-details"><summary>View all attacks & defensive matchups <span>⌄</span></summary>${rows}</details></article>`;
  }).join('')||'<p>Add Pokémon to your team to see recommendations.</p>';
 
@@ -974,7 +1149,7 @@ function td66RememberGame(g,source='manual'){if(!games.includes(g))return;try{lo
 
 // Closing a team clears any game and team-derived tool state, never saved team records.
 function td70CloseTeam(){
- td74CloseInline(true);td72DetailsTeam=null;
+ td74CloseInline();td72DetailsTeam=null;
  current=null;chosen=null;foe=null;foe2=null;lookupVersion++;
  $('editor').hidden=true;
  $('foeInput').value='';$('foeInput2').value='';
@@ -1515,16 +1690,15 @@ async function td70PlatinumTrainerCached(){
  try{
   const hit=await(await caches.open(TD70_PLATINUM_TRAINER_CACHE)).match(TD70_PLATINUM_TRAINER_KEY);
   if(!hit)return null;
-  const payload=await hit.json();
-  return payload?.schema===70&&Array.isArray(payload.trainers)&&payload.trainers.length>=13?payload:null;
+  return td79Data.read(hit,payload=>payload?.schema===70&&Array.isArray(payload.trainers)&&payload.trainers.length>=13&&
+   payload.trainers.every(row=>typeof row?.name==='string'&&Array.isArray(row.pokemon)&&row.pokemon.every(mon=>
+    typeof mon?.name==='string'&&Number.isFinite(mon.level)&&Array.isArray(mon.moves)&&mon.moves.every(move=>typeof move==='string'))));
  }catch{return null}
 }
 async function td70PlatinumTrainerCatalog(){
  if(!td70TrainerCatalogPromise)td70TrainerCatalogPromise=(async()=>{
   const cached=await td70PlatinumTrainerCached();if(cached)return cached;
-  const response=await fetch(TD70_PLATINUM_TRAINER_SOURCE);
-  if(!response.ok)throw Error('Platinum trainer source returned HTTP '+response.status);
-  const raw=await response.json();
+  const raw=await td79Data.request(TD70_PLATINUM_TRAINER_SOURCE,{},response=>response.json());
   if(!Array.isArray(raw.trainers))throw Error('Platinum trainer source has an unexpected format');
   // Save a compact, source-derived roster (not the multi-megabyte complete dataset).
   const trainers=raw.trainers.filter(t=>/^(Leader |Elite Four |Champion )/.test(t.trainer_class||'')&&Array.isArray(t.pokemon)&&t.pokemon.length>1)
@@ -1654,7 +1828,7 @@ function td74ChallengeProfile(game,version,roster){
 }
 function td74EntryStats(base,entry,adjustments=entry?.statAdjustments){
  const imported=entry?.saveStats;
- if(imported&&!imported.egg){
+ if(imported?.stats&&!imported.egg){
   const level=tdDev1Level(entry.level,imported.level);
   const at=(key,l)=>{
    if(key==='hp'&&entry.id===292)return 1;
@@ -1692,9 +1866,8 @@ function td77MigrateBattleProfiles(){
     item:actual||mon.level!=null?mon.item??row.item??'':row.item??mon.item??'',
     statAdjustments:mon.statAdjustments??(matchesSnapshot?row.statAdjustments??{}:{})};
   })}));
-  localStorage.setItem('poketact-teams',JSON.stringify(migrated));
   teams=migrated;
-  localStorage.removeItem(TD72_LEVELS_KEY);
+  save().then(saved=>{if(saved&&localStorage.getItem(TD72_LEVELS_KEY)===raw)localStorage.removeItem(TD72_LEVELS_KEY);});
  }catch(error){console.warn('Could not migrate saved battle profiles',error);}
 }
 function td77PlannerTeamRows(team){
@@ -1707,12 +1880,12 @@ function td77PlannerTeamRows(team){
 }
 
 function tdDev1Level(value,fallback=50){const v=String(value??'').trim();return /^\d+$/.test(v)?Math.max(1,Math.min(100,Number(v))):fallback;}
-function plannerPresetSet(){
- const game=$('planGame').value,cat=$('planMode').value;
+function trainerPresetSet(game,cat){
  if(cat==='custom')return null;
  if(cat==='elite'&&game==='Emerald')return Object.fromEntries(Object.entries(emeraldLeague).map(([n,rows])=>[n,{v1:rows,v2:rows}]));
  return trainerRostersV57[game]?.[cat]||null;
 }
+function plannerPresetSet(){return trainerPresetSet($('planGame').value,$('planMode').value);}
 function syncPlanner(){
  refreshPlannerTeamMenu();
  const oldTrainer=$('planTrainer').value,game=$('planGame').value,mode=$('planMode').value;
@@ -1753,15 +1926,7 @@ function importPlannerTeam(){
 }
 function td61SyncVersionOptions(sel){const control=$('planVersion');const options=[...control.options];for(const o of options){if(['v2','v3','v4'].includes(o.value)){o.disabled=!sel?.[o.value];o.hidden=['v3','v4'].includes(o.value)&&!sel?.[o.value];}}if(!sel?.[control.value])control.value='v1';control.disabled=!sel?.v2&&!sel?.v3&&!sel?.v4;}
 let td70TrainerRosterToken=0,td77OpponentContext="";
-function loadPlannerRoster(){
- const request=++td70TrainerRosterToken,rosters=plannerPresetSet(),sel=rosters?.[$('planTrainer').value];
- if($('planMode').value!=='custom')td61SyncVersionOptions(sel);
- const row=sel?.[$('planVersion').value]||sel?.v1;
- const game=$('planGame').value,trainer=$('planTrainer').value,mode=$('planMode').value,version=$('planVersion').value;
- const context=game+'|'+mode;
- if(mode==='custom'&&td77OpponentContext===context)return;
- td77OpponentContext=context;
- plannerOpp=row?row.map(([name,level,...moves],i)=>{
+function td79TrainerRecord(game,mode,trainer,version,[name,level,...moves],i){
   const sequel=['Black 2','White 2'].includes(game);
   const exact=sequel?window.takDexB2W2?.rosters?.[mode]?.[trainer]?.[version]?.[i]:(game==='Platinum'&&mode==='elite')?window.takDexPlatinumLeagueV77?.get(trainer,version,name):null;
   const verified=window.takDexUnovaTrainerReference?.(game,trainer,version,td51NameKey(name),level);
@@ -1770,10 +1935,77 @@ function loadPlannerRoster(){
    (exact&&(!exact.name||td51NameKey(exact.name)===canonical)?exact.ability:'')||'';
   const challenge=exact?td74ChallengeProfile(game,version,window.takDexB2W2?.rosters?.[mode]?.[trainer]):{};
   if(challenge.challengeOffset&&verified&&level>verified.statLevel&&level-verified.statLevel<=5)challenge.challengeOffset=level-verified.statLevel;
-  return {name,level,...challenge,id:window.takDexBWCoreV75?.ids?.[name]||null,
-   moves:verified?.moves??exact?.moves??((game==='Black'||game==='White')?window.takDexBWTrainerMovesV76?.get(trainer,mode,version,name):null)??((game==='Emerald'&&mode==='gym'&&version==='v1')?td65EmeraldGymMoves[trainer]?.[i]:null)??moves,
-   item:verified?.item??exact?.item??'',ability,verifiedTrainerMoves:!!verified};
- }):Array.from({length:6},()=>({name:'',level:50,moves:[]}));
+  const [movesSource,attacks]=[
+   ['Verified Unova table',verified?.moves],['Bundled trainer variant',exact?.moves],
+   ['Bundled BW moves',(game==='Black'||game==='White')?window.takDexBWTrainerMovesV76?.get(trainer,mode,version,name):null],
+   ['Bundled Emerald Gym moves',game==='Emerald'&&mode==='gym'&&version==='v1'?td65EmeraldGymMoves[trainer]?.[i]:null],
+   ['Bundled preset',moves]
+  ].find(([,value])=>value!=null);
+  const item=verified?.item??exact?.item;
+  return {record:{name,level,...challenge,id:window.takDexBWCoreV75?.ids?.[name]||null,
+   moves:attacks,item:item??'',ability,verifiedTrainerMoves:!!verified},
+   fields:{moves:attacks.some(Boolean)?movesSource:null,ability:ability?'Bundled ability evidence':null,
+    item:typeof item==='string'?(verified?'Verified Unova table':'Bundled trainer variant'):null}};
+
+}
+// Read only. Do not start a download from the coverage screen.
+async function td79CoverageInventory(){
+ const platinum=await td70PlatinumTrainerCached();
+ const attempt=call=>Promise.resolve().then(call).catch(()=>null);
+ return Promise.all(games.map(async game=>{
+  const group=vg[game];
+  const [bundle,stored,reference,machines]=await Promise.all([
+   attempt(()=>window.takDexDB74?.inventory(game)),
+   attempt(()=>window.takDexEncounterV55?.cached(game,{storedOnly:true})),
+   attempt(()=>window.takDexReferenceV58?.cached(game,{verify:true})),
+   attempt(()=>window.takDexReferenceV58?.machineInventory(game))
+  ]);
+  const usingStored=stored?.hasSource&&(stored.schema===65||!bundle?.rows);
+  const encounter=usingStored?{
+   rows:stored.records,groups:Object.values(stored.entries).reduce((sum,rows)=>sum+rows.length,0),
+   source:'Downloaded encounter index'
+  }:bundle?{rows:bundle.rows,groups:bundle.grouped,source:'Bundled PokéAPI snapshot'}:null;
+  const totals={trainers:0,variants:0,entries:0,moves:0,abilities:0,items:0};
+  const providers=new Set();
+  for(const mode of ['gym','elite','story']){
+   const category=trainerPresetSet(game,mode)||{};
+   totals.trainers+=Object.keys(category).length;
+   for(const [trainer,versions] of Object.entries(category)){
+    for(const [version,roster] of Object.entries(versions)){
+     if(!Array.isArray(roster)||!roster.length)continue;
+     totals.variants++;
+     const fallback=game==='Platinum'&&platinum?td70PlatinumTrainerMoves(platinum,trainer,roster):null;
+     roster.forEach((entry,i)=>{
+      const record=td79TrainerRecord(game,mode,trainer,version,entry,i);
+      totals.entries++;
+      const movesSource=record.fields.moves||(fallback?.[i]?.some(Boolean)?'Downloaded Platinum trainer source':null);
+      totals.moves+=Number(!!movesSource);
+      totals.abilities+=Number(!!record.fields.ability);
+      totals.items+=Number(!!record.fields.item);
+      for(const provider of [movesSource,record.fields.ability,record.fields.item])if(provider)providers.add(provider);
+     });
+    }
+   }
+  }
+  const maps=window.takDexMapsV73?.inventory(game);
+  const tutors=window.takDexTutorV73?.inventory(game);
+  return {game,group,shared:games.filter(other=>other!==game&&vg[other]===group),encounter,
+   downloadedEncounter:stored?.hasSource?'Saved index':stored?'Stored with no source rows':'No downloaded index',
+   downloadedReference:reference?.complete?'Validated download':reference?.invalid?'Missing or invalid dependencies':reference?'Partial download':'No download',
+   machines:machines?{count:machines.rows.length,source:machines.source}:null,totals,providers:[...providers],maps,tutors,
+   acquisition:window.takDexAcquisitionV77?.coverage(game),progression:window.td62Progress?.coverage(game)};
+ }));
+}
+window.takDexCoverageV79={inventory:td79CoverageInventory};
+function loadPlannerRoster(){
+ const request=++td70TrainerRosterToken,rosters=plannerPresetSet(),sel=rosters?.[$('planTrainer').value];
+ if($('planMode').value!=='custom')td61SyncVersionOptions(sel);
+ const row=sel?.[$('planVersion').value]||sel?.v1;
+ const game=$('planGame').value,trainer=$('planTrainer').value,mode=$('planMode').value,version=$('planVersion').value;
+ const context=game+'|'+mode;
+ if(mode==='custom'&&td77OpponentContext===context)return;
+ td77OpponentContext=context;
+ plannerOpp=row?row.map((entry,i)=>td79TrainerRecord(game,mode,trainer,version,entry,i).record):Array.from({length:6},()=>({name:'',level:50,moves:[]}));
  renderPlannerSlots('planOpp',plannerOpp,false);
  if(mode!=='custom')$('planResults').innerHTML='';
  if(['Black 2','White 2'].includes(game)&&['v3','v4'].includes(version)&&mode!=='custom')$('eliteNote').textContent='Challenge Mode: stats use Normal Mode levels and 30 IVs; displayed levels are used for damage. Nature and EVs remain estimates.';else if(mode!=='custom')$('eliteNote').textContent='';
@@ -1868,7 +2100,7 @@ function plannerEdit(e){const x=e.target;if(!x.dataset.plan)return;const arr=x.d
   const my=++token,arr=input.dataset.plan==='own'?plannerOwn:plannerOpp,row=arr[+input.dataset.i],game=$('planGame').value,query=clean(input.value);
   closeExcept(box);box.hidden=false;box.innerHTML='<p class="note">Loading compatible moves…</p>';
   const list=await validMovesFor(row?.name,game);if(my!==token||!box.isConnected)return;
-  const hit=list.filter(n=>!query||n.includes(query));const shown=hit.slice(0,browse?60:18);
+  const hit=td78SearchMatches(list,query);const shown=hit.slice(0,browse?60:18);
   box.innerHTML=shown.length?shown.map(n=>`<button type="button" data-td65-pick="${safe(n)}">${safe(td41PokemonLabel(n))}</button>`).join('')+(hit.length>shown.length?'<p class="note">Type to narrow the list.</p>':''):'<p class="note">No verified moves for this game. Manual entry is still allowed.</p>';
  }
  const host=$('plannerPage');
@@ -1964,21 +2196,85 @@ async function loadPlannerPokemon(e,gen,game){
  const abilities=historicalAbilities(p,game);
  return {weight:p.weight??e.weight??null,id:p.id||e.id||bw?.ids?.[name],canonicalName:name,sourceMoves:td73MoveSignature(e.moves),name:pretty(p.name||name),types:historicalTypes(p,game),baseStats,
    battleStats:td74EntryStats(baseStats,e),currentHP:e.saveStats?.level===e.level?e.saveStats?.currentHP:undefined,friendship:e.saveStats?.friendship,statAdjustments:{...(e.statAdjustments||{})},
-   abilities,level:e.level,moves,heldItem:e.item||'',
+   abilities,level:e.level,moves,heldItem:e.item||'',status:td78ImportedStatus(e.saveStats,gen),
    selectedAbility:td2ResolveAbility({abilities},e.ability)||null};
 }
+function td78ImportedStatus(saved,gen){
+ const word=saved?.statusWord;
+ if(gen!==5||saved?.egg||!Number.isInteger(word)||word<0)return undefined;
+ const flag=word&255;
+ if(flag>=1&&flag<=7)return 'sleep';
+ return ({0:'none',8:'poison',16:'burn',32:'freeze',64:'paralysis',128:'toxic',136:'toxic'})[flag];
+}
 function estimateDamage(a,d,m,gen,bound='min'){
- if(!a||!d||a.dataMissing||d.dataMissing||!m?.type||!['physical','special'].includes(m.damageClass)||!d.types?.length||!a.types?.length||td72AbilityReport(m,d,gen,a).possibleImmune.length)return null;
- const eff=defensiveEffect(m,d,gen,a);if(eff===null)return null;if(eff===0)return 0;
- const l=tdDev1Level(a.level,50),al=tdDev1Level(d.level,50);
- if(['Seismic Toss','Night Shade'].includes(m.name))return l;
- if(m.name==='Dragon Rage')return 40;if(m.name==='Sonic Boom')return 20;
- const range=td2Power(m,a,d,gen);if(!range)return null;const power=range[bound];if(power<=0)return 0;
- const special=m.damageClass==='special',ak=special?'special-attack':'attack',dk=special&&!['Psyshock','Psystrike','Secret Sword'].includes(m.name)?'special-defense':'defense',source=m.name==='Foul Play'?d:a;
- const atk=source.battleStats?.[ak],def=d.battleStats?.[dk];if(!Number.isFinite(atk)||!Number.isFinite(def)||atk<=0||def<=0)return null;
- const stab=td2Stab(m,a,gen),item=td77HeldDamage(a,d,m,gen);
- const effectiveAttack=atk*td77Intimidate(a,d,m,gen);
- return Math.max(1,Math.floor((Math.floor((Math.floor(2*l/5)+2)*power*effectiveAttack*td2OffensiveModifier(m,a,gen,power)/Math.max(1,def)/50)+2)*eff*stab*item));
+ return td78DamageRolls(a,d,m,gen,bound)?.at(-1)??null;
+}
+const TD78_PERCENT_ROLLS=Array.from({length:16},(_,i)=>85+i);
+const TD78_BYTE_ROLLS=Array.from({length:39},(_,i)=>217+i);
+const td78Round=value=>Math.ceil(value-.5);
+const td78ApplyModifier=(value,modifier)=>td78Round(value*modifier/4096);
+function td78ChainModifiers(modifiers){
+ return modifiers.reduce((total,modifier)=>Math.floor((total*modifier+2048)/4096),4096);
+}
+function td78DamageRolls(a,d,m,gen,bound='min',range){
+ if(!a||!d||a.dataMissing||d.dataMissing||!m?.type||!['physical','special'].includes(m.damageClass)||!d.types?.length||!a.types?.length)return null;
+ const report=td72AbilityReport(m,d,gen,a);
+ const eff=report.effective??defensiveEffect(m,d,gen,a);
+ if(eff===null||report.possibleImmune.length)return null;
+ if(eff===0)return [0];
+ const level=tdDev1Level(a.level,50);
+ if(['Seismic Toss','Night Shade'].includes(m.name))return [level];
+ if(m.name==='Dragon Rage')return [40];
+ if(m.name==='Sonic Boom')return [20];
+ if(m.name==='Dream Eater'&&d.status!=='sleep')return null;
+ range??=td2Power(m,a,d,gen);
+ if(!range)return null;
+ const power=range[bound];
+ if(power<=0)return [0];
+ const special=m.damageClass==='special',ak=special?'special-attack':'attack',dk=special&&!['Psyshock','Psystrike','Secret Sword'].includes(m.name)?'special-defense':'defense';
+ const atk=(m.name==='Foul Play'?d:a).battleStats?.[ak],def=d.battleStats?.[dk];
+ if(!(atk>0&&def>0))return null;
+ const stab=td2Stab(m,a,gen),offense=td2OffensiveModifier(m,a,gen,power),held=td77HeldDamage(a,d,m,gen);
+ const intimidation=td77Intimidate(a,d,m,gen);
+ const base=(bp,attack,defense)=>Math.floor(Math.floor((Math.floor(2*level/5)+2)*bp*attack/defense)/50)+2;
+ if(gen!==5){
+  // Historical fallback retains the prior maximum estimate. The sampled
+  // random factors are verified, but this is not historical formula parity.
+  const max=base(power,atk*intimidation*offense,Math.max(1,def))*eff*stab*held;
+  return (gen<=2?TD78_BYTE_ROLLS:TD78_PERCENT_ROLLS).map(roll=>Math.max(1,Math.floor(Math.floor(max)*roll/(gen<=2?255:100))));
+ }
+ const item=td73MoveKey(a.heldItem),ability=td2ActualAbility(a),defenderAbility=report.knownAbility;
+ const powerMods=[],attackMods=[],finalMods=[];
+ if(['blaze','overgrow','torrent','swarm','huge-power','pure-power'].includes(ability)){
+  if(offense!==1)attackMods.push(offense*4096);
+ }else if(offense!==1)powerMods.push(offense===1.3?5325:offense===1.2?4915:offense*4096);
+ if(!special&&ability==='guts'&&a.status&&a.status!=='none')attackMods.push(6144);
+ if(defenderAbility==='thick-fat'&&['fire','ice'].includes(m.type))attackMods.unshift(2048);
+ if(defenderAbility==='heatproof'&&m.type==='fire')powerMods.push(2048);
+ if(defenderAbility==='dry-skin'&&m.type==='fire')powerMods.push(5120);
+ if(item==='choice-band'||item==='choice-specs'){
+  if(held>1)attackMods.push(6144);
+ }else if(item==='life-orb')finalMods.push(5324);
+ else if(item==='expert-belt'){if(held>1)finalMods.push(4915);}
+ else if(held>1)powerMods.push(held===1.1?4505:4915);
+ const types=report.base??eff;
+ if(['filter','solid-rock'].includes(defenderAbility)&&types>1)finalMods.unshift(3072);
+ if(defenderAbility==='multiscale'&&(!Number.isFinite(d.currentHP)||d.currentHP>=estimatedHP(d)))finalMods.unshift(2048);
+ const final=td78ChainModifiers(finalMods);
+ if(m.name==='Solar Beam'&&['rain','sand','hail'].includes(a.weather))powerMods.unshift(2048);
+ const adjustedPower=Math.max(1,td78ApplyModifier(power,td78ChainModifiers(powerMods)));
+ const attack=Math.max(1,td78ApplyModifier(Math.floor(atk*intimidation),td78ChainModifiers(attackMods)));
+ const weather=a.weather;
+ const rainSun=weather==='rain'||weather==='sun';
+ const strengthened=weather==='rain'?'water':'fire',weakened=weather==='rain'?'fire':'water';
+ const weatherMod=rainSun&&m.type===strengthened?6144:rainSun&&m.type===weakened?2048:4096;
+ const sandBoost=(weather==='sand'||d.weather==='sand')&&special&&dk==='special-defense'&&d.types.includes('rock');
+ const damage=td78ApplyModifier(base(adjustedPower,attack,sandBoost?td78ApplyModifier(def,6144):def),weatherMod);
+ const burn=!special&&a.status==='burn'&&ability!=='guts';
+ return TD78_PERCENT_ROLLS.map(roll=>{
+  const typed=Math.floor(td78Round(Math.floor(damage*roll/100)*stab)*types);
+  return td78Round(Math.max(1,(burn?Math.floor(typed/2):typed)*final/4096));
+ });
 }
 function td77Intimidate(a,d,m,gen){
  if(gen<3||m.damageClass!=='physical'||m.name==='Foul Play'||td2ActualAbility(d)!=='intimidate')return 1;
@@ -1993,69 +2289,8 @@ function td77HeldDamage(a,d,m,gen){
  return item;
 }
 function estimatedHP(p){const hp=p.baseStats?.hp||70,level=Math.max(1,Math.min(100,p.level||50));return p.battleStats?.hp||td74StatEstimate(hp,level,true)}
-function plannerDamageLabel(a,d,m,gen){const high=estimateDamage(a,d,m,gen);if(high===null)return 'Damage varies';const hp=estimatedHP(d);const low=high===0?0:['Seismic Toss','Night Shade','Dragon Rage','Sonic Boom'].includes(m.name)?high:Math.max(1,Math.floor(high*.85));
- if(['Rollout','Ice Ball'].includes(m.name)){
-  // One hit is 30 BP. Full five-hit sequence doubles 30→60→120→240→480,
-  // but is never assumed in rankings or one-turn damage estimates.
-  const sequence=[30,60,120,240,480].map(power=>estimateDamage(a,d,{...m,power,name:'__one_hit_fixed__'},gen)||0);
-  const ceiling=sequence.reduce((sum,value)=>sum+value,0);
-  return `First hit: Est. ${low}–${high} HP (${Math.round(100*low/hp)}–${Math.round(100*high/hp)}%); 5-hit ceiling: up to ${ceiling} HP (all hits required, not guaranteed)`;
- }
- const ceiling=estimateDamage(a,d,m,gen,'max');return `Est. ${low}–${high} HP (${Math.round(100*low/hp)}–${Math.round(100*high/hp)}%)${ceiling>high?' · Conditional max '+ceiling+' HP':''}`;
-}
-// V17: rank YOUR whole team independently against EACH opposing Pokémon, in battle order.
-function plannerPortrait(p){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`}
-// V64: progressive matchup analysis. Type-only information is always available;
-// move-based HP estimates are only shown when an actual damaging move was provided.
 function plannerPotentialStab(attacker,defender,gen){
  return [...new Set(attacker.types||[])].map(t=>({type:t,mult:defensiveEffect({type:t,name:'Potential STAB',damageClass:'physical'},defender,gen,attacker)})).filter(x=>x.mult!==null);
-}
-function plannerTypeRisk(threats){const worst=Math.max(...threats.map(t=>t.mult),0);
- return {worst,label:worst>=4?'4× STAB threat':worst>=2?'2× STAB threat':worst===1?'Neutral STAB risk':worst>0?'Resists STAB':'Immune to listed STAB'};
-}
-function plannerStabLine(threats){return threats.length?threats.map(t=>`${pill(t.type)} <b>${safe(effectText(t.mult))}</b>`).join(' · '):'<span class="note">Opponent typing unavailable.</span>'}
-function renderPlannerBattle(own,opp,gen){
- const disclaimer='<p class="analysis-disclaimer">Ranking weighs expected damage as a share of estimated target HP, worst entered damaging opponent move as a share of your HP, move accuracy, and a small estimated-Speed tie-break. <b>Entered opponent attacks</b> are treated as actual threats for ranking; <b>potential STAB</b> is hypothetical and used only when there is no entered damaging opponent move. Damage ranges are approximate on-hit values, not guarantees. Estimates omit EVs, natures, most held items, weather, status, boosts, real HP/IVs, priority, turn order and many move/ability effects. Life Orb, Choice Band, Choice Specs, Expert Belt, Muscle Band and Wise Glasses are approximated where applicable. Known historical ability immunities are applied; moves potentially blocked by an unknown possible ability are withheld from recommendations. Enter a confirmed opponent ability to resolve uncertainty. Trainer roster Pokémon/levels are not proof of their moves.</p>';
- return opp.map((d,oi)=>{
-  const ranks=own.map(a=>{
-   const attacks=(a.moves||[]).map(m=>({m,value:estimateDamage(a,d,m,gen),effectiveness:defensiveEffect(m,d,gen,a),perTurn:td2PerTurn(a,d,m,gen)})).filter(x=>x.value!==null&&x.value>0).sort((x,y)=>y.perTurn-x.perTurn);
-   const incoming=(d.moves||[]).map(m=>({m,value:estimateDamage(d,a,m,gen),effectiveness:defensiveEffect(m,a,gen,d),perTurn:td2PerTurn(d,a,m,gen)})).filter(x=>x.value!==null&&x.value>0).sort((x,y)=>y.perTurn-x.perTurn);
-   const outgoingStab=plannerPotentialStab(a,d,gen),incomingStab=plannerPotentialStab(d,a,gen);
-   const potential=plannerTypeRisk(incomingStab);
-   const knownThreat=incoming[0]||null,best=attacks[0]||null;
-   const possibleBlocks=(a.moves||[]).filter(m=>td72AbilityReport(m,d,gen,a).possibleImmune.length).map(m=>({name:m.name,reason:td72RiskLabel(m,d,gen,a)}));
-   const topOffensiveMult=Math.max(0,...outgoingStab.map(t=>td72AbilityReport({type:t.type,damageClass:'physical'},d,gen).possibleImmune.length?0:t.mult));
-   const hitChance=m=>Number.isFinite(m?.accuracy)?Math.max(0,Math.min(1,m.accuracy/100)):1;
-   const enemyHP=Math.max(1,estimatedHP(d)),ownHP=Math.max(1,estimatedHP(a));
-   const outgoingPercent=best?100*best.value/enemyHP:null;
-   const incomingPercent=knownThreat?100*knownThreat.value/ownHP:null;
-   // Matchup ranking is explicitly driven by known moves, not a hypothetical STAB type if known attacks exist.
-   const offensive=best?Math.min(3.6,3*outgoingPercent/100)*hitChance(best.m)/td2Turns(best.m,a,gen):0.45*topOffensiveMult;
-   const defensive=knownThreat?Math.min(3.8,3*incomingPercent/100)*hitChance(knownThreat.m)/td2Turns(knownThreat.m,d,gen)
-     :potential.worst>=4?1.3:potential.worst>=2?.7:potential.worst===0?-.25:potential.worst<1?-.15:.15;
-   const speedA=a.battleStats?.speed||td74StatEstimate(a.baseStats?.speed,a.level),speedD=d.battleStats?.speed||td74StatEstimate(d.baseStats?.speed,d.level);
-   const speedBonus=Math.max(-.12,Math.min(.12,(speedA-speedD)/250));
-   const knownWorst=knownThreat?.value??null;
-   return {a,attacks,incoming,best,outgoingStab,incomingStab,potential,knownThreat,knownWorst,outgoingPercent,incomingPercent,score:offensive-defensive+speedBonus,topOffensiveMult,possibleBlocks};
-  }).sort((a,b)=>b.score-a.score);
-  return `<details class="planner-opponent td63-opponent"><summary class="planner-opponent-heading td63-opponent-heading"><div class="planner-opponent-number">${oi+1}</div><div class="planner-opponent-art"><img src="${safe(plannerPortrait(d))}" alt=""></div><div><small>OPPONENT ${oi+1} OF ${opp.length}</small><h3><span role="button" tabindex="0" class="td73-poke-link" data-td73-mon="${safe(d.name)}" data-td73-context="planner" title="Tap for Pokédex">${safe(d.name)}</span> <span>Lv ${d.level}</span></h3><div class="pills">${d.types.map(pill).join('')}</div></div><span class="td63-chevron" aria-hidden="true">⌄</span></summary><div class="td63-opponent-body"><div class="planner-opponent-moves"><b>Opponent moves:</b> ${d.moves.length?d.moves.map(m=>`<span class="movechip" style="--c:${colors[m.type]||'#777'}">${safe(m.name)}</span>`).join(' '):'<span class="note">Not entered · potential STAB threats shown below</span>'}</div><h4 class="section-label">▥ YOUR TEAM · BEST MATCHUPS</h4>${ranks.map((r,i)=>{
-    const b=r.best;
-    const headline=b?`<div class="recommended-move"><small>⚔ BEST KNOWN MOVE VS ${safe(d.name).toUpperCase()}</small><strong class="td65-head-move">${safe(b.m.name)} ${pill(b.m.type)}</strong><span>${effectText(b.effectiveness)} effective · ${plannerDamageLabel(r.a,d,b.m,gen)} · ${td3Stab(r.a.types.includes(b.m.type))}</span></div>`:
-      `<div class="recommended-move"><small>POTENTIAL OFFENSE · MOVES NOT ENTERED</small><strong>${r.topOffensiveMult?effectText(r.topOffensiveMult)+' STAB potential':'No effective STAB type'}</strong><span>Type matchup only · does not confirm a move is learned</span></div>`;
-    const defensiveMult=r.knownThreat?.effectiveness??r.potential.worst;
-    const defenseStatus=defensiveMult===0?'Immune':defensiveMult<1?'Resistant':defensiveMult>=2?'Weak':'Neutral';
-    // Keep the explicit defensive verdict visible alongside the move/source and its multiplier.
-    // The entered-move label describes the highest estimated incoming damage, not every possible attack.
-    const risk=r.knownThreat?(r.knownThreat.m.name+' · '+effectText(defensiveMult))
-      :('Potential STAB · '+effectText(r.potential.worst));
-    const knownRisk=r.knownThreat?`<p class="td70-known-risk"><strong>Highest entered incoming threat: ${safe(r.knownThreat.m.name)}</strong> · ${effectText(r.knownThreat.effectiveness)} · ${plannerDamageLabel(d,r.a,r.knownThreat.m,gen)}</p>`:
-      '<p class="note">No entered damaging opponent moves — ranking uses hypothetical STAB-type exposure.</p>';
-    const uncertain=r.possibleBlocks?.length?`<p class="td72-ability-warning">${r.possibleBlocks.map(x=>safe(x.name)+' — '+safe(x.reason)).join(' · ')}. These attacks are not ranked until the opponent’s ability is known.</p>`:'';
-    const detail=r.attacks.length?r.attacks.map(x=>`<div class="learn-row td65-attackline"><div class="td65-attackhead"><b>${safe(x.m.name)}</b>${pill(x.m.type)}</div><span class="td65-attackdetail">${effectText(x.effectiveness)} effective · ${plannerDamageLabel(r.a,d,x.m,gen)}${r.a.types.includes(x.m.type)?' · STAB':''}</span></div>`).join(''):'<p class="note">No damaging attacks entered. Potential STAB type coverage: '+plannerStabLine(r.outgoingStab)+'</p>';
-    const defense=r.incoming.length?`<h4>Entered opponent attacks against ${safe(r.a.name)} · ${safe(defenseStatus)}</h4>`+r.incoming.map(x=>`<div class="learn-row td65-attackline"><div class="td65-attackhead"><b>${safe(x.m.name)}</b>${pill(x.m.type)}</div><span class="td65-attackdetail">${effectText(x.effectiveness)} effective · ${plannerDamageLabel(d,r.a,x.m,gen)}${d.types.includes(x.m.type)?' · STAB':''}</span></div>`).join(''):'<p class="note">No verified damaging opponent attacks entered; incoming HP damage cannot be estimated. '+safe(defenseStatus)+' (type-only assessment).</p>';
-    return `<details class="card rank-card td63-rank ${i===0?'rank-winner':''}"><summary class="recommendation-head"><div class="ranking-medal">${i===0?'♛':i+1}</div><div class="identity rank-identity"><div class="rank-portrait"><img src="${safe(plannerPortrait(r.a))}" alt=""></div><div class="rank-info"><strong><span role="button" tabindex="0" class="td73-poke-link" data-td73-mon="${safe(r.a.name)}" data-td73-context="planner" title="Tap for Pokédex">${safe(r.a.name)}</span> · Lv ${r.a.level}</strong><div class="pills">${r.a.types.map(pill).join('')}</div></div></div><div class="rank-risk td66-defense ${defenseStatus==='Weak'?'td66-defense-weak':defenseStatus==='Neutral'?'td66-defense-neutral':'td66-defense-safe'}"><span class="td70-defense-verdict">${safe(defenseStatus)}</span><span class="td70-defense-source">${safe(risk)}</span></div><span class="td63-chevron" aria-hidden="true">⌄</span><div class="td72-rank-best">${b?`<b>⚔ ${safe(b.m.name)}</b><span>${b.m.type?pill(b.m.type):''} PWR ${safe(Number.isFinite(b.m.power)?b.m.power:'—')} · ACC ${safe(Number.isFinite(b.m.accuracy)?b.m.accuracy+'%':'—')} · ${effectText(b.effectiveness)}${r.a.types.includes(b.m.type)?' · STAB':''} · ${safe(effectivePowerLabel({...b.m,powerIndex:expectedPower(b.m,r.a,d,gen)}))}</span>`:'<span>No unblocked damaging move known</span>'}</div></summary><div class="td63-rank-body">${headline}${uncertain}${knownRisk}<div class="td64-stab"><h4>Potential incoming STAB · type only</h4>${plannerStabLine(r.incomingStab)}<p class="note">These attack types are possible, not confirmed moves.</p></div><div class="td70-expanded-matchups"><h4>Offensive attacks</h4>${detail}${defense}</div></div></details>`;
-   }).join('')}</div></details>`;
- }).join('')+disclaimer;
 }
 let td70PlannerRequest=0;
 $('planAnalyze').onclick=async()=>{const request=++td70PlannerRequest,result=$('planResults');const game=$('planGame').value,gen=gameGeneration(game);
@@ -2263,19 +2498,17 @@ for(const id of ['foeInput','foeInput2']){
   status.textContent=p?.complete?'🟢 Offline records downloaded · '+new Date(p.date).toLocaleDateString():p?.done?'🔵 Partial database · '+p.done+' / '+p.total+' files. Tap to resume.':'⚪ Offline database not downloaded';
   btn.textContent=p?.complete?'Update offline database':p?.done?'Resume offline download':'Download offline database';
  };
- const cached=async(url)=>!!(await (await caches.open(OFFLINE_CACHE)).match(url));
- const download=async(url,force=false)=>{
-  const cache=await caches.open(url.startsWith(origin)?OFFLINE_CACHE:'takdex-artwork-v26');
-  if(!force&&await cache.match(url))return;
-  let err;for(let i=0;i<3;i++)try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);await cache.put(url,r.clone());return}catch(e){err=e}
-  throw err;
+ const download=async url=>{
+  const library=url.startsWith(origin),cache=await caches.open(library?OFFLINE_CACHE:'takdex-artwork-v26');
+  if(library)return td79Data.ensure(cache,url,data=>td79Data.apiShape(url.slice(origin.length),data));
+  const valid=r=>r?.ok&&/^image\//i.test(r.headers.get('content-type')||'');
+  if(valid(await cache.match(url)))return;
+  await td79Data.request(url,{cache:'no-store'},async response=>{
+   if(!valid(response)||!(await response.clone().blob()).size)throw Error('Invalid artwork response');
+   await cache.put(url,response);
+  });
  };
- const getList=async(path)=>{
-  const url=origin+path;
-  let res=await (await caches.open(OFFLINE_CACHE)).match(url);
-  if(!res){await download(url);res=await (await caches.open(OFFLINE_CACHE)).match(url)}
-  return (await res.json()).results||[];
- };
+ const getList=async path=>(await download(origin+path)).results;
  btn.addEventListener('click',async()=>{
   if(busy)return;
   if(!('caches' in window)){status.textContent='Offline storage unsupported';return}
@@ -2603,12 +2836,12 @@ update();
  }
  function index(rows,field){return new Map(rows.map(x=>[x[field],x]))}
  const maxIds=[151,251,386,493,649,721,809,905,1025];
- async function cached(game,{storedOnly=false}={}){if(!storedOnly&&MEM.has(game))return MEM.get(game);if(!('caches'in window))return null;const r=await(await caches.open(CACHE)).match(key(game));if(!r)return null;try{const p=await r.json();if((p.schema===55||p.schema===64||p.schema===65)&&p.game===game){if(!storedOnly)MEM.set(game,p);return p}}catch{}return null}
- async function fetchTable(name){if(!TABLES.has(name))TABLES.set(name,(async()=>{const res=await fetch(ROOT+name+'.csv');if(!res.ok)throw Error('PokéAPI '+name+'.csv: HTTP '+res.status);return csv(await res.text(),name)})().catch(e=>{TABLES.delete(name);throw e}));return TABLES.get(name)}
- async function buildSelected(selected,progress){
+ async function cached(game,{storedOnly=false}={}){if(!storedOnly&&MEM.has(game))return MEM.get(game);if(!('caches'in window))return null;const r=await(await caches.open(CACHE)).match(key(game));if(!r)return null;const p=await td79Data.read(r,p=>p.game===game&&td79Data.encounterShape(p));if(p&&!storedOnly)MEM.set(game,p);return p}
+ async function fetchTable(name){if(!TABLES.has(name))TABLES.set(name,(async()=>{return td79Data.request(ROOT+name+'.csv',{},async res=>csv(await res.text(),name))})().catch(e=>{TABLES.delete(name);throw e}));return TABLES.get(name)}
+ async function buildSelected(selected,progress,signal){
   const data={};let done=0;
   // Grouped fetches avoid saturating mobile connections, while retaining usable progress updates.
-  for(let i=0;i<SOURCE.length;i+=4){const batch=SOURCE.slice(i,i+4);await Promise.all(batch.map(async n=>{data[n]=await fetchTable(n);done++;progress('Downloading source tables · '+done+' / '+SOURCE.length)}))}
+  for(let i=0;i<SOURCE.length;i+=4){if(signal?.aborted)throw signal.reason;const batch=SOURCE.slice(i,i+4);await Promise.all(batch.map(async n=>{data[n]=await fetchTable(n);done++;progress('Downloading source tables · '+done+' / '+SOURCE.length)}))}
   progress('Indexing version-specific encounters…');
   const versions=data.versions,vsByName=index(versions,'identifier'),pokemon=index(data.pokemon,'id'),speciesById=index(data.pokemon_species,'id');
   const typeName=index(data.types,'id'),methods=index(data.encounter_methods,'id'),slot=index(data.encounter_slots,'id');
@@ -2648,6 +2881,7 @@ update();
    const entries={};if(bucket)for(const [id,rec] of bucket.ids)entries[id]=[...rec.values()].sort((a,b)=>a[0].localeCompare(b[0]));
    packs[g]={schema:64,game:g,version:name,source:'PokéAPI encounters, regional dex and species lineage; curated starter/special records',sourceDate:new Date().toISOString().slice(0,10),records:bucket?.count||0,mons,entries,hasSource:!!bucket&&bucket.count>0};
   }
+  if(signal?.aborted)throw signal.reason;
   progress('Saving indexed game packs…');
   if(!('caches' in window))throw Error('Offline CacheStorage is unavailable in this browser');
   const cache=await caches.open(CACHE);
@@ -2667,9 +2901,9 @@ update();
   if(!IN_FLIGHT.has(game))IN_FLIGHT.set(game,buildSelected([game],m=>{lastProgress(m);if(cb)cb(m)}).finally(()=>IN_FLIGHT.delete(game)));
   await IN_FLIGHT.get(game);const pack=await cached(game);if(!pack)throw Error('No encounter pack for '+game);return pack;
  }
- async function refresh(game,cb){if(!games.includes(game))throw Error('Select a supported game');
-  const local=await window.takDexDB74?.encounter(game).catch(()=>null);if(local?.hasSource){const cache=await caches.open(CACHE);await cache.put(key(game),new Response(JSON.stringify(local),{headers:{'content-type':'application/json'}}));MEM.set(game,local);window.dispatchEvent(new Event('td58-pack-update'));return local;}
-  if(!IN_FLIGHT.has(game))IN_FLIGHT.set(game,buildSelected([game],m=>{lastProgress(m);if(cb)cb(m)}).finally(()=>IN_FLIGHT.delete(game)));
+ async function refresh(game,cb,signal){if(!games.includes(game))throw Error('Select a supported game');
+  const local=await window.takDexDB74?.encounter(game).catch(()=>null);if(signal?.aborted)throw signal.reason;if(local?.hasSource){const cache=await caches.open(CACHE);await cache.put(key(game),new Response(JSON.stringify(local),{headers:{'content-type':'application/json'}}));MEM.set(game,local);window.dispatchEvent(new Event('td58-pack-update'));return local;}
+  if(!IN_FLIGHT.has(game))IN_FLIGHT.set(game,buildSelected([game],m=>{lastProgress(m);if(cb)cb(m)},signal).finally(()=>IN_FLIGHT.delete(game)));
   await IN_FLIGHT.get(game);return cached(game);
  }
  async function remove(game){MEM.delete(game);if('caches' in window){const cache=await caches.open(CACHE);await cache.delete(key(game))}window.dispatchEvent(new Event('td58-pack-update'))}
@@ -2800,10 +3034,29 @@ function td77TypeTiles(gen,attribute,isSelected){
 function td772FilterButton(id,label,panel){
  return `<button id="${id}" class="td772-filter-button" type="button" aria-label="${label}" aria-expanded="false" aria-controls="${panel}"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg></button>`;
 }
-function td772BindFilter(button,panel){
+function td78FilterHeader(count=0){
+ return `<div class="td78-filter-header"><button type="button" class="td774-secondary" data-td78-clear-filters ${count?'':'disabled'}>Clear filters</button></div>`;
+}
+function td78FilterBadges(types,classes=[]){
+ return [...Array.from(types,type=>[type,'type']),...Array.from(classes,kind=>[kind,'class'])].map(([value,group])=>
+  `<span class="td78-filter-chip${group==='type'?' pill':''}"${group==='type'?` style="--c:${colors[value]}"`:''}>
+   ${safe(pretty(value))}<button type="button" data-td78-filter-value="${safe(value)}" data-td78-filter-group="${group}" aria-label="Clear ${safe(pretty(value))} filter">×</button></span>`).join('');
+}
+function td78FilterState(button,panel,count){
+ button.classList.toggle('selected',count>0);
+ panel.querySelector('.td78-filter-header')?.remove();
+ panel.insertAdjacentHTML('afterbegin',td78FilterHeader(count));
+}
+function td772BindFilter(button,panel,clear){
  const open=value=>{panel.hidden=!value;button.setAttribute('aria-expanded',String(value));};
  button.onclick=()=>open(panel.hidden);
- panel.addEventListener('keydown',event=>{if(event.key==='Escape'){open(false);button.focus();}});
+ panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();open(false);button.focus();}});
+ panel.addEventListener('click',event=>{
+  if(!event.target.closest('[data-td78-clear-filters]'))return;
+  clear?.();
+  button.focus({preventScroll:true});
+ });
+ td78FilterState(button,panel,0);
 }
 (function initTypeExplorer(){
  const dex=$('dexPage');if(!dex||$('typeExplorerPage'))return;
@@ -2836,12 +3089,15 @@ function td772BindFilter(button,panel){
  const filterButton=$('td772ExplorerFilters');
  filterBox.innerHTML=`<label><input type="checkbox" id="td65Recorded"> Only recorded wild encounters</label><label><input type="checkbox" id="td65Unverified"> Include unverified Pokémon</label><label><input type="checkbox" id="td66Trades"> Include Pokémon requiring external trades</label>`;
  typeEl.before(filterBox);
- td772BindFilter(filterButton,filterBox);
+ td772BindFilter(filterButton,filterBox,()=>{
+  for(const input of filterBox.querySelectorAll('input'))input.checked=false;
+  filterBox.dispatchEvent(new Event('change'));
+ });
  filterBox.addEventListener('change',()=>{
   onlyRecorded=$('td65Recorded').checked;
   includeUnverified=$('td65Unverified').checked;
   includeTrades=$('td66Trades').checked;
-  filterButton.classList.toggle('selected',onlyRecorded||includeUnverified||includeTrades);
+  td78FilterState(filterButton,filterBox,Number(onlyRecorded)+Number(includeUnverified)+Number(includeTrades));
   show();
  });
  function go(back,restore=false){dex.hidden=!back;page.hidden=back;if(!back)window.scrollTo(0,restore?explorerScroll:0);else window.scrollTo(0,0)}
@@ -2971,8 +3227,7 @@ function td772BindFilter(button,panel){
    // This is a generation filter, NOT proof of in-game obtainability.
    const max=maxPokemon();
    const pool=rows.filter(r=>td7PokemonAllowed(r.name,Number(r.url?.match(/\/(\d+)\/?$/)?.[1]),game.value)).map(r=>r.name);
-   const prefix=pool.filter(n=>n.startsWith(q)),other=q?pool.filter(n=>!n.startsWith(q)&&n.includes(q)):[];
-   const found=(browse&&!q?pool:prefix.concat(other)).slice(0,45);
+   const found=td78SearchMatches(pool,q).slice(0,45);
    box.innerHTML=found.length?found.map(n=>`<button type="button" data-compare-name="${safe(n)}">${safe(td41PokemonLabel(n))}</button>`).join('')+'<p class="note" style="padding:3px 8px">'+(q?'Type more to narrow results.':'Type to search the full Pokédex.')+'</p>':'<p class="note">No matching Pokémon.</p>';
   }catch{if(mine===revision)box.innerHTML='<p class="note">Pokémon list unavailable. Connect to the internet or download Offline Data.</p>'}
  }
@@ -3087,16 +3342,16 @@ function td772BindFilter(button,panel){
 
  <p id="td59State" class="note" aria-live="polite">Checking downloaded data…</p>
  <p id="td59Progress" class="note" aria-live="polite"></p>
- <div class="td59-actions"><button type="button" id="td59Download">Download game pack</button><button type="button" class="td59-delete" id="td59Delete">Remove pack</button></div></div>
- <div class="card td59-card"><h3>Saved game packs</h3><div id="td59Saved" class="note">Checking storage…</div>
+ <div class="td59-actions"><button type="button" class="td774-secondary" id="td59Download">Download pack</button><button type="button" class="td774-secondary" id="td59Delete">Remove pack</button></div></div>
+ <div class="card td59-card">
  <button type="button" class="td59-delete td59-clear" id="td59Clear">Clear all downloaded packs and old offline data</button></div>
- <p class="note">Pack status tracks offline files. Encounter and acquisition records may be incomplete. Artwork downloads can use significant storage.</p>`;
+ <p class="note">Artwork downloads can use significant storage.</p>`;
  document.querySelector('main').appendChild(page);
  const css=document.createElement('style');css.textContent=`
  #td59OfflinePage .td59-card{margin:13px 0;padding:16px}
  #td59OfflinePage .td59-card h3{margin:0 0 9px;font-size:1.05rem}
  #td59OfflinePage .td59-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-items:stretch}
- #td59OfflinePage .td59-actions button{width:100%;min-width:0;min-height:44px;padding:8px;font-size:.9rem;border:1px solid transparent}
+ #td59OfflinePage .td59-actions button{width:100%;min-width:0;height:44px;padding:8px;font-size:.9rem}
  #td59OfflinePage .td59-delete{background:transparent!important;color:var(--text,#eee)!important;border:1px solid var(--edge,#555)!important;box-shadow:none!important}
  #td59OfflinePage .td59-delete:disabled{opacity:.35}
  #td59OfflinePage .td59-card .note{overflow-wrap:anywhere}
@@ -3115,12 +3370,20 @@ function td772BindFilter(button,panel){
  async function cachedArtwork(g){
   if(!('caches' in window)||!(await caches.keys()).includes(artCacheName(g)))return null;
   try{const r=await(await caches.open(artCacheName(g))).match(artKey(g));if(!r)return null;
-   const meta=await r.json();return meta.schema===60&&meta.game===g?meta:null;
+   const meta=await td79Data.read(r,m=>m?.schema===60&&m.game===g&&typeof m.complete==='boolean'&&Number.isInteger(m.expected));
+   if(!meta)return {complete:false,invalid:true};
+   if(meta.complete){
+    const cache=await caches.open(artCacheName(g)),keys=new Set((await cache.keys()).map(request=>request.url));
+    for(let id=1;id<=maxFor(g);id++){
+     if(!keys.has(SPRITES_ROOT+'other/official-artwork/'+id+'.png')||!keys.has(SPRITES_ROOT+id+'.png'))return {...meta,complete:false,invalid:true};
+    }
+   }
+   return meta;
   }catch{return null}
  }
  // Pack artwork is intentionally stored under the ORIGINAL image URLs, so all screens
  // (Pokédex, evolutions, Battle, 6v6, comparison and explorer) share one image cache.
- async function downloadArtwork(g,report){
+ async function downloadArtwork(g,report,signal){
   if(!('caches' in window))throw Error('Offline image storage unavailable');
   const store=await caches.open(artCacheName(g));
   const sharedStores=await Promise.all((await caches.keys()).filter(k=>k.startsWith(ART_PREFIX)&&k!==artCacheName(g)).map(k=>caches.open(k)));
@@ -3134,21 +3397,23 @@ function td772BindFilter(button,panel){
   const progress=()=>report('Artwork '+completed+'/'+urls.length+' images · '+failed+' unavailable');
   progress();
   async function worker(){
-   while(next<urls.length){const url=urls[next++];let hit=false;
+   while(next<urls.length&&!signal?.aborted){const url=urls[next++];let hit=false;
     try{
      const old=await store.match(url);
-     if(old){hit=true;saved++}
+     const valid=response=>response?.ok&&/^image\//i.test(response.headers.get('content-type')||'');
+     if(valid(old)){hit=true;saved++}
      else {
       // Existing downloaded game artwork can be copied locally, without redownloading.
-      for(const shared of sharedStores){const copy=await shared.match(url);if(copy){await store.put(url,copy.clone());saved++;hit=true;break}}
+      for(const shared of sharedStores){const copy=await shared.match(url);if(valid(copy)){await store.put(url,copy.clone());saved++;hit=true;break}}
       let lastError;
-      for(let attempt=0;attempt<2&&!hit;attempt++){
+      for(let attempt=0;attempt<2&&!hit&&!signal?.aborted;attempt++){
        try{
-        const response=await fetch(url,{mode:'cors',cache:'no-store'});
-        if(!response.ok)throw Error('Image HTTP '+response.status);
-        if(!((response.headers.get('content-type')||'').toLowerCase().startsWith('image/')))throw Error('Not an image');
-        await store.put(url,response.clone());
-        bytes+=Number(response.headers.get('content-length'))||0;
+        await td79Data.request(url,{mode:'cors',cache:'no-store',signal},async response=>{
+         if(!valid(response))throw Error('Not an image');
+         const body=await response.clone().blob();
+         if(!body.size)throw Error('Empty artwork');
+         await store.put(url,response);bytes+=body.size;
+        });
         saved++;hit=true;
        }catch(e){lastError=e}
       }
@@ -3160,7 +3425,7 @@ function td772BindFilter(button,panel){
    }
   }
   await Promise.all(Array.from({length:Math.min(5,urls.length)},worker));
-  const meta={schema:60,game:g,complete:failed===0,expected:urls.length,completed,saved,failed,bytes,created:new Date().toISOString()};
+  const meta={schema:60,game:g,complete:!signal?.aborted&&completed===urls.length&&failed===0,expected:urls.length,completed,saved,failed,bytes,created:new Date().toISOString()};
   await store.put(artKey(g),new Response(JSON.stringify(meta),{headers:{'Content-Type':'application/json'}}));
   window.dispatchEvent(new Event('td58-pack-update'));
   if(failed)throw Error(failed+' image files could not be downloaded. Retry to resume.');
@@ -3179,44 +3444,98 @@ function td772BindFilter(button,panel){
  }
  function restoreProgress(g){try{const p=JSON.parse(localStorage.getItem(OFFLINE_PROGRESS_KEY)||'null');return p?.game===g?p.message:''}catch{return ''}}
 
- const fetchJSON=async url=>{const res=await fetch(url,{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status+' · '+url);return res.json()};
+
  const rows=text=>{const lines=text.trim().split(/\r?\n/),head=lines.shift().split(',');return lines.filter(Boolean).map(line=>{const parts=line.split(',');return Object.fromEntries(head.map((h,i)=>[h,(parts[i]||'').trim()]))})};
- async function cachedReference(g){if(!('caches'in window))return null;
-  if(!(await caches.keys()).includes(refCacheName(g)))return null;
-  const found=await(await caches.open(refCacheName(g))).match(refKey(g));
-  if(!found)return null;try{const d=await found.json();return d.schema===58&&d.game===g?d:null}catch{return null}}
- async function machinesFor(g){try{const local=await window.takDexDB74?.machines(vg[g]);if(local?.length)return local}catch{}const meta=await cachedReference(g);return meta?.machines||null}
- window.takDexReferenceV58={machinesFor,cached:cachedReference};
- async function downloadReference(g,report){
+ const referenceLists=['pokemon?limit=2000','pokemon-species?limit=2000','move?limit=2000','evolution-chain?limit=1000'];
+ const referencePath=(kind,id)=>BASE+kind+'/'+id+'/';
+ const referenceRecord=(store,url)=>store.match(url).then(response=>
+  td79Data.read(response,data=>td79Data.apiShape(url.slice(BASE.length),data)));
+ async function verifyReference(store,g){
+  const keys=new Set((await store.keys()).map(request=>request.url)),cap=maxFor(g),dependents=new Set();
+  const planned=referenceLists.map(path=>BASE+path);
+  for(let id=1;id<=cap;id++)planned.push(referencePath('pokemon',id),referencePath('pokemon-species',id));
+  if(planned.some(url=>!keys.has(url)))return false;
+  let next=0,valid=true;
+  async function check(urls,inspect){
+   next=0;
+   await Promise.all(Array.from({length:5},async()=>{
+    while(valid&&next<urls.length){
+     const url=urls[next++],data=await referenceRecord(store,url);
+     if(!data)valid=false;else if(inspect)inspect(url,data);
+    }
+   }));
+  }
+  await check(planned,(url,data)=>{
+   if(url.startsWith(BASE+'pokemon/'))for(const move of data.moves){
+    if(move.version_group_details.some(v=>v.version_group.name===vg[g]))dependents.add(move.move.url);
+   }
+   if(url.startsWith(BASE+'pokemon-species/'))dependents.add(data.evolution_chain.url);
+  });
+  if(!valid||[...dependents].some(url=>!keys.has(url)))return false;
+  await check([...dependents]);
+  return valid;
+ }
+ async function cachedReference(g,{verify=false}={}){
+  if(!('caches'in window)||!(await caches.keys()).includes(refCacheName(g)))return null;
+  const store=await caches.open(refCacheName(g));
+  const data=await td79Data.read(await store.match(refKey(g)),d=>d?.schema===58&&d.game===g&&
+   typeof d.complete==='boolean'&&td79Data.machineRows(d.machines));
+  if(!data)return {complete:false,invalid:true,machines:[]};
+  if(data.complete&&verify&&(!data.machines.length||!await verifyReference(store,g)))return {...data,complete:false,invalid:true};
+  return {...data,verified:verify&&data.complete};
+ }
+ async function machineInventory(g){
+  try{const local=await window.takDexDB74?.machines(vg[g]);if(local?.length)return {rows:local,source:'Bundled PokéAPI snapshot'};}catch{}
+  const meta=await cachedReference(g);
+  return meta?.machines?.length?{rows:meta.machines,source:'Downloaded TM/HM catalog'}:null;
+ }
+ async function machinesFor(g){return (await machineInventory(g))?.rows||null;}
+ window.takDexReferenceV58={machinesFor,machineInventory,cached:cachedReference};
+ async function downloadReference(g,report,signal){
   if(!('caches' in window))throw Error('Offline storage not supported by this browser');
   const store=await caches.open(refCacheName(g));
-  const prior=await cachedReference(g);
+  const prior=await cachedReference(g,{verify:true});
   let saved=0,failed=0,requests=0;const failures=[];
   if(!prior?.complete)await store.put(refKey(g),new Response(JSON.stringify({schema:58,game:g,complete:false,created:new Date().toISOString(),saved:0,requests:0,failed:0,machines:[]}),{headers:{'content-type':'application/json'}}));
   const progress=msg=>report(msg+' · '+saved+' saved / '+requests+' checked'+(failed?' · '+failed+' failed':''));
-  async function put(url){requests++;if(await store.match(url)){saved++;return null}
-   // Species, moves and evolution-chain URLs are identical between game packs. Reuse
-   // a verified response from an earlier pack instead of downloading it again.
-   try{const other=await caches.match(url,{ignoreSearch:false});
-    if(other?.ok){const data=await other.clone().json();await store.put(url,other.clone());saved++;return data;}}
-   catch{} // A bad shared cache response must not block the network fallback.
-   let error;for(let retry=0;retry<2;retry++)try{const res=await fetch(url,{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const data=await res.clone().json();await store.put(url,res.clone());saved++;return data}catch(e){error=e}
-   failed++;failures.push(url);return null;
+  const names=(await caches.keys()).filter(name=>name!==refCacheName(g)&&name.startsWith(REF_PREFIX));
+  const sharedStores=await Promise.all(names.map(name=>caches.open(name)));
+  async function shared(url){
+   for(const cache of sharedStores){
+    const hit=await cache.match(url);
+    if(await td79Data.read(hit?.clone(),data=>td79Data.apiShape(url.slice(BASE.length),data)))return hit;
+   }
+   return null;
   }
-  async function work(urls,label,process){let n=0;let next=0;progress(label);
+  async function put(url){
+   if(signal?.aborted)throw signal.reason;
+   requests++;
+   try{
+    const data=await td79Data.ensure(store,url,data=>td79Data.apiShape(url.slice(BASE.length),data),{shared,signal});
+    saved++;return data;
+   }catch(error){
+    if(signal?.aborted)throw error;
+    failed++;failures.push(url);return null;
+   }
+  }
+  async function work(urls,label,process){
+   let done=0,next=0;progress(label);
    const unique=[...new Set(urls)];
-   async function run(){while(next<unique.length){const url=unique[next++];let data;
-    // Needed when a previously downloaded Pokémon record is used to discover its moves.
-    const hit=await store.match(url);if(hit){saved++;requests++;try{data=await hit.json()}catch{data=null}}
-    else data=await put(url);
-    if(data&&process)process(data);
-    n++;if(n%15===0||n===unique.length)progress(label+' · '+n+'/'+unique.length);
-   }}
-   await Promise.all(Array.from({length:Math.min(5,unique.length||1)},run));
+   async function run(){
+    while(next<unique.length&&!signal?.aborted){
+     const data=await put(unique[next++]);
+     if(data&&process)process(data);
+     done++;
+     if(done%15===0||done===unique.length)progress(label+' · '+done+'/'+unique.length);
+    }
+   }
+   const results=await Promise.allSettled(Array.from({length:Math.min(5,unique.length||1)},run));
+   if(signal?.aborted)throw signal.reason;
+   const failure=results.find(result=>result.status==='rejected');
+   if(failure)throw failure.reason;
   }
-  const lists=['pokemon?limit=2000','pokemon-species?limit=2000','move?limit=2000','evolution-chain?limit=1000'];
   progress('Saving Pokémon search indexes');
-  for(const p of lists)await put(BASE+p);
+  for(const path of referenceLists)await put(BASE+path);
   const cap=maxFor(g),moveLinks=new Set(),evoLinks=new Set(),chosenGroup=vg[g];
   const pokemonUrls=Array.from({length:cap},(_,i)=>BASE+'pokemon/'+(i+1)+'/');
   await work(pokemonUrls,'Pokémon details',p=>{
@@ -3233,7 +3552,7 @@ function td772BindFilter(button,panel){
    const local=await window.takDexDB74?.machines(chosenGroup).catch(()=>null);
    if(local?.length){machines=local;}else{
    const files=await Promise.all(['machines','version_groups','items','moves'].map(async n=>{
-    const res=await fetch(CSV_ROOT+n+'.csv');if(!res.ok)throw Error(n+' CSV unavailable');return rows(await res.text());
+    return td79Data.request(CSV_ROOT+n+'.csv',{signal},async res=>rows(await res.text()));
    }));
    const [machineRows,versionGroups,items,moves]=files;
    const correctedGroup=chosenGroup==='brilliant-diamond-and-shining-pearl'?'brilliant-diamond-shining-pearl':chosenGroup;
@@ -3245,7 +3564,8 @@ function td772BindFilter(button,panel){
    if(!machines.length)throw Error('Game-specific TM/HM list unavailable in PokéAPI CSV');
    }
   }catch(e){failed++;failures.push('TM/HM catalog: '+e.message)}
-  const previous=await cachedReference(g);
+  if(signal?.aborted)throw signal.reason;
+  const previous=await cachedReference(g,{verify:true});
   const meta={schema:58,game:g,complete:failed===0,created:new Date().toISOString(),saved,requests,failed,machines,
    note:'Generation-filtered reference records, not verified game-specific obtainable roster'};
   // Never replace a previously complete manifest with an incomplete retry.
@@ -3256,14 +3576,10 @@ function td772BindFilter(button,panel){
  }
  async function removeReference(g){if('caches' in window)await caches.delete(refCacheName(g));window.dispatchEvent(new Event('td58-pack-update'))}
 
- function statusFor(ref,enc,art,trainerReady){
-  return ref?.complete&&enc?.hasSource&&enc.schema>=64&&art?.complete&&trainerReady?'ready':
-   ref||enc||art?'partial':'missing';
- }
- const iconFor={ready:'🟢',partial:'🔵',shared:'🟣',missing:'⚪'};
+ const iconFor={ready:'🟢',partial:'🟠',missing:'⚪'};
  $('td59Legend').innerHTML=Object.entries(iconFor).map(([status,icon])=>
   `<li><span aria-hidden="true">${icon}</span><span>${word(status)}</span></li>`).join('');
- let packStates=new Map(),statusRefresh;
+ const packStates=new Map();
  const gameSelectIds=['game','editTeamGame','dexGame','planGame','tmGame','typeCheckGame','typeExplorerGame','td56Game','td59Game'];
  // Explicit option.value is critical: Team dialog options used to derive their value from text.
  function decorateGameSelects(){
@@ -3272,32 +3588,88 @@ function td772BindFilter(button,panel){
     if(!games.includes(name))continue;
     if(!option.dataset.td59Game){option.value=name;option.dataset.td59Game=name}
     const model=packStates.get(name);
-    const label=id==='td59Game'?iconFor[model?.displayStatus||'missing']+' '+name+(model?' · '+word(model.displayStatus):''):name;
+    const label=id==='td59Game'&&model?iconFor[model.status]+' '+name+' · '+word(model.status):name;
     if(option.textContent!==label)option.textContent=label;
    }
   }
  }
- async function getState(g){
-  const [ref,enc,art,trainers]=await Promise.all([
-   cachedReference(g),window.takDexEncounterV55.cached(g,{storedOnly:true}),cachedArtwork(g),
-   g==='Platinum'?td70PlatinumTrainerCached():Promise.resolve(true)
+ async function packStores(names,accept){
+  return Promise.all(names.filter(accept).map(name=>caches.open(name)));
+ }
+ async function inspectPack(g,names){
+  const cap=maxFor(g),refs=await packStores(names,name=>name.startsWith(REF_PREFIX)||name===OFFLINE_CACHE);
+  const artwork=await packStores(names,name=>name.startsWith(ART_PREFIX)||name==='takdex-artwork-v26');
+  const refKeys=new Set((await Promise.all(refs.map(store=>store.keys()))).flat().map(key=>key.url));
+  const artKeys=new Set((await Promise.all(artwork.map(store=>store.keys()))).flat().map(key=>key.url));
+  const read=async url=>{
+   for(const store of refs){
+    const record=await referenceRecord(store,url);
+    if(record)return record;
+   }
+   return null;
+  };
+  const required=referenceLists.map(path=>BASE+path),images=[];
+  for(let id=1;id<=cap;id++){
+   required.push(referencePath('pokemon',id),referencePath('pokemon-species',id));
+   images.push(SPRITES_ROOT+id+'.png',SPRITES_ROOT+'other/official-artwork/'+id+'.png');
+  }
+  let usableRef=false;
+  const deps=new Set();
+  const hasCore=required.every(url=>refKeys.has(url));
+  async function validReferences(urls,discover){
+   let next=0,complete=true;
+   await Promise.all(Array.from({length:5},async()=>{
+    while(next<urls.length){
+     const url=urls[next++],data=await read(url);
+     if(!data){complete=false;continue;}
+     usableRef=true;
+     if(!discover)continue;
+     if(url.startsWith(BASE+'pokemon/'))for(const move of data.moves){
+      if(move.version_group_details.some(v=>v.version_group.name===vg[g]))deps.add(move.move.url);
+     }
+     if(url.startsWith(BASE+'pokemon-species/'))deps.add(data.evolution_chain.url);
+    }
+   }));
+   return complete;
+  }
+  let core=false;
+  if(hasCore)core=await validReferences(required,true);
+  if(!core&&!usableRef)for(const url of required){
+   if(refKeys.has(url)&&await read(url)){usableRef=true;break;}
+  }
+  const artValid=async url=>{
+   if(!artKeys.has(url))return false;
+   for(const store of artwork){
+    const hit=await store.match(url);
+    if(hit?.ok&&/^image\//i.test(hit.headers.get('content-type')||'')&&(await hit.blob()).size)return true;
+   }
+   return false;
+  };
+  let usableArt=false,completeArt=images.every(url=>artKeys.has(url));
+  for(const url of images){
+   if(await artValid(url))usableArt=true;
+   else completeArt=false;
+   if(usableArt&&!completeArt)break;
+  }
+  const [enc,trainers,machines]=await Promise.all([
+   window.takDexEncounterV55.cached(g,{storedOnly:true}),
+   g==='Platinum'?td70PlatinumTrainerCached():true,
+   Promise.all(games.filter(other=>vg[other]===vg[g]).map(other=>cachedReference(other)))
   ]);
-  return {ref,enc,art,trainers,status:statusFor(ref,enc,art,trainers)};
+  const hasMachines=machines.some(meta=>meta?.machines?.length);
+  const completeRef=core&&hasMachines&&await validReferences([...deps],false);
+  const completeEncounter=!!enc?.hasSource&&enc.schema>=64;
+  const status=completeRef&&completeEncounter&&completeArt&&trainers?'ready':
+   usableRef||hasMachines||usableArt||enc?.hasSource||g==='Platinum'&&trainers?'partial':'missing';
+  return {status,ref:{complete:completeRef},enc,art:{complete:completeArt},trainers,
+   local:names.includes(refCacheName(g))||names.includes(artCacheName(g))||!!enc||g==='Platinum'&&!!trainers};
  }
- function refreshStatusMap(){
-  if(!statusRefresh)statusRefresh=Promise.all(games.map(async name=>[name,await getState(name)]))
-   .then(records=>{
-    const sources=records.filter(([,p])=>p.ref?.complete||p.ref?.saved>0||p.art?.complete||p.art?.saved>0);
-    packStates=new Map(records.map(([name,p])=>[name,{...p,displayStatus:p.status==='missing'&&
-     sources.some(([source])=>name!==source&&gameGeneration(name)===gameGeneration(source))?'shared':p.status}]));
-    decorateGameSelects();
-   }).finally(()=>{statusRefresh=null});
-  return statusRefresh;
- }
+ async function getState(g){return inspectPack(g,'caches'in window?await caches.keys():[]);}
+ function refreshStatusMap(){decorateGameSelects();return Promise.resolve();}
  document.addEventListener('focusin',e=>{if(e.target?.tagName==='SELECT')decorateGameSelects()},true);
  document.addEventListener('pointerdown',e=>{if(e.target?.closest?.('select'))decorateGameSelects()},true);
  window.takDexOfflineV59={refreshIndicators:refreshStatusMap};
- function word(status){return {ready:'Downloaded',partial:'Partial download',shared:'Shared reference',missing:'No pack'}[status]}
+ function word(status){return {ready:'Downloaded',partial:'Partial download',missing:'Not downloaded'}[status]}
  async function hasLegacyCache(){
   try{const keys=await caches.keys();if(keys.some(k=>['takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k)))return true}catch{}
   try{if(localStorage.getItem('takdex-offline-full-v26'))return true;for(let i=0;i<localStorage.length;i++)if(localStorage.key(i)?.startsWith('pt-v2:'))return true}catch{}
@@ -3305,7 +3677,14 @@ function td772BindFilter(button,panel){
  }
  async function update(){
   const g=game.value,token=++taskState.token;
-  try{await refreshStatusMap()}catch(e){
+  try{
+   await refreshStatusMap();
+   if(games.includes(g)){
+    const selected=await getState(g,true);
+    if(token!==taskState.token)return;
+    packStates.set(g,selected);decorateGameSelects();
+   }
+  }catch(e){
    if(token===taskState.token)state.textContent='Pack status unavailable.';
    return;
   }
@@ -3313,58 +3692,53 @@ function td772BindFilter(button,panel){
   const model=packStates.get(g);
   $('td59Name').textContent='Game pack';
   if(model){
-   const {ref,enc,art,trainers,status,displayStatus}=model;
-   state.textContent=iconFor[displayStatus]+' '+word(displayStatus)
-    +' · Reference: '+(ref?.complete?'saved':ref?'partial':'missing')
-    +' · Encounters: '+(enc?.hasSource?enc.schema>=64?'indexed':'update needed':enc?'unavailable':'missing')
-    +' · Artwork: '+(art?.complete?'saved':art?(art.saved||0)+'/'+(art.expected||'?'):'missing')
-    +(g==='Platinum'?' · Trainer attacks: '+(trainers?'saved':'missing'):'');
-   downloadBtn.textContent=status==='ready'?'✓ Downloaded':status==='partial'?'Resume download':'Download pack';
-   downloadBtn.disabled=taskState.busy||status==='ready';
-   deleteBtn.disabled=taskState.busy||status==='missing';
+   const {status}=model;
+   state.textContent=iconFor[status]+' '+word(status);
+   downloadBtn.textContent=taskState.download?'Cancel download':status==='ready'?'✓ Downloaded':status==='partial'?'Resume download':'Download pack';
+   downloadBtn.disabled=!taskState.download&&(taskState.busy||status==='ready');
+   deleteBtn.disabled=taskState.busy||!model.local;
   }else{
    state.textContent='Choose a game to manage its pack.';
    downloadBtn.textContent='Download pack';
    downloadBtn.disabled=true;deleteBtn.disabled=true;
   }
-  const saved=[...packStates].filter(([,p])=>p.status!=='missing');
-  $('td59Saved').innerHTML=saved.length?saved.map(([name,p])=>'<div>'+iconFor[p.displayStatus]+' <b>'+safe(name)+'</b> · '+word(p.displayStatus)+'</div>').join(''):'No game-specific packs stored.';
-  const hasData=saved.length||await hasLegacyCache();
+  const hasData=('caches'in window&&(await caches.keys()).some(name=>name.startsWith(REF_PREFIX)||name.startsWith(ART_PREFIX)||name==='takdex-encounter-catalog-v55'||name===TD70_PLATINUM_TRAINER_CACHE))||await hasLegacyCache();
   if(token===taskState.token)clearBtn.disabled=taskState.busy||!hasData;
  }
  function setBusy(busy){taskState.busy=busy;game.disabled=busy;downloadBtn.disabled=busy;deleteBtn.disabled=busy;clearBtn.disabled=busy;}
  async function downloadGame(){
-  if(taskState.busy)return;
+  if(taskState.busy){taskState.download?.abort();return;}
   const g=game.value;if(!games.includes(g)){progress.textContent='Choose a game first.';return}
-  setBusy(true);let errors=[];
+  setBusy(true);const controller=new AbortController(),signal=controller.signal;taskState.download=controller;
+  downloadBtn.disabled=false;downloadBtn.textContent='Cancel download';let errors=[];
   setProgress(g,'Starting '+g+' pack download…',true);
   try{
-   const existing=await getState(g);
+   const existing=await getState(g,true);
    if(!existing.ref?.complete){
     setProgress(g,'Downloading '+g+' reference data…',true);
-    try{await downloadReference(g,txt=>setProgress(g,'↻ '+txt))}catch(e){errors.push('Reference: '+(e.message||e))}
+    try{await downloadReference(g,txt=>setProgress(g,'↻ '+txt),signal)}catch(e){errors.push('Reference: '+(e.message||e))}
    }
-   if(!existing.enc?.hasSource||existing.enc?.schema<64){
+   if(!signal.aborted&&(!existing.enc?.hasSource||existing.enc?.schema<64)){
     setProgress(g,'Downloading '+g+' encounter locations…',true);
-    try{await window.takDexEncounterV55.refresh(g,txt=>setProgress(g,'↻ '+txt))}catch(e){errors.push('Encounters: '+(e.message||e))}
+    try{await window.takDexEncounterV55.refresh(g,txt=>setProgress(g,'↻ '+txt),signal)}catch(e){errors.push('Encounters: '+(e.message||e))}
    }
-   if(!existing.art?.complete){
+   if(!signal.aborted&&!existing.art?.complete){
     setProgress(g,'Downloading '+g+' Pokémon artwork…',true);
-    try{await downloadArtwork(g,txt=>setProgress(g,'↻ '+txt))}catch(e){errors.push('Artwork: '+(e.message||e))}
+    try{await downloadArtwork(g,txt=>setProgress(g,'↻ '+txt),signal)}catch(e){errors.push('Artwork: '+(e.message||e))}
    }
-   if(g==='Platinum'&&!(await td70PlatinumTrainerCached())){
+   if(!signal.aborted&&g==='Platinum'&&!(await td70PlatinumTrainerCached())){
     setProgress(g,'Downloading verified Platinum trainer moves…',true);
     try{await td70PlatinumTrainerCatalog()}catch(e){errors.push('Trainer moves: '+(e.message||e))}
    }
-   const final=await getState(g);
-   setProgress(g,errors.length?'⚠ '+errors.join(' | '):final.status==='ready'?'':'⚠ Pack is partial; some source data is missing. Retry to resume.',true);
-  }finally{setBusy(false);await update()}
+   const final=await getState(g,true);
+   setProgress(g,signal.aborted?'Download cancelled. Saved records can be reused.':errors.length?'⚠ '+errors.join(' | '):final.status==='ready'?'':'⚠ Pack is partial; some source data is missing. Retry to resume.',true);
+  }finally{taskState.download=null;setBusy(false);await update()}
  }
  async function removeGame(){
   if(taskState.busy)return;
   const g=game.value;if(!games.includes(g))return;const existing=await getState(g);
-  if(existing.status==='missing')return;
-  if(!window.confirm('Remove the downloaded '+g+' game pack?\n\nThis will delete its reference and encounter records. Saved teams and settings will NOT be deleted.'))return;
+  if(!existing.local)return;
+  if(!await td78Confirmation('Remove the '+g+' offline pack?','This removes its reference and encounter records.','Remove'))return;
   setBusy(true);
   try{await removeReference(g);await window.takDexEncounterV55.remove(g);await removeArtwork(g);if(g==='Platinum'){await caches.delete(TD70_PLATINUM_TRAINER_CACHE);td70TrainerCatalogPromise=null}setProgress(g,'Pack removed.',true)}
   catch(e){progress.textContent='⚠ Could not remove '+g+': '+(e.message||e)}
@@ -3373,7 +3747,7 @@ function td772BindFilter(button,panel){
  async function clearAll(){
   if(taskState.busy)return;
   const msg='Delete ALL downloaded game packs AND older offline databases?\n\nSaved teams, nicknames, movesets and preferences will NOT be deleted.\n\nThis cannot be undone.';
-  if(!window.confirm(msg))return;
+  if(!await td78Confirmation('Delete offline packs?',msg,'Delete'))return;
   setBusy(true);progress.textContent='Removing game packs and old offline records…';
   try{
    // Clearing the catalog's in-memory map matters: otherwise removed games remain usable until reload.
@@ -3403,7 +3777,6 @@ function td772BindFilter(button,panel){
  window.addEventListener('td58-pack-update',async()=>{
   if(taskState.busy)return;
   try{
-   await statusRefresh;
    if(visible)await update();else await refreshStatusMap();
   }catch(e){console.warn('Game pack status:',e)}
  });
@@ -3428,7 +3801,7 @@ function td772BindFilter(button,panel){
    // CacheStorage.match checks all existing game packs; no per-image enumeration of
    // thousands of image records or sequential open() of every game cache.
    let preferred=null;
-   try{const selectedId=localStorage.getItem('takdex-v71-active-team');const t=JSON.parse(localStorage.getItem('poketact-teams')||'[]').find(x=>x.id===selectedId);const g=t?.game||localStorage.getItem('takdex-v66-game')||'';
+   try{const selectedId=localStorage.getItem('takdex-v71-active-team');const t=td78Store.entry(td78Store.read().state,'teams',selectedId).value;const g=t?.game||localStorage.getItem('takdex-v66-game')||'';
     if(g)preferred=await caches.open('takdex-artwork-v60-'+String(g).toLowerCase().replace(/[^a-z0-9]+/g,'-'));
    }catch{}
    for(const candidate of [src,alternate]){
@@ -3545,7 +3918,7 @@ function td772BindFilter(button,panel){
   close();box.hidden=false;box.innerHTML='<p class="note">Loading Pokémon…</p>';
   try{const entries=await listNames($('planGame').value);if(mine!==seq||!box.isConnected)return;
    const gen=gameGeneration($('planGame').value),limit=[151,251,386,493,649,721,809,905,1025][gen-1]||1025;
-   const q=input.value.trim().toLowerCase().replace(/\s+/g,'-');const hits=entries.filter(n=>!q||n.includes(q));
+   const q=input.value.trim().toLowerCase().replace(/\s+/g,'-');const hits=td78SearchMatches(entries,q);
    box.innerHTML=(hits.length?hits.slice(0,browse?65:16).map(n=>`<button type="button" data-td66-pokemon="${safe(n)}">${safe(td41PokemonLabel(n))}</button>`).join(''):'<p class="note">No matching Pokémon.</p>')+(hits.length>65?'<p class="note">Type to narrow the list.</p>':'');
   }catch{box.innerHTML='<p class="note">Search index unavailable; enter Pokémon manually.</p>'}
  }
@@ -3649,7 +4022,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const aboutPage=document.createElement('section');aboutPage.id='td70AboutPage';aboutPage.hidden=true;
  aboutPage.innerHTML=`<div class="bar"><h2>About Tak-Dex</h2><button type="button" id="td70AboutBack">← More</button></div>
  <div class="card td70-about-card"><h3>Tak-Dex</h3>
- <p><strong>Web version:</strong> V77.2.1-STABLE</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
+ <p><strong>Web version:</strong> V78 DEV3 RC1</p><p><strong>Android:</strong> ${window.Capacitor?.isNativePlatform?.() ? "Native build version may differ" : "Released separately"}</p>
 </div>
  <div class="card td70-about-card"><h3>Storage &amp; offline reference</h3><p class="note" id="td70AboutStorage">Checking local storage…</p></div>
  <div class="tool-card"><button type="button" id="td68OpenCoverage" class="tool-link">▦ Database Coverage ›</button></div>
@@ -3685,7 +4058,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const page=document.createElement('section');page.id='td68MovePage';page.hidden=true;
  page.innerHTML=`<div class="bar td772-context-heading"><h2 id="td774CheckerHeading">Move Checker</h2><div class="td72-move-header-actions"><button type="button" id="td72MoveTypeToggle" aria-pressed="false">◈ By Type</button><button type="button" id="td68MoveBack">← More</button></div></div>
  <div class="td76-move-filters td77-planning-tabs" role="tablist" aria-label="Move catalog"><button type="button" role="tab" data-move-catalog="" aria-selected="true">All Moves</button><button type="button" role="tab" data-move-catalog="machines" aria-selected="false">TM / HM</button></div>
- <div id="td68MoveSearchPanel" class="tool-card"><label>Search any move<div class="search td68-search"><input type="text" id="td68MoveInput" placeholder="Future Sight, Rollout, Earthquake…" autocomplete="off"><div id="td68MoveSuggest" class="suggestions" hidden></div></div></label><button type="button" id="td68MoveGo">View move</button></div>
+ <div id="td68MoveSearchPanel" class="tool-card"><label>Search any move<div class="search td68-search"><input type="text" id="td68MoveInput" placeholder="Future Sight, Rollout, Earthquake…" autocomplete="off"><div id="td68MoveSuggest" class="suggestions" hidden></div></div></label></div>
  <div id="td68MoveResult" aria-live="polite"><p class="note">Select a move to see its power, accuracy, PP, effect, and generation changes.</p></div>
  <div id="td72MoveTypePanel" hidden><div class="td772-filter-line"><select id="td72MoveTypeGame" aria-label="Game"><option value="">Choose game…</option></select>${td772FilterButton('td72MoveFilters','Move filters','td72MoveFilterPanel')}</div><div id="td72MoveTypeChoices" class="td72-move-types"></div><p id="td72MoveTypeStatus" class="note">Choose a game and type to browse moves.</p><div id="td72MoveTypeResults"></div></div>`;
  const machinePanel=$('tmPage');
@@ -3756,7 +4129,10 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  const filter=document.createElement('div');filter.className='td772-filter-panel td5-filter';filter.id='td72MoveFilterPanel';
  filter.innerHTML=`<label><span class="td773-sr-only">Filter by</span><select id="td5FilterMode"><option value="">All moves</option><option value="mon">Pokémon</option><option value="team">Saved team</option></select></label><div id="td5FilterFields" hidden><label id="td5MonWrap">Pokémon<div class="search battle-search"><input id="td5MonInput" autocomplete="off" placeholder="Search Pokémon…"><button type="button" class="battle-clear td61-mon-clear" id="td61MonClear" aria-label="Clear Pokémon" hidden>×</button><div id="td5MonResults" class="suggestions" hidden></div></div></label><label id="td5TeamWrap" hidden>Saved team<select id="td5FilterTeam"></select></label><small id="td5FilterStatus"></small></div>`;filter.hidden=true;td72Types.before(filter);
  const filterButton=$('td72MoveFilters');
- td772BindFilter(filterButton,filter);
+ td772BindFilter(filterButton,filter,()=>{
+  $('td5FilterMode').value='';filterMon='';$('td5MonInput').value='';$('td5MonResults').hidden=true;
+  $('td61MonClear').hidden=true;$('td5FilterTeam').value='';filterChanged();
+ });
  let filterMon='',filterRequest=0;
  function filterMenus(){const g=td72Game.value,sel=$('td5FilterTeam'),old=sel.value;sel.innerHTML='<option value="">Choose team…</option>'+teams.filter(t=>t.game===g).map(t=>`<option value="${safe(t.id)}">${safe(t.name)}</option>`).join('');const matching=teams.filter(t=>t.game===g);if(matching.length===1)sel.value=matching[0].id;else if(old&&matching.some(t=>String(t.id)===old))sel.value=old;else if(current?.game===g&&matching.some(t=>t.id===current.id))sel.value=current.id;}
  async function filterRecords(){if(!td72TypeMode)return null;const mode=$('td5FilterMode').value;if(!mode)return null;const g=td72Game.value,mons=mode==='mon'?(filterMon?[{name:filterMon}]:[]):(teams.find(t=>t.id===$('td5FilterTeam').value)?.pokemon||[]).filter(Boolean);if(!games.includes(g)||!mons.length)return [];return Promise.all(mons.map(async mon=>{try{return {mon,...await td5LearnRecords(mon,g,true)}}catch{return {mon,direct:new Set(),later:new Set(),unknown:true}}}))}
@@ -3764,7 +4140,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  function td52EvolutionOnly(rows,name){return !!rows?.length&&!rows.some(r=>r.direct.has(name))&&rows.some(r=>r.later.has(name))}
  function filterLabel(rows,name){if(!rows)return '';if($('td5FilterMode').value==='mon')return rows.some(r=>!r.direct.has(name)&&r.later.has(name))?'↑ After evolution':'';return rows.filter(r=>r.direct.has(name)||r.later.has(name)).map(r=>td41PokemonLabel(r.mon.name)+(r.direct.has(name)?'':' ↑')).join(', ')}
  function td52FilterMarkup(rows,name){if(!rows)return '';if($('td5FilterMode').value==='mon')return td52EvolutionOnly(rows,name)?'<span class="td52-evo-member">↑ '+safe(rows.map(r=>r.laterMethods?.get(name)).filter(Boolean).join(', ')||'Evolution')+'</span>':'';return rows.filter(r=>r.direct.has(name)||r.later.has(name)).map(r=>`<span class="${r.direct.has(name)?'':'td52-evo-member'}">${safe(td41PokemonLabel(r.mon.name))}${r.direct.has(name)?'':' ↑ '+safe(r.laterMethods?.get(name)||'Evolution')}</span>`).join(', ')}
- function filterChanged(){++filterRequest;++searchReq;const mode=$('td5FilterMode').value;$('td5FilterFields').hidden=!mode;$('td5MonWrap').hidden=mode!=='mon';$('td5TeamWrap').hidden=mode!=='team';filterButton.classList.toggle('selected',!!mode);
+ function filterChanged(){++filterRequest;++searchReq;const mode=$('td5FilterMode').value;$('td5FilterFields').hidden=!mode;$('td5MonWrap').hidden=mode!=='mon';$('td5TeamWrap').hidden=mode!=='team';td78FilterState(filterButton,filter,Number(Boolean(mode)));
  td72MoveGameOverride=mode&&games.includes(td72Game.value)?td72Game.value:null;const stamp=filterRequest;filterRecords().then(rows=>{if(stamp===filterRequest)$('td5FilterStatus').textContent=rows===null?'':!rows.length?($('td5FilterMode').value==='team'&&$('td5FilterTeam').value?'No Pokémon in selected team.':$('td5FilterMode').value==='mon'&&filterMon?'Learnset unavailable.':'Choose Pokémon or team.'):rows.some(r=>r.unknown)?'Some evolution or learnset data unavailable.':''});if(td72TypeMode)td72LoadType();else if(query.value.length>=2)findSuggestions();}
  search($('td5MonInput'),$('td5MonResults'),n=>{filterMon=n;$('td61MonClear').hidden=false;filterChanged()});$('td5MonInput').addEventListener('focus',e=>e.target.select());$('td5MonInput').addEventListener('input',()=>{filterMon='';$('td61MonClear').hidden=!$('td5MonInput').value;++searchReq});$('td61MonClear').onclick=()=>{filterMon='';$('td5MonInput').value='';$('td61MonClear').hidden=true;$('td5MonResults').hidden=true;filterChanged();$('td5MonInput').focus()};$('td5FilterMode').onchange=()=>{if(!td72Game.value)td72Game.value=td72Game.value||current?.game||td66SavedGame()||'';filterMenus();filterChanged()};$('td5FilterTeam').onchange=filterChanged;window.addEventListener('td5:team-context',e=>{const g=e.detail?.game;if(!games.includes(g))return;td72Game.value=g;filterMenus();if($('td5FilterMode').value==='team'&&teams.some(t=>t.game===g&&t.id===e.detail.teamId))$('td5FilterTeam').value=e.detail.teamId;if(!page.hidden)filterChanged()});
  td72Game.insertAdjacentHTML('beforeend',gameOptions);
@@ -3849,11 +4225,6 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
    requestAnimationFrame(()=>window.scrollTo(0,td72DetailScroll));
    return;
   }
-  if(td72DetailOrigin==='search'){
-   ++req;td72DetailOrigin=null;res.innerHTML='<p class="note">Select a move to see its power, accuracy, PP, effect, and generation changes.</p>';
-   requestAnimationFrame(()=>window.scrollTo(0,td72DetailScroll));
-   return;
-  }
   page.hidden=true;report.hidden=true;
   if(source==='dex'){$('dexPage').hidden=false;['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===2));requestAnimationFrame(()=>window.scrollTo(0,savedScroll))}
   else if(source==='team'){$('teamsPage').hidden=false;['teamsTab','battleTab','dexTab','moreTab'].forEach((id,i)=>$(id).classList.toggle('selected',i===0));requestAnimationFrame(()=>window.scrollTo(0,savedScroll))}
@@ -3872,10 +4243,10 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
   savedScroll=window.scrollY;
   moveAcquisitionContext=acquisitionContext;
   showCatalog('');
-  source=origin||'more';$('td68MoveBack').hidden=false;
+  source=origin||'more';$('td68MoveBack').hidden=source!=='more';
   if(source!=='more'){
    $('td5FilterMode').value='';$('td5FilterFields').hidden=true;filter.hidden=true;
-   filterButton.classList.remove('selected');filterButton.setAttribute('aria-expanded','false');
+   td78FilterState(filterButton,filter,0);filterButton.setAttribute('aria-expanded','false');
   }
   td72DetailOrigin=null;td72DetailScroll=0;td72TypeToggle.hidden=false;
   ++searchReq;
@@ -3899,13 +4270,16 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
  ['teamsTab','battleTab','dexTab','moreTab'].forEach(id=>$(id).addEventListener('click',()=>{page.hidden=true;report.hidden=true},true));
  $('dexResult').addEventListener('click',e=>{const b=e.target.closest('[data-td68-move]');if(!b)return;e.preventDefault();tak67CaptureDexSections();launch(b.dataset.td68Move,'dex',$('dexGame').value,b.dataset.td77Reminder)});
  $('moveFields').addEventListener('click',e=>{const b=e.target.closest('[data-td74-builder-move]');if(b){e.preventDefault();launch(b.dataset.td74BuilderMove,'team',current?.game)}});$('slots').addEventListener('click',e=>{const b=e.target.closest('[data-td5-team-move]');if(b){e.preventDefault();launch(b.dataset.td5TeamMove,'team',current?.game)}});$('slots').addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.matches('[data-td5-team-move]')){e.preventDefault();e.target.click()}});
+ res.addEventListener('click',event=>{
+  const link=event.target.closest('[data-td78-move-map]');
+  if(link)window.takDexMapsV73?.open(link.dataset.td78MoveGame,link.dataset.td78MoveMap);
+ });
  async function moveList(){if(!list){list=api('move?limit=2000').then(x=>(x.results||[]).map(v=>v.name)).catch(e=>{list=null;throw e});}return list}
- async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2||/^(?:(?:tm|hm)?-?\d+)$/.test(q)){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const compatible=await filterRecords();const values=(await moveList()).filter(n=>n.includes(q)&&filterNames(compatible,n)).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" class="${td52EvolutionOnly(compatible,n)?'td52-evo-only':''}" data-td68-select="${safe(n)}"><span class="td774-move-lines"><strong>${safe(pretty(n))}</strong></span>${filterLabel(compatible,n)?`<small class="td51-search-members">${td52FilterMarkup(compatible,n)}</small>`:''}</button>`).join('')||'<p class="note">No matching compatible move.</p>';td77HydrateMoveRows(suggest,'td68Select',td72MoveGameOverride||current?.game||td66SavedGame());}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
+ async function findSuggestions(){const token=++searchReq,q=normal(query.value);if(q.length<2||/^(?:(?:tm|hm)?-?\d+)$/.test(q)){suggest.hidden=true;return}suggest.hidden=false;suggest.innerHTML='<p class="note">Looking up moves…</p>';try{const compatible=await filterRecords();const values=td78SearchMatches((await moveList()).filter(n=>filterNames(compatible,n)),q).slice(0,30);if(token!==searchReq)return;suggest.innerHTML=values.map(n=>`<button type="button" class="${td52EvolutionOnly(compatible,n)?'td52-evo-only':''}" data-td68-select="${safe(n)}"><span class="td774-move-lines"><strong>${safe(pretty(n))}</strong></span>${filterLabel(compatible,n)?`<small class="td51-search-members">${td52FilterMarkup(compatible,n)}</small>`:''}</button>`).join('')||'<p class="note">No matching compatible move.</p>';td77HydrateMoveRows(suggest,'td68Select',td72MoveGameOverride||current?.game||td66SavedGame());}catch{if(token===searchReq)suggest.innerHTML='<p class="note">Move list unavailable. Try entering the exact move name.</p>'}}
  query.addEventListener('click',()=>{if(query.value)query.select()});
  query.addEventListener('input',findSuggestions);query.addEventListener('focus',()=>{if(query.value.length>=2)findSuggestions()});
- suggest.addEventListener('click',e=>{const b=e.target.closest('[data-td68-select]');if(!b)return;query.value=pretty(b.dataset.td68Select);suggest.hidden=true;load(b.dataset.td68Select)});
- query.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=suggest.querySelector('[data-td68-select]');const name=!suggest.hidden&&first?first.dataset.td68Select:query.value;suggest.hidden=true;submitMove(name)}if(e.key==='Escape')suggest.hidden=true});
- $('td68MoveGo').addEventListener('click',()=>{suggest.hidden=true;submitMove(query.value)});
+ suggest.addEventListener('click',e=>{const b=e.target.closest('[data-td68-select]');if(!b)return;query.value=pretty(b.dataset.td68Select);suggest.hidden=true;++searchReq;load(b.dataset.td68Select)});
+ query.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const first=suggest.querySelector('[data-td68-select]');const name=!suggest.hidden&&first?first.dataset.td68Select:query.value;suggest.hidden=true;++searchReq;submitMove(name)}if(e.key==='Escape'){++searchReq;suggest.hidden=true;}});
  const generationNames=['','Red/Blue/Yellow','Gold/Silver/Crystal','Ruby/Sapphire/Emerald/FRLG','Diamond/Pearl/Platinum/HGSS','Black/White/B2W2','X/Y/ORAS','Sun/Moon/USUM','Sword/Shield/BDSP','Scarlet/Violet'];
  function statsAt(data,g,game){const hist=moveGenerationData(data,g,game),intro=generationFromName(data.generation?.name?.replace('generation-','')||'');return {...hist,pp:hist.pp??data.pp}}
  function statDesc(n){return Number.isFinite(n)?String(n):'—'}
@@ -3921,7 +4295,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
   'earthquake':'Damages grounded Pokémon with a Ground-type attack. Flying types and Levitate users are normally immune. It also strikes adjacent allies in most Double Battles.',
   'double-edge':'Deals damage and also inflicts recoil on the user, unless a relevant ability prevents it.'
  };
- async function load(value){const name=normal(value),mine=++req;if(!name)return;if(!td72DetailOrigin&&source==='more'){td72DetailOrigin='search';td72DetailScroll=window.scrollY;}query.value=pretty(name);res.innerHTML='<p class="note">Loading move details…</p>';
+ async function load(value){const name=normal(value),mine=++req;if(!name)return;query.value=pretty(name);res.innerHTML='<p class="note">Loading move details…</p>';
   try{const compatible=await filterRecords();if(mine!==req)return;if(!filterNames(compatible,name)){res.textContent='No confirmed compatible move for this filter.';return}const data=await api('move/'+encodeURIComponent(name));if(mine!==req)return;const game=td72MoveGameOverride||current?.game||td66SavedGame()||null,selectedGen=game ? gameGeneration(game) : null,intro=generationFromName(data.generation?.name?.replace('generation-','')||'');
    const introduced=({'generation-i':1,'generation-ii':2,'generation-iii':3,'generation-iv':4,'generation-v':5,'generation-vi':6,'generation-vii':7,'generation-viii':8,'generation-ix':9})[data.generation?.name]||1;
    const globalLatest={power:data.power,accuracy:data.accuracy,pp:data.pp,damageClass:data.damage_class?.name,type:data.type?.name};
@@ -3937,7 +4311,7 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
    const historicEffects=(data.effect_changes||[]).map(x=>({version:x.version_group?.name,text:english(x.effect_entries)?.effect||english(x.effect_entries)?.short_effect||''})).filter(x=>x.text);
    const extra=historicEffects.length?'<h4>Older effect descriptions</h4>'+historicEffects.map(x=>`<p class="td68-minor"><b>${safe(pretty(x.version||'Historical version'))}:</b> ${safe(x.text.replace(/\$effect_chance/g,Number.isFinite(data.effect_chance)?data.effect_chance+'%':'conditional chance'))}</p>`).join(''):'';
    const contact=(data.flags||[]).some(f=>f.name==='contact');
-   res.innerHTML=`<article class="card"><h2>${safe(pretty(data.name))} ${pill(present.type)}</h2><p class="note">${selectedGen?(introducedYet?safe(game)+' (Generation '+selectedGen+')':safe(game)+' · Not yet introduced'):'Latest recorded stats (all games)'} · Introduced in Generation ${introduced}</p><div class="td68-facts">${[['Power',statDesc(present.power)],['Accuracy',Number.isFinite(present.accuracy)?present.accuracy+'%':'—'],['PP',statDesc(present.pp)]].map(([label,val])=>`<div class="td68-fact"><strong>${val}</strong><small>${label}</small></div>`).join('')}</div><h3>What it does</h3><div class="td68-effect">${paragraphs(effectText)}</div>${extra}<p class="td68-minor">Target: ${safe(pretty(data.target?.name||'Unknown'))} · Priority: ${Number(data.priority)||0} · Contact: ${contact?'Yes':'No / unlisted'}</p><h3>Changes between generations</h3><div style="overflow-x:auto"><table class="td68-history"><thead><tr><th>Generation</th><th>PWR</th><th>ACC</th><th>PP</th><th>Category</th><th>Type</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.g===selectedGen?'td68-current':''}"><td>${row.g} ${row.g===selectedGen?'· '+safe(game):''}</td><td>${statDesc(row.power)}</td><td>${Number.isFinite(row.accuracy)?row.accuracy+'%':'—'}</td><td>${statDesc(row.pp)}</td><td>${safe(pretty(row.damageClass))}</td><td>${safe(pretty(row.type))}</td></tr>`).join('')}</tbody></table></div></article>`;
+   res.innerHTML=`<article class="card"><h2>${safe(pretty(data.name))} ${pill(present.type)}</h2>${introducedYet?'':`<p class="note">${safe(game)} · Not yet introduced</p>`}<div class="td68-facts">${[['Power',statDesc(present.power)],['Accuracy',Number.isFinite(present.accuracy)?present.accuracy+'%':'—'],['PP',statDesc(present.pp)]].map(([label,val])=>`<div class="td68-fact"><strong>${val}</strong><small>${label}</small></div>`).join('')}</div><h3>What it does</h3><div class="td68-effect">${paragraphs(effectText)}</div>${extra}<p class="td68-minor">Target: ${safe(pretty(data.target?.name||'Unknown'))} · Priority: ${Number(data.priority)||0} · Contact: ${contact?'Yes':'No / unlisted'}</p><h3>Changes between generations</h3><div style="overflow-x:auto"><table class="td68-history"><thead><tr><th>Generation</th><th>PWR</th><th>ACC</th><th>PP</th><th>Category</th><th>Type</th></tr></thead><tbody>${rows.map(row=>`<tr class="${row.g===selectedGen?'td68-current':''}"><td>${row.g} ${row.g===selectedGen?'· '+safe(game):''}</td><td>${statDesc(row.power)}</td><td>${Number.isFinite(row.accuracy)?row.accuracy+'%':'—'}</td><td>${statDesc(row.pp)}</td><td>${safe(pretty(row.damageClass))}</td><td>${safe(pretty(row.type))}</td></tr>`).join('')}</tbody></table></div></article>`;
 
     // Move acquisition guide — reuse verified TM/HM locations.
     const locationBox = document.createElement('details');
@@ -3949,7 +4323,6 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
         <p class="note">Looking up acquisition information…</p>
       </div>`;
     res.appendChild(locationBox);
-    if(moveAcquisitionContext)res.querySelector('article > .note')?.insertAdjacentHTML('afterend','<p class="note">'+td77AcquisitionLinks(moveAcquisitionContext,game)+'</p>');
     if(td72DetailOrigin||['dex','team','maps','battle','planner','team-planner'].includes(source)){const heading=res.querySelector('article h2');if(heading){const row=document.createElement('div');row.className='td64-move-heading';heading.before(row);row.append(heading);const backButton=document.createElement('button');backButton.type='button';backButton.className='td64-move-back';backButton.textContent='← Back';backButton.onclick=back;row.append(backButton);}}
     requestAnimationFrame(()=>{if(mine===req&&!page.hidden&&machinePanel.hidden)res.scrollIntoView({block:'start'})});
     if(!machinePanel.hidden){/* The machine panel already displays compatibility for the selected species or team. */}else if(compatible){const mode=$('td5FilterMode').value,team=teams.find(t=>t.id===$('td5FilterTeam').value);if(mode==='team'&&team){const compat=document.createElement('section');compat.className='card td72-move-compat';compat.innerHTML=`<h3>Who can learn ${safe(pretty(name))} in my team?</h3><div class="td74-mon-row td51-compat-strip">${td51CompatTiles(team.pokemon||[],(team.pokemon||[]).map(m=>compatible.find(r=>r.mon===m)),name,true)}</div>`;res.appendChild(compat)}else if(compatible.some(r=>r.later.has(name)&&!r.direct.has(name))){const compat=document.createElement('section');compat.className='card';compat.textContent='↑ After evolution';res.appendChild(compat)}}else if(current?.id&&(!td72MoveGameOverride||td72MoveGameOverride===current.game)){const teamId=current.id,compat=document.createElement('section');compat.id='td72MoveCompatibility';compat.className='card td72-move-compat';compat.innerHTML='<h3>Who can learn it in my team?</h3><p class="note">Checking game-specific compatibility…</p>';res.appendChild(compat);td72RenderMoveTeamCompatibility(data.name,teamId,mine).catch(error=>{if(mine===req&&compat.isConnected)compat.textContent='Team compatibility data unavailable.';console.warn('Move compatibility unavailable',error)})}
@@ -3980,14 +4353,11 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
       ? known.map(acquisition => `
           <div style="margin-bottom:14px">
             <p><b>${safe(acquisition.game)}</b></p>
-            <p>${safe(String(acquisition.item).toUpperCase())} — ${safe(acquisition.location)}</p>
+            <p>${safe(String(acquisition.item).toUpperCase())} ·
+              ${['Emerald','Platinum','Black','White','Black 2','White 2'].includes(acquisition.game)?
+                `<button type="button" class="td74-dex-map-link" data-td74-machine-location="${safe(acquisition.location)}" data-td74-machine-game="${safe(acquisition.game)}">${safe(acquisition.location)} <span aria-hidden="true">⌖</span></button>`:safe(acquisition.location)}</p>
             <p class="note">${safe(acquisition.reuse)}</p>
             ${window.td62Progress?.moveAccess(acquisition.game,data.name,'machine').map(note=>`<small>${safe(note)}</small>`).join('')||''}
-            ${['Platinum','Black','White','Black 2','White 2'].includes(acquisition.game)?`<button type="button" data-td74-machine-location="${safe(acquisition.location)}" data-td74-machine-game="${safe(acquisition.game)}">⌖ Show on Map</button>`:''}
-            ${acquisition.reference
-              ? `<p class="note"><a href="${safe(acquisition.reference)}"
-                   target="_blank" rel="noopener noreferrer">Location reference ↗</a></p>`
-              : ''}
           </div>
         `).join('')
       : `<div class="td68-acquisition-empty" role="status" style="padding:6px 0 3px">
@@ -3998,21 +4368,43 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
          </div>`;
     if(td73Tutors.length){
       if(!known.length)body.innerHTML='';
-      body.insertAdjacentHTML('beforeend',td73Tutors.map(tutor=>`<div class="td73-move-tutor"><p><b>${safe(tutor.game)} · Move Tutor</b></p><p><b>${safe(tutor.place)}</b> — ${safe(tutor.detail)}</p><p class="note">Cost: ${safe(tutor.cost)}${tutor.condition?' · '+safe(tutor.condition):''}</p><div class="td73-detail-actions"><button type="button" data-td73-map-link="${safe(tutor.place)}" data-td73-map-game="${safe(tutor.game)}">⌖ Show on Maps</button> <a href="${safe(tutor.reference)}" target="_blank" rel="noopener noreferrer">Verified source ↗</a></div></div>`).join(''));
+      body.insertAdjacentHTML('beforeend',td73Tutors.map(tutor=>`<div class="td73-move-tutor"><p><b>${safe(tutor.game)} · Move Tutor</b></p><p><button type="button" class="td74-dex-map-link" data-td73-map-link="${safe(tutor.place)}" data-td73-map-game="${safe(tutor.game)}">${safe(tutor.place)} <span aria-hidden="true">⌖</span></button> · ${safe(tutor.detail)}</p><p class="note">Cost: ${safe(tutor.cost)}${tutor.condition?' · '+safe(tutor.condition):''}</p></div>`).join(''));
     }
 
+    if(moveAcquisitionContext&&!body.textContent.includes(moveAcquisitionContext))
+      body.insertAdjacentHTML('afterbegin','<p class="note">'+td77AcquisitionLinks(moveAcquisitionContext,game).replaceAll('data-td74-dex-map=',
+       'data-td78-move-game="'+safe(game)+'" data-td78-move-map=')+'</p>');
   }catch(e){if(mine===req)res.innerHTML='<p class="error">Could not load that move. Check spelling or reconnect to download its record.</p>'}
  }
- // Reliable inventory of the 34 selectable games. Never mistake a missing download for no encounters.
- async function showCoverage(){source='more';openPage('coverage');const host=$('td68CoverageResults');host.innerHTML='<p class="note">Reading locally available records…</p>';
-  const parts=await Promise.all(games.map(async game=>{
-   let enc=null,ref=null;try{enc=await window.takDexEncounterV55?.cached?.(game)}catch{}try{ref=await window.takDexReferenceV58?.cached?.(game)}catch{}
-   const categories=trainerRostersV57[game]||{};const trainers=Object.values(categories).reduce((sum,cat)=>sum+Object.keys(cat).length,0);
-   const rosters=Object.values(categories).reduce((sum,cat)=>sum+Object.values(cat).reduce((z,versions)=>z+Object.values(versions).reduce((n,rows)=>n+rows.length,0),0),0);
-   return {game,trainerCount:trainers,rosterEntries:rosters,encounters:enc?.records||0,encLoaded:!!enc?.hasSource,machines:ref?.machines?.length||0,refLoaded:!!ref?.complete};
-  }));
-  const platinumTrainers=await td70PlatinumTrainerCached();
-  host.innerHTML=`<p class="note">${parts.length} game selections · ${parts.filter(x=>x.encLoaded).length} local encounter indexes · ${parts.filter(x=>x.refLoaded).length} complete local reference packs · Platinum exact trainer moves: ${platinumTrainers?'saved':'not downloaded'}. Not a claim of database completeness.</p><div class="card" style="padding:0">${parts.map(x=>`<div class="td68-coverage-row"><strong>${safe(x.game)}</strong><small>Encounter index: ${x.encLoaded?x.encounters+' wild encounter records':'not downloaded / coverage unknown'} · TM/HM reference: ${x.refLoaded?x.machines+' machines':'not downloaded / unverified'}</small><small>Built-in trainer presets: ${x.trainerCount} trainers / ${x.rosterEntries} listed Pokémon; ${x.trainerCount?'remaining moves may be unverified':'no verified preset in this release'}</small></div>`).join('')}</div>`;
+  let coverageRequest=0;
+ async function showCoverage(){
+  source='more';openPage('coverage');
+  const host=$('td68CoverageResults'),request=++coverageRequest;
+  host.innerHTML='<p class="note">Reading reference sources…</p>';
+  try{
+   const games=await td79CoverageInventory();
+   if(report.hidden||request!==coverageRequest)return;
+   const line=(name,value)=>`<small><b>${name}</b> · ${safe(value)}</small>`;
+   host.innerHTML=`<div class="card" style="padding:0">${games.map(x=>{
+    const t=x.totals;
+    return `<div class="td68-coverage-row"><strong>${safe(x.game)}</strong>
+     ${line('Version group',x.group+(x.shared.length?' · Shared reference with '+x.shared.join(', '):''))}
+     ${line('Reference storage',x.downloadedReference)}
+     ${line('Encounters',x.encounter?.rows?`${x.encounter.rows.toLocaleString()} source rows · ${x.encounter.groups.toLocaleString()} merged groups · ${x.encounter.source}`:
+      x.encounter?'No encounter records in the indexed source · Availability unknown':'Encounter source unavailable · Availability unknown')}
+     ${line('Encounter storage',x.downloadedEncounter)}
+     ${line('TM/HM assignments',x.machines?`${x.machines.count} assignments · ${x.machines.source}`:'Unverified')}
+     ${line('Trainer presets',t.trainers?`${t.trainers} trainers · ${t.variants} variants · ${t.entries} Pokémon entries`:'No indexed preset')}
+     ${t.entries?line('Trainer fields',`Moves ${t.moves}/${t.entries} · Abilities ${t.abilities}/${t.entries} · Item status ${t.items}/${t.entries} · Other entries unverified`):''}
+     ${x.providers.length?line('Trainer sources',x.providers.join(' · ')):''}
+     ${line('Acquisition',x.acquisition||'Game-specific milestones unverified')}
+     ${line('Events',x.maps?.events?`${x.maps.events} indexed map events/services · Partial`:'Unverified')}
+     ${line('Tutors',x.tutors?`${x.tutors} referenced tutor entries · Partial, bundled`:'Unverified')}
+     ${line('Map',x.maps?`${x.maps.places} indexed places · ${x.maps.source}`:'No interactive map')}
+     ${line('Progression',x.progression||'Save progression unverified')}
+    </div>`;
+   }).join('')}</div>`;
+  }catch{if(request===coverageRequest&&!report.hidden)host.textContent='Coverage sources could not be read. Try again.';}
  }
  covButton.addEventListener('click',showCoverage);$('td68CoverageBack').addEventListener('click',()=>{report.hidden=true;window.takActivate(3);more.hidden=true;aboutPage.hidden=false;window.scrollTo(0,0)});
  ['teamsTab','battleTab','dexTab','moreTab'].forEach(id=>$(id).addEventListener('click',()=>{report.hidden=true}));
@@ -4127,7 +4519,7 @@ document.addEventListener('keydown',event=>{
  function commit(){const name=$('td4OpponentName').value.trim(),game=$('planGame').value;if(!games.includes(game)||!name||!plannerOpp.some(x=>x?.name)){message('Choose a game, name and at least one Pokémon.');return;}const list=read(),old=list.find(x=>x.id===selected&&x.game===game);const update=!!old;if(list.some(x=>x.game===game&&x.name.toLowerCase()===name.toLowerCase()&&(!update||x.id!==selected))){message('That preset name already exists.');return;}const id=update?old.id:td71NewTeamId();const next={id,game,name,rows:clone(plannerOpp.slice(0,6)),updated:Date.now()};const all=update?list.map(x=>x.id===id?next:x):[...list,next];if(write(all)){selected=id;render();message('Saved '+name);}}
  $('td4OpponentSelect').onchange=()=>{const id=$('td4OpponentSelect').value;if(id)load(id);else{selected='';$('td4OpponentName').value='';render();}};
  $('td4OpponentSave').onclick=commit;
- $('td4OpponentDelete').onclick=()=>{const old=read().find(x=>x.id===selected);if(!old||!confirm('Delete '+old.name+'?'))return;if(write(read().filter(x=>x.id!==old.id))){selected='';$('td4OpponentName').value='';render();message('Preset deleted.');}};
+ $('td4OpponentDelete').onclick=async()=>{const old=read().find(x=>x.id===selected);if(!old||!await td78Confirmation('Delete '+old.name+'?','','Delete'))return;if(write(read().filter(x=>x.id!==old.id))){selected='';$('td4OpponentName').value='';render();message('Preset deleted.');}};
  for(const id of ['planGame','planMode'])$(id).addEventListener('change',()=>{selected='';$('td4OpponentName').value='';message('');render()});
  $('openPlanner').addEventListener('click',()=>{selected='';$('td4OpponentName').value='';render()});
  window.addEventListener('td75:active-game',render);new MutationObserver(()=>{host.hidden=$('planMode').value!=='custom';if(previousGame!==$('planGame').value)render()}).observe($('planOpp'),{childList:true});
@@ -4202,17 +4594,18 @@ document.addEventListener('keydown',event=>{
   return [...(timing.rank!=null?[milestone(timing.rank)+(current!=null&&current<timing.rank?' · Later in story':'')]:[]),...timing.requirements];
  }
 
- window.td62Progress={rank,milestone,location,hm,hmRemoval,encounter,acquisition,describe,late,tone,moveTiming,starterChoice,detected,actualProgress,encounterAccess,moveAccess};
+ window.td62Progress={coverage:game=>unova(game)?'Badge and story-event gates · Gen V save observation':'Planning milestones only; save progression unverified',rank,milestone,location,hm,hmRemoval,encounter,acquisition,describe,late,tone,moveTiming,starterChoice,detected,actualProgress,encounterAccess,moveAccess};
 })();
 
 // V74 DEV4: playthrough Team Planner. Planned slots are saved independently of actual teams.
 (function td4TeamPlanner(){
- const KEY='takdex-v74-playthrough-plans',clean=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,'-');
- const six=()=>Array.from({length:6},()=>null);const read=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'{}');return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}catch{return {}}};
+ const clean=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,'-');
+ const six=()=>Array.from({length:6},()=>null);
+ const planWrites=new Map();
  const records=new Map();let state=null,pack=null,token=0,rankRun=0,ranked=[],chosenSlot=0,lookup=null,manualCandidate=null,manualRun=0; const moveInfo=new Map(),leagueInfo=new Map(),temporaryHmCache=new Map(); let moveRun=0;
  const more=$('morePage'),page=document.createElement('section');page.id='td4TeamPlannerPage';page.hidden=true;
  more.after(page);
- page.innerHTML=`<div class="bar"><h2>Team Planner</h2><button type="button" id="td4Back">← My Team</button></div><div class="tool-card"><h3 id="td41TeamTitle"></h3><div hidden><select id="td4Game"><option value="">Choose game…</option>${gameOptions}</select><select id="td4Team"></select></div><small id="td77ActualProgress" hidden></small><label>Planning deadline<select id="td77Availability"></select></label><div class="td44-reset"><button id="td4Seed" class="delete-team-link" type="button">Reset plan</button></div><small id="td4Status" role="status"></small></div><div id="td77MoveViews" class="bar" role="tablist" aria-label="Planning mode"><button type="button" role="tab" data-view="during">During game</button><button type="button" role="tab" data-view="final">Final</button></div><div class="card"><h3>Planned team</h3><div id="td4Slots" class="td4-plan-grid"></div><div id="td4PlanProgress"></div></div><div id="td4Edit" class="card" hidden><div id="td72MoveHeading" hidden><h4 id="td72MoveTitle"></h4><div class="td7-reset-top"><button type="button" id="td77Lock" aria-pressed="false" hidden>Lock Pokémon</button><button type="button" class="delete-team-link" id="td4Clear">Reset Pokémon</button></div></div><div id="td77FinalForm" hidden></div><div id="td77SlotRoute"></div><div id="td41MoveSlots"></div><details class="td42-settings"><summary><span>Change Pokémon</span><span id="td63SelectedReplacement"></span></summary><small id="td775ReplacementLocked" hidden></small><div class="td77-candidate-search"><div class="search"><input id="td4Search" autocomplete="off" placeholder="Search Pokémon…"></div><button type="button" id="td77TypeFilter" aria-label="Filter Pokémon by type" aria-controls="td77TypeOptions" aria-expanded="false">◈</button><span id="td77ActiveTypes"></span><div id="td4SearchResults" class="suggestions" hidden></div><div id="td77TypeOptions" role="dialog" aria-label="Pokémon type filter" hidden></div></div><div id="td63ManualCandidate"></div><label class="td77-inline-check"><input id="td77Legendary" type="checkbox"> <span>Include Legendary and Mythical Pokémon</span></label><div id="td4CandidateStatus" role="status"></div><div id="td4Candidates"></div></details><details id="td5TeamOptimize" class="td42-settings" hidden><summary id="td77SuggestMoves">Suggested moves</summary><div id="td5TeamProposals" hidden></div></details></div><details class="card"><summary class="td77-analysis-summary"><strong>Recommended improvements</strong><small id="td77ImprovementSummary">Review team changes</small></summary><div id="td77Improvements"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>Team coverage</strong><small id="td77CoverageSummary"></small></summary><div id="td4Coverage"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>HM overview</strong><small id="td77HmSummary"></small></summary><div id="td4HM"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>Gym readiness</strong><small id="td77GymSummary"></small></summary><div id="td77Gyms"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>Elite Four readiness</strong><small id="td77LeagueSummary"></small></summary><div id="td4League"></div></details>`;
+ page.innerHTML=`<div class="bar"><h2>Team Planner</h2><button type="button" id="td4Back">← My Team</button></div><div class="tool-card"><h3 id="td41TeamTitle"></h3><div hidden><select id="td4Game"><option value="">Choose game…</option>${gameOptions}</select><select id="td4Team"></select></div><small id="td77ActualProgress" hidden></small><label>Planning deadline<select id="td77Availability"></select></label><div class="td44-reset"><button id="td4Seed" class="delete-team-link" type="button">Reset plan</button></div><small id="td4Status" role="status"></small></div><div id="td77MoveViews" class="bar" role="tablist" aria-label="Planning mode"><button type="button" role="tab" data-view="during">During game</button><button type="button" role="tab" data-view="final">Final</button></div><div class="card"><h3>Planned team</h3><div id="td4Slots" class="td4-plan-grid"></div><div id="td4PlanProgress"></div></div><div id="td4Edit" class="card" hidden><div id="td72MoveHeading" hidden><h4 id="td72MoveTitle"></h4><div class="td7-reset-top"><button type="button" id="td77Lock" aria-pressed="false" hidden>Lock Pokémon</button><button type="button" class="td774-secondary" id="td4Clear">Reset</button><button type="button" class="td774-secondary td78-remove-stage" id="td78RemovePlan" data-td78-remove-stage hidden>Remove</button></div></div><div id="td77FinalForm" hidden></div><div id="td77SlotRoute"></div><div id="td41MoveSlots"></div><details class="td42-settings"><summary><span>Change Pokémon</span><span id="td63SelectedReplacement"></span></summary><small id="td775ReplacementLocked" hidden></small><div class="td77-candidate-search td772-filter-line"><div class="search"><input id="td4Search" autocomplete="off" placeholder="Search Pokémon…"></div>${td772FilterButton("td77TypeFilter","Filter Pokémon by type","td77TypeOptions")}<span id="td77ActiveTypes"></span><div id="td4SearchResults" class="suggestions" hidden></div><div id="td78AddOwned"></div><div id="td77TypeOptions" class="td772-filter-panel" role="group" aria-label="Pokémon type filter" hidden></div></div><div id="td63ManualCandidate"></div><label class="td77-inline-check"><input id="td77Legendary" type="checkbox"> <span>Include Legendary and Mythical Pokémon</span></label><div id="td4CandidateStatus" role="status"></div><div id="td4Candidates"></div><button type="button" class="td774-secondary" id="td79SearchReturn" aria-label="Return to Pokémon search" hidden>⌃</button></details><details id="td5TeamOptimize" class="td42-settings" hidden><summary id="td77SuggestMoves">Suggested moves</summary><div id="td5TeamProposals" hidden></div></details></div><details class="card"><summary class="td77-analysis-summary"><strong>Recommended improvements</strong><small id="td77ImprovementSummary">Review team changes</small></summary><div id="td77Improvements"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>Team coverage</strong><small id="td77CoverageSummary"></small></summary><div id="td4Coverage"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>HM overview</strong><small id="td77HmSummary"></small></summary><div id="td4HM"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>Gym readiness</strong><small id="td77GymSummary"></small></summary><div id="td77Gyms"></div></details><details class="card"><summary class="td77-analysis-summary"><strong>Elite Four readiness</strong><small id="td77LeagueSummary"></small></summary><div id="td4League"></div></details>`;
  const actual=()=>teams.find(t=>t.id===$('td4Team').value&&t.game===$('td4Game').value);
  const effectiveProgress=()=>window.td62Progress.detected(actual()?.saveLink?.progression);
  function renderActualProgress(){
@@ -4222,9 +4615,54 @@ document.addEventListener('keydown',event=>{
  }
  const planKey=()=>[$('td4Game').value,$('td4Team').value||'standalone'].join(':');
  function say(t){$('td4Status').textContent=t;}
- function persist(){if(!state||!games.includes(state.game))return false;try{const x=read();x[planKey()]=state;localStorage.setItem(KEY,JSON.stringify(x));return true}catch{say('Could not save plan. Storage unavailable.');return false}}
+ function captureStage(){
+  for(const [i,stages] of Object.entries(state.independentSlots||{}))stages[movesetView]=state.slots[i];
+ }
+ function projectStage(){
+  for(const [i,stages] of Object.entries(state.independentSlots||{}))state.slots[i]=stages[movesetView];
+ }
+ function stageDisplay(i){
+  const active=state.slots[i],pair=state.independentSlots?.[i];
+  const other=pair?.[movesetView==='during'?'final':'during'];
+  const assigned=ownedAssignments();
+  const party=actual()?.pokemon||[];
+  const member=party[assigned[i]]||(pair?[pair.during,pair.final].map(plan=>matchingIdentity(plan,party)).find(Boolean):null);
+  return {active,pair,other,member:member||(!active&&!other&&!assigned.includes(i)?party[i]:null)};
+ }
+ function separateStages(i,during,final){
+  (state.independentSlots??={})[i]={during,final};
+  state.slots[i]=state.independentSlots[i][movesetView];
+ }
+ function persist(){
+  if(!state||!games.includes(state.game))return;
+  captureStage();
+  const proposed=td78Store.copy(state),key=planKey(),id=$('td4Team').value;
+  for(const [i,stages] of Object.entries(proposed.independentSlots||{})){
+   proposed.slots[i]=stages.final;
+   delete stages.final;
+  }
+  const before=planWrites.get(key);
+  if(!before||td78Store.same(before.proposed,proposed))return;
+  const write={proposed};
+  planWrites.set(key,write);
+  const operation=Promise.resolve(before.pending||before.row).then(expected=>td78Store.commit(snapshot=>{
+   td78Store.expect(snapshot,'plans',key,expected);
+   if(id&&td78Store.entry(snapshot,'teams',id).value?.game!==proposed.game)
+    throw td78Store.fault('CONFLICT','The team changed or was deleted. The plan was not saved.');
+   td78Store.replace(snapshot,'plans',key,proposed);
+  }));
+  write.pending=operation.then(result=>td78Store.entry(result.state,'plans',key));
+  operation.then(result=>{write.row=td78Store.entry(result.state,'plans',key);write.pending=null;td78ProjectionWarning(result);},error=>{
+   write.pending?.catch(()=>{});
+   say(error.message);td78WriteWarning(error,{key,plan:proposed});
+  });
+ }
  function teamMenu(){const g=$('td4Game').value,old=$('td4Team').value;$('td4Team').innerHTML='<option value="">Standalone plan</option>'+teams.filter(t=>t.game===g).map(t=>`<option value="${safe(t.id)}">${safe(t.name)}</option>`).join('');if([...$('td4Team').options].some(o=>o.value===old))$('td4Team').value=old;}
- function load(){++token;++rankRun;manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();$('td5TeamProposals').innerHTML='';ranked=[];pack=null;lookup=null;$('td4Edit').hidden=true;$('td4Candidates').innerHTML='';const g=$('td4Game').value;filterTypes.clear();$('td77TypeOptions').hidden=true;$('td77TypeFilter').setAttribute('aria-expanded','false');const saved=read()[planKey()];state=saved?.game===g&&Array.isArray(saved.slots)?saved:{game:g,slots:six(),approved:false,progress:''};state.approved=false;delete state.manualAcquired;state.slots=Array.from({length:6},(_,i)=>{const stored=state.slots[i];
+ function load(){++token;++rankRun;manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();$('td5TeamProposals').innerHTML='';ranked=[];pack=null;lookup=null;$('td4Edit').hidden=true;$('td4Candidates').innerHTML='';const g=$('td4Game').value;filterTypes.clear();$('td77TypeOptions').hidden=true;$('td77TypeFilter').setAttribute('aria-expanded','false');const key=planKey(),pending=planWrites.get(key),row=td78Store.entry(td78Store.read().state,'plans',key);const saved=td78Store.copy(pending?.pending?pending.proposed:row.value);if(!pending?.pending)planWrites.set(key,{row,proposed:td78Store.copy(saved)});state=saved?.game===g&&Array.isArray(saved.slots)?saved:{game:g,slots:six(),approved:false,progress:''};state.approved=false;delete state.manualAcquired;
+  movesetView=state.mode==='during'?'during':'final';
+  for(const [i,stages] of Object.entries(state.independentSlots||{}))stages.final=state.slots[i]??null;
+  projectStage();
+  state.slots=Array.from({length:6},(_,i)=>{const stored=state.slots[i];
   if(!stored)return null;
   const {finalTarget,imported,...source}=stored;
   const migrated=Number.isInteger(finalTarget?.id)&&finalTarget.id!==stored.id&&
@@ -4232,7 +4670,7 @@ document.addEventListener('keydown',event=>{
   const p=migrated?{...source,...finalTarget,ability:finalTarget.ability||'',finalLearnset:learnsetFor(finalTarget)}:source;
   p.duringMoves=moveSlots({plannedMoves:p.duringMoves??moveSlots(p).map(m=>({...m,purpose:'keep',replacement:''}))});
   p.milestoneId=milestoneOptions(g).find(x=>x[1]===p.milestone)?.[0]||'';
-  return p;});if(!saved&&actual())state.slots=Array.from({length:6},(_,i)=>fromTeam(actual().pokemon[i],i));migrateMoves();$('td41MoveSlots').innerHTML='';$('td41TeamTitle').textContent=(actual()?.name||'')+' · '+g;setDeadlineOptions(g);updateTypeFilter();state.progressId=milestoneOptions(g).find(x=>x[1]===state.progress)?.[0]||'';movesetView=state.mode==='during'?'during':'final';say('');persist();render();if(Number.isInteger(state.editorSlot)&&state.editorSlot>=0&&state.editorSlot<6)$('td4Slots').querySelector('[data-td4-slot="'+state.editorSlot+'"]')?.click();refreshMoveInfo();if(g)hydrate(!saved);}
+  return p;});migrateMoves();$('td41MoveSlots').innerHTML='';$('td41TeamTitle').textContent=(actual()?.name||'')+' · '+g;setDeadlineOptions(g);updateTypeFilter();state.progressId=milestoneOptions(g).find(x=>x[1]===state.progress)?.[0]||'';movesetView=state.mode==='during'?'during':'final';say('');persist();render();if(Number.isInteger(state.editorSlot)&&state.editorSlot>=0&&state.editorSlot<6)$('td4Slots').querySelector('[data-td4-slot="'+state.editorSlot+'"]')?.click();refreshMoveInfo();if(g)hydrate(!saved);}
  let plannerActive=false,plannerScroll=0,plannerDirty=false,checkerEditor=null;
  window.td77RememberPlan=()=>{if(plannerActive&&!page.hidden)plannerScroll=window.scrollY;};
  window.td77RestorePlan=()=>{
@@ -4244,12 +4682,12 @@ document.addEventListener('keydown',event=>{
   if(saved?.token===token&&saved.slot===chosenSlot&&!$('td4Edit').hidden){
    const input=$('td41MoveSlots').querySelector(`[data-td45-move="${saved.field}"]`);
    if(input){
-    const box=input.nextElementSibling;
+    const box=moveBox(input);
     if(box.hidden||input.value!==saved.search){
      input.value=saved.search;
-     showMoveOptions(input,clean(saved.search));
-    }
-    box.querySelector('.td78-move-results').scrollTop=saved.scroll;
+     moveFilters.set(input,saved.filters);
+     showMoveOptions(input,clean(saved.search),saved.scroll);
+    }else box.querySelector('.td78-move-results').scrollTop=saved.scroll;
    }
   }
   requestAnimationFrame(()=>{if(!page.hidden)window.scrollTo(0,plannerScroll);});
@@ -4273,7 +4711,7 @@ document.addEventListener('keydown',event=>{
  function fromTeam(p,i){return p?{originPid:p.saveStats?.pid,originName:td73IdentityKey(p),originSlot:i,autoOwnedPending:true,id:p.id,name:clean(p.name),types:p.types||[],baseStats:p.baseStats||{},abilities:p.abilities||[],ability:p.ability||'',image:td71StoredArt(p),imported:false,plannedMoves:moveSlots(p)}:null}
  function migrateMoves(){state.slots=state.slots.map((p,i)=>{if(!p)return null;const a=ownedFor(p,i);const planned=Array.isArray(p.plannedMoves)?moveSlots(p):moveSlots(a||p);return {...p,plannedMoves:planned}});const legacy=state.hmAssignments||{};for(const [hm,carrier] of Object.entries(legacy)){if(!carrier)continue;const p=state.slots.find(x=>x?.name===carrier);if(!p||p.plannedMoves.some(m=>m.move===hm))continue;const free=p.plannedMoves.find(m=>!m.move);if(free)free.move=hm;else{state.legacyHmReview=state.legacyHmReview||{};state.legacyHmReview[hm]=carrier;}}delete state.hmAssignments;}
 
- $('td4Seed').onclick=()=>{const t=actual();if(!t||state.approved)return;if(!confirm('Reset this plan to your current team?'))return;++token;++rankRun;state.slots=Array.from({length:6},(_,i)=>fromTeam(t.pokemon[i],i));delete state.legacyHmReview;delete state.editorSlot;$('td4Edit').hidden=true;$('td41MoveSlots').innerHTML='';persist();render();hydrate();};
+ $('td4Seed').onclick=async()=>{const t=actual();if(!t||state.approved)return;if(!await td78Confirmation('Reset this plan to your current team?','','Reset'))return;++token;++rankRun;state.slots=Array.from({length:6},(_,i)=>fromTeam(t.pokemon[i],i));delete state.independentSlots;delete state.legacyHmReview;delete state.editorSlot;$('td4Edit').hidden=true;$('td41MoveSlots').innerHTML='';persist();render();hydrate();};
  let lineagePack,parentsById,terminalSpecies;
  function buildLineageIndex(){
   if(lineagePack===pack&&parentsById)return;
@@ -4306,10 +4744,10 @@ document.addEventListener('keydown',event=>{
   const move={type,damageClass:'physical'};
   return defensiveEffect(move,p,gen);
  }
- function metrics(slots,game){
+ function metrics(slots,game,typeOnly=false){
   const gen=gameGeneration(game),ts=typesFor(game),filled=slots.filter(p=>p?.types?.length);
   const weak=ts.map(type=>{
-   const effects=filled.map(p=>({p,m:matchupDefense(p,type,gen)}));
+   const effects=filled.map(p=>({p,m:typeOnly?matchup(type,p.types,gen):matchupDefense(p,type,gen)}));
    const vulnerable=effects.filter(({m})=>m>1);
    const resistant=effects.filter(({m})=>m>0&&m<1);
    const immune=effects.filter(({m})=>m===0);
@@ -4339,8 +4777,8 @@ document.addEventListener('keydown',event=>{
  }
  function roleTags(p){const b=p?.baseStats||{},out=[];if((b.attack||0)>=90)out.push('Physical');if((b['special-attack']||0)>=90)out.push('Special');if((b.speed||0)>=90)out.push('Fast');if((b.defense||0)>=90||(b['special-defense']||0)>=90)out.push('Defensive');return out;}
  function acquisition(slot,includeOwned=true){if(slot?.acquisitionRoute){const route=chosenRoute(slot);if(route)return route;if(pack&&includeOwned)return {kind:'unknown',reason:'Selected acquisition route needs review'};}let evidence=null;try{if(pack&&slot?.id)evidence=window.takDexAcquisitionV64.details(pack,slot.id)}catch{}return window.td62Progress.acquisition(state.game,slot,pack,includeOwned?[ownedFor(slot,chosenSlot)].filter(Boolean):[],evidence);}
- function routeOptions(slot,includeOwned=true,index=chosenSlot){
-  const g=state.game,member=includeOwned&&ownedFor(slot,index),owned=member?[member]:[];
+ function routeOptions(slot,includeOwned=true,index=chosenSlot,matched){
+  const g=state.game,member=matched===undefined?includeOwned&&ownedFor(slot,index):matched,owned=member?[member]:[];
   const previous=slot?.acquisitionRoute;
   if(previous&&member?.saveStats?.pid!=null&&member.id!==previous.startId&&
      previous.id===previous.startId+'|owned|'+member.saveStats.pid&&lineage(member.id).has(previous.startId)){
@@ -4361,6 +4799,7 @@ document.addEventListener('keydown',event=>{
  function routeChoice(r){
   const name=td41PokemonLabel(r.startName);
   if(r.initial.kind==='owned')return 'Use owned '+name;
+  if(r.initial.kind==='link-trade')return 'Trade '+name;
   return 'Obtain '+name+(r.steps.length?'':' directly')+' · '+[r.initial.place,pretty(r.initial.method)].filter(Boolean).join(' · ');
  }
  function routeStore(r){return r&&{id:r.id,startId:r.startId,...(r.initial.kind==='owned'&&r.initial.minLevel?{startLevel:r.initial.minLevel}:{})};}
@@ -4370,11 +4809,12 @@ document.addEventListener('keydown',event=>{
   const levels=initial.minLevel?('Lv '+initial.minLevel+(initial.maxLevel&&initial.maxLevel!==initial.minLevel?'–'+initial.maxLevel:'')):'';
   const method=({walk:'Wild encounter','dark-grass':'Dark grass','grass-spots':'Rustling grass'})[initial.method]||pretty(initial.method);
   const gate=rank=>rank===0?'Start of game':rank===10?'Postgame':milestoneOptions(state.game).find(([key])=>window.td62Progress.rank(key)===rank)?.[1];
-  const access=initial.kind==='owned'?'Already on team':now!=null&&now>=initial.rank?'Available now':gate(initial.rank);
+  const access=initial.kind==='owned'?'Already on team':initial.kind==='link-trade'?'Local link trade':
+   now!=null&&now>=initial.rank?'Available now':gate(initial.rank);
   const evolutionGate=r.rank>initial.rank?'Evolution from '+gate(r.rank):'';
   const details=[method,levels].filter(Boolean).join(' · ');
   const deadlineWarning=!history&&limit!=null&&!routeFits(r);
-  return '<div class="td77-evolution-path">'+(showPath?'<strong>'+safe(evolutionPath(r))+'</strong><small>'+evolutionRequirements(r)+'</small>':'')+[
+  return '<div class="td77-evolution-path">'+(showPath?'<strong>'+safe(evolutionPath(r,{levels:true}))+'</strong>'+[evolutionRequirements(r,{omitLevel:true})].filter(Boolean).map(value=>'<small>'+value+'</small>').join(''):'')+[
      place,
      [access,evolutionGate].filter(Boolean).map(safe).join(' · '),
      [safe(details),td77AcquisitionLinks(initial.note,state.game)].filter(Boolean).join(' · ')
@@ -4387,27 +4827,87 @@ document.addEventListener('keydown',event=>{
    return levels&&level?name+' (Lv. '+level+')':name;
   })].join(' → ');
  }
- function evolutionRequirements(route){
-  return route.steps.map(step=>td77AcquisitionLinks(step.requirement,state.game)).join(' · ');
+ function evolutionRequirements(route,{omitLevel=false}={}){
+  return route.steps.filter(step=>!omitLevel||!/^Level \d+$/i.test(step.requirement))
+   .map(step=>td77AcquisitionLinks(step.requirement,state.game)).join(' · ');
+ }
+ function fulfilledCapture(slot){
+  const member=ownedFor(slot,chosenSlot);
+  return slot.fulfilledPid!=null||!!member&&slot.explicitOwned&&
+   (!slot.acquisitionRoute||chosenRoute(slot)?.initial.kind==='owned');
  }
  function routeEditor(slot,context){
-  const rows=routeOptions(slot).filter(path=>context!=='confirmed'||!slot.duringTargetId||routeIncludesStage(path,slot.duringTargetId)),r=slot.fulfilledPid!=null&&slot.acquisitionRoute?chosenRoute(slot,false):chosenRoute(slot);
-  const fulfilled=slot.fulfilledPid!=null;
-  const deadline=deadlineRank();
-  const cap=deadlineLevel();
-  const fits=row=>deadline==null||routeFits(row,cap);
-  const allowed=rows.filter(fits);
-  const later=rows.filter(row=>!fits(row));
-  const option=(row,restricted)=>'<option value="'+safe(row.id)+'" '+(row.id===r?.id?'selected':'')+'>'+safe(routeChoice(row)+(restricted?' · after deadline':''))+'</option>';
-  const missing=slot.acquisitionRoute&&!r?'<option value="" selected>Saved route needs review</option>':'';
+  const rows=routeOptions(slot).filter(path=>!slot.duringTargetId||routeIncludesStage(path,slot.duringTargetId));
+  const fulfilled=context!=='preview'&&fulfilledCapture(slot);
+  const r=fulfilled&&slot.acquisitionRoute?(chosenRoute(slot,false)||chosenRoute(slot)):chosenRoute(slot);
+  if(fulfilled){
+   const member=ownedFor(slot,chosenSlot),stage=member?.id??slot.fulfilledStage;
+   const pending=r?.steps.filter(step=>!stage||!lineage(stage).has(step.id))||[];
+   const requirement=step=>{
+    const level=step.requirement.match(/^Level (\d+)$/i);
+    const target=safe(td41PokemonLabel(step.name));
+    return level?target+' at Lv. '+level[1]:target+' · '+td77AcquisitionLinks(step.requirement,state.game);
+   };
+   if(!member&&!pending.length)return '';
+   return '<div class="td78-owned-route">'+(member?'<small class="td41-good">On team'+(Number.isInteger(member.level)?' · Lv. '+member.level:'')+'</small>':'')+
+    (pending.length?`<small>Evolution remaining · ${pending.map(requirement).join(' · ')}</small>`:'')+'</div>';
+  }
   const [method,location]=r?routeChoice(r).split(' · '):['Saved route needs review',''];
-  const requirements=r?.steps.map(step=>step.requirement).join(' · ');
-  const condition=requirements?.replace(/^Level (\d+)$/i,'Evolve at Lv. $1');
-  const select=rows.length?`<label class="td774-route-choice"><span aria-hidden="true">${safe(fulfilled?'Selected acquisition route':method)}
-   ${!fulfilled&&(condition||location)?`<small>${safe(condition||location)}</small>`:''}</span>
-   <select data-td77-route="${context}" aria-label="Acquisition method">${missing}${allowed.map(row=>option(row,false)).join('')}
-   ${later.length?'<optgroup label="Outside the planning deadline">'+later.map(row=>option(row,true)).join('')+'</optgroup>':''}</select></label>`:'';
-  return (fulfilled?'<small class="td41-good">'+(ownedFor(slot,chosenSlot)?'Acquisition fulfilled · On team':'Previously matched · Not in party')+'</small>':'')+select+(r?`<details class="td78-disclosure td773-disclosure td774-route-details"><summary><span>${fulfilled?'Selected route history':'Acquisition details'}</span></summary>${routeDescription(r,r.steps.length>1,fulfilled)}</details>${fulfilled||routeFits(r)?'':`<small class="td63-danger">${safe(routeRestriction(r))}</small>`}`:fulfilled?'':'<small>'+td77AcquisitionLinks(availability(slot),state.game)+'</small>');
+  const requirement=r?.steps.map(step=>step.requirement).join(' · ').replace(/^Level (\d+)$/i,'Evolve at Lv. $1');
+  const groups=[
+   ['Before planning deadline','td41-good',[]],
+   ['After planning deadline','td63-danger',[]],
+   ['Other acquisition methods','',[]]
+  ];
+  const external=row=>row.initial.kind==='link-trade';
+  const other=row=>external(row)||row.initial.kind==='owned';
+  for(const row of rows)groups[other(row)?2:routeFits(row)?0:1][2].push(row);
+  const methodName=value=>({'dark-grass':'Dark Grass','grass-spots':'Rustling Grass'})[value]||pretty(value);
+  const choice=(row,label)=>'<button type="button" class="td774-secondary'+(external(row)?' td5-evo-text':'')+
+   '" data-td77-route="'+context+'" data-route-id="'+safe(row.id)+'" aria-pressed="'+(row.id===r?.id)+'">'+safe(label)+'</button>';
+  const sameArea=row=>row.initial.method==='hidden-grotto'?row.initial.place?.split(' · ')[0]:row.initial.place;
+  const options=groups.filter(([, , routes])=>routes.length).map(([title,tone,routes])=>{
+   const paths=new Map();
+   for(const row of routes){
+    const key=other(row)?row.id:JSON.stringify([row.startId,sameArea(row),row.initial.rank,row.rank]);
+    if(!paths.has(key))paths.set(key,[]);
+    paths.get(key).push(row);
+   }
+   return '<div class="td78-route-group"><b class="'+tone+'">'+title+'</b>'+[...paths.values()].map(area=>{
+    const selected=area.find(row=>row.id===r?.id);
+    const walk=area.find(row=>row.initial.method==='walk'&&!row.initial.note&&!row.initial.conditions?.length);
+    const first=selected||walk||area[0];
+    const level=first.steps.map(step=>step.requirement).join(' · ').replace(/^Level (\d+)$/i,'evolves at Lv. $1');
+    if(other(first))return choice(first,[routeChoice(first),level,!routeFits(first)?routeRestriction(first):''].filter(Boolean).join(' · '));
+    const label='Obtain '+td41PokemonLabel(first.startName)+(first.steps.length?'':' directly');
+    const methods=[...new Set(area.map(row=>row.initial.method))];
+    const preferred=['walk','dark-grass','hidden-grotto'];
+    const methodLabel=[...preferred.filter(key=>methods.includes(key)),...methods.filter(key=>!preferred.includes(key))]
+     .map(methodName).join(', ');
+    const requirements=row=>{
+     // The standard grotto spawn note adds no route gate if unrestricted walking is available.
+     const grotto=walk&&row.initial.method==='hidden-grotto'&&
+      row.initial.note==='Hidden Grotto encounter. Check after the Route 5 tutorial; spawns are random.';
+     return JSON.stringify([grotto?'':row.initial.note||'',row.initial.conditions||[],
+      row.steps.filter(step=>step.level>0&&row.initial.minLevel>=step.level).map(step=>step.id)]);
+    };
+    const needsMethod=area.length>1&&new Set(area.map(requirements)).size>1;
+    const exactMethod=needsMethod?`<select data-td77-route="${context}" aria-label="Encounter method at ${safe(sameArea(first))}">
+     <option value="" ${selected?'':'selected'} disabled>Choose encounter method</option>
+     ${area.map(row=>`<option value="${safe(row.id)}" ${row.id===selected?.id?'selected':''}>${safe([
+      methodName(row.initial.method),row.initial.minLevel?'Lv. '+row.initial.minLevel+(row.initial.maxLevel!==row.initial.minLevel?'–'+row.initial.maxLevel:''):'',
+      row.initial.conditions?.join(', '),row.initial.note].filter(Boolean).join(' · '))}</option>`).join('')}</select>`:'';
+    return `<div class="td78-route-area">
+     ${needsMethod?`<strong>${safe(label)}</strong>`:choice(first,label)}
+     <div class="td78-route-location">${td77AcquisitionLinks(sameArea(first),state.game)} · ${safe(methodLabel)}</div>
+     ${level?`<small>${safe(level)}</small>`:''}${exactMethod}</div>`;
+   }).join('')+'</div>';
+  }).join('');
+  const selector=rows.length?`<details class="td773-disclosure td78-route-picker"><summary class="td774-route-choice"><span>${safe(method)}
+   ${requirement||location?`<small>${safe(location||requirement)}</small>`:''}</span></summary><div class="td78-route-options">${options}</div></details>`:'';
+  return selector+(r?`<details class="td78-disclosure td773-disclosure td774-route-details"><summary>Acquisition details</summary>${routeDescription(r,r.steps.length>0)}</details>${routeFits(r)?'':`<small class="td63-danger">${safe(routeRestriction(r))}</small>`}`:
+   `<small class="note">${td77AcquisitionLinks(availability(slot),state.game)}</small>`);
+
  }
  function candidateAcquisition(slot,open=false){
   const game=state.game,progress=window.td62Progress;
@@ -4418,18 +4918,18 @@ document.addEventListener('keydown',event=>{
    (timing.kind==='owned'?'On team':'Acquisition details');
   const rank=timing.rank;
   const now=progress.rank(effectiveProgress());
-  const status=timing.kind==='owned'?'Already on team':rank==null||!timing.confirmed&&!route?description.split(' · ')[0]:
+  const status=route?.initial.kind==='link-trade'?'Local link trade':timing.kind==='owned'?'Already on team':rank==null||!timing.confirmed&&!route?description.split(' · ')[0]:
    now!=null&&rank<=now?'Available now':rank===9?'Before Elite Four':rank===10?'Postgame':rank===0?'Start of game':'Available after badge '+rank;
   const restriction=route&&!routeFits(route)?routeRestriction(route):deadline!=null&&rank>deadline?'After planning deadline':'';
-  const tone=restriction||now!=null&&rank>now?'td63-danger':progress.tone(timing,effectiveProgress(),target);
+  const tone=route?.initial.kind==='link-trade'?'td5-evo-text':restriction?'td63-danger':rank!=null?'td41-good':'';
   const initial=route?.initial;
   const method=initial&&({walk:'Wild encounter','dark-grass':'Dark grass','grass-spots':'Rustling grass'}[initial.method]||pretty(initial.method));
   const levels=initial?.minLevel?'Lv '+initial.minLevel+(initial.maxLevel&&initial.maxLevel!==initial.minLevel?'–'+initial.maxLevel:''):'';
   const gate=rank=>milestoneOptions(game).find(([key])=>progress.rank(key)===rank)?.[1];
-  const lines=initial?[initial.place,gate(initial.rank),[method,levels,initial.note].filter(Boolean).join(' · '),
+  const lines=initial?[initial.place,initial.rank!==rank?gate(initial.rank):'',[method,levels,initial.note].filter(Boolean).join(' · '),
    rank>initial.rank?'Evolution: '+gate(rank):'']:[description];
   return `<details class="td78-disclosure td80-candidate-acquisition td773-disclosure"${open?' open':''}><summary><span>${safe(heading)}<small class="${tone}">${safe(status)}${restriction?' · '+safe(restriction):''}</small></span></summary>
-   ${[route?.steps.length?evolutionRequirements(route):'',...lines.map(line=>td77AcquisitionLinks(line,game))].filter(Boolean)
+   ${[route?.steps.length?evolutionRequirements(route,{omitLevel:true}):'',...lines.map(line=>td77AcquisitionLinks(line,game))].filter(Boolean)
     .map(line=>`<small>${line}</small>`).join('')}</details>`;
  }
  function availability(slot){if(!slot)return '';return window.td62Progress.describe(acquisition(slot),effectiveProgress(),$('td77Availability').value);}
@@ -4440,17 +4940,24 @@ document.addEventListener('keydown',event=>{
   const indicator=$('td63SelectedReplacement');
   if(indicator)indicator.textContent=p&&!manualCandidate?.confirmed&&!sameMon(a,p)?'Planned: '+td41PokemonLabel(p.name):'';
  }
+ function rememberMoveEditor(){
+  const box=$('td41MoveSlots').querySelector('.suggestions:not([hidden])');
+  const input=box?.closest('.td78-editor-shell').querySelector('input');
+  clearTimeout(moveBlurTimer);
+  checkerEditor=input?{token,slot:chosenSlot,field:input.dataset.td45Move,search:input.value,
+   scroll:box.querySelector('.td78-move-results').scrollTop,filters:moveFilters.get(input)}:null;
+ }
  page.addEventListener('click',e=>{
   const link=e.target.closest('[data-td74-dex-map]');
-  if(link){e.preventDefault();window.takDexMapsV73?.open(state.game,link.dataset.td74DexMap);}
+  if(link){
+   e.preventDefault();
+   rememberMoveEditor();
+   window.takDexMapsV73?.open(state.game,link.dataset.td74DexMap);
+  }
   const move=e.target.closest('[data-td77-plan-move]');
   if(move){
    e.preventDefault();
-   const box=$('td41MoveSlots').querySelector('.suggestions:not([hidden])');
-   const input=box?.previousElementSibling;
-   clearTimeout(moveBlurTimer);
-   checkerEditor=input?{token,slot:chosenSlot,field:input.dataset.td45Move,search:input.value,
-    scroll:box.querySelector('.td78-move-results').scrollTop}:null;
+   rememberMoveEditor();
    window.takDexMoveV68?.open(move.dataset.td77PlanMove,'team-planner',state.game,move.dataset.td77Reminder);
    page.hidden=true;
   }
@@ -4526,29 +5033,22 @@ document.addEventListener('keydown',event=>{
   const start=plan.acquisitionRoute?.startId||plan.duringTargetId||plan.id;
   return lineage(member.id).has(Number(start));
  }
+ function matchingIdentity(plan,party){
+  if(!plan)return null;
+  const pid=plan.fulfilledPid??plan.originPid;
+  const name=plan.originName||(!plan.confirmedCandidate&&plan.name);
+  const matches=party.filter(member=>member&&(pid!=null?member.saveStats?.pid===pid:
+   name&&td73IdentityKey(member)===name));
+  if(matches.length!==1)return null;
+  const member=matches[0];
+  if(plan.fulfilledPid!=null&&!eligibleAcquisition(plan,member))return null;
+  if(plan.explicitOwned&&pid!=null&&!lineage(member.id).has(plan.id)&&!lineage(plan.id).has(member.id))return null;
+  return member;
+ }
  function ownedAssignments(){
   const party=actual()?.pokemon||[],slots=state?.slots||[];
-  const result=slots.map(()=>-1),reserved=new Set();
-  const claim=(slot,indices)=>{
-   if(indices.length===1&&!reserved.has(indices[0])){
-    result[slot]=indices[0];reserved.add(indices[0]);
-   }
-  };
-  const matching=predicate=>party.flatMap((member,i)=>member&&predicate(member)?[i]:[]);
-  slots.forEach((p,i)=>{
-   if(p?.fulfilledPid==null)return;
-   claim(i,matching(member=>member.saveStats?.pid===p.fulfilledPid&&eligibleAcquisition(p,member)));
-  });
-  slots.forEach((p,i)=>{
-   if(!p||p.fulfilledPid!=null||p.originPid==null)return;
-   claim(i,matching(member=>member.saveStats?.pid===p.originPid));
-  });
-  slots.forEach((p,i)=>{
-   if(!p||p.fulfilledPid!=null||p.originPid!=null)return;
-   const name=p.originName||(!p.confirmedCandidate&&p.name);
-   if(name)claim(i,matching(member=>td73IdentityKey(member)===name));
-  });
-  return result;
+  const candidates=slots.map(plan=>matchingIdentity(plan,party));
+  return candidates.map(member=>member&&candidates.filter(candidate=>candidate===member).length===1?party.indexOf(member):-1);
  }
  function ownedFor(p,i){
   const index=p?state?.slots.indexOf(p):-1,slot=index>=0?index:i;
@@ -4623,6 +5123,7 @@ document.addEventListener('keydown',event=>{
   const member=ownedFor(p,slot);
   const target=p;
   const route=chosenRoute(p,true,slot);
+  if(state.independentSlots?.[slot]?.during===p&&member&&lineage(member.id).has(p.id))return moveKey(member.name);
   const chosen=p.duringTargetId||pack?.mons?.find(([,name])=>name===p.duringSpecies)?.[0];
   if(chosen&&lineage(p.id).has(chosen))return pack?.mons?.find(([id])=>id===chosen)?.[1]||p.duringSpecies||p.name;
   if(route?.initial.kind!=='owned'&&route)return route.startName;
@@ -4637,7 +5138,7 @@ document.addEventListener('keydown',event=>{
  }
  function displayedMoves(p){return movesetView==='during'?(p?.duringMoves||[]):(p?.plannedMoves||[]);}
  function activeMoves(){return state.slots.flatMap(p=>displayedMoves(p).map(goal)).filter(Boolean);}
- function knownMoves(final=true){return state.slots.flatMap(p=>(p?.plannedMoves||[]).map(m=>final?goal(m):m.move)).filter(Boolean)}
+ function knownMoves(){return state.slots.flatMap(p=>(p?.plannedMoves||[]).map(goal)).filter(Boolean)}
  function damaging(m){return m?.damageClass&&m.damageClass!=='status'&&m.type&&((Number(m.power)>0)||m.power===null)}
  function coverageFor(names){const gen=gameGeneration(state.game),data=names.map(info),known=data.filter(damaging);return {types:typesFor(state.game).filter(t=>known.some(m=>matchup(m.type,[t],gen)>1)),incomplete:data.some(m=>!m?.damageClass||!m?.type)};}
  function coveragePair(title,a,b){const ts=typesFor(state.game),col=(label,c)=>{const missing=ts.filter(x=>!c.types.includes(x));return `<div class="td44-cover-col${missing.length===0?' td45-complete':''}"><small>${label}</small><strong>${c.types.length}/${ts.length}</strong><div class="td44-cover-track"><span style="width:${100*c.types.length/ts.length}%"></span></div><small>${c.incomplete?'Not verified / missing':missing.length?'Missing':'Complete coverage'}</small><div class="pills">${missing.map(pill).join('')}</div></div>`};return `<div class="td42-coverage"><b>${title}</b><div class="td44-cover-pair">${col('Actual team',a)}<span class="td42-arrow">→</span>${col('Planned team',b)}</div></div>`;}
@@ -4752,30 +5253,32 @@ document.addEventListener('keydown',event=>{
   const result=moveRecommendations();
   improvementMove=result?.proposals||[];
   for(const [index,r] of improvementMove.entries()){
-   const reason=r.added.length?'coverage against '+r.added.map(pretty).join(', '):
-    r.utility?'HM utility':r.lost.length?'better practical fit':'better move reliability or power';
+   const reason=r.utility?'Story HM':'';
    const move=(r.prev?safe(pretty(r.prev))+' → ':'Add ')+safe(pretty(r.name));
-   proposals.push({kind:"move",score:r.score+2,html:`<details><summary>${safe(td41PokemonLabel(r.p.name))} · ${move}</summary>
+   proposals.push({kind:"move",replaces:Boolean(r.prev),score:r.score+2,html:`<details><summary>${safe(td41PokemonLabel(r.p.name))} · ${move}</summary>
     <div class="td79-move-compare">
      ${improvementMoveCard(r.prev)}<span aria-hidden="true">→</span>${improvementMoveCard(r.name,r.prev)}
     </div>
     ${improvementTypes('Coverage gained',r.added)}${improvementTypes('Coverage lost',r.lost,true)}
-    ${!r.added.length?`<small>${safe(reason)}</small>`:''}
+    ${reason?`<small>${safe(reason)}</small>`:''}
     ${moveDrawback(info(r.name))!=='—'?`<small>${safe(moveDrawback(info(r.name)))}</small>`:''}
     <small>${td77AcquisitionLinks(r.timing,g)}</small>
-    <button type="button" data-td77-apply-move="${index}">Apply to ${movesetView==='during'?'During game':'Final'} moveset</button></details>`});
+    <button type="button" class="td774-secondary" data-td77-apply-move="${index}" data-score="${r.score.toFixed(2)}">Apply to ${movesetView==='during'?'During game':'Final'} moveset</button></details>`});
   }
-  const proposalsForTeam=state.slots.filter(Boolean);
+  const proposalsForTeam=intendedTeam();
   if(pack&&improvementIndex){
    const baseline=compositionValue(proposalsForTeam,g),cap=deadlineLevel();
    const slotProposals=[];
-   for(const [i,p] of state.slots.entries()){
-    if(!p||p.locked||!p.types?.length)continue;
-    const rest=state.slots.filter((q,j)=>q&&j!==i),used=new Set(proposalsForTeam.map(q=>q.id));
+   buildLineageIndex();
+   const empty=state.slots.indexOf(null);
+   for(const [i,planned] of state.slots.entries()){
+    if(planned?.locked||!planned&&i!==empty)continue;
+    const p=planned&&(movesetView==='during'?duringLearner(planned,i):planned);
+    const rest=state.slots.flatMap((q,j)=>q&&j!==i?[movesetView==='during'?duringLearner(q,j):q]:[]),used=new Set(proposalsForTeam.map(q=>q.id));
     let evolution=null,replacement=null;
-    for(const [id,name,types] of pack.mons){
-     if(used.has(id)||!types?.length||!improvementIndex[id]||improvementIndex[id][0]&&!state.includeLegendary)continue;
-     const evolves=lineage(id).has(p.id);
+    for(const [id,name,types] of terminalSpecies){
+     if(!td7PokemonAllowed(name,id,g)||used.has(id)||!types?.length||!improvementIndex[id]||improvementIndex[id][0]&&!state.includeLegendary)continue;
+     const evolves=Boolean(p&&lineage(id).has(p.id));
      const candidate={id,name,types,baseStats:indexedStats(improvementIndex[id],gen)};
      if(redundantDowngrade(candidate,p)||rest.some(q=>redundantFamily(candidate,q))||alreadyClaimsSpecies(candidate,rest,g))continue;
      const improvement=compositionValue([...rest,candidate],g)-baseline;
@@ -4790,15 +5293,14 @@ document.addEventListener('keydown',event=>{
      if(!evolves&&(!replacement||gain>replacement.gain))replacement={...candidate,gain,evolves};
     }
     const best=[evolution,replacement].filter(Boolean).sort((a,b)=>b.gain-a.gain)[0];
-    if(best?.gain>2)slotProposals.push({i,p,best,evolution,replacement});
+    if(best&&(!p||best.gain>2))slotProposals.push({i,p,best,evolution,replacement});
    }
-   for(const {i,p,best,evolution,replacement} of slotProposals){
-    const alternative=best.evolves?replacement:evolution;
-    const comparison=candidateDelta(proposalsForTeam,[...state.slots.filter((p,j)=>p&&j!==i),best],g);
-    const already=coverageFor(activeMoves()).types;
-    const benefits=improvementTypes('Newly covered by STAB',comparison.added.filter(type=>!already.includes(type)))+
-     improvementTypes('Existing coverage gains STAB',comparison.added.filter(type=>already.includes(type)))+
-     improvementTypes('STAB coverage lost',comparison.lost,true);
+   for(const {i,p,best} of slotProposals){
+    const coverage=coverageSnapshot(proposalsForTeam,g).stabCoverage;
+    const next=coverageSnapshot(state.slots.flatMap((p,j)=>i===j?[best]:p?[movesetView==='during'?duringLearner(p,j):p]:[]),g).stabCoverage;
+    const comparison={added:next.filter(t=>!coverage.includes(t)),lost:coverage.filter(t=>!next.includes(t))};
+    const benefits=improvementTypes('Potential super-effective STAB gained',comparison.added)+
+     improvementTypes('Potential super-effective STAB lost',comparison.lost,true);
     const route=best.timing;
     const initial=route.initial;
     const levels=(route.steps||[]).map(step=>step.requirement.match(/^Level (\d+)$/i)?.[1]).filter(Boolean);
@@ -4810,7 +5312,8 @@ document.addEventListener('keydown',event=>{
     ]:[window.td62Progress.describe(route,effectiveProgress(),$('td77Availability').value)];
     const timingMarkup=timing.filter(Boolean).map(line=>`<small class="${initial&&initial.rank>(deadlineRank()??Infinity)&&line===window.td62Progress.milestone(initial.rank)?'td63-danger':''}">${td77AcquisitionLinks(line,g)}</small>`).join('');
     const monCard=mon=>`<div><img src="${safe(sprite(mon))}" alt=""><strong>${safe(td41PokemonLabel(mon.name))}</strong><div class="pills">${mon.types.map(pill).join('')}</div></div>`;
-    proposals.push({score:best.gain,html:`<details class="td772-team-proposal"><summary><span>${best.evolves?'Evolve ':''}${safe(td41PokemonLabel(p.name))} → ${safe(td41PokemonLabel(best.name))}</span></summary><div class="td79-pokemon-compare">${monCard(p)}<span aria-hidden="true">→</span>${monCard(best)}</div>${improvementBaseStats(p,best)}<div class="td78-benefits">${benefits}</div><div class="td775-improvement-route">${timingMarkup}</div>${alternative?`<small class="td775-alternative">Also considered: ${safe(td41PokemonLabel(alternative.name))}</small>`:''}<button type="button" class="td774-secondary" data-td77-improve="${i}" data-target="${safe(best.name)}">Preview ${best.evolves?'evolution':'replacement'}</button></details>`});
+    const title=p?`${best.evolves?'Evolve ':''}${td41PokemonLabel(p.name)} → ${td41PokemonLabel(best.name)}`:'Add '+td41PokemonLabel(best.name)+' · Slot '+(i+1);
+    proposals.push({score:best.gain,html:`<details class="td772-team-proposal" data-score="${best.gain.toFixed(2)}"><summary><span>${safe(title)}</span></summary><div class="td79-pokemon-compare">${p?monCard(p)+'<span aria-hidden="true">→</span>':''}${monCard(best)}</div>${p?improvementBaseStats(p,best):''}<div class="td78-benefits">${benefits}</div><div class="td775-improvement-route">${timingMarkup}</div><button type="button" class="td774-secondary" data-td77-improve="${i}" data-target="${safe(best.name)}">Preview  ${!p?'addition':best.evolves?'evolution':'replacement'}</button></details>`});
    }
   }
   const shared=profile.weak.filter(r=>r.weak>1&&r.severity==='uncovered').sort((a,b)=>b.gap-a.gap)[0];
@@ -4834,7 +5337,7 @@ document.addEventListener('keydown',event=>{
   }
 
   proposals.sort((a,b)=>b.score-a.score);
-  const pokemon=proposals.filter(p=>!p.kind),moves=proposals.filter(p=>p.kind==='move');
+  const pokemon=proposals.filter(p=>!p.kind),moves=proposals.filter(p=>p.kind==='move').sort((a,b)=>Number(a.replaces)-Number(b.replaces)||b.score-a.score);
   const resources=unovaResourceSummary(g);
   const resourceCount=(resources.match(/data-td77-resource=/g)||[]).length+resourceNotes.length;
   const category=(title,count,content)=>`<details class="td42-settings td78-category"><summary>${title} <small>(${count})</small></summary>${content||'<small>None identified</small>'}</details>`;
@@ -4920,21 +5423,28 @@ document.addEventListener('keydown',event=>{
  function plannerLockIcon(classes=''){
   return `<svg class="${classes}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`;
  }
- function planArtwork(mon,stage='',active=false){
-  return `<span class="td772-stage${active?' td772-active-stage':''}"${active?' aria-current="true"':''}><img alt="" src="${safe(sprite(mon))}"><strong>${safe(td41PokemonLabel(mon.name))}</strong><span class="pills">${(mon.types||[]).map(pill).join('')}</span><small class="td773-sr-only">${stage}</small></span>`;
+ function planArtwork(mon,active=false){
+  return `<span class="td772-stage${active?' td772-active-stage':''}"${active?' aria-current="true"':''}><img alt="" src="${safe(sprite(mon))}"><strong>${safe(td41PokemonLabel(mon.name))}</strong><span class="pills">${(mon.types||[]).map(pill).join('')}</span></span>`;
  }
  function render(){if(!state)return;renderActualProgress();for(const button of $('td77MoveViews').querySelectorAll('button'))button.setAttribute('aria-selected',String(button.dataset.view===movesetView));const edit=$('td4Edit');$('td4Slots').after(edit);$('td4Seed').disabled=!actual();
  $('td4Slots').innerHTML=state.slots.map((p,i)=>{
-  if(!p)return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}"><strong>＋ Slot ${i+1}</strong></button>`;
-  const during=duringLearner(p,i),isDuring=movesetView==='during',display=isDuring?during:p;
-  const owned=ownedFor(p,i),transition=owned&&!sameMon(owned,display),route=chosenRoute(p,true,i);
-  const arrow=evolutionArrow(transition?owned:during,transition?display:p,route);
-  const dual=!owned&&p.duringTargetId&&!sameMon(during,p);
-  const artwork=dual?planArtwork(during,'During game',isDuring)+arrow+planArtwork(p,'Final',!isDuring):
-   transition?planArtwork(owned,'Actual')+arrow+planArtwork(display,isDuring?'During game':'Final',true):planArtwork(display);
+  const {pair,other,member:owned}=stageDisplay(i),isDuring=movesetView==='during';
+  if(!p&&!other&&!owned)return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}"><strong>＋ Slot ${i+1}</strong></button>`;
+  const during=pair?(pair.during&&(p===pair.during?duringLearner(p,i):records.get(state.game+':'+pair.during.duringSpecies)||pair.during)):
+   p&&duringLearner(p,i);
+  const final=pair?pair.final:p;
+  const display=p?(isDuring?during:p):(isDuring?final:during)||owned;
+  const route=p&&chosenRoute(p,true,i),transition=p&&owned&&!sameMon(owned,display);
+  const explicit=Boolean(pair||p?.duringTargetId),dual=explicit&&during&&final&&!sameMon(during,final);
+  const artwork=dual?planArtwork(during,isDuring)+evolutionArrow(during,final,route)+planArtwork(final,!isDuring):
+   transition&&!explicit?planArtwork(owned)+evolutionArrow(owned,display,route)+planArtwork(display,true):
+   planArtwork(display,Boolean(p));
+  const actualCue=owned&&(dual?!sameMon(owned,during)&&!sameMon(owned,final):transition&&explicit)?
+   '<small class="td78-actual-stage">Actual · '+safe(td41PokemonLabel(owned.name))+'</small>':'';
+  if(!p)return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}"><div class="td42-mon-pair">${artwork}</div><div class="td772-plan-status">${actualCue}<small>${other?'＋ Plan '+(isDuring?'During game':'Final'):'＋ Plan slot '+(i+1)}</small></div><div class="td42-tile-moves">${Array(4).fill(moveChip('')).join('')}</div></button>`;
   const lock=p.locked?plannerLockIcon('td81-plan-lock')+'<span class="td773-sr-only">Locked</span>':'';
   const status=transition?(lineage(display.id).has(Number(owned.id))?'Planned evolution':p.fulfilledPid!=null?'Selected earlier stage':'Planned replacement'):safe(progressFor(p));
-  return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}" data-td77-hold>${lock}<div class="td42-mon-pair">${artwork}</div><div class="td772-plan-status"><small>${status}</small>${p.fulfilledPid==null&&route?.steps.length&&route.initial.kind!=='owned'?`<small>Obtain ${safe(td41PokemonLabel(route.startName))}</small>`:''}${p.fulfilledPid==null&&(route||acquisition(p)).rank>(deadlineRank()??10)?'<small class="td63-danger">After planning deadline</small>':''}</div><div class="td42-tile-moves">${alignedMoves(p,i).map(tileMove).join('')}</div></button>`;
+  return `<button type="button" class="td4-planned-slot td42-plan-tile" data-td4-slot="${i}" data-td77-hold>${lock}<div class="td42-mon-pair">${artwork}</div><div class="td772-plan-status">${actualCue}<small>${status}</small>${p.fulfilledPid==null&&route?.steps.length&&route.initial.kind!=='owned'?`<small>Obtain ${safe(td41PokemonLabel(route.startName))}</small>`:''}${p.fulfilledPid==null&&(route||acquisition(p)).rank>(deadlineRank()??10)?'<small class="td63-danger">After planning deadline</small>':''}</div><div class="td42-tile-moves">${alignedMoves(p,i).map(tileMove).join('')}</div></button>`;
  }).join('');
  fitTileMoves();
  const filled=state.slots.filter(Boolean);
@@ -4944,7 +5454,7 @@ document.addEventListener('keydown',event=>{
  const plannedMoveCount=activeMoves().length;
  const counter=(label,n,total)=>`<span><strong class="${countTone(n,total)}">${n}/${total}</strong><small>${label}</small></span>`;
  $('td4PlanProgress').innerHTML='<h4>Team Progress</h4><div>'+counter('Planned',filled.length,6)+counter('Acquired',acquired,6)+counter('Final forms',count,6)+'</div><div>'+counter('Moves planned',plannedMoveCount,24)+counter('Planned moves already known',learned,plannedMoveCount)+'</div>';
- const m=metrics(intendedTeam(),state.game),potentialStab=m.covered;$('td4Coverage').innerHTML=state.game?`${coveragePair('Potential STAB coverage',{types:metrics(actual()?.pokemon||[],state.game).covered},{types:potentialStab})}${coveragePair('Moveset coverage',coverageFor((actual()?.pokemon||[]).flatMap(p=>(p?.moves||[]).map(moveKey)).filter(Boolean)),coverageFor(activeMoves()))}<section class="td774-defensive"><h4>Intended team · Defensive coverage</h4>${['uncovered','partial','compensated'].map((status,index)=>{
+ const m=metrics(intendedTeam(),state.game),potentialStab=m.covered;$('td4Coverage').innerHTML=state.game?`${coveragePair('Potential STAB coverage',{types:metrics(actual()?.pokemon||[],state.game).covered},{types:potentialStab})}${coveragePair('Moveset coverage',coverageFor((actual()?.pokemon||[]).flatMap(p=>(p?.moves||[]).map(moveKey)).filter(Boolean)),coverageFor(activeMoves()))}<section class="td774-defensive"><h4>Planned team · Defensive coverage</h4>${['uncovered','partial','compensated'].map((status,index)=>{
  const rows=m.weak.filter(x=>x.weak>1&&x.severity===status);
  return rows.length?'<h5>'+['Uncovered weaknesses','Partially compensated','Well compensated'][index]+'</h5>'+
  rows.map(x=>`<p>${pill(x.type)} ${x.weak} weak · ${x.resist-x.immune} resist · ${x.immune} immune</p>`).join(''):'';
@@ -4954,7 +5464,7 @@ document.addEventListener('keydown',event=>{
  const partial=m.weak.filter(x=>x.weak>1&&x.severity==='partial').length;
  const compensated=m.weak.filter(x=>x.weak>1&&x.severity==='compensated').length;
  $('td77CoverageSummary').innerHTML=`<span class="td77-coverage-line"><span class="${countTone(potentialStab.length,typeCount)}">STAB ${potentialStab.length}/${typeCount}</span> · <span class="${countTone(moveCount,typeCount)}">Moves ${moveCount}/${typeCount}</span></span><span class="td77-coverage-line"><span class="${gaps?'td63-danger':'td41-good'}">${gaps} uncovered</span> · <span class="${partial?'td41-warn':'td41-good'}">${partial} partially compensated</span>${compensated?' · <span class="td41-good">'+compensated+' well compensated</span>':''}</span>`;
- const assigned=hms(state.game).filter(name=>knownMoves().includes(name));
+ const assigned=hms(state.game).filter(name=>activeMoves().includes(name));
 
  const expected=hms(state.game).length;
  $('td77HmSummary').textContent=expected?assigned.length+'/'+expected+' planned':'No party HMs';
@@ -4975,7 +5485,7 @@ document.addEventListener('keydown',event=>{
  }).join(' · ')||'No indexed roster';
  renderReadiness($('td77Gyms'),true);renderReadiness($('td4League'),false);renderHM();
  renderImprovements(m);}
- async function refreshMoveInfo(){if(!state)return;const g=state.game,run=++moveRun,stamp=token;const owned=(actual()?.pokemon||[]).flatMap(p=>p?.moves||[]);for(const m of owned){if(m?.type&&m?.damageClass&&!moveInfo.has(g+':'+moveKey(m)))moveInfo.set(g+':'+moveKey(m),m)}const names=[...new Set([...knownMoves(false),...knownMoves(),...state.slots.flatMap(p=>(p?.duringMoves||[]).map(goal)),...owned.map(moveKey),...state.slots.flatMap(p=>(p?.plannedMoves||[]).map(m=>m.warningFrom))].filter(Boolean))];await Promise.all(names.filter(n=>!moveInfo.has(g+':'+n)).map(async n=>{const m=await enrichMove({name:pretty(n)},gameGeneration(g),g);if(m?.type&&m?.damageClass)moveInfo.set(g+':'+n,m)}));if(run===moveRun&&stamp===token&&state?.game===g){
+ async function refreshMoveInfo(){if(!state)return;const g=state.game,run=++moveRun,stamp=token;const owned=(actual()?.pokemon||[]).flatMap(p=>p?.moves||[]);for(const m of owned){if(m?.type&&m?.damageClass&&!moveInfo.has(g+':'+moveKey(m)))moveInfo.set(g+':'+moveKey(m),m)}const names=[...new Set([...knownMoves(),...state.slots.flatMap(p=>(p?.duringMoves||[]).map(goal)),...owned.map(moveKey),...state.slots.flatMap(p=>(p?.plannedMoves||[]).map(m=>m.warningFrom))].filter(Boolean))];await Promise.all(names.filter(n=>!moveInfo.has(g+':'+n)).map(async n=>{const m=await enrichMove({name:pretty(n)},gameGeneration(g),g);if(m?.type&&m?.damageClass)moveInfo.set(g+':'+n,m)}));if(run===moveRun&&stamp===token&&state?.game===g){
    const editing=$('td41MoveSlots').contains(document.activeElement)||$('td41MoveSlots').querySelector('.suggestions:not([hidden])');
    if(editing)return;
    render();
@@ -4991,8 +5501,8 @@ document.addEventListener('keydown',event=>{
  function alignedMoves(p,slot,view=movesetView){
   const planned=(view==='during'?p.duringMoves:p.plannedMoves)||[];
   const learner=view==='during'?duringLearner(p,slot):finalLearner(p);
-  const route=chosenRoute(p,true,slot),used=new Set();
-  const actualMoves=Array.from({length:4},(_,i)=>moveKey(ownedFor(p,slot)?.moves?.[i]));
+  const route=chosenRoute(p,true,slot),used=new Set(),member=ownedFor(p,slot);
+  const actualMoves=Array.from({length:4},(_,i)=>moveKey(member?.moves?.[i]));
   const rows=actualMoves.map(from=>{
    const index=from?planned.findIndex((move,i)=>!used.has(i)&&goal(move)===from): -1;
    if(index>=0)used.add(index);
@@ -5005,13 +5515,13 @@ document.addEventListener('keydown',event=>{
    return {...row,index,move,retained:row.from===goal(move)&&retainsMove(p,learner,row.from,slot,route)};
   });
  }
- function distributeHM(rows,slots){const occupied=slots.map(p=>new Set((p?.plannedMoves||[]).flatMap(m=>[m.move,goal(m)]).filter(n=>rows.includes(n))));const pending=rows.filter(h=>!slots.some(p=>p?.plannedMoves?.some(m=>goal(m)===h))).map(h=>({h,eligible:slots.map((p,i)=>p?.hms?.includes(h)?i:-1).filter(i=>i>=0)})).sort((a,b)=>a.eligible.length-b.eligible.length);const loads=occupied.map(x=>Math.min(4,x.size)),memo=new Map();const score=(h,i,load)=>{const p=slots[i],b=p.baseStats||{},type=['surf','waterfall','dive','whirlpool'].includes(h)?'water':h==='fly'||h==='defog'?'flying':h==='rock-smash'?'fighting':'normal',combat=['surf','fly','waterfall','strength'].includes(h);return (combat&&p.types?.includes(type)?75:0)+(h==='surf'?(b['special-attack']||0):(b.attack||0))/10+(p.plannedMoves?.filter(m=>!goal(m)).length>load-loads[i]?12:0)-(load*55);};function solve(j,counts){if(j===pending.length)return {score:0,choices:[]};const key=j+':'+counts.join(',');if(memo.has(key))return memo.get(key);const {h,eligible}=pending[j];let best=solve(j+1,counts);best={score:best.score,choices:[-1,...best.choices]};for(const i of eligible){const already=occupied[i].has(h);if(counts[i]>=4&&!already)continue;const next=counts.slice();if(!already)next[i]++;const r=solve(j+1,next),v=1000+score(h,i,counts[i])+r.score;if(v>best.score)best={score:v,choices:[i,...r.choices]};}memo.set(key,best);return best;}const best=solve(0,loads);return new Map(pending.map((x,j)=>[x.h,best.choices[j]>=0?{p:slots[best.choices[j]],i:best.choices[j]}:null]));}
+ function distributeHM(rows,slots){const occupied=slots.map(p=>new Set(displayedMoves(p).map(goal).filter(n=>rows.includes(n))));const pending=rows.filter(h=>!occupied.some(moves=>moves.has(h))).map(h=>({h,eligible:slots.map((p,i)=>p?.hms?.includes(h)?i:-1).filter(i=>i>=0)})).sort((a,b)=>a.eligible.length-b.eligible.length);const loads=occupied.map(x=>Math.min(4,x.size)),memo=new Map();const score=(h,i,load)=>{const p=slots[i],b=p.baseStats||{},type=['surf','waterfall','dive','whirlpool'].includes(h)?'water':h==='fly'||h==='defog'?'flying':h==='rock-smash'?'fighting':'normal',combat=['surf','fly','waterfall','strength'].includes(h);return (combat&&p.types?.includes(type)?75:0)+(h==='surf'?(b['special-attack']||0):(b.attack||0))/10+(p.plannedMoves?.filter(m=>!goal(m)).length>load-loads[i]?12:0)-(load*55);};function solve(j,counts){if(j===pending.length)return {score:0,choices:[]};const key=j+':'+counts.join(',');if(memo.has(key))return memo.get(key);const {h,eligible}=pending[j];let best=solve(j+1,counts);best={score:best.score,choices:[-1,...best.choices]};for(const i of eligible){const already=occupied[i].has(h);if(counts[i]>=4&&!already)continue;const next=counts.slice();if(!already)next[i]++;const r=solve(j+1,next),v=1000+score(h,i,counts[i])+r.score;if(v>best.score)best={score:v,choices:[i,...r.choices]};}memo.set(key,best);return best;}const best=solve(0,loads);return new Map(pending.map((x,j)=>[x.h,best.choices[j]>=0?{p:slots[best.choices[j]],i:best.choices[j]}:null]));}
  // Main-story HM requirement references: https://bulbapedia.bulbagarden.net/wiki/HM and https://pokemondb.net/black-white/hms
  function hmPurpose(g,h){if(!['Black','White','Black 2','White 2'].includes(g))return 'Story requirement not verified';if(h==='fly')return 'Fast travel';if(['Black','White'].includes(g)){if(h==='cut')return 'Story required · Dreamyard';if(h==='surf')return 'Optional · Area access & exploration';if(h==='strength')return 'Optional · Victory Road shortcuts & area access';}else if(['surf','strength'].includes(h))return 'Story required';return 'Optional exploration';}
  function td5HmAdvice(h,p,g){const attackType=['surf','waterfall','dive','whirlpool'].includes(h)?'water':['fly','defog'].includes(h)?'flying':h==='rock-smash'?'fighting':'normal';if(['surf','fly','waterfall','strength'].includes(h)&&p?.types?.includes(attackType)){if(gameGeneration(g)>=4&&h==='surf'&&(p.baseStats?.['special-attack']||0)<(p.baseStats?.attack||0)*0.65)return 'Replace';if(gameGeneration(g)>=4&&['fly','waterfall','strength'].includes(h)&&(p.baseStats?.attack||0)<(p.baseStats?.['special-attack']||0)*0.65)return 'Replace';return 'Keep';}if(['cut','flash','rock-smash','defog','rock-climb','dive','whirlpool'].includes(h))return 'Replace';return 'Replace';}
  function td5TemporaryCarrier(h){const catalog=pack,g=state.game,ids=new Set(state.slots.filter(Boolean).map(p=>p.id)),key=g+':'+h+':'+effectiveProgress()+':'+[...ids].sort().join(',');if(!catalog||catalog.game!==g)return null;if(temporaryHmCache.has(key))return temporaryHmCache.get(key);const entry={pending:true};temporaryHmCache.set(key,entry);const pool=(catalog.mons||[]).filter(p=>!ids.has(p[0])&&catalog.entries?.[p[0]]?.length).filter(p=>{const evidence=window.takDexAcquisitionV64.details(catalog,p[0]);const timing=window.td62Progress.acquisition(g,{id:p[0],name:p[1]},catalog,[],evidence),now=window.td62Progress.rank(effectiveProgress());return evidence.verified&&!evidence.notes?.some(n=>n.eventOnly)&&(now==null||timing.rank!=null&&timing.rank<=now)}).sort((a,b)=>{const av=Math.min(...(catalog.entries[a[0]]||[]).map(x=>Number(x[2])||100)),bv=Math.min(...(catalog.entries[b[0]]||[]).map(x=>Number(x[2])||100));return av-bv;}).slice(0,32);(async()=>{let found=null;for(let i=0;i<pool.length&&!found;i+=8){const batch=await Promise.all(pool.slice(i,i+8).map(async p=>{try{const d=await details(p[1],g);return d.hms.includes(h)?{p:d,loc:catalog.entries[p[0]]?.[0]?.[0]}:null}catch{return null}}));found=batch.find(Boolean)||null;}entry.pending=false;entry.found=found;if(state?.game===g&&pack===catalog)renderHM()})().catch(()=>{entry.pending=false;});return entry;}
  $('td4HM').closest('details').addEventListener('toggle',e=>{if(e.target.open&&state)renderHM()});
- function renderHM(){const opened=new Set([...$('td4HM').querySelectorAll('details[open]')].map(x=>x.dataset.hm));const rows=hms(state.game),owned=(actual()?.pokemon||[]).filter(Boolean),recommendations=distributeHM(rows,state.slots);$('td4HM').innerHTML=(rows.length?'<div class="td64-hm-summary td64-hm-head"><b>HM</b><b>Actual</b><b>Planned</b><span></span></div>':'')+(rows.map(h=>{const current=owned.filter(p=>(p.moves||[]).some(m=>moveKey(m)===h));const assigned=state.slots.flatMap((p,i)=>(p?.plannedMoves||[]).filter(m=>m.move===h||goal(m)===h).map(m=>({p,i,m,final:goal(m)===h})));const final=assigned.filter(x=>x.final),interim=assigned.filter(x=>!x.final);const recommended=recommendations.get(h);const outside=!final.length&&!recommended&&$('td4HM').closest('details').open?td5TemporaryCarrier(h):null;const unknown=state.slots.some(p=>p&&!Array.isArray(p.hms));const utility=m=>hmPurpose(state.game,h);const carrier=({p,i},prefix='')=>`<button class="td41-carrier" type="button" data-td41-carrier="${i}">${prefix}${safe(td41PokemonLabel(p.name))}</button>`;const usefulness=hmPurpose(state.game,h);const gate=window.td62Progress.hm(state.game,h,effectiveProgress());const names=ps=>ps.map(p=>safe(td41PokemonLabel(p.name))).join(', ')||'—';return `<details class="td64-hm-row" data-hm="${safe(h)}" ${opened.has(h)?'open':''}><summary class="td64-hm-summary"><strong>${safe(pretty(h))}</strong><span>${names(current)}</span><span class="${final.length?'td41-good':''}">${names(final.map(x=>x.p))}</span><span class="td64-hm-arrow">⌄</span></summary><div class="td41-hm-row"><small class="td45-hm-purpose ${gate&&window.td62Progress.rank(effectiveProgress())!=null&&window.td62Progress.rank(effectiveProgress())<gate.rank?'td63-danger':''}">${safe(usefulness)}${gate?' · '+safe(gate.text):''}</small><div class="td64-hm-actions">${final.length?final.map(x=>carrier(x,'Edit: ')).join(''):recommended?carrier(recommended,'Recommended: '):`<small>${outside?.found?`Temporary carrier: ${safe(td41PokemonLabel(outside.found.p.name))}${outside.found.loc?' · '+safe(pretty(outside.found.loc)):''} · ${td77AcquisitionLinks(window.td62Progress.describe(acquisition(outside.found.p),effectiveProgress(),''),state.game)}`:outside?.pending?'Checking temporary carriers…':unknown?'Compatibility unavailable':'No verified temporary carrier found in checked records'}</small>`}</div>${interim.length?`<div class="td43-hm-interim"><small>Temporary: </small>${interim.map(x=>carrier(x)).join('')}</div>`:''}<div class="td41-hm-meta"><span>Elite Four: ${final.length?('Keep'):interim.length?'Replace before Elite Four':recommended?td5HmAdvice(h,recommended.p,state.game):outside?.found?'Replace':'Unassigned'}</span></div></div></details>`}).join('')||'<p>No party HM requirement list for this game.</p>');}
+ function renderHM(){const opened=new Set([...$('td4HM').querySelectorAll('details[open]')].map(x=>x.dataset.hm));const rows=hms(state.game),owned=(actual()?.pokemon||[]).filter(Boolean),recommendations=distributeHM(rows,state.slots);$('td4HM').innerHTML=(rows.length?'<div class="td64-hm-summary td64-hm-head"><b>HM</b><b>Actual</b><b>Planned</b><span></span></div>':'')+(rows.map(h=>{const current=owned.filter(p=>(p.moves||[]).some(m=>moveKey(m)===h));const assigned=state.slots.flatMap((p,i)=>displayedMoves(p).some(m=>goal(m)===h)?[{p,i}]:[]);const recommended=recommendations.get(h);const outside=!assigned.length&&!recommended&&$('td4HM').closest('details').open?td5TemporaryCarrier(h):null;const unknown=state.slots.some(p=>p&&!Array.isArray(p.hms));const carrier=({p,i},prefix='')=>`<button class="td41-carrier" type="button" data-td41-carrier="${i}">${prefix}${safe(td41PokemonLabel(p.name))}</button>`;const usefulness=hmPurpose(state.game,h);const gate=window.td62Progress.hm(state.game,h,effectiveProgress());const names=ps=>ps.map(p=>safe(td41PokemonLabel(p.name))).join(', ')||'—';return `<details class="td64-hm-row" data-hm="${safe(h)}" ${opened.has(h)?'open':''}><summary class="td64-hm-summary"><strong>${safe(pretty(h))}</strong><span>${names(current)}</span><span class="${assigned.length?'td41-good':''}">${names(assigned.map(x=>x.p))}</span><span class="td64-hm-arrow">⌄</span></summary><div class="td41-hm-row"><small class="td45-hm-purpose ${gate&&window.td62Progress.rank(effectiveProgress())!=null&&window.td62Progress.rank(effectiveProgress())<gate.rank?'td63-danger':''}">${safe(usefulness)}${gate?' · '+safe(gate.text):''}</small><div class="td64-hm-actions">${assigned.length?assigned.map(x=>carrier(x,'Edit: ')).join(''):recommended?carrier(recommended,'Recommended: '):`<small>${outside?.found?`Suggested carrier: ${safe(td41PokemonLabel(outside.found.p.name))}${outside.found.loc?' · '+safe(pretty(outside.found.loc)):''} · ${td77AcquisitionLinks(window.td62Progress.describe(acquisition(outside.found.p),effectiveProgress(),''),state.game)}`:outside?.pending?'Checking temporary carriers…':unknown?'Compatibility unavailable':'No verified temporary carrier found in checked records'}</small>`}</div><div class="td41-hm-meta"><span>Elite Four: ${assigned.length?'Keep':recommended?td5HmAdvice(h,recommended.p,state.game):outside?.found?'Replace':'Unassigned'}</span></div></div></details>`}).join('')||'<p>No party HM requirement list for this game.</p>');}
  function td5Attacker(p,slot){const a=ownedFor(p,slot);return {...p,ability:sameMon(a,p)?a.ability:p.ability,abilities:sameMon(a,p)?(a.abilities?.length?a.abilities:p.abilities):p.abilities};}
  function td5Merit(x,p,slot,g){if(!damaging(x))return 0;const attacker=td5Attacker(p,slot),name=pretty(moveKey(x.name)),m={...x,name},gen=gameGeneration(g);if(TAK62_AVOID.has(moveKey(name))&&!TD2_CHARGE.has(name)&&!TD2_RECHARGE.has(name))return 0;const power=td2Power(m,attacker,null,gen)?.min;if(!Number.isFinite(power)||power<=0)return 0;const stat=p.baseStats?.[m.damageClass==='special'?'special-attack':'attack']||0;const drawback=['Flare Blitz','Brave Bird','Double Edge','Head Smash','Wood Hammer','Wild Charge','Take Down','Submission','Volt Tackle','Jump Kick','High Jump Kick'].includes(name)?0.88:1;const hit=Number.isFinite(m.accuracy)?m.accuracy/100:1;return power*hit*td2Stab(m,attacker,gen)*td2OffensiveModifier(m,attacker,gen)*(stat+50)/150/td2Turns(m,attacker,gen)*drawback+(Number(m.priority)>0?8:0);}
  function td51Risk(n){return /^(dream-eater|nightmare|foul-play|outrage|thrash|petal-dance|superpower|close-combat|overheat|leaf-storm|draco-meteor|hammer-arm|v-create|flare-blitz|brave-bird|double-edge|head-smash|wood-hammer|wild-charge|take-down|submission|volt-tackle|jump-kick|high-jump-kick|dig|fly|dive|bounce|solar-beam|sky-attack|razor-wind|skull-bash|shadow-force|giga-impact|hyper-beam|blast-burn|hydro-cannon|frenzy-plant|rock-wrecker|roar-of-time|focus-punch|sucker-punch|last-resort|snore|belch|stored-power|reversal|flail|endeavor|counter|mirror-coat|metal-burst|synchronoise|assurance|payback|revenge|avalanche|retaliate|hex|venoshock|wake-up-slap|brine|facade|acrobatics|electro-ball|gyro-ball|eruption|water-spout)$/.test(moveKey(n));}
@@ -5029,7 +5539,8 @@ document.addEventListener('keydown',event=>{
   const merit=td5Merit(m,p,i,g),oldMerit=td5Merit(old,p,i,g);
   if(!merit&&!utility)return null;
   const ownMoves=own.map(entry=>info(entry.name));
-  if(damaging(m)&&old?.type!==m.type&&!utility&&ownMoves.some(row=>damaging(row)&&row.type===m.type))return null;
+  if(damaging(m)&&old?.type!==m.type&&!utility&&ownMoves.some(row=>damaging(row)&&row.type===m.type&&
+   row.damageClass===m.damageClass&&td5Merit(row,p,i,g)>=merit))return null;
   const effect=(move,mon,slot,type)=>damaging(move)&&defensiveEffect(move,{types:[type]},gen,mon)>1?
    plannerSuitability(mon,[type],move,gen)*Math.min(1,td5Merit(move,mon,slot,g)/60):0;
   let contribution=0;
@@ -5053,8 +5564,27 @@ document.addEventListener('keydown',event=>{
  function moveDrawback(x){const n=moveKey(x?.name);if(['dig','fly','dive','bounce','solar-beam','sky-attack','razor-wind','skull-bash','shadow-force'].includes(n))return 'Two turns';if(n==='dream-eater')return 'Target must sleep';if(n==='foul-play')return 'Uses target Attack';if(['flare-blitz','brave-bird','double-edge','head-smash','wood-hammer','wild-charge','take-down','submission','volt-tackle'].includes(n))return 'Recoil';if(['giga-impact','hyper-beam','blast-burn','hydro-cannon','frenzy-plant','rock-wrecker','roar-of-time'].includes(n))return 'Recharge';if(['superpower','close-combat','overheat','leaf-storm','draco-meteor','hammer-arm','v-create'].includes(n))return 'Stat drop';if(['thrash','outrage','petal-dance'].includes(n))return 'Move lock / confusion';return '—'}
  function moveTradeoff(a,b,added,lost){const val=(x,k)=>k==='accuracy'?(x?.accuracy==null?'—':x.accuracy+'%'):k==='power'?(x?.power??'—'):x?.[k]?pretty(x[k]):'—';return `<span class="td44-trade-table">${[['Power','power'],['Accuracy','accuracy'],['Category','damageClass'],['Type','type'],['Drawback','drawback']].map(([label,k])=>{const x=k==='drawback'?moveDrawback(a):val(a,k),y=k==='drawback'?moveDrawback(b):val(b,k),cls=['power','accuracy'].includes(k)&&Number.isFinite(a?.[k])&&Number.isFinite(b?.[k])?(b[k]>a[k]?'td41-good':b[k]<a[k]?'td41-warn':''):k==='drawback'&&x!==y?(y==='—'?'td41-good':'td41-warn'):x!==y?'td51-changed':'';return `<span>${label}</span><span>${safe(x)}</span><span class="${cls}">${safe(y)}</span>`}).join('')}${added.length?`<span class="td41-good td44-trade-wide">Gains: ${safe(added.map(pretty).join(', '))}</span>`:''}${lost.length?`<span class="td41-warn td44-trade-wide">Loses: ${safe(lost.map(pretty).join(', '))}</span>`:''}</span>`}
 
- function downgradeReasons(p,slot,prev,n,others,g){const a=info(prev),z=info(n),reasons=[];if(damaging(a)&&z){const before=coverageFor([...others,prev]).types,after=coverageFor([...others,n]).types,lost=before.filter(t=>!after.includes(t));if(lost.length)reasons.push('Loses coverage: '+lost.map(pretty).join(', '));if(p.types?.includes(a.type)&&!others.some(x=>damaging(info(x))&&info(x).type===a.type)&&(!damaging(z)||z.type!==a.type))reasons.push('Removes the last '+pretty(a.type)+' STAB attack');if(!damaging(z)||td5Merit(z,p,slot,g)<td5Merit(a,p,slot,g)*.8)reasons.push('Lower reliable offensive value');if(hms(g).includes(prev)&&!others.includes(prev))reasons.push('Removes an assigned HM');if(td51Risk(n)&&!td51Risk(prev))reasons.push('Adds a conditional or high-drawback attack');}return reasons;}
- function warningMarkup(p,m,i,old){const target=goal(m),baseline=m.warningTarget===target&&m.warningFrom?m.warningFrom:old;if(!baseline||!target||baseline===target)return "";const reasons=downgradeReasons(p,chosenSlot,baseline,target,p.plannedMoves.filter((_,j)=>j!==i).map(goal).filter(Boolean),state.game);return reasons.length?`<small class="td63-danger td62-warning">⚠ ${safe(reasons.join(" · "))}</small>`:"";}
+ function downgradeReasons(p,slot,prev,n,others,g){
+  const a=info(prev),z=info(n),reasons=[];
+  if(!a||!z||prev===n)return reasons;
+  const team=state.slots.flatMap((plan,i)=>i===slot?others:displayedMoves(plan).map(goal)).filter(Boolean);
+  const reliable=name=>{
+   const move=info(name);
+   return damaging(move)&&(move.accuracy??100)>=80&&!td51Risk(name);
+  };
+  const before=coverageFor([...team,prev].filter(reliable)).types;
+  const after=coverageFor([...team,n].filter(reliable)).types;
+  const lost=before.filter(type=>!after.includes(type)),gained=after.filter(type=>!before.includes(type));
+  if(lost.length)reasons.push('Loses reliable team coverage against '+lost.map(pretty).join(', '));
+  if(damaging(a)&&p.types?.includes(a.type)&&!others.some(name=>reliable(name)&&info(name).type===a.type)&&
+   (!damaging(z)||z.type!==a.type))reasons.push('Removes this Pokémon’s last '+pretty(a.type)+' STAB attack');
+  if(damaging(a)&&(!damaging(z)||td5Merit(z,p,slot,g)<td5Merit(a,p,slot,g)*.8))reasons.push('Lower reliable offensive value');
+  if(damaging(a)&&damaging(z)&&(a.accuracy??100)-(z.accuracy??100)>=15)reasons.push('Lower accuracy');
+  if(hms(g).includes(prev)&&!team.includes(prev))reasons.push('Removes the team’s '+pretty(prev)+' HM assignment');
+  if(td51Risk(n)&&!td51Risk(prev))reasons.push('Adds a conditional or high-drawback attack');
+  if(reasons.length&&gained.length)reasons.push('Gains reliable team coverage against '+gained.map(pretty).join(', '));
+  return reasons;
+ }
  function editableMoveCard(learner,old,target,index,during,retained=false){
   const data=info(target),available=Array.isArray(learner.legalMoves);
   const text=target?pretty(target):'Choose move';
@@ -5062,8 +5592,9 @@ document.addEventListener('keydown',event=>{
   const mode=during?'during':'goal';
   return `<div class="td42-move-flow td77-move-comparison ${during?'td77-during-flow':''}">${!old&&target?'<span class="td77-editor-empty" aria-label="No actual move">×</span>':moveChip(old,true)}<span class="td42-arrow">→</span>
    <div class="search td45-move-search td77-edit-move">
-    <div class="td77-planner-move-info">${stats}</div><input autocomplete="off" aria-label="${during?'During-game':'Goal'} move ${index+1}" ${during?'data-td77-during="'+index+'"':''} data-td45-move="${index}:${mode}" placeholder="Search moves…" value="${safe(target?text:'')}" ${available?'':'disabled'}>
-    <div class="suggestions" hidden></div><button class="td78-open-move" type="button" data-td78-open-move aria-label="Change planned move ${index+1}" ${available?'':'disabled'}></button>
+    <div class="td77-planner-move-info">${stats}<button class="td78-open-move" type="button" data-td78-open-move aria-expanded="false" aria-label="Change planned move ${index+1}" ${available?'':'disabled'}></button></div><div class="td78-editor-shell">
+     <div class="td78-editor-search td772-filter-line"><input autocomplete="off" aria-label="${during?'During-game':'Goal'} move ${index+1}" ${during?'data-td77-during="'+index+'"':''} data-td45-move="${index}:${mode}" placeholder="Search moves…" value="${safe(target?text:'')}" ${available?'':'disabled'}>
+     ${td772FilterButton('td78MoveFilters-'+index,'Move filters','td78MoveFilterPanel-'+index)}</div><div class="td78-move-badges"></div><div class="suggestions" hidden></div></div>
    </div></div>`;
  }
  page.addEventListener('click',event=>{
@@ -5079,23 +5610,16 @@ document.addEventListener('keydown',event=>{
   }
   persist();render();renderMoveSlots();
  });
- function selectedInterimMove(plan,move){
-  if(move?.purpose!=='temporary'||!move.move||!move.replacement||move.move===move.replacement)return '';
-  // A stored Final transition names both moves; it only applies while its source is selected in During.
-  return plan?.duringMoves?.some(selected=>goal(selected)===move.move)?move.move:'';
- }
  function movePreview(p,{move:m,from:old,index:i,retained}){
   const target=goal(m);
-  const interim=selectedInterimMove(state.slots[chosenSlot],m);
-  const stateNote=!retained&&interim?'<small class="td41-warn">Temporary: '+safe(pretty(interim))+'</small>':'';
-  return editableMoveCard(p,old,target,i,false,retained)+stateNote+warningMarkup(p,m,i,old)+moveTimingMarkup(p,target);
+  return editableMoveCard(p,old,target,i,false,retained)+moveTimingMarkup(p,target);
  }
  function updateMovePreviews(){
   const p=state?.slots[chosenSlot],learner=finalLearner(p);
   if(!p||movesetView!=='final')return;
   for(const row of alignedMoves(p,chosenSlot)){
    const el=$('td41MoveSlots').querySelector(`[data-td42-preview="${row.index}"]`);
-   if(el&&!el.contains(document.activeElement))el.innerHTML=movePreview(learner,row)+retainedChoiceNotice(learner,row.move,row.retained);
+   if(el&&!el.contains(document.activeElement)&&!el.querySelector('.suggestions:not([hidden])'))el.innerHTML=movePreview(learner,row)+retainedChoiceNotice(learner,row.move,row.retained);
   }
  }
  function retainedChoiceNotice(learner,move,retained){
@@ -5114,7 +5638,9 @@ document.addEventListener('keydown',event=>{
  let movesetView='final';
  $('td77MoveViews').onclick=e=>{
   if(!e.target.dataset.view)return;
-  movesetView=e.target.dataset.view;state.mode=movesetView;persist();render();
+  if(movesetView===e.target.dataset.view)return;
+  captureStage();movesetView=e.target.dataset.view;state.mode=movesetView;projectStage();
+  setDeadlineOptions(state.game);reconcileOwnership();persist();render();
   if(!$('td4Edit').hidden){renderMoveSlots();if(settings.open){restoreConfirmedPreview();findCandidates();}}
  };
  function finalFormOptions(p){
@@ -5125,7 +5651,7 @@ document.addEventListener('keydown',event=>{
   const root=livingStart?Number(member.id):[...lineage(p.id)].at(-1);
   return pack.mons.filter(([id])=>lineage(id).has(root)).map(([id,name,types])=>{
    const paths=routeOptions({...p,id,name,types}).filter(row=>!livingStart||row.initial.kind==='owned');
-   const path=paths.find(row=>row.id===route?.id)||paths[0];
+   const path=paths.find(row=>row.id===route?.id)||paths.find(row=>routeFits(row))||paths[0];
    return {id,name,path,reason:path?'':acquisition({id,name},false).reason||'Route timing not verified'};
   });
  }
@@ -5135,8 +5661,12 @@ document.addEventListener('keydown',event=>{
   const roster=leagueTargets(state.game).filter(t=>t.gym).find((_,i)=>gymBefore(state.game,i)===limit);
   return roster?.rows?.length?Math.max(...roster.rows.map(r=>r.level||0)):Infinity;
  }
+ function linkTradePending(route){
+  return route?.initial.kind==='link-trade'&&$('td77Availability').value==='actual'&&
+   actual()?.saveLink?.progression?.events?.trading===false;
+ }
  function routeFits(route,cap=deadlineLevel()){
-  if(!route||route.rank==null||route.rank>(deadlineRank()??9))return false;
+  if(!route||route.rank==null||route.rank>(deadlineRank()??9)||linkTradePending(route))return false;
   const trained=route.initial.kind==='owned'?route.initial.minLevel||0:0;
   return route.steps.every(step=>step.level<=Math.max(cap,trained));
  }
@@ -5159,23 +5689,62 @@ document.addEventListener('keydown',event=>{
   return {plannedMoves,finalAutoMoves:plannedMoves.map((move,i)=>manual[i]?'':finalMoveStamp(move))};
  }
  function renderFinalFormChoice(p){
-  const host=$('td77FinalForm');
-  if(!p){host.hidden=true;return;}
-  const during=movesetView==='during',stage=duringSpecies(p,chosenSlot);
-  const selected=during?stage:p.name;
-  const duringId=pack?.mons.find(([,name])=>name===stage)?.[0];
-  const stages=finalFormOptions(p),options=stages.filter(q=>q.name!==selected||during&&!p.duringTargetId);
-  const path=stages.find(q=>q.name===selected)?.path;
-  host.hidden=!options.length;
-  if(!options.length)return;
-  const lockedToDuring=q=>!during&&p.duringTargetId&&duringId&&!lineage(q.id).has(duringId);
-  host.innerHTML=`<label>Planned evolution <select aria-label="Planned evolution">
-   <option value="">${safe(pretty(selected))} · ${during?'During game':'Final'}</option>
-   ${options.map(q=>`<option value="${q.id}" ${q.path&&!lockedToDuring(q)?'':'disabled'}>${q.path&&!q.path.steps.length?'Keep ':''}${safe(pretty(q.name))}${q.path?.steps.length?' · '+safe(q.path.steps.at(-1).requirement):''}${lockedToDuring(q)?' · Change During game first':routeFits(q.path)?'':' · '+safe(q.path?routeRestriction(q.path):q.reason)}</option>`).join('')}
-   </select></label>${during&&path&&!routeFits(path)?'<small class="td41-warn">'+safe(routeRestriction(path))+'</small>':''}`;
+  const host=$('td77FinalForm'),stages=finalFormOptions(p);
+  host.hidden=!p||stages.length<2;
+  if(host.hidden)return;
+  const during=movesetView==='during';
+  const name=during?duringSpecies(p,chosenSlot):p.name;
+  const path=stages.find(q=>q.name===name)?.path;
+  const requirement=path?.steps.at(-1)?.requirement;
+  host.innerHTML=`<div class="td78-evolution-label">Planned evolution
+   <button type="button" class="td774-route-choice td78-evolution-control" aria-haspopup="dialog" data-td78-evolution>
+   <span>${safe(pretty(name))} · ${during?'During game':'Final'}
+    ${requirement?`<small>${safe(requirement)}</small>`:''}</span></button></div>`;
  }
+ $('td77FinalForm').addEventListener('click',e=>{
+  const trigger=e.target.closest('[data-td78-evolution]'),p=state.slots[chosenSlot];
+  if(!trigger||!p)return;
+  const during=movesetView==='during',slot=chosenSlot;
+  const selected=during?duringSpecies(p,slot):p.name;
+  const stages=finalFormOptions(p);
+  const dialog=document.createElement('dialog');
+  dialog.className='td71-quick-dialog td78-evolution-dialog';
+  dialog.setAttribute('aria-labelledby','td78EvolutionTitle');
+  dialog.innerHTML=`<h3 id="td78EvolutionTitle">Planned evolution</h3><div class="td78-evolution-options">
+   ${stages.map(q=>{
+    const current=q.name===selected,path=q.path;
+    const fits=path&&routeFits(path);
+    const tone=path?(fits?(current?'':'td41-good'):'td63-danger'):'';
+    const status=path?(fits?(current?'Current choice':path.initial.kind==='owned'?'On team':window.td62Progress.milestone(path.rank)):routeRestriction(path)):q.reason;
+    return `<div><button type="button" class="td774-secondary" data-td78-form="${q.id}" aria-pressed="${current}" ${!current&&!path?'disabled':''}>
+     ${current?'Keep ':''}${safe(pretty(q.name))}</button>
+     <div>${path?.steps.length?`<small>${safe(path.steps.map(step=>step.requirement).join(' · '))}</small>`:''}
+     ${status?`<small class="${tone}">${safe(status)}</small>`:''}</div></div>`;
+   }).join('')}</div><button type="button" class="td774-secondary" data-td78-evolution-cancel>Cancel</button>`;
+  dialog.addEventListener('close',()=>{
+   dialog.remove();
+   if(trigger.isConnected&&!page.hidden)trigger.focus({preventScroll:true});
+  },{once:true});
+  dialog.addEventListener('click',event=>{
+   const cancel=event.target.closest('[data-td78-evolution-cancel]');
+   const button=event.target.closest('[data-td78-form]');
+   if(cancel){dialog.close();return;}
+   const option=button&&stages.find(q=>q.id===Number(button.dataset.td78Form));
+   if(!option)return;
+   dialog.close();
+   if(option.name===selected||state.slots[slot]!==p||slot!==chosenSlot)return;
+   const routes=routeOptions(p);
+   const existing=chosenRoute(p);
+   const route=during&&lineage(p.id).has(option.id)?
+    routes.find(path=>path.id===existing?.id&&routeIncludesStage(path,option.id)):option.path;
+   choose(option.name,route,during?option.id:undefined);
+  });
+  document.body.append(dialog);dialog.showModal();
+  dialog.querySelector('[aria-pressed=true]')?.focus({preventScroll:true});dialog.scrollTop=0;
+ });
  function routeRestriction(path){
   if(path.rank==null)return 'Timing not verified';
+  if(linkTradePending(path))return 'Receive the C-Gear first';
   if(path.rank>(deadlineRank()??9))return 'After planning deadline';
   return 'Above the level for this deadline';
  }
@@ -5202,12 +5771,13 @@ document.addEventListener('keydown',event=>{
    {...selected,initial:{...selected.initial,minLevel:member.level}}:selected;
   return {target,moves:await suggestedMoves(form,i,g,false,earlier,trainingRoute)};
  }
- page.addEventListener('change',async e=>{
-  const select=e.target.closest('[data-td77-route]');
-  if(!select||!select.value)return;
-  if(select.dataset.td77Route==='preview'&&manualCandidate){stageCandidate(manualCandidate.name,select.value);return;}
+ async function applyAcquisitionRoute(select,routeId){
+  if(!routeId)return;
+  const {td77Route}=select.dataset;
+  if(td77Route==='preview'&&manualCandidate){stageCandidate(manualCandidate.name,routeId,{scroll:false});return;}
   const i=chosenSlot,g=state.game,p=state.slots[i],stamp=token;
-  const route=routeOptions(p).find(row=>row.id===select.value);
+  if(!p||fulfilledCapture(p))return;
+  const route=routeOptions(p).find(row=>row.id===routeId);
   if(!route)return;
   if(p.duringTargetId&&!routeIncludesStage(route,p.duringTargetId))return;
   const edited={...p,acquisitionRoute:routeStore(route)};
@@ -5229,30 +5799,84 @@ document.addEventListener('keydown',event=>{
    state.slots[i]={...edited,...reviseAutomaticMoves(p,final.moves),duringSpecies:intermediate.name,
     duringMoves:interim.plannedMoves,duringAutoMoves:interim.finalAutoMoves,
     finalLearnset:learnset};
-   persist();render();if(i===chosenSlot&&!$('td4Edit').hidden){renderMoveSlots();if(settings.open&&manualCandidate?.confirmed)restoreConfirmedPreview();}refreshMoveInfo();
-  }catch{if(stamp===token&&state.slots[i]===p){say('Acquisition route could not be updated.');renderMoveSlots();}}
- });
- $('td77FinalForm').addEventListener('change',async e=>{
-  const select=e.target.closest('select'),i=chosenSlot,p=state?.slots[i],stamp=token;
-  if(!select||!p||!select.value)return;
-  const option=finalFormOptions(p).find(q=>q.id===+select.value);
-  const during=movesetView==='during',stage=pack?.mons.find(([,name])=>name===duringSpecies(p,i))?.[0];
-  if(!option?.path||!during&&p.duringTargetId&&stage&&!lineage(option.id).has(stage)){renderFinalFormChoice(p);return;}
-  select.disabled=true;
-  try{
-   if(!during){await choose(option.name,option.path);return;}
-   if(!lineage(p.id).has(option.id)){
-    if(!lineage(option.id).has(p.id)&&!confirm('Use '+pretty(option.name)+' for During game and replace the incompatible Final branch? Manual moves will be kept for review.'))return;
-    await choose(option.name,option.path,option.id);
-    return;
+   persist();render();
+   if(i===chosenSlot&&!$('td4Edit').hidden){
+    renderMoveSlots();
+    if(settings.open&&manualCandidate?.confirmed)restoreConfirmedPreview();
+    else $('td77SlotRoute').querySelector('.td78-route-picker > summary')?.focus({preventScroll:true});
    }
-   await choose(option.name,option.path,option.id);
-  }catch{if(stamp===token&&i===chosenSlot)say('Could not update the During game evolution.');}
-  finally{if(select.isConnected)renderFinalFormChoice(state?.slots[i]);}
+   refreshMoveInfo();
+  }catch{if(stamp===token&&state.slots[i]===p){say('Acquisition route could not be updated.');renderMoveSlots();}}
+ }
+ page.addEventListener('click',e=>{
+  const select=e.target.closest('button[data-td77-route]');
+  if(select)applyAcquisitionRoute(select,select.dataset.routeId);
  });
-
- function renderMoveSlots(){const host=$('td41MoveSlots'),p=state?.slots[chosenSlot],a=ownedFor(p,chosenSlot);$('td77Lock').hidden=!p;
+ page.addEventListener('change',e=>{
+  const select=e.target.closest('select[data-td77-route]');
+  if(select)applyAcquisitionRoute(select,select.value);
+ });
+ function renderOwnedChoices(p){
+  const assigned=ownedAssignments(),party=actual()?.pokemon||[];
+  $('td78AddOwned').innerHTML=p?'':party.flatMap((member,index)=>member&&!assigned.includes(index)?
+   [`<button type="button" class="td774-secondary" data-td78-add-owned="${index}">Use ${safe(td41PokemonLabel(member.name))}${member.level?' · Lv. '+member.level:''} · Party ${index+1}</button>`]:[]).join('');
+ }
+ $('td78AddOwned').addEventListener('click',async event=>{
+  const button=event.target.closest('[data-td78-add-owned]');
+  if(!button||state.approved)return;
+  const i=chosenSlot,index=Number(button.dataset.td78AddOwned),team=actual(),member=team?.pokemon[index];
+  const view=movesetView,stamp=token;
+  if(!member||state.slots[i]||ownedAssignments().includes(index))return;
+  const matching=team.pokemon.filter(p=>p&&(member.saveStats?.pid!=null?p.saveStats?.pid===member.saveStats.pid:
+   td73IdentityKey(p)===td73IdentityKey(member)));
+  if(matching.length>1&&!await td78Confirmation('Use '+td41PokemonLabel(member.name)+' from party slot '+(index+1)+'?',
+   'More than one party Pokémon has this identity.','Use Pokémon'))return;
+  if(stamp!==token||movesetView!==view||chosenSlot!==i||state.slots[i]||actual()?.pokemon[index]!==member)return;
+  const plan=fromTeam(member,index);
+  delete plan.autoOwnedPending;
+  plan.explicitOwned=true;
+  plan.duringSpecies=plan.name;
+  plan.duringMoves=plan.plannedMoves.map(move=>({...move}));
+  if(view==='during'||state.independentSlots?.[i]){
+   const stages=state.independentSlots?.[i];
+   separateStages(i,view==='during'?plan:stages?.during??null,view==='final'?plan:stages?.final??null);
+  }else state.slots[i]=plan;
+  persist();render();renderMoveSlots();refreshMoveInfo();hydrate(false);
+ });
+ async function removePlannedStage(){
+  const i=chosenSlot,stamp=token,view=movesetView,plan=state.slots[i];
+  if(!plan||plan.locked||state.approved)return;
+  const name=view==='during'?duringSpecies(plan,i):plan.name;
+  if(!await td78Confirmation('Remove '+td41PokemonLabel(name)+' from '+(view==='during'?'During game':'Final')+'?',
+   'This removes the Pokémon and its moves from this planned stage.','Remove'))return;
+  if(stamp!==token||chosenSlot!==i||view!==movesetView||state.slots[i]!==plan||plan.locked)return;
+  captureStage();
+  const stages=state.independentSlots?.[i];
+  if(stages){
+   separateStages(i,view==='during'?null:stages.during,view==='final'?null:stages.final);
+   if(!state.independentSlots[i].during&&!state.independentSlots[i].final)delete state.independentSlots[i];
+  }else{
+   separateStages(i,view==='final'?plan:null,view==='during'?plan:null);
+  }
+  ++rankRun;++selectionRun;++manualRun;manualCandidate=null;
+  $('td63ManualCandidate').innerHTML='';$('td4Search').value='';$('td4SearchResults').hidden=true;
+  settings.open=true;persist();render();renderMoveSlots();findCandidates();refreshMoveInfo();
+ }
+ page.addEventListener('click',event=>{
+  if(event.target.closest('[data-td78-remove-stage]'))removePlannedStage();
+  if(event.target.closest('[data-td79-keep-during]')&&movesetView==='final'&&!state.slots[chosenSlot]){
+   const during=state.independentSlots?.[chosenSlot]?.during;
+   if(during)choose(during.duringSpecies||during.name,null,undefined,during);
+  }
+ });
+ function renderMoveSlots(){
+ const host=$('td41MoveSlots'),{active:p,other,member:a}=stageDisplay(chosenSlot);
+ const fallback=!p&&(other||a);
  const locked=!!p?.locked;
+ $('td77Lock').disabled=!p||state.approved;
+ $('td78RemovePlan').hidden=false;
+ $('td78RemovePlan').disabled=!p||locked||state.approved;
+ renderOwnedChoices(p);
  $('td77Legendary').closest('label').hidden=locked;
  $('td4Search').closest('.td77-candidate-search').hidden=locked;
  const lockMessage=$('td775ReplacementLocked');
@@ -5260,9 +5884,20 @@ document.addEventListener('keydown',event=>{
  lockMessage.innerHTML=locked?plannerLockIcon('td774-lock-status')+' Replacement locked':'';
  if(locked)closeTypeFilter();
  renderFinalFormChoice(p);
- $('td77Lock').textContent=p?.locked?'Unlock Pokémon':'Lock Pokémon';
+ $('td77Lock').hidden=false;
+ $('td77Lock').textContent=locked?'Unlock':'Lock';
  $('td77Lock').setAttribute('aria-pressed',String(!!p?.locked));
- $('td72MoveHeading').hidden=!p;$('td4Clear').hidden=!p;$('td4Clear').disabled=!!state?.approved;refreshAcquisition();$('td5TeamOptimize').hidden=!p;if(!p){host.innerHTML='';return;}const display=movesetView==='during'?duringLearner(p,chosenSlot):p;$('td72MoveTitle').textContent=(a&&!sameMon(a,display)?td41PokemonLabel(a.name)+' → ':'')+td41PokemonLabel(display.name)+' · Moveset progression';p.plannedMoves=moveSlots(p);
+ $('td72MoveHeading').hidden=!p&&!fallback;
+ $('td4Clear').hidden=false;
+ $('td4Clear').disabled=!p||state.approved||locked||!displayedMoves(p).some(move=>move?.move||goal(move));
+ refreshAcquisition();
+ $('td5TeamOptimize').hidden=!p;
+ if(!p){
+  if(fallback)$('td72MoveTitle').textContent=td41PokemonLabel(fallback.name)+' · Moveset progression';
+  host.innerHTML=movesetView==='final'&&other?`<button type="button" class="td774-secondary" data-td79-keep-during>Keep ${safe(td41PokemonLabel(other.duringSpecies||other.name))}</button>`:'';
+  return;
+ }
+ const display=movesetView==='during'?duringLearner(p,chosenSlot):p;$('td72MoveTitle').textContent=(a&&!sameMon(a,display)?td41PokemonLabel(a.name)+' → ':'')+td41PokemonLabel(display.name)+' · Moveset progression';p.plannedMoves=moveSlots(p);
  if(movesetView==='during'){
   p.duringMoves=moveSlots({plannedMoves:p.duringMoves??moveSlots(p).map(m=>({...m,purpose:'keep',replacement:''}))});
   const species=duringSpecies(p,chosenSlot);
@@ -5299,19 +5934,19 @@ document.addEventListener('keydown',event=>{
    `<h4>Recommended upgrades</h4><div class="td5-proposal-list">${result.proposals.map((r,i)=>
     `<div class="td64-alternative"><span class="td44-trade-head">${moveChip(r.prev)}<span>→</span>${moveChip(r.name)}</span>
     ${moveTradeoff(info(r.prev),info(r.name),r.added,r.lost)}<small>${td77AcquisitionLinks(r.timing,state.game)}</small>
-    <button type="button" data-td64-alt="${i}">Select ${safe(pretty(r.name))}</button></div>`).join('')}</div>`:
+    <button type="button" class="td774-secondary" data-td64-alt="${i}">Select ${safe(pretty(r.name))}</button></div>`).join('')}</div>`:
    'No verified move upgrade for this deadline.';
  }
  $('td5TeamProposals').addEventListener('click',e=>{
   const button=e.target.closest('[data-td64-alt]');
   if(button)applyMoveImprovement(suggestedMoveProposals[+button.dataset.td64Alt],{fromSlot:true});
  });
- function applyMoveImprovement(r,{fromSlot=false}={}){
+ async function applyMoveImprovement(r,{fromSlot=false}={}){
   if(!r||r.view!==movesetView||state.slots[r.i]!==r.p||(fromSlot?r.i!==chosenSlot:r.p.locked))return;
   const planned=displayedMoves(r.p),move=planned[r.j];
-  if(goal(move)!==r.prev||!moveRecommendations(r.i).proposals.some(p=>p.j===r.j&&p.name===r.name))return;
+  if(goal(move)!==r.prev||!moveRecommendations(fromSlot?r.i:null).proposals.some(p=>p.i===r.i&&p.j===r.j&&p.name===r.name))return;
   const loss=r.lost.length?' Loses coverage against '+r.lost.map(pretty).join(', ')+'.':'';
-  if(!confirm(td41PokemonLabel(r.p.name)+': '+(r.prev?'replace '+pretty(r.prev)+' with ':'add ')+pretty(r.name)+'?'+loss))return;
+  if(!await td78Confirmation((r.prev?'Replace '+pretty(r.prev)+' with ':'Add ')+pretty(r.name)+'?',td41PokemonLabel(r.p.name)+loss,'Apply')||state.slots[r.i]!==r.p||planned[r.j]!==move||movesetView!==r.view)return;
   const current=move.move;
   const temporary=r.view==='final'&&current&&current!==r.name&&!r.known&&
    !planned.some((entry,j)=>j!==r.j&&goal(entry)===current);
@@ -5347,14 +5982,17 @@ document.addEventListener('keydown',event=>{
  }
  function moveRecommendations(onlySlot=null){
   const g=state.game,view=movesetView,during=view==='during',now=window.td62Progress.rank(effectiveProgress())??0;
-  const deadline=Math.min(deadlineRank()??9,during?now+1:Infinity),data=window.takDexAcquisitionV77;
+  const observed=window.td62Progress.rank(effectiveProgress());
+  const configured=state.stageDeadlines?.during??state.deadline;
+  const deadline=during&&!configured&&observed!=null?Math.min(deadlineRank()??9,observed+1):deadlineRank()??9;
+  const data=window.takDexAcquisitionV77;
   const names=new Set(),missing=new Set(),plans=[];
   const getStage=(p,name)=>records.get(g+':'+name)||(name===p.name&&p.legalMoves?p:null);
   for(const [i,p] of state.slots.entries()){
    if(!p)continue;
-   const route=chosenRoute(p,true,i),member=ownedFor(p,i);
+   const route=routeForLearner(chosenRoute(p,true,i),during?duringLearner(p,i):p,during),member=ownedFor(p,i);
    if(!route&&(p.acquisitionRoute||!sameMon(member,p)&&!acquisition(p,false).confirmed))continue;
-   if(route&&(route.initial.rank>deadline||!during&&!routeFits(route)))continue;
+   if(route&&(!routeFits(route)||route.initial.rank>deadline))continue;
    const stages=during?[duringSpecies(p,i)]:route?[route.startName,...route.steps.map(step=>step.name)]:[p.name];
    if(stages.length>1&&member&&route?.initial.kind==='owned'){
     const current=stages.indexOf(moveKey(member.name));
@@ -5376,11 +6014,11 @@ document.addEventListener('keydown',event=>{
   if(pending)return {ready:false,proposals:[]};
   const teamMoves=plans.map(({moves,pool,learner,i})=>moves.map(move=>goal(move)).filter(name=>pool.routes.has(name))
    .map(name=>({name,mon:td5Attacker(learner,i),slot:i})));
-  const proposals=[];
+  const proposals=[],assignedHm=new Set(activeMoves().filter(name=>hms(g).includes(name)));
   for(const [index,{i,p,learner,moves,pool,route}] of plans.entries()){
-   if(onlySlot==null?p.locked:i!==onlySlot)continue;
+   if(p.locked||onlySlot!=null&&i!==onlySlot)continue;
    const others=teamMoves.flatMap((rows,j)=>index===j?[]:rows),used=new Set(moves.map(goal).filter(Boolean));
-   let best;
+   let best,fill;
    for(const [j,move] of moves.entries()){
     const prev=goal(move);
     if(hms(g).includes(prev)||hms(g).includes(move.move))continue;
@@ -5388,32 +6026,42 @@ document.addEventListener('keydown',event=>{
     const own=existing.map(name=>({name}));
     for(const [name,options] of pool.routes){
      if(used.has(name)||!info(name))continue;
-     const evaluation=rateMoveChange(learner,i,pool.routes.has(prev)?prev:'',name,own,others,g);
-     if(!evaluation)continue;
+     const evaluation=rateMoveChange(learner,i,prev,name,own,others,g);
+     const merit=td5Merit(info(name),learner,i,g),oldMerit=td5Merit(info(prev),learner,i,g);
+     const required=during&&evaluation?.utility&&!assignedHm.has(name)&&hmPurpose(g,name).startsWith('Story required')&&
+      !window.td62Progress.hm(g,name,effectiveProgress())?.used;
+     if(!evaluation||!merit&&!required)continue;
+     if(hms(g).includes(name)&&!required&&(!merit||merit<oldMerit||evaluation.score<=(evaluation.utility?3:0)))continue;
      const choices=[options,...existing.map(n=>pool.routes.get(n))];
      const scheduled=data.scheduleEvolutionMoves(pool.stageMinimums,pool.startingLevel,pool.practicalLevel,choices)?.[0];
      if(!scheduled)continue;
      const stage=pool.stages[scheduled.stage];
      const gate=Math.max(scheduled.timing?.rank||0,route?.initial.rank||0);
-     const score=evaluation.score-(during&&gate>now?.85:0)-(prev&&prev!==name?.6:0);
-     if(score<1.25||best&&best.score>=score)continue;
+     const score=evaluation.score-(evaluation.utility&&!required?3:0)-(during&&observed!=null&&gate>now?.5:0)-(prev?.35:0)+(!prev&&merit?merit/40:0);
+     const threshold=prev?1.25:.5;
+     const incumbent=prev?best:fill;
+     if(score<threshold||incumbent&&(Number(incumbent.utility)>Number(required)||incumbent.utility===Boolean(required)&&incumbent.score>=score))continue;
      const timing=pool.known.has(name)?'Already known':
       [scheduled.timing?.text||('Level '+scheduled.level),stage.name!==learner.name?'Learn as '+pretty(stage.name)+' before evolving':'',
-       route?.initial.rank>now?'Obtain '+pretty(route.startName)+' · '+route.initial.place:'',
-       gate>now?'Later than current progress':''].filter(Boolean).join(' · ');
-     best={...evaluation,score,i,j,p,prev,name,timing,view,known:pool.known.has(name),reminder:scheduled.reminder};
+       route?.initial.rank>now?'Obtain '+pretty(route.startName)+' · '+route.initial.place:''].filter(Boolean).join(' · ');
+     const proposal={...evaluation,utility:Boolean(required),score,i,j,p,prev,name,timing,view,known:pool.known.has(name),reminder:scheduled.reminder};
+     if(prev)best=proposal;else fill=proposal;
     }
    }
-   if(best)proposals.push(best);
+   const selected=fill||best;
+   if(selected){
+    proposals.push(selected);
+    if(selected.utility)assignedHm.add(selected.name);
+   }
   }
-  return {ready:true,proposals:proposals.sort((a,b)=>b.score-a.score).slice(0,3)};
+  return {ready:true,proposals:proposals.sort((a,b)=>Number(Boolean(a.prev))-Number(Boolean(b.prev))||b.score-a.score)};
  }
  function legalOptions(p,i,k,q){
   const during=k==='during',learner=during?duringLearner(p,chosenSlot):finalLearner(p);
-  const used=new Set((during?p.duringMoves:p.plannedMoves).filter((_,j)=>j!==i).flatMap(m=>[m.move,m.replacement]).filter(Boolean));
+  const used=new Set((during?p.duringMoves:p.plannedMoves).map(goal).filter(Boolean));
   const names=new Set(learner.legalMoves||[]);
   if(during)for(const n of finalLearner(p).legalMoves||[])names.add(n);
-  return [...names].filter(n=>!used.has(n)&&n.includes(q)).sort((a,b)=>Number(b.startsWith(q))-Number(a.startsWith(q))||a.localeCompare(b));
+  return td78SearchMatches([...names].filter(n=>!used.has(n)).sort(),q);
  }
  function canKeepActual(p,index,mode,name){
   const during=mode==='during',learner=during?duringLearner(p,chosenSlot):finalLearner(p);
@@ -5421,13 +6069,28 @@ document.addEventListener('keydown',event=>{
   return retainsMove(p,learner,name,chosenSlot)&&!moves.some((move,i)=>i!==index&&goal(move)===name);
  }
  const moveHost=$('td41MoveSlots');
+ const moveFilters=new WeakMap();
+ const moveClasses=['physical','special','status'];
  let moveBlurTimer;
- function showMoveOptions(input,q=''){
+ function moveBox(input){return input.closest('.td78-editor-shell').querySelector('.suggestions');}
+ function showMoveOptions(input,q='',scroll=0){
   const p=state?.slots[chosenSlot];
   if(!p)return;
-  const [index,mode]=input.dataset.td45Move.split(':'),box=input.nextElementSibling;
+  const [index,mode]=input.dataset.td45Move.split(':'),box=moveBox(input);
   const learner=mode==='during'?duringLearner(p,chosenSlot):finalLearner(p);
   const opts=legalOptions(p,+index,mode,q);
+  const filter=moveFilters.get(input)||{open:false,types:new Set(),classes:new Set()};
+  moveFilters.set(input,filter);
+  const count=filter.types.size+filter.classes.size;
+  input.closest('.td78-editor-shell').querySelector('.td78-move-badges').innerHTML=td78FilterBadges(filter.types,filter.classes);
+  input.closest('.td77-edit-move').querySelector('[data-td78-open-move]').setAttribute('aria-expanded','true');
+  const funnel=input.closest('.td78-editor-search').querySelector('.td772-filter-button');
+  funnel.classList.toggle('selected',count>0);
+  funnel.setAttribute('aria-expanded',String(filter.open));
+  const classes=moveClasses.map(value=>`<button type="button" class="td774-secondary" data-td78-move-class="${value}" aria-pressed="${filter.classes.has(value)}">${pretty(value)}</button>`).join('');
+  const filterPanel=`<div class="td772-filter-panel td78-move-filter-panel" id="td78MoveFilterPanel-${index}" ${filter.open?'':'hidden'}>
+   ${td78FilterHeader(count)}<div class="td72-move-types" role="group" aria-label="Move type">${td77TypeTiles(gameGeneration(state.game),'data-td78-move-type',type=>filter.types.has(type))}</div>
+   <div class="td78-move-classes" role="group" aria-label="Move category">${classes}</div></div>`;
   const old=input.closest('[data-td77-actual-move]')?.dataset.td77ActualMove;
   const selected=goal((mode==='during'?p.duringMoves:p.plannedMoves)[+index]);
   const timing=selected&&plannerMoveTiming(learner,selected);
@@ -5436,49 +6099,121 @@ document.addEventListener('keydown',event=>{
   const clear=action('Clear',selected?'data-td77-clear-move aria-label="Clear planned move"':'disabled','m6 6 12 12 M18 6 6 18');
   const checker=action('Checker',selected?`data-td77-plan-move="${safe(selected)}" data-td77-reminder="${safe(timing?.text||'')}"`:'disabled','M13 5h6v6 M19 5l-8 8 M19 13v6H5V5h6');
   const close=action('Close','data-td79-close-move','m5 12 4 4L19 6');
-  const render=(n,move)=>move?td77MoveResultLines({...move,name:n}):'<strong>'+safe(pretty(n))+'</strong>';
-  box.innerHTML=`<div class="td78-move-actions">${keep}${clear}${checker}${close}</div><strong>Available moves</strong><div class="td78-move-results">`+
-   opts.map(n=>`<div class="td79-move-choice"><button type="button" class="td77-move-option" data-td45-pick="${safe(n)}"><span class="td77-move-result-lines">${render(n,info(n))}</span></button>${learner.legalMoves?.includes(n)?moveTimingMarkup(learner,n):'<small>Learn on a later planned form</small>'}</div>`).join('')+
-   (opts.length?'':'<p class="note">No compatible moves</p>')+'</div>';
+  const render=(n,move)=>move?td77MoveResultLines({...move,name:n},''):'<strong></strong>';
+  box.innerHTML=filterPanel+`<div class="td78-move-actions">${keep}${clear}${checker}${close}</div><strong>Available moves</strong><div class="td78-move-results"></div>`;
   box.hidden=false;
-  const game=state.game,buttons=[...box.querySelectorAll('[data-td45-pick]')];
+  const game=state.game,list=box.querySelector('.td78-move-results');
+  const display=()=>{
+   const names=opts.filter(name=>{
+    const move=info(name);
+    return (!filter.types.size||filter.types.has(move?.type))&&(!filter.classes.size||filter.classes.has(move?.damageClass));
+   });
+   list.innerHTML=names.map(n=>{
+    const learned=learner.legalMoves?.includes(n);
+    const timing=learned?plannerMoveTiming(learner,n):null;
+    return `<div class="td79-move-choice">
+     <button type="button" class="td78-suggestion-name" data-td77-plan-move="${safe(n)}" data-td77-reminder="${safe(timing?.text||'')}" aria-label="Open ${safe(pretty(n))} in Move Checker">${safe(pretty(n))}</button>
+     <button type="button" class="td77-move-option" data-td45-pick="${safe(n)}" aria-label="Select ${safe(pretty(n))}"><span class="td77-move-result-lines">${render(n,info(n))}</span></button>
+     ${learned?moveTimingMarkup(learner,n):'<small>Learn on a later planned form</small>'}</div>`;
+   }).join('')+(names.length?'':'<p class="note">No compatible moves</p>');
+   list.scrollTop=scroll;
+  };
+  const load=async name=>{
+   const move=await enrichMove({name:pretty(name)},gameGeneration(game),game).catch(()=>null);
+   if(move?.type)moveInfo.set(game+':'+name,move);
+   return move;
+  };
+  box.moveObserver?.disconnect();
+  if(count){
+   const missing=opts.filter(name=>!info(name)?.damageClass);
+   if(!missing.length){display();return;}
+   list.innerHTML='<p class="note" role="status">Checking move details…</p>';
+   (async()=>{
+    for(let i=0;i<missing.length&&list.isConnected&&!box.hidden;i+=8){
+     await Promise.all(missing.slice(i,i+8).map(load));
+    }
+    if(list.isConnected&&!box.hidden)display();
+   })();
+   return;
+  }
+  display();
   const observer=new IntersectionObserver(entries=>{
    for(const {target,isIntersecting} of entries){
     if(!isIntersecting)continue;
     observer.unobserve(target);
     const name=target.dataset.td45Pick;
-    enrichMove({name:pretty(name)},gameGeneration(game),game).then(move=>{
-     if(!move?.type||!target.isConnected)return;
-     moveInfo.set(game+':'+name,move);
-     target.firstElementChild.innerHTML=render(name,move);
-    }).catch(()=>{});
+    load(name).then(move=>{
+     if(move?.type&&target.isConnected)target.firstElementChild.innerHTML=render(name,move);
+    });
    }
-  },{root:box.querySelector('.td78-move-results')});
-  box.moveObserver?.disconnect();
+  },{root:list});
   box.moveObserver=observer;
-  for(const button of buttons)if(button.firstElementChild&&!info(button.dataset.td45Pick))observer.observe(button);
+  for(const button of list.querySelectorAll('[data-td45-pick]'))if(!info(button.dataset.td45Pick))observer.observe(button);
  }
+
  moveHost.addEventListener('focusin',e=>{
   if(!e.target.matches('[data-td45-move]'))return;
-  if(e.target.nextElementSibling.hidden)showMoveOptions(e.target);
+  if(moveBox(e.target).hidden)showMoveOptions(e.target);
  });
- moveHost.addEventListener('click',e=>{
+ moveHost.addEventListener('click',async e=>{
+  const option=e.target.closest('.td79-move-choice');
+  if(option&&!e.target.closest('button,a,summary,details')){
+   option.querySelector('[data-td45-pick]').click();
+   return;
+  }
+  const filterButton=e.target.closest('.td772-filter-button,[data-td78-move-type],[data-td78-move-class],[data-td78-clear-filters],[data-td78-filter-value]');
+  if(filterButton){
+   const input=filterButton.closest('.td77-edit-move').querySelector('input');
+   const filter=moveFilters.get(input);
+   if(!filter)return;
+   const {td78MoveType:type,td78MoveClass:damageClass}=filterButton.dataset;
+   if(filterButton.hasAttribute('data-td78-clear-filters')){
+    filter.types.clear();filter.classes.clear();showMoveOptions(input,clean(input.value));
+    input.closest('.td78-editor-search').querySelector('.td772-filter-button').focus({preventScroll:true});return;
+   }
+   const removed=filterButton.dataset.td78FilterValue;
+   if(removed){
+    (filterButton.dataset.td78FilterGroup==='type'?filter.types:filter.classes).delete(removed);
+    showMoveOptions(input,clean(input.value));
+    input.closest('.td78-editor-search').querySelector('.td772-filter-button').focus({preventScroll:true});return;
+   }
+   if(type||damageClass){
+    const values=type?filter.types:filter.classes,key=type||damageClass;
+    if(values.has(key))values.delete(key);else values.add(key);
+   }
+   else {
+    filter.open=!filter.open;
+    moveBox(input).querySelector('.td78-move-filter-panel').hidden=!filter.open;
+    filterButton.setAttribute('aria-expanded',String(filter.open));
+    filterButton.classList.toggle('selected',Boolean(filter.types.size||filter.classes.size));
+    return;
+   }
+   showMoveOptions(input,clean(input.value));
+   const attribute=type?'data-td78-move-type':'data-td78-move-class';
+   moveBox(input).querySelector(`[${attribute}="${type||damageClass}"]`)?.focus({preventScroll:true});
+   return;
+  }
   const trigger=e.target.closest('[data-td78-open-move]');
   if(trigger){
-   for(const other of moveHost.querySelectorAll('.suggestions:not([hidden])'))other.hidden=true;
-   const field=trigger.parentElement.querySelector('input');
+   const field=trigger.closest('.td77-edit-move').querySelector('input'),wasOpen=!moveBox(field).hidden;
+   for(const other of moveHost.querySelectorAll('.suggestions:not([hidden])')){
+    other.hidden=true;
+    other.closest('.td77-edit-move').querySelector('[data-td78-open-move]').setAttribute('aria-expanded','false');
+   }
+   if(wasOpen){trigger.setAttribute('aria-expanded','false');return;}
    field.value='';showMoveOptions(field);
-   const box=field.nextElementSibling;
-   if(box.getBoundingClientRect().bottom>window.innerHeight-72)box.scrollIntoView({block:'center'});
+   const shell=field.closest('.td78-editor-shell');
+   if(shell.getBoundingClientRect().bottom>window.innerHeight-72)shell.scrollIntoView({block:'nearest'});
    return;
   }
   const input=e.target.closest('[data-td45-move]');
-  if(input&&input.nextElementSibling.hidden)showMoveOptions(input);
+  if(input&&moveBox(input).hidden)showMoveOptions(input);
   const close=e.target.closest('[data-td79-close-move]');
   if(close){
    const editor=close.closest('.td77-edit-move');
    editor.querySelector('.suggestions').hidden=true;
-   editor.querySelector('[data-td78-open-move]').focus({preventScroll:true});
+   const toggle=editor.querySelector('[data-td78-open-move]');
+   toggle.setAttribute('aria-expanded','false');toggle.focus({preventScroll:true});
    return;
   }
   const clear=e.target.closest('[data-td77-clear-move],[data-td77-clear-plan]');
@@ -5488,7 +6223,8 @@ document.addEventListener('keydown',event=>{
    const p=state.slots[chosenSlot];
    const name=goal((mode==='during'?p.duringMoves:p.plannedMoves)[+index]);
    if(!name)return;
-   if(!confirm('Clear '+pretty(name)+' from this planned slot?')){clear.focus({preventScroll:true});return;}
+   if(!await td78Confirmation('Clear '+pretty(name)+'?','This clears the move from the '+(mode==='during'?'During game':'Final')+' slot.','Clear')){clear.focus({preventScroll:true});return;}
+   if(!field.isConnected||state.slots[chosenSlot]!==p)return;
    if(mode==='during'){applyDuring(field,'');return;}
    const i=Number(index);
    p.plannedMoves[i]={move:'',purpose:'keep',replacement:''};
@@ -5501,16 +6237,21 @@ document.addEventListener('keydown',event=>{
   if(e.target.matches('[data-td45-move]')){showMoveOptions(e.target,clean(e.target.value));}
  });
  moveHost.addEventListener('keydown',e=>{
-  const input=e.target.closest('[data-td45-move]')||e.target.closest('.suggestions')?.previousElementSibling;
+  const input=e.target.closest('.td77-edit-move')?.querySelector('[data-td45-move]');
   if(!input?.matches('[data-td45-move]'))return;
-  const box=input.nextElementSibling;
+  const box=moveBox(input);
   if(e.key==='Escape'){
+   const funnel=input.closest('.td78-editor-search').querySelector('.td772-filter-button');
+   if(moveFilters.get(input)?.open){
+    e.preventDefault();funnel.click();funnel.focus({preventScroll:true});return;
+   }
    box.hidden=true;
-   input.parentElement.querySelector('[data-td78-open-move]')?.focus({preventScroll:true});
+   const toggle=input.closest('.td77-edit-move').querySelector('[data-td78-open-move]');
+   toggle?.setAttribute('aria-expanded','false');toggle?.focus({preventScroll:true});
    return;
   }
   if(e.key==='Enter'&&e.target===input&&!box.hidden){e.preventDefault();box.querySelector('.td78-move-results [data-td45-pick]')?.click();}
-  if(!['ArrowDown','ArrowUp'].includes(e.key)||e.target.closest('.td62-move-timing'))return;
+  if(!['ArrowDown','ArrowUp'].includes(e.key)||e.target!==input&&!e.target.matches('[data-td45-pick]'))return;
   e.preventDefault();
   if(box.hidden)showMoveOptions(input);
   const options=[...box.querySelectorAll('[data-td45-pick]')],current=options.indexOf(document.activeElement);
@@ -5519,20 +6260,23 @@ document.addEventListener('keydown',event=>{
  });
  moveHost.addEventListener('focusout',e=>{
   const container=e.target.closest('.search');
-  if(!container||checkerEditor||container.contains(e.relatedTarget))return;
+  if(!container||checkerEditor||$('td78Confirmation')||container.contains(e.relatedTarget))return;
   const input=container.querySelector('[data-td45-move]');
   if(!input)return;
-  const box=input.nextElementSibling,contents=box.firstElementChild;
+  const box=moveBox(input),contents=box.firstElementChild;
   clearTimeout(moveBlurTimer);
   moveBlurTimer=setTimeout(()=>{
-   if(checkerEditor||contents!==box.firstElementChild||!input.isConnected||container.contains(document.activeElement))return;
-   box.hidden=true;box.moveObserver?.disconnect();
+   if(checkerEditor||$('td78Confirmation')||contents!==box.firstElementChild||!input.isConnected||container.contains(document.activeElement))return;
+   box.hidden=true;container.querySelector('[data-td78-open-move]')?.setAttribute('aria-expanded','false');box.moveObserver?.disconnect();
    const [i,k]=input.dataset.td45Move.split(':'),p=state?.slots[chosenSlot];
    const m=k==='during'?p?.duringMoves[+i]:p?.plannedMoves[+i];
    if(m)input.value=pretty(k==='goal'?goal(m):m.move);
   },150);
  });
- page.addEventListener('pointerdown',e=>{if(!e.target.closest('.td77-edit-move,[data-td77-plan-move]'))for(const box of moveHost.querySelectorAll('.suggestions:not([hidden])'))box.hidden=true;});
+ page.addEventListener('pointerdown',e=>{if(!$('td78Confirmation')&&!e.target.closest('.td77-edit-move,[data-td77-plan-move]'))for(const box of moveHost.querySelectorAll('.suggestions:not([hidden])')){
+  box.hidden=true;
+  box.closest('.td77-edit-move').querySelector('[data-td78-open-move]')?.setAttribute('aria-expanded','false');
+ }});
  function applyDuring(input,name,retained=false){
   const p=state.slots[chosenSlot],i=Number(input.dataset.td77During);
   if(!p?.duringMoves||name&&!retained&&!legalOptions(p,i,'during',name).includes(name))return;
@@ -5545,13 +6289,40 @@ document.addEventListener('keydown',event=>{
   const actualMove=input.closest('[data-td77-actual-move]')?.dataset.td77ActualMove;
   if(n!==actualMove||!canKeepActual(p,+i,k,n))return;
   const previous=goal((k==='during'?p.duringMoves:p.plannedMoves)[+i]);
-  if(!confirm(previous&&previous!==n?'Replace '+pretty(previous)+' with '+pretty(n)+'?':'Keep '+pretty(n)+' in this planned slot?')){b.focus({preventScroll:true});return;}
+  if(!await td78Confirmation(previous&&previous!==n?'Replace '+pretty(previous)+' with '+pretty(n)+'?':'Keep '+pretty(n)+'?','','Keep')){b.focus({preventScroll:true});return;}
+  if(!input.isConnected||state.slots[chosenSlot]!==p||!canKeepActual(p,+i,k,n))return;
   if(k==='during'){applyDuring(input,n,true);return;}
   p.plannedMoves[+i]={move:n,purpose:'keep',replacement:''};
   (p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;
   if(p.finalAutoMoves)p.finalAutoMoves[+i]='';
   persist();render();renderMoveSlots();refreshMoveInfo();return;
- }if(!legalOptions(p,+i,k,n).includes(n))return;if(k==='during'){applyDuring(input,n);return;}let confirmedFrom='';const slot=chosenSlot,g=state.game,stamp=token,prev=goal(m),others=p.plannedMoves.filter((_,j)=>j!==+i).map(goal).filter(Boolean);if(prev&&prev!==n){for(const name of [prev,n])if(!info(name)){try{const v=await enrichMove({name:pretty(name)},gameGeneration(g),g);if(v?.type&&v.damageClass)moveInfo.set(g+':'+name,v)}catch{}}if(stamp!==token||slot!==chosenSlot||state.slots[slot]!==p||p.plannedMoves[+i]!==m||goal(m)!==prev)return;const reasons=downgradeReasons(finalLearner(p),slot,prev,n,others,g);if(reasons.length&&!confirm('Potential moveset downgrade: '+pretty(prev)+' → '+pretty(n)+'\n'+reasons.join('\n')+'\nKeep replacement?')){input.value=pretty(prev);input.nextElementSibling.hidden=true;return;}if(reasons.length)confirmedFrom=m.warningTarget===prev&&m.warningFrom?m.warningFrom:prev;}if(k==='move'){p.plannedMoves[+i]={move:n,purpose:'keep',replacement:'',milestone:'',usefulness:'unknown'}}else if(m.move&&m.move!==n){m.purpose='temporary';m.replacement=n}else{m.move=n;m.purpose='keep';m.replacement=''}const chosen=p.plannedMoves[+i];(p.finalManualSlots??=[])[+i]=true;delete p.autoOwnedPending;if(p.finalAutoMoves)p.finalAutoMoves[+i]='';chosen.warningFrom=confirmedFrom;chosen.warningTarget=confirmedFrom?n:'';persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();});
+ }
+ const index=+i,slot=chosenSlot,g=state.game,stamp=token,during=k==='during';
+ const moves=during?p.duringMoves:p.plannedMoves,selected=moves[index],prev=goal(selected);
+ const valid=()=>input.isConnected&&stamp===token&&slot===chosenSlot&&state.slots[slot]===p&&
+  moves[index]===selected&&goal(selected)===prev&&legalOptions(p,index,k,n).includes(n);
+ if(!valid())return;
+ if(prev){
+  const relevant=new Set([n,prev,...activeMoves()]);
+  await Promise.all([...relevant].filter(name=>!info(name)).map(async name=>{
+   const value=await enrichMove({name:pretty(name)},gameGeneration(g),g).catch(()=>null);
+   if(value?.type&&value.damageClass)moveInfo.set(g+':'+name,value);
+  }));
+  if(!valid())return;
+  const learner=during?duringLearner(p,slot):finalLearner(p);
+  const reasons=downgradeReasons(learner,slot,prev,n,moves.filter((_,j)=>j!==index).map(goal).filter(Boolean),g);
+  if(reasons.length&&!await td78Confirmation(pretty(prev)+' → '+pretty(n),reasons.join('\n'),'Replace'))return;
+ }
+ if(!valid())return;
+ if(during){applyDuring(input,n);return;}
+ if(selected.purpose==='temporary'&&selected.move!==n&&p.duringMoves?.some(move=>goal(move)===selected.move)){
+  selected.replacement=n;delete selected.warningFrom;delete selected.warningTarget;
+ }else moves[index]={move:n,purpose:'keep',replacement:''};
+ (p.finalManualSlots??=[])[index]=true;
+ delete p.autoOwnedPending;
+ if(p.finalAutoMoves)p.finalAutoMoves[index]='';
+ persist();render();renderMoveSlots();if(settings.open)findCandidates();refreshMoveInfo();
+ });
  $('td4HM').addEventListener('click',e=>{const b=e.target.closest('[data-td41-carrier]');if(!b)return;if($('td4Edit').hidden||chosenSlot!==Number(b.dataset.td41Carrier))$('td4Slots').querySelector(`[data-td4-slot="${Number(b.dataset.td41Carrier)}"]`)?.click();$('td41MoveSlots').scrollIntoView({block:'start'});});
 
  async function refreshLeagueInfo(){const g=state.game,stamp=token;const missing=[...new Set(leagueTargets(g).flatMap(t=>t.rows.filter(r=>!r.types?.length||!r.id||clean(r.name)==='jellicent').map(r=>clean(r.name))))];for(let i=0;i<missing.length;i+=6){if(stamp!==token)return;await Promise.all(missing.slice(i,i+6).map(async n=>{try{const d=await details(n,g);leagueInfo.set(g+':'+n,d)}catch{}}));}if(stamp===token&&state?.game===g&&!$('td41MoveSlots').contains(document.activeElement))render();}
@@ -5595,14 +6366,13 @@ document.addEventListener('keydown',event=>{
   persist();render();if(!$('td4Edit').hidden)renderMoveSlots();
   refreshMoveInfo();if(initialPlan)optimizeOwnedPlans(my).catch(()=>{});
  }
- $('td4Slots').onclick=e=>{const b=e.target.closest('[data-td4-slot]');if(!b||!state.game)return;const next=Number(b.dataset.td4Slot);if(!$('td4Edit').hidden&&next===chosenSlot){delete state.editorSlot;persist();$('td4Edit').hidden=true;++rankRun;placeInlineEditor();return;}++rankRun;improvementType='';chosenSlot=next;state.editorSlot=next;persist();manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();$('td5TeamProposals').innerHTML='';$('td4Edit').querySelector(':scope > .td42-settings').open=!state.slots[next];lookup=state.slots[chosenSlot];ranked=[];$('td4Edit').hidden=false;$('td4Search').value='';$('td4SearchResults').hidden=true;$('td4Candidates').innerHTML='';$('td4CandidateStatus').textContent=state.approved?'Unlock the plan to edit.':'';for(const id of ['td4Search','td4Clear'])$(id).disabled=state.approved;renderMoveSlots();$('td4Clear').hidden=!lookup;if(!lookup)settings.open=true;placeInlineEditor();if(settings.open)findCandidates();};
+ $('td4Slots').onclick=e=>{const b=e.target.closest('[data-td4-slot]');if(!b||!state.game)return;const next=Number(b.dataset.td4Slot);if(!$('td4Edit').hidden&&next===chosenSlot){delete state.editorSlot;persist();$('td4Edit').hidden=true;++rankRun;placeInlineEditor();return;}++rankRun;improvementType='';chosenSlot=next;state.editorSlot=next;persist();manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();$('td5TeamProposals').innerHTML='';$('td4Edit').querySelector(':scope > .td42-settings').open=!state.slots[next];lookup=state.slots[chosenSlot];ranked=[];$('td4Edit').hidden=false;$('td4Search').value='';$('td4SearchResults').hidden=true;$('td4Candidates').innerHTML='';$('td4CandidateStatus').textContent=state.approved?'Unlock the plan to edit.':'';for(const id of ['td4Search','td4Clear'])$(id).disabled=state.approved;renderMoveSlots();if(!lookup)settings.open=true;placeInlineEditor();if(settings.open)findCandidates();};
  async function stageCandidate(n,routeId,{scroll=true}={}){const stamp=token,run=++manualRun,i=chosenSlot,g=state.game,host=$('td63ManualCandidate');manualCandidate=null;host.textContent='Loading candidate…';try{const d=await details(n,g);if(stamp!==token||run!==manualRun||i!==chosenSlot)return;if(!td7PokemonAllowed(d.name,d.id,g)){host.textContent='Not a species from this game’s generation.';return;}const priorPlan=state.slots[i],baseline=ownedFor(priorPlan,i);
  const activePlan=priorPlan&&movesetView==='during'?duringLearner(priorPlan,i):priorPlan;
- const selected=sameMon(activePlan,d)&&(movesetView!=='during'||priorPlan.locked||priorPlan.duringTargetId===d.id)&&
-  (priorPlan.locked||priorPlan.confirmedCandidate||!sameMon(baseline,priorPlan));
- const rows=routeOptions(d);
- const route=rows.find(row=>row.id===(routeId|| (selected?priorPlan.acquisitionRoute?.id:'')))||
-  (selected&&priorPlan.acquisitionRoute?null:rows[0]);
+ const selected=sameMon(activePlan,d);
+ const rows=routeOptions(selected?priorPlan:d);
+ const route=rows.find(row=>row.id===(routeId||(selected?priorPlan.acquisitionRoute?.id:'')))||
+  (selected&&priorPlan.acquisitionRoute?null:rows.find(row=>routeFits(row))||rows[0]);
  const conflict=ownershipConflict(d,i);
  const familyWarning=state.slots.some((p,slot)=>slot!==i&&p&&redundantFamily(d,p));
  manualCandidate={...d,acquisitionRoute:routeStore(route)||(selected?priorPlan.acquisitionRoute:null),confirmed:selected};
@@ -5613,27 +6383,16 @@ document.addEventListener('keydown',event=>{
  const weaknesses=p=>p?typesFor(g).filter(t=>matchup(t,p.types,gameGeneration(g))>1):[];
  const oldWeak=weaknesses(prior),newWeak=weaknesses(d);
  const gains=oldWeak.filter(t=>!newWeak.includes(t)),losses=newWeak.filter(t=>!oldWeak.includes(t));
- const statOrder=['attack','special-attack','speed','hp','defense','special-defense'];
- const offense=statOrder.slice(0,3);
- const changed=statOrder.flatMap(key=>{
-  const start=prior?.baseStats?.[key],end=d.baseStats?.[key];
-  return Number.isFinite(start)&&Number.isFinite(end)&&start!==end?[[key,start,end]]:[];
- });
- const relevant=changed.filter(([key])=>offense.includes(key));
- const statChanges=relevant.length?relevant:changed;
- const comparison=gains.length||losses.length||statChanges.length?`<details class="td773-disclosure td774-comparison"><summary><span>Comparison details</span></summary>
-  ${gains.length||losses.length?`<div class="td774-weak-compare">${[['Weaknesses removed',gains,'td41-good'],['Weaknesses added',losses,'td63-danger']].map(([title,types,tone])=>
-   types.length?`<div><small class="${tone}">${title}</small><div class="pills">${types.map(pill).join('')}</div></div>`:'').join('')}</div>`:''}
-  ${statChanges.length?`<div class="td774-stat-tiles">${statChanges.map(([key,start,end])=>`<div><small>${safe(key==='special-attack'?'Sp. Attack':key==='special-defense'?'Sp. Defense':pretty(key))}</small><b>${start} → ${end}</b><small class="${end>start?'td41-good':'td63-danger'}">${end>start?'+':'−'}${Math.abs(end-start)}</small></div>`).join('')}</div>`:''}</details>`:'';
+ const comparison=gains.length||losses.length?`<details class="td773-disclosure td774-comparison"><summary>Comparison details</summary>
+  <div class="td774-weak-compare">${[['Weaknesses removed',gains,'td41-good'],['Weaknesses added',losses,'td63-danger']].map(([title,types,tone])=>
+   types.length?`<div><small class="${tone}">${title}</small><div class="pills">${types.map(pill).join('')}</div></div>`:'').join('')}</div></details>`:'';
  const endpoints=selected?[]:manualEndpoints(d,route);
  const evolution=endpoints.length?`<div class="td77-candidate-actions td772-evolution-choices"><strong>Evolution options</strong>${endpoints.map(({target,path})=>
   `<div><div class="td774-evolution-choice"><b>${safe(evolutionPath(path))}</b><button type="button" class="td774-secondary" aria-label="Plan ${safe(td41PokemonLabel(target.name))}" data-td77-plan-endpoint="${safe(target.name)}" data-route="${safe(path.id)}">Plan ›</button></div><small>${evolutionRequirements(path)}</small>${routeFits(path)?'':`<small class="td63-danger">${safe(routeRestriction(path))}</small>`}</div>`).join('')}</div>`:'';
  const conflictNotice=conflict&&!selected?`<div class="td77-candidate-actions"><small class="td41-warn">${safe(td41PokemonLabel(conflict.member.name))} is assigned to another team slot.</small><button type="button" data-td77-evolve-slot="${conflict.slot}">Plan evolution in ${safe(td41PokemonLabel(conflict.member.name))}’s slot</button></div>`:'';
+ const remove=selected?`<button type="button" class="td774-secondary td78-remove-stage" data-td78-remove-stage ${priorPlan.locked||state.approved?'disabled':''}>Remove</button>`:'';
  const actionLabel=selected?'Selected':endpoints.length?'Keep '+td41PokemonLabel(d.name):conflict&&route?'Obtain another '+td41PokemonLabel(d.name):'Select '+td41PokemonLabel(d.name);
- host.innerHTML=`<div class="td43-candidate" data-td77-preview-context><div class="td43-candidate-pick" tabindex="0">${recommendationHeader(d,activePlan,{action:selected?'✓ Selected':''})}</div>${comparison}<div data-td77-preview-route>${routeEditor(manualCandidate,selected?'confirmed':'preview')}</div>${selected?'':coverageDisclosure(i,d)}${conflictNotice}${earlierStage(d,priorPlan)?'<small class="td41-warn">'+safe(td41PokemonLabel(d.name))+' is an earlier evolutionary stage of planned '+safe(td41PokemonLabel(priorPlan.name))+'.</small>':''}${familyWarning?'<small class="td63-danger td77-family-warning">This evolutionary family is already represented in the plan.</small>':''}${evolution} ${selected?'':`<div class="bar td774-preview-actions"><button type="button" data-td63-manual-select ${conflict&&!route?'disabled':''}>${safe(actionLabel)}</button><button type="button" class="td774-secondary" data-td77-cancel-preview>Cancel</button></div>`}</div>`;
- if(!selected&&route)recommendationAttacks(d,i,g,movesetView==='during',route).then(attacks=>{
-  if(stamp===token&&run===manualRun&&attacks)host.querySelector('.td773-coverage-body').innerHTML=candidateCoverageCopy(i,d,attacks);
- }).catch(()=>{});
+ host.innerHTML=`<div class="td43-candidate" data-td77-preview-context><div class="td43-candidate-pick" tabindex="0">${recommendationHeader(d,activePlan,{action:remove})}</div>${comparison}<div data-td77-preview-route>${routeEditor(selected?priorPlan:manualCandidate,selected?'confirmed':'preview')}</div>${selected?'':coverageDisclosure(i,d)}${conflictNotice}${earlierStage(d,priorPlan)?'<small class="td41-warn">'+safe(td41PokemonLabel(d.name))+' is an earlier evolutionary stage of planned '+safe(td41PokemonLabel(priorPlan.name))+'.</small>':''}${familyWarning?'<small class="td63-danger td77-family-warning">This evolutionary family is already represented in the plan.</small>':''}${evolution} ${selected?'':`<div class="bar td774-preview-actions"><button type="button" data-td63-manual-select ${conflict&&!route?'disabled':''}>${safe(actionLabel)}</button><button type="button" class="td774-secondary" data-td77-cancel-preview>Cancel</button></div>`}</div>`;
  refreshAcquisition();requestAnimationFrame(()=>{if(scroll&&stamp===token&&run===manualRun&&host.isConnected&&!page.hidden)host.scrollIntoView({block:'start'});});}catch{if(stamp===token&&run===manualRun)host.textContent='Pokémon data unavailable.';}}
  function manualEndpoints(start,source){
   return (pack?.mons||[]).filter(([id])=>id!==start.id&&lineage(id).has(start.id)).flatMap(([id,name,types])=>{
@@ -5643,24 +6402,27 @@ document.addEventListener('keydown',event=>{
   }).filter((entry,_,all)=>!all.some(other=>other!==entry&&lineage(other.target.id).has(entry.target.id)));
  }
  function restoreConfirmedPreview(){
-  const p=state?.slots[chosenSlot],a=ownedFor(p,chosenSlot);
-  if(p&&(p.locked||p.confirmedCandidate||!sameMon(a,p))){stageCandidate(movesetView==='during'?duringSpecies(p,chosenSlot):p.name,p.acquisitionRoute?.id,{scroll:false});return;}
+  const p=state?.slots[chosenSlot];
+  if(p){stageCandidate(movesetView==='during'?duringSpecies(p,chosenSlot):p.name,p.acquisitionRoute?.id,{scroll:false});return;}
   manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';
  }
  const filterTypes=new Set();
- let requireAllTypes=false;
- function matchesTypes(types){return !filterTypes.size||[...filterTypes][requireAllTypes?'every':'some'](type=>types?.includes(type));}
+ function matchesTypes(types){return !filterTypes.size||[...filterTypes].some(type=>types?.includes(type));}
  function updateTypeFilter(){
   const host=$('td77TypeOptions');
   const typeButtons=td77TypeTiles(gameGeneration(state.game),'data-td77-filter-type',type=>filterTypes.has(type));
-  host.innerHTML='<div class="bar"><label><input type="checkbox" id="td77RequireTypes" '+(requireAllTypes?'checked':'')+'> Match all selected types</label></div><div class="td72-move-types">'+typeButtons+'</div>';
-  $('td77TypeFilter').classList.toggle('selected',filterTypes.size>0);
-  $('td77ActiveTypes').innerHTML=filterTypes.size?[...filterTypes].map(pill).join('')+' <button type="button" data-td77-clear-types aria-label="Clear type filters">×</button>':'';
+  host.innerHTML='<div class="td72-move-types">'+typeButtons+'</div>';
+  td78FilterState($('td77TypeFilter'),host,filterTypes.size);
+  $('td77ActiveTypes').innerHTML=td78FilterBadges(filterTypes);
  }
  function applyTypeFilter(){
   updateTypeFilter();findCandidates();
   if($('td4Search').value.trim().length>=2)$('td4Search').dispatchEvent(new Event('input'));
  }
+ $('td77TypeOptions').addEventListener('click',event=>{
+  if(!event.target.closest('[data-td78-clear-filters]'))return;
+  filterTypes.clear();applyTypeFilter();$('td77TypeFilter').focus({preventScroll:true});
+ });
  $('td77TypeFilter').onclick=()=>{
   const host=$('td77TypeOptions');
   host.hidden=!host.hidden;
@@ -5677,7 +6439,13 @@ document.addEventListener('keydown',event=>{
  $('td77TypeOptions').addEventListener('keydown',event=>{
   if(event.key==='Escape'){closeTypeFilter();$('td77TypeFilter').focus();}
  });
- $('td77ActiveTypes').onclick=e=>{if(e.target.closest('[data-td77-clear-types]')){filterTypes.clear();applyTypeFilter();}};
+ $('td77ActiveTypes').onclick=e=>{
+  const badge=e.target.closest('[data-td78-filter-value]');
+  if(!badge)return;
+  filterTypes.delete(badge.dataset.td78FilterValue);
+  applyTypeFilter();
+  $('td77TypeFilter').focus({preventScroll:true});
+ };
  $('td77TypeOptions').onclick=e=>{
   const button=e.target.closest('[data-td77-filter-type]');
   if(!button)return;
@@ -5685,7 +6453,6 @@ document.addEventListener('keydown',event=>{
   if(filterTypes.has(type))filterTypes.delete(type);else filterTypes.add(type);
   applyTypeFilter();
  };
- $('td77TypeOptions').onchange=e=>{if(e.target.id==='td77RequireTypes'){requireAllTypes=e.target.checked;applyTypeFilter();}};
  search($('td4Search'),$('td4SearchResults'),stageCandidate,name=>{
   if(!filterTypes.size)return true;
   const row=pack?.mons?.find(mon=>mon[1]===name);
@@ -5705,11 +6472,14 @@ document.addEventListener('keydown',event=>{
    window.scrollTo({top:window.scrollY+rowTop-inset-gap,behavior:'instant'});
   }));
  }
- async function choose(n,routeChoice,duringTarget){
+ let selectionRun=0;
+ async function choose(n,routeChoice,duringTarget,keptStage=null){
   if(state.approved||!n)return;
-  const my=token,i=chosenSlot,run=++rankRun,g=state.game,view=movesetView;
-  const previous=state.slots[i],member=ownedFor(previous,i);
-  const current=()=>my===token&&run===rankRun&&i===chosenSlot&&!state.approved&&view===movesetView;
+  const my=token,i=chosenSlot,run=++selectionRun,g=state.game,view=movesetView;
+  const previous=state.slots[i],member=keptStage?matchingIdentity(keptStage,actual()?.pokemon||[]):ownedFor(previous,i);
+  const current=()=>my===token&&run===selectionRun&&i===chosenSlot&&!state.approved&&view===movesetView&&
+   (!keptStage||state.independentSlots?.[i]?.during===keptStage)&&state.slots[i]?.id===previous?.id&&state.slots[i]?.duringTargetId===previous?.duringTargetId&&
+   state.slots[i]?.acquisitionRoute?.id===previous?.acquisitionRoute?.id;
   $('td4SearchResults').hidden=true;
   try{
    const selected=await details(n,g);
@@ -5720,40 +6490,37 @@ document.addEventListener('keydown',event=>{
    }
    const selectedLine=lineage(selected.id),previousLine=lineage(previous?.id);
    const family=!!previous&&[...selectedLine].some(id=>previousLine.has(id));
-   const related=!!previous&&(selectedLine.has(previous.id)||previousLine.has(selected.id));
-   const ownedPath=member&&previousLine.has(Number(member.id))&&
-    (!previous.acquisitionRoute||chosenRoute(previous,true,i)?.initial.kind==='owned');
-   if(ownedPath&&family&&!selectedLine.has(Number(member.id))){
+   const stages=state.independentSlots?.[i];
+   const independent=Boolean(stages)||view==='during'&&!family||
+    !family&&Boolean(previous?.duringTargetId||previous?.explicitOwned);
+   const memberStage=member?.id??previous?.fulfilledStage;
+   const ownedPath=previous&&memberStage&&previousLine.has(Number(memberStage))&&
+    (previous.fulfilledPid!=null||!previous.acquisitionRoute||chosenRoute(previous,true,i)?.initial.kind==='owned');
+   const explicitDuring=view==='during'?(duringTarget??selected.id):undefined;
+   if(ownedPath&&family&&(!selectedLine.has(Number(memberStage))||
+      explicitDuring&&!lineage(explicitDuring).has(Number(memberStage)))){
     say('Choose an evolution of the owned Pokémon.');
     return;
    }
    let target=selected;
-   let duringId=duringTarget;
+   let duringId=family?previous.duringTargetId:undefined;
    if(view==='during'){
-    duringId??=selected.id;
+    duringId=explicitDuring;
     if(family&&selected.id===duringId&&previousLine.has(duringId))target=previous;
-    else if(family&&!related&&!duringTarget&&
-     !confirm('Use '+pretty(selected.name)+' for During game and replace the incompatible Final branch? Manual moves will be kept for review.'))return;
-   }else if(related){
-    duringId=previous.duringTargetId;
-    if(!duringId&&!ownedPath&&previous.id!==selected.id&&selectedLine.has(previous.id))duringId=previous.id;
-    if(duringId&&!selectedLine.has(duringId)){
-     say('Choose a compatible During game evolution first.');
-     return;
-    }
-   }else if(family&&previous.duringTargetId){
-    if(!selectedLine.has(previous.duringTargetId)){
-     say('Choose a compatible During game evolution first.');
-     return;
-    }
-    duringId=previous.duringTargetId;
+    else if(family&&!previousLine.has(duringId)&&!lineage(duringId).has(previous.id)&&
+     !await td78Confirmation('Replace the incompatible Final evolution?', 'Use '+pretty(selected.name)+' during the game. Manual moves stay available for review.','Replace'))return;
+   }else if(duringId&&!selectedLine.has(duringId)){
+    if(!await td78Confirmation('Clear the incompatible During game evolution?', 'Use '+pretty(selected.name)+' for Final. Manual moves stay available for review.','Replace'))return;
+    duringId=undefined;
    }
-   if(previous?.locked&&!family&&!confirm('Replace this locked Pokémon?'))return;
-   const routes=routeOptions(target,true,i);
+   if(previous?.locked&&!family&&!await td78Confirmation('Replace this locked Pokémon?','','Replace'))return;
+   const routes=routeOptions(target,family,i,keptStage?member:undefined);
    const compatible=routes.filter(path=>!duringId||routeIncludesStage(path,duringId));
-   const route=compatible.find(path=>path.id===routeChoice?.id)||
-    compatible.find(path=>path.id===previous?.acquisitionRoute?.id)||compatible[0];
-   if(duringId&&routes.length&&!route){
+   const route=compatible.find(path=>path.id===(routeChoice?.id||keptStage?.acquisitionRoute?.id))||
+    compatible.find(path=>path.id===previous?.acquisitionRoute?.id)||
+    compatible.find(path=>path.initial.kind!=='link-trade'&&routeFits(path))||
+    compatible.find(path=>routeFits(path))||compatible[0];
+   if(duringId&&duringId!==target.id&&!route){
     say('No acquisition path supports both planned stages.');
     return;
    }
@@ -5767,11 +6534,14 @@ document.addEventListener('keydown',event=>{
    const sameFinal=sameMon(previous,target);
    const final=sameFinal?{plannedMoves:previous.plannedMoves,finalAutoMoves:previous.finalAutoMoves}:
     family?reviseAutomaticMoves(previous,result.moves):{plannedMoves:result.moves,finalAutoMoves:result.moves.map(finalMoveStamp)};
-   const during=family?reviseAutomaticMoves({
-    plannedMoves:previous.duringMoves,finalManualSlots:previous.duringManualSlots
-   },generated,previous.duringAutoMoves):{plannedMoves:generated,finalAutoMoves:generated.map(finalMoveStamp)};
-   const origin=previous?.originPid!=null||previous?.originName?previous:
-    fromTeam(member,actual()?.pokemon?.indexOf(member)??i);
+   const priorDuring=previous&&duringSpecies(previous,i);
+   const during=family&&Array.isArray(previous.duringMoves)&&priorDuring===intermediate.name?
+    {plannedMoves:previous.duringMoves,finalAutoMoves:previous.duringAutoMoves}:
+    family?reviseAutomaticMoves({
+     plannedMoves:previous.duringMoves,finalManualSlots:previous.duringManualSlots
+    },generated,previous.duringAutoMoves):{plannedMoves:generated,finalAutoMoves:generated.map(finalMoveStamp)};
+   const origin=keptStage||(family?(previous?.originPid!=null||previous?.originName?previous:
+    fromTeam(member,actual()?.pokemon?.indexOf(member)??i)):null);
    manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();
    improvementType='';
    const applied={...candidate,...final,confirmedCandidate:true,milestone:previous?.milestone||'',
@@ -5779,92 +6549,60 @@ document.addEventListener('keydown',event=>{
     duringMoves:during.plannedMoves,duringAutoMoves:during.finalAutoMoves,duringSpecies:intermediate.name,duringTargetId:duringId,
     finalLearnset:learnsetFor(result.target),
     finalManualSlots:family?previous.finalManualSlots:undefined,duringManualSlots:family?previous.duringManualSlots:undefined,
-    fulfilledPid:family&&eligibleAcquisition({...candidate,duringTargetId:duringId,confirmedCandidate:true},member)?previous?.fulfilledPid:undefined,
-    originPid:origin?.originPid,originName:origin?.originName,originSlot:origin?.originSlot,locked:family&&!!previous.locked};
-   if(applied.fulfilledPid!=null)applied.fulfilledStage=member.id;
-   state.slots[i]=applied;state.editorSlot=i;persist();
+    fulfilledPid:family&&previous.fulfilledPid!=null&&lineage(target.id).has(Number(memberStage))?previous.fulfilledPid:undefined,
+    originPid:origin?.originPid,originName:origin?.originName,originSlot:origin?.originSlot,explicitOwned:origin?.explicitOwned,locked:family&&!!previous.locked};
+   if(applied.fulfilledPid!=null)applied.fulfilledStage=memberStage;
+   if(independent){
+    captureStage();
+    const other=stages?stages[view==='during'?'final':'during']:previous;
+    separateStages(i,view==='during'?applied:other,view==='final'?applied:other);
+   }else state.slots[i]=applied;
+   state.editorSlot=i;reconcileOwnership();persist();
    $('td4Edit').hidden=false;render();$('td4Search').value='';lookup=applied;
-   $('td4CandidateStatus').textContent='';$('td4Clear').hidden=false;renderMoveSlots();refreshMoveInfo();
+   $('td4CandidateStatus').textContent='';renderMoveSlots();refreshMoveInfo();
    if(settings.open)restoreConfirmedPreview();
    findCandidates();scrollToAppliedSlot(i,my,applied);
   }catch{
    if(current())$('td4CandidateStatus').textContent='Pokémon data unavailable.';
   }
  }
- $('td4Clear').onclick=async()=>{const i=chosenSlot,original=ownedFor(state.slots[i],i),g=state.game,stamp=token;if(state.approved||!state.slots[i]||!confirm(original?'Reset this planned Pokémon and its moves to your current team?':'Clear this planned slot?'))return;++rankRun;const restored=fromTeam(original,i);if(restored){
-  restored.plannedMoves=restored.plannedMoves.map(m=>({...m,purpose:m.move?'keep':'review'}));
-  restored.duringMoves=restored.plannedMoves.map(move=>({...move}));
-  delete restored.autoOwnedPending;
- }state.slots[i]=restored;manualCandidate=null;++manualRun;$('td63ManualCandidate').innerHTML='';closeMoveSuggestions();lookup=restored;persist();render();$('td4Search').value='';$('td4SearchResults').hidden=true;$('td4Clear').hidden=!restored;renderMoveSlots();refreshMoveInfo();if(restored){try{const d=await details(restored.name,g);if(stamp!==token||state.slots[i]!==restored)return;state.slots[i]={...restored,...d};persist();render();if(i===chosenSlot)renderMoveSlots()}catch{}}if(stamp===token&&i===chosenSlot)findCandidates();};
- function candidateDelta(before,after,g){const a=metrics(before,g),b=metrics(after,g),types=ps=>[...new Set(ps.flatMap(p=>p?.types||[]))],unique=types(before),next=types(after),added=b.covered.filter(t=>!a.covered.includes(t)),lost=a.covered.filter(t=>!b.covered.includes(t)),lostTypes=unique.filter(t=>!next.includes(t)),roles=ps=>new Set(ps.flatMap(roleTags)),oldRoles=roles(before),newRoles=roles(after),lostRoles=[...oldRoles].filter(r=>!newRoles.has(r)),compatible=ps=>new Set(ps.flatMap(p=>p?.hms||[])),oldHM=compatible(before),newHM=compatible(after),lostHM=[...oldHM].filter(h=>!newHM.has(h));return {added,lost,lostTypes,lostRoles,lostHM,newTypes:next.filter(t=>!unique.includes(t))}}
+ $('td4Clear').onclick=async()=>{
+  const i=chosenSlot,p=state.slots[i],view=movesetView,stamp=token;
+  if(!p||p.locked||state.approved||!displayedMoves(p).some(move=>move?.move||goal(move)))return;
+  const label=view==='during'?'During game':'Final';
+  if(!await td78Confirmation('Reset '+label+' moveset?', 'This clears the planned moves for this stage.','Reset')||
+   stamp!==token||i!==chosenSlot||view!==movesetView||p!==state.slots[i]||p.locked)return;
+  p[view==='during'?'duringMoves':'plannedMoves']=moveSlots({});
+  p[view==='during'?'duringManualSlots':'finalManualSlots']=[true,true,true,true];
+  delete p[view==='during'?'duringAutoMoves':'finalAutoMoves'];
+  delete p.autoOwnedPending;
+  persist();render();renderMoveSlots();refreshMoveInfo();
+ };
  function coverageSnapshot(party,g){
   const gen=gameGeneration(g),types=typesFor(g);
-  const attacks=party.flatMap(({attacks})=>attacks);
+  const stabTypes=[...new Set(party.flatMap(p=>p.types||[]))];
   return {
-   defense:types.filter(type=>party.some(({mon})=>matchupDefense(mon,type,gen)<1)),
-   offense:types.filter(type=>attacks.some(move=>matchup(move.type,[type],gen)>1)),
-   stabTypes:types.filter(type=>attacks.some(move=>move.stab&&move.type===type)),
-   stabCoverage:types.filter(type=>attacks.some(move=>move.stab&&matchup(move.type,[type],gen)>1))
+   defense:types.filter(type=>party.some(p=>matchup(type,p.types,gen)<1)),
+   stabTypes,
+   stabCoverage:types.filter(type=>stabTypes.some(attack=>matchup(attack,[type],gen)>1))
   };
  }
- function candidateCoverageCopy(index,mon,attackTypes){
-  const rows=state.slots.flatMap((plan,i)=>{
-   if(!plan)return [];
-   const learner=movesetView==='during'?duringLearner(plan,i):plan;
-   const allowed=(movesetView==='during'?learner:finalLearner(plan)).legalMoves;
-   const attacks=displayedMoves(plan).map(goal).filter(name=>!allowed||allowed.includes(name)).map(info).filter(damaging)
-    .map(move=>({type:move.type,stab:learner.types?.includes(move.type)}));
-   return [{i,mon:learner,attacks}];
-  });
-  const candidate={mon,attacks:(attackTypes||[]).map(type=>({type,stab:mon.types.includes(type)}))};
-  const before=coverageSnapshot(rows,state.game);
-  const after=coverageSnapshot([...rows.filter(row=>row.i!==index),candidate],state.game);
-  const labels={defense:'Defensive coverage',offense:'Potential offensive coverage',
-   stabTypes:'STAB attack types',stabCoverage:'Potential super-effective STAB'};
-  const groups=Object.entries(labels).flatMap(([key,label])=>{
-   if(key!=='defense'&&!attackTypes)return [];
-   const gained=after[key].filter(type=>!before[key].includes(type));
-   const lost=before[key].filter(type=>!after[key].includes(type));
-   if(key==='stabCoverage')return [
-    [label,gained.filter(type=>!before.offense.includes(type)),lost],
-    ['Existing coverage gains STAB',gained.filter(type=>before.offense.includes(type)),[]]
-   ];
-   return [[label,gained,lost]];
-  }).filter(([,gained,lost])=>gained.length||lost.length);
-  if(!state.slots[index]){
-   const short=['Defense','Potential offense','STAB types','Potential SE STAB','Coverage gains STAB'];
-   const names=[...Object.values(labels),'Existing coverage gains STAB'];
-   const gains=groups.filter(([,types])=>types.length);
-   return gains.length?`<div class="td774-gains">${gains.map(([label,types])=>
-    `<section><h4 title="${label}">${short[names.indexOf(label)]}</h4><div>${types.map(pill).join('')}</div></section>`).join('')}</div>`:
-    `<small>${attackTypes?'No coverage gained':'No defensive gains. Move coverage may still be loading or unverified.'}</small>`;
-  }
+ function candidateCoverageCopy(index,mon){
+  const rows=state.slots.map((plan,i)=>plan&&(movesetView==='during'?duringLearner(plan,i):plan));
+  const before=coverageSnapshot(rows.filter(Boolean),state.game);
+  rows[index]=mon;
+  const after=coverageSnapshot(rows.filter(Boolean),state.game);
+  const labels={defense:'Defensive coverage',stabTypes:'STAB types',stabCoverage:'Potential super-effective STAB'};
+  const groups=Object.entries(labels).map(([key,label])=>[
+   label,after[key].filter(type=>!before[key].includes(type)),before[key].filter(type=>!after[key].includes(type))
+  ]).filter(([,gained,lost])=>gained.length||lost.length);
   const badges=types=>types.length?types.map(pill).join(''):'<span aria-label="None">—</span>';
   return groups.length?`<div class="td773-coverage-grid"><span class="td41-good">+ Gained</span><span class="td63-danger">− Lost</span>
    ${groups.map(([label,gained,lost])=>`<section><h4>${label}</h4><div>${badges(gained)}</div><div>${badges(lost)}</div></section>`).join('')}</div>`:
-   `<small>${attackTypes?'No coverage changes':'No defensive changes. Move coverage may still be loading or unverified.'}</small>`;
+   '<small>No type coverage changes</small>';
  }
  function coverageDisclosure(index,mon,open=false){
-  return `<details class="td773-coverage td773-disclosure"${open?' open':''}><summary><span>${state.slots[index]?'Coverage changes':'Coverage gained'}</span></summary><div class="td773-coverage-body">${candidateCoverageCopy(index,mon,null)}</div></details>`;
- }
- async function recommendationAttacks(mon,slot,g,during,route){
-  if(!route)return null;
-  const deadline=during?Math.min(deadlineRank()??9,Math.max(window.td62Progress.rank(effectiveProgress())??0,route.rank??0)):
-   deadlineRank()??9;
-  const candidate=await details(mon.name,g);
-  const steps=route.steps.slice(0,-1);
-  const earlier=route.steps.length?await Promise.all([route.startName,...steps.map(step=>step.name)].map(name=>details(name,g))):[];
-  const pool=collectMoveRoutes(candidate,slot,g,during,earlier,route,deadline,{requiredTraining:Math.max(1,...route.steps.map(step=>step.level||1))});
-  if(!pool)return null;
-  const moveKeys=[...pool.routes.keys()];
-  const known=await Promise.all(moveKeys.map(async name=>{
-   const key=g+':'+name;
-   const move=moveInfo.get(key)||await enrichMove({name:pretty(name)},gameGeneration(g),g).catch(()=>null);
-   if(move?.type&&move.damageClass)moveInfo.set(key,move);
-   return move;
-  }));
-  if(known.some(move=>!move?.type||!move.damageClass))return null;
-  return [...new Set(known.filter(damaging).map(move=>move.type))];
+  return `<details class="td773-coverage td773-disclosure"${open?' open':''}><summary><span>${state.slots[index]?'Coverage changes':'Coverage gained'}</span></summary><div class="td773-coverage-body">${candidateCoverageCopy(index,mon)}</div></details>`;
  }
  function recommendationHeader(mon,prior,{rank,action=''}={}){
   const bst=p=>p?.baseStats&&Object.values(p.baseStats).reduce((n,x)=>n+x,0);
@@ -5874,7 +6612,7 @@ document.addEventListener('keydown',event=>{
   return `<img loading="lazy" src="${safe(sprite(mon))}" alt=""><span class="td43-candidate-copy"><strong>${rank?'#'+rank+' · ':''}${safe(td41PokemonLabel(mon.name))}</strong><span class="pills">${mon.types.map(pill).join('')}</span></span><span class="td773-candidate-meta">${action?`<span class="td772-preview-label">${action}</span>`:''}${total?`<small>BST ${total}${delta}</small>`:''}</span>`;
  }
  function compositionValue(party,game){
-  const gen=gameGeneration(game),m=metrics(party,game);
+  const m=metrics(party,game,true);
   const typings=new Map(),roles={physical:0,special:0};
   let defense=0,overlap=0,quality=0;
   for(const p of party){
@@ -5908,7 +6646,8 @@ document.addEventListener('keydown',event=>{
    [key,cities&&key.startsWith('badge-')?'After Gym '+key.slice(6)+' · '+cities[Number(key.slice(6))-1]:label]);
   $('td77Availability').innerHTML='<option value="actual">Current actual progression</option>'+
    deadlines.map(([key,label])=>`<option value="${key}">${safe(label)}</option>`).join('')+'<option value="postgame">Including postgame</option>';
-  $('td77Availability').value=deadlines.some(([key])=>key===state.deadline)?state.deadline:state.deadline==='actual'||state.deadline==='postgame'?state.deadline:'pre-league';
+  const selected=state.stageDeadlines?.[movesetView]??state.deadline;
+  $('td77Availability').value=deadlines.some(([key])=>key===selected)?selected:selected==='actual'||selected==='postgame'?selected:'pre-league';
   $('td77Legendary').checked=!!state.includeLegendary;
  }
  function deadlineRank(){
@@ -5951,23 +6690,26 @@ document.addEventListener('keydown',event=>{
   };
   for(const [slot,p] of state.slots.entries()){
    if(!p)continue;
-   const member=ownedFor(p,slot),learner=finalLearner(p);
-   const route=chosenRoute(p,true,slot),timing=acquisition(learner,false);
+   const during=movesetView==='during';
+   const member=ownedFor(p,slot),learner=during?duringLearner(p,slot):finalLearner(p);
+   const route=routeForLearner(chosenRoute(p,true,slot),learner,during);
+   const timing=acquisition(learner,false);
    const completedStage=p.fulfilledStage||(route?.initial.kind==='owned'?member?.id:0);
    const completed=completedStage?route?.steps.findIndex(step=>step.id===completedStage)??-1:-1;
-   const evolved=Number(completedStage)===Number(p.id);
+   const evolved=Number(completedStage)===Number(learner.id);
    const projected=route?!routeFits(route,cap):timing.rank>deadline;
    const needs=route?route.steps.slice(completed+1).filter(step=>step.resource).map(step=>({item:step.resource,requirement:step.requirement})):
     p.acquisitionRoute?[]:[{item:data.evolutionItem(timing),requirement:timing.path?.requirement}].filter(step=>step.item);
-   const mon=td41PokemonLabel(p.name);
+   const mon=td41PokemonLabel(learner.name);
    if(!evolved)for(const {item,requirement} of needs){
     const source=requirement?.split(' in ').at(1);
     claims.push({item,member:mon,projected,source});
    }
-   for(const move of new Set((p.plannedMoves||[]).map(goal).filter(Boolean))){
+   const moves=displayedMoves(p);
+   for(const move of new Set(moves.map(goal).filter(Boolean))){
     if(retainsMove(p,learner,move,slot,route))continue;
     const methods=learner.learnMethods?.[move]||[];
-    const reminder=p.plannedMoves.some(m=>goal(m)===move&&m.reminderFor===move)||
+    const reminder=moves.some(m=>goal(m)===move&&m.reminderFor===move)||
      lineage(learner.id).size>1&&methods.length&&methods.every(([method,level])=>method==='level-up'&&level===1);
     if(reminder)spend('Heart Scale',1,projected||deadline<5,mon);
     if(!methods.length||!methods.every(([method])=>method==='tutor'))continue;
@@ -6018,6 +6760,12 @@ document.addEventListener('keydown',event=>{
    }
   }
   return copies;
+ }
+ function routeForLearner(route,learner,during){
+  if(!during||!route)return route;
+  const index=route.steps.findIndex(step=>step.id===learner.id);
+  return {...route,steps:route.steps.slice(0,index+1),rank:Math.max(route.initial.rank,
+   ...route.steps.slice(0,index+1).map(step=>step.rank||0))};
  }
  function collectMoveRoutes(p,slot,g,during,earlier,selected,deadline,{levelLimit=null,wanted=null,requiredTraining=1}={}){
   const progress=window.td62Progress;
@@ -6187,11 +6935,6 @@ document.addEventListener('keydown',event=>{
    Math.max(earlier.baseStats?.attack||0,earlier.baseStats?.['special-attack']||0)>=
    Math.max(later.baseStats?.attack||0,later.baseStats?.['special-attack']||0)+20;
  }
- function rankFamilyEndpoints(eligible,cap){
-  const feasible=eligible.filter(candidate=>candidate.routes?.some(route=>routeFits(route,cap)));
-  return eligible.filter(p=>p.earlierChoice||!feasible.some(q=>p!==q&&lineage(q.id).has(p.id)&&
-   !distinctEarlier(p,q)&&q.score>=p.score-10));
- }
  let recommendationContext='';
  const expandedRecommendations=new Map();
  async function findCandidates(){
@@ -6200,7 +6943,7 @@ document.addEventListener('keydown',event=>{
   const candidates=$('td4Candidates');
   const selectedPlan=state.slots[i];
   const context=JSON.stringify([token,i,g,movesetView,selectedPlan?.id,selectedPlan?.duringTargetId,selectedPlan?.acquisitionRoute?.id,
-   deadlineRank(),[...filterTypes].sort(),requireAllTypes,state.includeLegendary,improvementType]);
+   deadlineRank(),[...filterTypes].sort(),state.includeLegendary,improvementType]);
   if(recommendationContext!==context)expandedRecommendations.clear();
   recommendationContext=context;
   candidates.innerHTML='';
@@ -6215,33 +6958,25 @@ document.addEventListener('keydown',event=>{
   const original=state.slots.flatMap((p,j)=>p?[during?duringLearner(p,j):p]:[]);
   const base=state.slots.flatMap((p,j)=>p&&j!==i?[during?duringLearner(p,j):p]:[]);
   const used=new Set(base.map(p=>p.id));
-  const selectedId=during?plan?.duringTargetId:plan?.id;
-  if(selectedId)used.add(selectedId);
+  if(plan)used.add(during?duringLearner(plan,i).id:plan.id);
   const owned=[ownedFor(plan,i)].filter(Boolean);
   const otherSlots=state.slots.filter((p,j)=>p&&j!==i);
   const cap=deadlineLevel();
   const opposition=leagueTargets(g);
   const covered=party=>opposition.reduce((sum,t)=>sum+t.rows.filter(o=>o.types?.length&&party.some(p=>p.types?.some(type=>matchup(type,o.types,gameGeneration(g))>1))).length,0);
   const limit=deadlineRank()??9;
-  const currentLeague=leagueCoverage(original,g).reduce((sum,r)=>sum+r.covered,0);
+  const currentLeague=covered(original);
   let index;
   try{index=await plannerIndex();}catch{if(valid())host.textContent='Recommendation index unavailable.';return;}
   if(!valid())return;
   const gen=gameGeneration(g),eligible=[];
-  const moveGroup=({'red-blue':1,yellow:2,'gold-silver':3,crystal:4,'ruby-sapphire':5,emerald:6,
-   'firered-leafgreen':7,'diamond-pearl':8,platinum:9,'heartgold-soulsilver':10,'black-white':11,'black-2-white-2':14,
-   'x-y':15,'omega-ruby-alpha-sapphire':16,'sun-moon':17,'ultra-sun-ultra-moon':18,'sword-shield':20,
-   'brilliant-diamond-and-shining-pearl':23,'scarlet-violet':25})[vg[g]];
-  const teammates=state.slots.flatMap((member,j)=>j===i?[]:displayedMoves(member).map(goal));
-  const rosterCoverage=coverageFor(teammates).types;
   const selected=plan&&during?duringLearner(plan,i):plan;
-  const selectedCoverage=coverageFor(displayedMoves(plan).map(goal)).types;
   const baseline=compositionValue(original,g);
-  const uncovered=typesFor(g).filter(type=>!rosterCoverage.includes(type));
-  const indexedTypes=['normal','fire','water','electric','grass','ice','fighting','poison','ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy'];
+  const before=coverageSnapshot(original,g);
   const actualMember=ownedFor(selected,i);
-  const pressure=metrics(base,g).weak.filter(row=>row.severity==='uncovered');
-  for(const [id,name,types,,parent] of pack.mons){
+  const pressure=metrics(base,g,true).weak.filter(row=>row.severity==='uncovered');
+  buildLineageIndex();
+  for(const [id,name,types,,parent] of terminalSpecies){
    const row=index[id];
    if(!row||used.has(id)||!types?.length||!matchesTypes(types)||improvementType&&matchup(improvementType,types,gen)>=1||!td7PokemonAllowed(name,id,g)||row[0]&&!$('td77Legendary').checked)continue;
    const evidence=window.takDexAcquisitionV64.details(pack,id);
@@ -6249,21 +6984,14 @@ document.addEventListener('keydown',event=>{
    if(!timing.confirmed&&timing.kind!=='owned'&&!evidence.verified&&!evidence.nativeEvolution&&!pack.entries?.[id]?.length)continue;
    if((timing.kind!=='owned'&&alreadyClaimsSpecies({id},otherSlots,g))||!candidateInWindow(timing)||evidence.notes?.some(note=>note.eventOnly)&&!timing.confirmed)continue;
    const p={id,name,types,parent,timing,baseStats:indexedStats(row,gen)};
-   const earlierChoice=during&&plan&&lineage(plan.id).has(p.id);
-   if(!earlierChoice&&(otherSlots.some(q=>redundantFamily(p,q))||redundantDowngrade(p,selected)))continue;
+   if(otherSlots.some(q=>redundantFamily(p,q))||redundantDowngrade(p,selected))continue;
    p.routes=routeOptions(p);
    if(p.routes.length&&!p.routes.some(route=>routeFits(route,cap)))continue;
    const after=[...base,p];
    const leagueGain=covered(after)-currentLeague;
-   const immunities=['levitate','flash-fire','water-absorb','volt-absorb','sap-sipper'].filter(ability=>row[3].includes(ability)).length;
-   const attacks=indexedTypes.filter((_,bit)=>row[4]?.[moveGroup]&(1<<bit));
-   const canCover=type=>attacks.some(moveType=>matchup(moveType,[type],gen)>1);
-   const gated=row[5]?.[moveGroup]||{};
-   const gatedMask=Object.entries(gated).reduce((mask,[rank,types])=>Number(rank)<=limit?mask|types:mask,0);
-   const machineTypes=indexedTypes.filter((_,bit)=>gatedMask&(1<<bit));
-   const coverageWeight=type=>canCover(type)?1:machineTypes.some(moveType=>matchup(moveType,[type],gen)>1) ? .7:0;
-   const usableCoverage=uncovered.reduce((sum,type)=>sum+coverageWeight(type),0);
-   const lostCoverage=selectedCoverage.filter(type=>!rosterCoverage.includes(type)).reduce((sum,type)=>sum+1-coverageWeight(type),0);
+   const newCoverage=coverageSnapshot(after,g).stabCoverage;
+   const gainedCoverage=newCoverage.filter(type=>!before.stabCoverage.includes(type)).length;
+   const lostCoverage=before.stabCoverage.filter(type=>!newCoverage.includes(type)).length;
    const addressed=pressure.filter(row=>matchup(row.type,types,gen)<1);
    const addsPressure=pressure.filter(row=>matchup(row.type,types,gen)>1);
    const evolvesSelected=!!selected&&lineage(id).has(selected.id)&&id!==selected.id;
@@ -6272,16 +7000,16 @@ document.addEventListener('keydown',event=>{
    const parts={
     composition:compositionValue(after,g)-baseline,
     defense:addressed.reduce((sum,row)=>sum+row.weak*4,0)-addsPressure.reduce((sum,row)=>sum+row.weak*3,0),
-    moves:usableCoverage*2.5-lostCoverage*4,
+    stab:gainedCoverage*2.5-lostCoverage*4,
     quality:qualityGain,
     league:leagueGain*.7,
-    utility:immunities*1.4-(timing.rank??8)*.35,
+    timing:-(timing.rank??8)*.35,
     effort:-acquisitionEffort(p,timing,actualMember)
    };
-   eligible.push({...p,evolvesSelected,earlierChoice,parts,addressed,addsPressure,lostCoverage,score:Object.values(parts).reduce((sum,n)=>sum+n,0)});
+   eligible.push({...p,evolvesSelected,parts,addressed,addsPressure,lostCoverage,score:Object.values(parts).reduce((sum,n)=>sum+n,0)});
 
   }
-  ranked=rankFamilyEndpoints(eligible,cap).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name));
+  ranked=eligible.sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name));
   host.textContent=ranked.length?ranked.length+(state.slots[i]?' replacement options':' candidates'):'No candidates match these filters.';
   let from=0;
   const append=()=>{
@@ -6290,22 +7018,11 @@ document.addEventListener('keydown',event=>{
    candidates.querySelector('[data-td77-more-candidates]')?.remove();
    const current=state.slots[i];
    const active=current&&movesetView==='during'?duringLearner(current,i):current;
-   const batch=ranked.slice(from,from+24),view=movesetView;
+   const batch=ranked.slice(from,from+24);
    candidates.insertAdjacentHTML('beforeend',batch.map((p,offset)=>{
     const j=from+offset;
     return `<div class="td43-candidate td772-recommendation" data-candidate-id="${p.id}" data-score="${p.score.toFixed(2)}" data-factors="${safe(JSON.stringify(p.parts))}"><button type="button" class="td43-candidate-pick" data-td4-candidate="${j}">${recommendationHeader(p,active,{rank:j+1,action:'Preview ›'})}</button>${coverageDisclosure(i,p,expandedRecommendations.get(p.id)?.[0])}${candidateAcquisition(p,expandedRecommendations.get(p.id)?.[1])}</div>`;
    }).join(''));
-   (async()=>{
-    for(let start=0;start<batch.length;start+=4){
-     if(!valid()||view!==movesetView)return;
-     await Promise.all(batch.slice(start,start+4).map(async p=>{
-      const attacks=await recommendationAttacks(p,i,g,view==='during',p.routes.find(route=>routeFits(route,cap))).catch(()=>null);
-      if(!valid()||view!==movesetView||!attacks)return;
-      const benefits=candidates.querySelector(`[data-candidate-id="${p.id}"] .td773-coverage-body`);
-      if(benefits)benefits.innerHTML=candidateCoverageCopy(i,p,attacks);
-     }));
-    }
-   })();
    from+=24;
    if(from<ranked.length){
     candidates.insertAdjacentHTML('beforeend','<button type="button" data-td77-more-candidates>Show more Pokémon ('+(ranked.length-from)+')</button>');
@@ -6326,9 +7043,20 @@ document.addEventListener('keydown',event=>{
    card.querySelector('.td773-coverage').open,card.querySelector('.td80-candidate-acquisition').open
   ]);
  },true);
- $('td77Availability').addEventListener('change',()=>{state.deadline=$('td77Availability').value;persist();render();if(!$('td4Edit').hidden){renderMoveSlots();if(settings.open)findCandidates();}});
+ $('td77Availability').addEventListener('change',()=>{
+  const fallback=state.deadline||'pre-league';
+  (state.stageDeadlines??={during:fallback,final:fallback})[movesetView]=$('td77Availability').value;
+  state.deadline=state.stageDeadlines.final;persist();render();if(!$('td4Edit').hidden){renderMoveSlots();if(settings.open)findCandidates();}});
  $('td77Legendary').addEventListener('change',()=>{state.includeLegendary=$('td77Legendary').checked;persist();findCandidates();});
  const settings=$('td4Edit').querySelector(':scope > .td42-settings');
+ const searchReturn=$('td79SearchReturn');
+ function updateSearchReturn(){
+  const input=$('td4Search').getBoundingClientRect(),results=$('td4Candidates').getBoundingClientRect();
+  searchReturn.hidden=page.hidden||$('td4Edit').hidden||!settings.open||input.bottom>0||results.height<innerHeight||results.bottom<80;
+ }
+ window.addEventListener('scroll',updateSearchReturn,{passive:true});
+ new ResizeObserver(updateSearchReturn).observe($('td4Candidates'));
+ searchReturn.onclick=()=>$('td4Search').scrollIntoView({block:'center',behavior:'smooth'});
  settings.addEventListener('toggle',()=>{
   if(settings.open&&!$('td4Edit').hidden){
    if(!$('td63ManualCandidate').textContent.trim())restoreConfirmedPreview();
@@ -6397,8 +7125,8 @@ document.addEventListener('keydown',event=>{
   else stageCandidate(p.name);
  });
 
- window.addEventListener('td74:team-saved',()=>{
-  if(!state||!plannerActive)return;
+ window.addEventListener('td74:team-saved',event=>{
+  if(!state||!plannerActive||event.detail?.teamIds&&!event.detail.teamIds.includes($('td4Team').value))return;
   reconcileOwnership();
   if(page.hidden){plannerDirty=true;return;}
   const old=$('td4Team').value;

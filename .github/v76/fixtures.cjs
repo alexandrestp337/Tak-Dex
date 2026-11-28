@@ -16,6 +16,7 @@ function bank(bytes,version,offset,sequence,level,progress,roster) {
  roster??=[{}];
  bytes[party+4]=roster.length;
  bytes[trainer+31]=version;
+ if(progress?.trainer!=null)bytes.writeUInt32LE(progress.trainer,trainer+0x14);
  for(const [index,record] of roster.entries()){
   const mon=Buffer.alloc(220);
   const personality=record.pid??0x00034003;

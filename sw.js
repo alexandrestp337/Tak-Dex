@@ -1,19 +1,100 @@
-// V70: match the actual versioned URLs requested by index.html for offline cold starts.
-const NAME='takdex-v77.2.1-stable';
+// Install the exact static shell before replacing the current worker. Regional assets load on demand.
+importScripts('./offline-data.js?v=78.0.0-stable');
+const NAME='takdex-v78.0.0-stable';
 const ART='takdex-artwork-runtime-v74-dev71';
-const FILES=['./db74/planner-v77.json?v=77.6.0','./acquisition-v77.js?v=77.9.0','./','./index.html','./styles.css?v=77.2.1-stable','./bw-core-dev5.js?v=74.0.0','./app.js?v=77.2.1-stable','./gen5-save.js?v=77.0.0','./save-sync.js?v=77.1.0','./db74/gen5-save-names.json','./db74.js?v=74.0.0','./tutor-locations.js?v=77.6.0','./v73-ui.js?v=77.2.1-stable','./hoenn-map.js?v=76.0.0','./maps.js?v=77.2.1-stable','./battle-outcomes.js?v=76.0.6','./v74-ux.js?v=77.6.0','./unova-v74.js?v=74.5.2.20261124','./bw-trainer-moves-v76.js?v=74.5.2.20261124','./unova-trainer-reference.js?v=76.0.0','./trainer-abilities-v76.js?v=76.0.3','./sprite-ids-v77.js?v=74.5.2.20261124','./platinum-league-v77.js?v=74.5.2.20261124','./unova-b2w2-v74.js?v=74.0.0','./unova-black-2-v74.jpg?v=74.6.1','./unova-white-2-v74.jpg?v=74.6.1','./unova-black-v78.jpg?v=74.8.3','./unova-white-v78.jpg?v=74.8.3','./feedback-config.js?v=74.0.0','./manifest.webmanifest','./icon-192.png','./icon-512.png','./takdex-background.webp','./takdex-background-light.webp','./takdex-radar-logo.png','./takdex-header-logo.png','./takdex-team-nav.png','./takdex-battle-nav.png','./takdex-pokedex-nav.png','./takdex-splash.png','./sinnoh-platinum-game-map.png'];
-FILES.push(...["./db74/e-alpha-sapphire.json","./db74/e-black-2.json","./db74/e-black.json","./db74/e-blue.json","./db74/e-brilliant-diamond.json","./db74/e-crystal.json","./db74/e-diamond.json","./db74/e-emerald.json","./db74/e-firered.json","./db74/e-gold.json","./db74/e-heartgold.json","./db74/e-leafgreen.json","./db74/e-moon.json","./db74/e-omega-ruby.json","./db74/e-pearl.json","./db74/e-platinum.json","./db74/e-red.json","./db74/e-ruby.json","./db74/e-sapphire.json","./db74/e-scarlet.json","./db74/e-shield.json","./db74/e-shining-pearl.json","./db74/e-silver.json","./db74/e-soulsilver.json","./db74/e-sun.json","./db74/e-sword.json","./db74/e-ultra-moon.json","./db74/e-ultra-sun.json","./db74/e-violet.json","./db74/e-white-2.json","./db74/e-white.json","./db74/e-x.json","./db74/e-y.json","./db74/e-yellow.json","./db74/index.json","./db74/machines.json","./db74/moves.json","./db74/p0.json","./db74/p1.json","./db74/p10.json","./db74/p11.json","./db74/p12.json","./db74/p13.json","./db74/p14.json","./db74/p15.json","./db74/p156.json","./db74/p157.json","./db74/p158.json","./db74/p159.json","./db74/p16.json","./db74/p160.json","./db74/p161.json","./db74/p2.json","./db74/p3.json","./db74/p4.json","./db74/p5.json","./db74/p6.json","./db74/p7.json","./db74/p8.json","./db74/p9.json"]);
-self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(NAME).then(c=>c.addAll(FILES.map(file=>new Request(file,{cache:'reload'})))))});
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>(k.startsWith('takdex-v')&&k!==NAME)||k==='takdex-artwork-v26').map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+const OPTIONAL='takdex-bundled-runtime-v78';
+const SHELL=["./","./index.html","./styles.css?v=78.0.0-stable","./manifest.webmanifest","./bw-core-dev5.js?v=74.0.0","./sprite-ids-v77.js?v=74.5.2.20261124","./unova-b2w2-v74.js?v=74.0.0","./offline-data.js?v=78.0.0-stable","./db74.js?v=78.0.0-stable","./gen5-save.js?v=77.0.0","./acquisition-v77.js?v=78.0.0-stable","./dev1-storage.js?v=78.0.0-stable","./dev1-import.js?v=78.0.0-stable","./app.js?v=78.0.0-stable","./save-sync.js?v=78.0.0-stable","./unova-v74.js?v=74.5.2.20261124","./bw-trainer-moves-v76.js?v=74.5.2.20261124","./unova-trainer-reference.js?v=76.0.0","./trainer-abilities-v76.js?v=76.0.3","./platinum-league-v77.js?v=74.5.2.20261124","./tutor-locations.js?v=78.0.0-stable","./v73-ui.js?v=78.0.0-stable","./hoenn-map.js?v=76.0.0","./maps.js?v=78.0.0-stable","./feedback-config.js?v=74.0.0","./battle-outcomes.js?v=78.0.0-stable","./v74-ux.js?v=78.0.0-stable","./db74/gen5-save-names.json","./icon-192.png","./takdex-header-logo.png","./takdex-radar-logo.png","./takdex-team-nav.png","./takdex-battle-nav.png","./takdex-pokedex-nav.png"];
+const scoped=file=>new URL(file,self.registration.scope);
+const shellUrls=new Set(SHELL.map(file=>scoped(file).href));
+const optional=path=>/^db74\/.*\.json$/.test(path)||/^[a-z0-9.-]+\.(jpg|png|webp)$/i.test(path);
+const shellCache=name=>name.startsWith('takdex-v');
+const helpers=self.takDexOfflineData;
+const scopePath=scoped('./').pathname;
+function relative(url){return url.pathname.startsWith(scopePath)?url.pathname.slice(scopePath.length):null;}
+async function validAsset(response,path){
+ if(!response?.ok)return false;
+ if(path.startsWith('db74/'))return !!await helpers.read(response.clone(),data=>helpers.bundleShape(path.split('/').at(-1),data));
+ const mime=response.headers.get('content-type')||'';
+ if(path.endsWith('.js'))return /javascript|ecmascript/i.test(mime);
+ if(path.endsWith('.css'))return /text\/css/i.test(mime);
+ if(/\.(png|jpg|webp)$/.test(path))return /^image\//i.test(mime);
+ if(!path||path.endsWith('.html'))return /text\/html/i.test(mime);
+ return true;
+}
+self.addEventListener('install',event=>event.waitUntil((async()=>{
+ // Stage every response before writing so a missing essential asset leaves the prior shell active.
+ const staged=await Promise.all(SHELL.map(async file=>{
+  const request=new Request(scoped(file),{cache:'reload'});
+  const response=await helpers.request(request,{},async response=>{
+   if(!await validAsset(response,relative(new URL(request.url))))throw Error('Invalid shell asset: '+file);
+   const body=await response.arrayBuffer();
+   if(!body.byteLength)throw Error('Empty shell asset: '+file);
+   if((file==='./'||file==='./index.html')&&!new TextDecoder().decode(body).includes('name="takdex-version" content="V78-STABLE"')){
+    throw Error('Mismatched shell version: '+file);
+   }
+   const headers=new Headers(response.headers);
+   for(const field of ['Content-Encoding','Content-Length','Transfer-Encoding'])headers.delete(field);
+   return new Response(body,{headers});
+  });
+  return [request,response];
+ }));
+ const existing=await caches.has(NAME),cache=await caches.open(NAME);
+ const results=await Promise.allSettled(staged.map(([request,response])=>cache.put(request,response)));
+ const failure=results.find(result=>result.status==='rejected');
+ if(failure){
+  if(!existing)await caches.delete(NAME);
+  throw failure.reason;
+ }
+ await self.skipWaiting();
+})()));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{
+ const old=(await caches.keys()).filter(name=>shellCache(name)&&name!==NAME);
+ // Keep the most recent rollback shell and one pre-split cache if it supplies earlier optional data.
+ let legacy;
+ for(const name of [...old].reverse()){
+  const cache=await caches.open(name);
+  const keys=await cache.keys();
+  if(keys.some(request=>/^db74\/e-/.test(relative(new URL(request.url))||''))){legacy=name;break;}
+ }
+ await Promise.all(old.filter(name=>name!==old.at(-1)&&name!==legacy).map(name=>caches.delete(name)));
+ await self.clients.claim();
+})()));
+async function runtimeAsset(request,path){
+ const cache=await caches.open(OPTIONAL);
+ if(request.cache!=='reload'&&request.cache!=='no-store'){
+  const own=await cache.match(request);
+  if(await validAsset(own,path))return own;
+  if(own)await cache.delete(request);
+  for(const name of (await caches.keys()).filter(shellCache).reverse()){
+   const saved=await(await caches.open(name)).match(request);
+   if(await validAsset(saved,path))return saved;
+  }
+ }
+ const response=await fetch(request);
+ if(await validAsset(response,path))try{await cache.put(request,response.clone());}catch{}
+ return response;
+}
 self.addEventListener('fetch',e=>{
  const u=new URL(e.request.url);
  if(e.request.method!=='GET')return;
- if(u.origin===self.location.origin){
-  if(u.pathname.endsWith('/feedback-config.js')){
-   e.respondWith((async()=>{try{const r=await fetch(e.request,{cache:'no-cache'});if(r.ok){try{await(await caches.open(NAME)).put(e.request,r.clone())}catch{}return r;}}catch{}const cached=await caches.match(e.request);return cached||new Response('window.TAKDEX_FEEDBACK_FORM_ID = "";', {headers:{'Content-Type':'application/javascript'}});})());return;
-  }
-  // Cache first: offline cold starts must not wait for a stalled network handshake.
-  e.respondWith((async()=>{const cached=await caches.match(e.request);if(cached)return cached;try{return await fetch(e.request)}catch(err){const fallback=await caches.match(e.request,{ignoreSearch:true});if(fallback)return fallback;throw err}})());
+ const path=relative(u);
+ if(u.origin===self.location.origin&&path!==null){
+  if(path==='feedback-config.js'){
+   e.respondWith((async()=>{
+    const cache=await caches.open(NAME);
+    try{
+     const r=await helpers.request(e.request,{cache:'no-cache'});
+     if(await validAsset(r,path)){try{await cache.put(e.request,r.clone());}catch{}return r;}
+    }catch{}
+    return await cache.match(e.request)||new Response('window.TAKDEX_FEEDBACK_FORM_ID = "";',{headers:{'Content-Type':'application/javascript'}});
+   })());
+  }else if(shellUrls.has(u.href)||e.request.mode==='navigate'&&['','index.html'].includes(path)){
+   e.respondWith((async()=>{
+    const cache=await caches.open(NAME);
+    const local=await cache.match(e.request)||(e.request.mode==='navigate'?await cache.match(scoped('./index.html')):null);
+    return local||fetch(e.request);
+   })());
+  }else if(optional(path))e.respondWith(runtimeAsset(e.request,path));
   return;
  }
  if(u.hostname==='raw.githubusercontent.com'&&u.pathname.startsWith('/PokeAPI/sprites/master/sprites/pokemon/')&&u.pathname.endsWith('.png')){

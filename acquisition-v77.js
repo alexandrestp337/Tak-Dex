@@ -1258,6 +1258,17 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   return false;
  }
  // Build routes from the version's audited acquisition records and encounter index.
+ function linkTradeSource(game,id,name,record){
+  if(!['Black','White','Black 2','White 2'].includes(game)||id>649||record?.kind==='event')return null;
+  // Restrict trade to verified donors: a normal Unova species, a native route,
+  // or an existing game-specific migration record for a standard species.
+  if(!(id>=495&&id<=646||
+     record?.confirmed||transferOnly(game,id,name)))return null;
+  const unlock=game.endsWith(' 2')?'Receive the C-Gear from Bianca after Aspertia Gym':
+   'Receive the C-Gear from Fennel after Striaton Gym';
+  return {kind:'link-trade',confirmed:true,rank:1,method:'link trade',
+   note:unlock+' · Requires a local Generation V partner who already owns this Pokémon',source:'gen5-local-trade-c-gear'};
+ }
  function plannerRoutes(game,target,pack,owned=[],resolve=lookup){
   if(!pack?.mons||!target?.id)return [];
   const rows=new Map();
@@ -1294,15 +1305,21 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
     const note=audited[start+i+1]?.path;
     const previous=chain[start+i]?.[1];
     const level=auditedLevelEvolutions[nextId]||0;
-    const specialMatch=note?.stage&&note.stage.toLowerCase().replaceAll(' ','-')===previous;
+    const sourceStage=note?.stage?.toLowerCase().replaceAll(' ','-');
+    const rule=nextId===604&&previous==='eelektrik'&&sourceStage==='tynamo'?{...note,requirement:'Use a Thunder Stone from Chargestone Cave'}:
+     nextId===169&&previous==='golbat'&&sourceStage==='zubat'?{...note,requirement:'Level up with high friendship'}:
+     sourceStage===previous?note:null;
     const stone=nextId===38&&['Black','White','Black 2','White 2'].includes(game);
-    const requirement=level?'Level '+level:specialMatch?note.requirement:stone?'Use a Fire Stone':'';
-    const resource=specialMatch?evolutionItem({path:note}):stone?'fire-stone':null;
+    const requirement=level?'Level '+level:rule?.requirement||(stone?'Use a Fire Stone':'');
+    const resource=rule?evolutionItem({path:rule}):stone?'fire-stone':null;
+    const friendship=/^(?:Level up with |High )?friendship(?: during the day| at night)?$/i.test(requirement);
     return requirement?{id:nextId,name:nextName,requirement,level,resource,
-     rank:specialMatch&&!level?audited[start+i+1].rank:stone?game.endsWith(' 2')?3:1:0}:null;
+     rank:rule&&!level&&!friendship?audited[start+i+1]?.rank||0:stone?game.endsWith(' 2')?3:1:0}:null;
    });
    if(steps.includes(null))continue;
    const sources=direct(row,record);
+   const traded=linkTradeSource(game,id,name,record);
+   if(traded)sources.push(traded);
    for(const p of owned.filter(p=>Number(p?.id)===id)){
     sources.push({kind:'owned',confirmed:true,rank:0,method:'already owned',minLevel:p.level,member:p.saveStats?.pid??''});
    }
@@ -1316,7 +1333,8 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
      path:steps.length?{stage:title(name),initial,requirement:steps.map(step=>step.requirement).join(' → '),level:steps.at(-1).level}:undefined});
    }
   }
-  return routes.sort((a,b)=>Number(b.initial.kind==='owned')-Number(a.initial.kind==='owned')||a.rank-b.rank||
+  return routes.sort((a,b)=>Number(b.initial.kind==='owned')-Number(a.initial.kind==='owned')||
+   Number(a.initial.kind==='link-trade')-Number(b.initial.kind==='link-trade')||a.rank-b.rank||
    a.steps.length-b.steps.length||(a.initial.minLevel||0)-(b.initial.minLevel||0)||a.id.localeCompare(b.id));
  }
  function moveReminder(game){
@@ -1450,5 +1468,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return rules;
  }
- root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
+ root.takDexAcquisitionV77={coverage:game=>['Black','White','Black 2','White 2'].includes(game)?'Curated Unova locations, requirements and evolution paths · Partial':
+  ['Platinum','HeartGold','SoulSilver','Emerald'].includes(game)?'Selected routes and progression rules · Partial':'Encounter and evolution records where indexed',
+  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
 })(globalThis);

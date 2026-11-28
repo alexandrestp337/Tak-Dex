@@ -124,5 +124,5 @@ function find(game,move){const key=String(move||'').toLowerCase().trim().replace
 function at(game,place){const normalized=String(place||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-');
   return Object.entries(data[game]||{}).flatMap(([move,records])=>records.filter(e=>e.place.toLowerCase().replace(/[^a-z0-9]+/g,'-')===normalized).map(e=>({...e,move}))).sort((a,b)=>a.move.localeCompare(b.move));
 }
-window.takDexTutorV73={find,at,source,coverage:Object.keys(data)};
+window.takDexTutorV73={inventory:game=>Object.values(data[game]||{}).reduce((total,rows)=>total+rows.length,0),find,at,source,coverage:Object.keys(data)};
 })();

@@ -1,0 +1,819 @@
+{
+  "source": "@smogon/calc@0.11.0",
+  "generation": 5,
+  "fixtures": [
+    {
+      "label": "91 HP threshold",
+      "a": {
+        "name": "Stoutland",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 160,
+          "attack": 120,
+          "defense": 110,
+          "special-attack": 65,
+          "special-defense": 110,
+          "speed": 100
+        },
+        "abilities": [
+          "sand-rush"
+        ],
+        "ability": "sand-rush",
+        "friendship": 255
+      },
+      "d": {
+        "name": "Audino",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 178,
+          "attack": 80,
+          "defense": 91,
+          "special-attack": 80,
+          "special-defense": 106,
+          "speed": 70
+        },
+        "abilities": [
+          "healer"
+        ],
+        "ability": "healer",
+        "currentHP": 90
+      },
+      "m": {
+        "name": "Return",
+        "power": 102,
+        "type": "normal",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        76,
+        78,
+        79,
+        79,
+        81,
+        81,
+        82,
+        84,
+        84,
+        85,
+        85,
+        87,
+        88,
+        88,
+        90,
+        91
+      ]
+    },
+    {
+      "label": "Base-power stage and item",
+      "a": {
+        "name": "Darmanitan",
+        "level": 50,
+        "types": [
+          "fire"
+        ],
+        "battleStats": {
+          "hp": 180,
+          "attack": 160,
+          "defense": 75,
+          "special-attack": 50,
+          "special-defense": 75,
+          "speed": 115
+        },
+        "abilities": [
+          "sheer-force"
+        ],
+        "ability": "sheer-force",
+        "heldItem": "Charcoal"
+      },
+      "d": {
+        "name": "Lucario",
+        "level": 50,
+        "types": [
+          "fighting",
+          "steel"
+        ],
+        "battleStats": {
+          "hp": 145,
+          "attack": 130,
+          "defense": 90,
+          "special-attack": 135,
+          "special-defense": 90,
+          "speed": 110
+        },
+        "abilities": [
+          "steadfast"
+        ],
+        "ability": "steadfast"
+      },
+      "m": {
+        "name": "Fire Punch",
+        "power": 75,
+        "type": "fire",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        236,
+        236,
+        240,
+        242,
+        246,
+        248,
+        252,
+        254,
+        258,
+        260,
+        264,
+        266,
+        270,
+        272,
+        276,
+        278
+      ]
+    },
+    {
+      "label": "Sheer Force with Life Orb",
+      "a": {
+        "name": "Darmanitan",
+        "level": 50,
+        "types": [
+          "fire"
+        ],
+        "battleStats": {
+          "hp": 180,
+          "attack": 160,
+          "defense": 75,
+          "special-attack": 50,
+          "special-defense": 75,
+          "speed": 115
+        },
+        "abilities": [
+          "sheer-force"
+        ],
+        "ability": "sheer-force",
+        "heldItem": "Life Orb"
+      },
+      "d": {
+        "name": "Lucario",
+        "level": 50,
+        "types": [
+          "fighting",
+          "steel"
+        ],
+        "battleStats": {
+          "hp": 145,
+          "attack": 130,
+          "defense": 90,
+          "special-attack": 135,
+          "special-defense": 90,
+          "speed": 110
+        },
+        "abilities": [
+          "steadfast"
+        ],
+        "ability": "steadfast"
+      },
+      "m": {
+        "name": "Fire Punch",
+        "power": 75,
+        "type": "fire",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        257,
+        260,
+        260,
+        265,
+        268,
+        273,
+        273,
+        276,
+        281,
+        283,
+        289,
+        289,
+        291,
+        296,
+        299,
+        304
+      ]
+    },
+    {
+      "label": "Mold Breaker bypasses Levitate",
+      "a": {
+        "name": "Haxorus",
+        "level": 50,
+        "types": [
+          "dragon"
+        ],
+        "battleStats": {
+          "hp": 151,
+          "attack": 167,
+          "defense": 110,
+          "special-attack": 80,
+          "special-defense": 90,
+          "speed": 117
+        },
+        "abilities": [
+          "mold-breaker"
+        ],
+        "ability": "mold-breaker"
+      },
+      "d": {
+        "name": "Rotom-Wash",
+        "level": 50,
+        "types": [
+          "electric",
+          "water"
+        ],
+        "battleStats": {
+          "hp": 125,
+          "attack": 85,
+          "defense": 127,
+          "special-attack": 125,
+          "special-defense": 127,
+          "speed": 106
+        },
+        "abilities": [
+          "levitate"
+        ],
+        "ability": "levitate"
+      },
+      "m": {
+        "name": "Earthquake",
+        "power": 100,
+        "type": "ground",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        100,
+        100,
+        102,
+        102,
+        104,
+        106,
+        106,
+        108,
+        108,
+        110,
+        112,
+        112,
+        114,
+        114,
+        116,
+        118
+      ]
+    },
+    {
+      "label": "Guts and burn",
+      "a": {
+        "name": "Conkeldurr",
+        "level": 50,
+        "types": [
+          "fighting"
+        ],
+        "battleStats": {
+          "hp": 180,
+          "attack": 160,
+          "defense": 115,
+          "special-attack": 75,
+          "special-defense": 85,
+          "speed": 65
+        },
+        "abilities": [
+          "guts"
+        ],
+        "ability": "guts",
+        "status": "burn"
+      },
+      "d": {
+        "name": "Stoutland",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 160,
+          "attack": 120,
+          "defense": 110,
+          "special-attack": 65,
+          "special-defense": 110,
+          "speed": 100
+        },
+        "abilities": [
+          "sand-rush"
+        ],
+        "ability": "sand-rush"
+      },
+      "m": {
+        "name": "Drain Punch",
+        "power": 75,
+        "type": "fighting",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        186,
+        188,
+        192,
+        194,
+        194,
+        198,
+        200,
+        204,
+        204,
+        206,
+        210,
+        212,
+        212,
+        216,
+        218,
+        222
+      ]
+    },
+    {
+      "label": "Burn after STAB and effectiveness",
+      "a": {
+        "name": "Stoutland",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 160,
+          "attack": 120,
+          "defense": 110,
+          "special-attack": 65,
+          "special-defense": 110,
+          "speed": 100
+        },
+        "abilities": [
+          "sand-rush"
+        ],
+        "ability": "sand-rush",
+        "status": "burn",
+        "friendship": 255
+      },
+      "d": {
+        "name": "Audino",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 178,
+          "attack": 80,
+          "defense": 106,
+          "special-attack": 80,
+          "special-defense": 106,
+          "speed": 70
+        },
+        "abilities": [
+          "healer"
+        ],
+        "ability": "healer"
+      },
+      "m": {
+        "name": "Return",
+        "power": 102,
+        "type": "normal",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        33,
+        33,
+        33,
+        33,
+        34,
+        34,
+        35,
+        35,
+        36,
+        36,
+        36,
+        36,
+        37,
+        37,
+        38,
+        39
+      ]
+    },
+    {
+      "label": "Adaptability STAB",
+      "a": {
+        "name": "Porygon-Z",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 160,
+          "attack": 100,
+          "defense": 90,
+          "special-attack": 155,
+          "special-defense": 95,
+          "speed": 110
+        },
+        "abilities": [
+          "adaptability"
+        ],
+        "ability": "adaptability",
+        "heldItem": "Choice Specs"
+      },
+      "d": {
+        "name": "Audino",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 178,
+          "attack": 80,
+          "defense": 106,
+          "special-attack": 80,
+          "special-defense": 106,
+          "speed": 70
+        },
+        "abilities": [
+          "healer"
+        ],
+        "ability": "healer"
+      },
+      "m": {
+        "name": "Tri Attack",
+        "power": 80,
+        "type": "normal",
+        "damageClass": "special",
+        "accuracy": 100
+      },
+      "rolls": [
+        134,
+        134,
+        136,
+        138,
+        140,
+        142,
+        142,
+        144,
+        146,
+        148,
+        150,
+        150,
+        152,
+        154,
+        156,
+        158
+      ]
+    },
+    {
+      "label": "Multiscale rounding",
+      "a": {
+        "name": "Beartic",
+        "level": 50,
+        "types": [
+          "ice"
+        ],
+        "battleStats": {
+          "hp": 170,
+          "attack": 130,
+          "defense": 100,
+          "special-attack": 90,
+          "special-defense": 100,
+          "speed": 70
+        },
+        "abilities": [
+          "snow-cloak"
+        ],
+        "ability": "snow-cloak",
+        "heldItem": "Expert Belt"
+      },
+      "d": {
+        "name": "Dragonite",
+        "level": 50,
+        "types": [
+          "dragon",
+          "flying"
+        ],
+        "battleStats": {
+          "hp": 166,
+          "attack": 154,
+          "defense": 115,
+          "special-attack": 120,
+          "special-defense": 120,
+          "speed": 100
+        },
+        "abilities": [
+          "multiscale"
+        ],
+        "ability": "multiscale"
+      },
+      "m": {
+        "name": "Icicle Crash",
+        "power": 85,
+        "type": "ice",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        132,
+        132,
+        137,
+        137,
+        139,
+        139,
+        144,
+        144,
+        144,
+        146,
+        146,
+        151,
+        151,
+        154,
+        154,
+        158
+      ]
+    },
+    {
+      "label": "HP-triggered Torrent and rain",
+      "a": {
+        "name": "Samurott",
+        "level": 50,
+        "types": [
+          "water"
+        ],
+        "battleStats": {
+          "hp": 170,
+          "attack": 120,
+          "defense": 105,
+          "special-attack": 128,
+          "special-defense": 90,
+          "speed": 90
+        },
+        "abilities": [
+          "torrent"
+        ],
+        "ability": "torrent",
+        "heldItem": "Mystic Water",
+        "currentHP": 25,
+        "weather": "rain"
+      },
+      "d": {
+        "name": "Milotic",
+        "level": 50,
+        "types": [
+          "water"
+        ],
+        "battleStats": {
+          "hp": 170,
+          "attack": 80,
+          "defense": 99,
+          "special-attack": 120,
+          "special-defense": 145,
+          "speed": 101
+        },
+        "abilities": [
+          "marvel-scale"
+        ],
+        "ability": "marvel-scale",
+        "weather": "rain"
+      },
+      "m": {
+        "name": "Surf",
+        "power": 95,
+        "type": "water",
+        "damageClass": "special",
+        "accuracy": 100
+      },
+      "rolls": [
+        64,
+        65,
+        66,
+        66,
+        67,
+        68,
+        69,
+        69,
+        70,
+        71,
+        72,
+        72,
+        73,
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "label": "Brine at half target HP",
+      "a": {
+        "name": "Samurott",
+        "level": 50,
+        "types": [
+          "water"
+        ],
+        "battleStats": {
+          "hp": 170,
+          "attack": 120,
+          "defense": 105,
+          "special-attack": 128,
+          "special-defense": 90,
+          "speed": 90
+        },
+        "abilities": [
+          "torrent"
+        ],
+        "ability": "torrent"
+      },
+      "d": {
+        "name": "Darmanitan",
+        "level": 50,
+        "types": [
+          "fire"
+        ],
+        "battleStats": {
+          "hp": 180,
+          "attack": 160,
+          "defense": 75,
+          "special-attack": 50,
+          "special-defense": 75,
+          "speed": 115
+        },
+        "abilities": [
+          "sheer-force"
+        ],
+        "ability": "sheer-force",
+        "currentHP": 60
+      },
+      "m": {
+        "name": "Brine",
+        "power": 65,
+        "type": "water",
+        "damageClass": "special",
+        "accuracy": 100
+      },
+      "rolls": [
+        252,
+        254,
+        258,
+        260,
+        264,
+        266,
+        270,
+        272,
+        276,
+        278,
+        282,
+        284,
+        288,
+        290,
+        294,
+        296
+      ]
+    },
+    {
+      "label": "Choice Scarf and Gyro Ball",
+      "a": {
+        "name": "Ferrothorn",
+        "level": 50,
+        "types": [
+          "grass",
+          "steel"
+        ],
+        "battleStats": {
+          "hp": 149,
+          "attack": 114,
+          "defense": 151,
+          "special-attack": 74,
+          "special-defense": 136,
+          "speed": 40
+        },
+        "abilities": [
+          "iron-barbs"
+        ],
+        "ability": "iron-barbs"
+      },
+      "d": {
+        "name": "Stoutland",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 160,
+          "attack": 120,
+          "defense": 110,
+          "special-attack": 65,
+          "special-defense": 110,
+          "speed": 100
+        },
+        "abilities": [
+          "sand-rush"
+        ],
+        "ability": "sand-rush",
+        "heldItem": "Choice Scarf"
+      },
+      "m": {
+        "name": "Gyro Ball",
+        "power": 0,
+        "type": "steel",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        55,
+        55,
+        57,
+        57,
+        58,
+        58,
+        60,
+        60,
+        60,
+        61,
+        61,
+        63,
+        63,
+        64,
+        64,
+        66
+      ]
+    },
+    {
+      "label": "Intimidate and Choice Band",
+      "a": {
+        "name": "Haxorus",
+        "level": 50,
+        "types": [
+          "dragon"
+        ],
+        "battleStats": {
+          "hp": 151,
+          "attack": 167,
+          "defense": 110,
+          "special-attack": 80,
+          "special-defense": 90,
+          "speed": 117
+        },
+        "abilities": [
+          "mold-breaker"
+        ],
+        "ability": "mold-breaker",
+        "heldItem": "Choice Band"
+      },
+      "d": {
+        "name": "Stoutland",
+        "level": 50,
+        "types": [
+          "normal"
+        ],
+        "battleStats": {
+          "hp": 160,
+          "attack": 120,
+          "defense": 110,
+          "special-attack": 65,
+          "special-defense": 110,
+          "speed": 100
+        },
+        "abilities": [
+          "intimidate"
+        ],
+        "ability": "intimidate"
+      },
+      "m": {
+        "name": "Dragon Claw",
+        "power": 80,
+        "type": "dragon",
+        "damageClass": "physical",
+        "accuracy": 100
+      },
+      "rolls": [
+        69,
+        70,
+        70,
+        72,
+        72,
+        73,
+        75,
+        75,
+        76,
+        76,
+        78,
+        78,
+        79,
+        79,
+        81,
+        82
+      ]
+    }
+  ]
+}
