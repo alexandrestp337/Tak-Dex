@@ -74,3 +74,9 @@ Baseline `786c0eb1073e96112bb6ea6c3b738a7688256350`, [draft PR #6](https://githu
 | 412 px light | [Evolution](dev5-rc3-evidence/412-light-evolution.png) · [Pokémon filter](dev5-rc3-evidence/412-light-pokemon-filter.png) · [Owned Psyduck](dev5-rc3-evidence/412-light-owned.png) |
 
 The screenshots were visually inspected. The [focused Chromium test](dev5-rc3-browser.cjs) uses local browser fixtures with existing game data. Move-filter markup, logic and applicable CSS rules were checked against the baseline by diff. Physical Samsung, native Android and broad regression tests were outside this round’s verification.
+
+## V78-STABLE release
+
+The owner accepted DEV1–DEV5 at Web checkpoint `f95220b78b94446cea57f40a0ad679d1aec210f9`. The stable promotion through [PR #6](https://github.com/alexandrestp337/Tak-Dex/pull/6) changes release metadata and V78 shell asset versions. Saved-data schemas and downloaded-data cache namespaces are carried forward.
+
+The production shell namespace is `takdex-v78.0.0-stable`. The `V78-STABLE` tag identifies the Web source for Android V11 integration. [Production Web app](https://alexandrestp337.github.io/Tak-Dex/)
