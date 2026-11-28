@@ -9,14 +9,14 @@ const entries=names=>names.map(move=>({move,purpose:'keep'}));
 const mon=(id,name,types,moves,extra={})=>({id,name,types,level:27,moves,plannedMoves:entries(moves),duringMoves:entries(moves),...extra});
 const pikachu=mon(25,'pikachu',['electric'],['thunder-shock','quick-attack'],{originName:'pikachu',explicitOwned:true,locked:true});
 const eevee=mon(133,'eevee',['normal'],['tackle','bite'],{originPid:101});
-const psyduck=mon(54,'psyduck',['water'],['water-gun','scratch','tail-whip'],{originName:'psyduck'});
+const psyduck=mon(54,'psyduck',['water'],['water-gun','scratch','tail-whip'],{originPid:103});
 const espeon=mon(196,'espeon',['psychic'],['confusion'],{originPid:102,duringTargetId:133,duringSpecies:'eevee',
  acquisitionRoute:{id:'133|owned|102',startId:133}});
-const catchPlan=mon(344,'claydol',['ground','psychic'],['confusion'],{confirmedCandidate:true,fulfilledPid:900,fulfilledStage:343,
- acquisitionRoute:{id:'343|walk|Relic Castle · Volcarona’s chamber|27|30',startId:343}});
-const team={id,game,name:'DEV5 fixture',pokemon:[pikachu,{...eevee,saveStats:{pid:101}},psyduck,{...eevee,saveStats:{pid:102}},
- {...mon(343,'baltoy',['ground','psychic'],['confusion']),saveStats:{pid:900}}]};
-const plan={game,mode:'final',deadline:'badge-6',slots:[null,eevee,psyduck,espeon,catchPlan,null],independentSlots:{0:{during:pikachu}}};
+const catchPlan=mon(55,'golduck',['water'],['water-gun'],{confirmedCandidate:true,fulfilledPid:900,fulfilledStage:54,
+ acquisitionRoute:{id:'54|owned|900',startId:54}});
+const team={id,game,name:'DEV5 fixture',pokemon:[pikachu,{...eevee,saveStats:{pid:101}},{...psyduck,saveStats:{pid:103}},{...eevee,saveStats:{pid:102}},
+ {...mon(54,'psyduck',['water'],['water-gun']),saveStats:{pid:900}}]};
+const plan={game,mode:'final',deadline:'badge-6',slots:[null,eevee,psyduck,espeon,catchPlan,mon(504,'patrat',['normal'],['tackle'],{confirmedCandidate:true})],independentSlots:{0:{during:pikachu}}};
 const rect=loc=>loc.evaluate(e=>e.getBoundingClientRect().toJSON());
 const saved=page=>page.evaluate(({key,planKey})=>JSON.parse(localStorage.getItem(key)).plans[planKey].value,{key,planKey});
 async function act(locator){await locator.evaluate(e=>e.scrollIntoView({block:'center'}));await locator.click();}
@@ -77,12 +77,13 @@ async function checkUI(browser,width,light){
   // Fulfillment guards the capture picker while still providing the path and future requirements.
   await openSlot(page,4);
   const route=page.locator('#td77SlotRoute');
-  assert.match(await route.innerText(),/Capture fulfilled/);
-  assert.match(await route.innerText(),/Evolution remaining.*36/i);
+  assert.match(await route.innerText(),/On team · Lv. 27/);
+  assert.match(await route.innerText(),/Evolution remaining · Golduck at Lv\. 33/);
   assert.equal(await route.locator('[data-td77-route]').count(),0);
-  await route.getByText('Selected route history').click();
-  assert.ok(await route.locator('[data-td74-dex-map="Relic Castle"]').count());
+  assert.equal(await route.getByText('Selected route history').count(),0);
 
+  await openSlot(page,5);
+  assert.ok(await page.locator('#td77SlotRoute .td78-route-picker').count());
   await openSlot(page,1);
   const choose=page.locator('[data-td78-evolution]');
   await act(choose);
@@ -95,6 +96,7 @@ async function checkUI(browser,width,light){
    const [button,requirements]=await Promise.all([rect(row.locator('button')),rect(row.locator(':scope > div'))]);
    assert.ok(Math.abs(button.width-requirements.width)<1&&button.right<requirements.left,JSON.stringify([button,requirements]));
   }
+  assert.notEqual(await rows.nth(1).evaluate(e=>getComputedStyle(e).boxShadow),'none');
   await photo(dialog,tag+'-evolution');
   await page.keyboard.press('Escape');
   await dialog.waitFor({state:'hidden'});
@@ -104,6 +106,8 @@ async function checkUI(browser,width,light){
   await act(page.locator('#td77TypeFilter'));
   const type=page.locator('#td77TypeOptions [data-td77-filter-type="normal"]');
   await type.waitFor();
+  const buttonStyle=el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return [r.height,r.width,s.fontSize,s.padding,s.textAlign,s.opacity]};
+  const pokemonClear=await page.locator('#td77TypeOptions [data-td78-clear-filters]').evaluate(buttonStyle);
   const pokemonFilter=await rect(type);
   assert.equal(pokemonFilter.height,30);
   assert.doesNotMatch(await page.locator('#td77TypeOptions').innerText(),/\d+ selected/);
@@ -136,6 +140,7 @@ async function checkUI(browser,width,light){
   await act(shell.getByRole('button',{name:'Move filters'}));
   const moveType=page.locator('.td78-move-filter-panel [data-td78-move-type="normal"]:visible');
   assert.equal((await rect(moveType)).height,pokemonFilter.height);
+  assert.deepEqual(await shell.locator('[data-td78-clear-filters]').evaluate(buttonStyle),pokemonClear);
   await photo(shell.locator('.td78-move-filter-panel'),tag+'-move-filter');
   await act(toggle);
   assert.equal(await shell.isVisible(),false);
@@ -178,6 +183,12 @@ async function checkUI(browser,width,light){
   await act(page.locator('#mapsFullscreen'));
   assert.equal(await page.locator('#mapsZoomValue').count(),0);
   await act(page.locator('#mapsFullscreen'));
+  await act(page.locator('#moreTab'));await act(page.locator('#td59OpenOffline'));
+  await page.locator('#td59Game').selectOption('Black 2');
+  await page.locator('#td59State').getByText(/Not downloaded/).waitFor();
+  assert.deepEqual(await page.locator('#td59Legend li span:last-child').allTextContents(),['Downloaded','Partial download','Not downloaded']);
+  assert.equal((await rect(page.locator('#td59Download'))).height,(await rect(page.locator('#td59Delete'))).height);
+  await photo(page.locator('#td59OfflinePage'),tag+'-offline');
   assert.deepEqual(errors,[]);
   console.log(tag+' · Keep, capture history, equal filters, full move hit area, selector geometry and map controls passed');
  }finally{await page.close();}
@@ -221,7 +232,7 @@ async function coverageAndFeedback(browser){
   await page.locator('#td7FeedbackDialog textarea').fill('Local intercepted verification');
   await page.locator('#td7FeedbackSubmit').click();
   await page.getByText('Feedback sent. Thank you!').waitFor();
-  assert.match(submission,/V78 DEV5 RC1/);
+  assert.match(submission,/V78 DEV5 RC2/);
   let requests=0;
   await page.route('https://pokeapi.co/api/v2/ability/static',async route=>{
    requests++;
@@ -234,9 +245,56 @@ async function coverageAndFeedback(browser){
   console.log('34 coverage models, absent/shared/removed/invalid sources, mocked feedback version, and coalesced fallback/search ranking passed.');
  }finally{await page.close();}
 }
+async function packs(browser){
+ const p=await browser.newPage({serviceWorkers:'block'});
+ try{
+  await p.goto(url);await p.locator('#moreTab').click();await p.locator('#td59OpenOffline').click();
+  const pick=async (game,label)=>{
+   await p.locator('#td59Game').selectOption(game);
+   await p.locator('#td59State').getByText(label,{exact:false}).waitFor();
+  };
+  const seed=async phase=>p.evaluate(async phase=>{
+   const base='https://pokeapi.co/api/v2/',sprites='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+   const cache=await caches.open('takdex-reference-v58-red');
+   const meta=new URL('takdex-reference-v58/red.json',location.href).href;
+   const put=(key,data)=>cache.put(key,new Response(JSON.stringify(data)));
+   if(phase==='stale'){
+    await put(meta,{schema:58,game:'Red',complete:true,machines:[]});
+    await cache.put(base+'pokemon/1/',new Response('corrupt'));return;
+   }
+   if(phase==='remove-dependency'){await cache.delete(base+'evolution-chain/1/');return;}
+   const enc=await caches.open('takdex-encounter-catalog-v55');
+   const art=await caches.open('takdex-artwork-v60-red');
+   await put(meta,{schema:58,game:'Red',complete:false,machines:[{item:'tm01',move:'mega-punch'}]});
+   for(const kind of ['pokemon','pokemon-species','move','evolution-chain']){
+    await put(base+kind+'?limit='+(kind==='evolution-chain'?1000:2000),{count:1,results:[{name:'fixture',url:base+kind+'/1/'}]});
+   }
+   const tasks=[];
+   for(let id=1;id<=151;id++){
+    tasks.push(put(base+'pokemon/'+id+'/',{id,name:'fixture',species:{name:'fixture'},types:[{type:{name:'normal'}}],
+     stats:Array(5).fill({stat:{name:'hp'},base_stat:30}),moves:[]}));
+    tasks.push(put(base+'pokemon-species/'+id+'/',{id,name:'fixture',evolution_chain:{url:base+'evolution-chain/1/'}}));
+    for(const file of [id+'.png','other/official-artwork/'+id+'.png'])
+     tasks.push(art.put(sprites+file,new Response('fixture',{headers:{'Content-Type':'image/png'}})));
+   }
+   tasks.push(put(base+'evolution-chain/1/',{id:1,chain:{species:{name:'fixture'},evolves_to:[]}}));
+   tasks.push(enc.put(new URL('takdex-encounters-v55/blue.json',location.href).href,
+    new Response(JSON.stringify({schema:65,game:'Blue',records:1,hasSource:true,mons:[[1,'fixture',['normal']]],entries:{1:[['route-1','walk',2,3]]}}))));
+   await Promise.all(tasks);
+  },phase);
+  await seed('stale');await pick('Red','Not downloaded');
+  await seed('complete');await pick('Blue','🟢 Downloaded');
+  assert.equal(await p.locator('#td59Download').isDisabled(),true);
+  await seed('remove-dependency');await pick('Yellow','Partial download');await pick('Blue','Partial download');
+  assert.equal(await p.locator('#td59Download').isDisabled(),false);
+  assert.ok(await p.evaluate(async()=>!!await (await caches.open('takdex-reference-v58-red')).match('https://pokeapi.co/api/v2/pokemon/1/')));
+  console.log('Absent, stale, shared complete and missing-dependency partial pack states passed.');
+ }finally{await p.close();}
+}
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
  try{
+  if(process.env.TAKDEX_FOCUS==='packs'){await packs(browser);return;}
   if(process.env.TAKDEX_FOCUS==='coverage'){await coverageAndFeedback(browser);return;}
   for(const width of process.env.TAKDEX_WIDTH?[Number(process.env.TAKDEX_WIDTH)]:[360,412])
    for(const light of [false,true])await checkUI(browser,width,light);

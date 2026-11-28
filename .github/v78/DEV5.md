@@ -39,3 +39,19 @@ Development continues from DEV4 RC2, `553640e0efab79571d7ce2b59b0681eb314f62bb`,
 2. Keep a During choice in an empty Final slot. Inspect Remove, Reset, capture history and pending evolution information in each stage.
 3. Compare the two filter panels, scroll long Pokémon results and return to search. Tap the same planned move to close it, then check a contextual Move Checker return.
 4. Inspect Team Recommendation stats, a compact candidate, Map Gym actions and About → Database Coverage. Check a partial pack resume and an offline reload.
+
+## DEV5 RC2 final Web candidate
+
+The RC2 baseline is `a1460bc6141f00853b1c528560f5a0c14490e828`. The [private build stamp](https://tak-dex-v77-development.freeclout8.chatgpt.site/preview-build.json) identifies the exact packaged branch commit. The development shell is `takdex-v78.0.0-dev5-rc2`.
+
+- The existing evolution rows use a subtle full-width divider with the same spacing and layout. Both Clear filters buttons use the same size, font, alignment and disabled treatment. [Evolution](dev5-rc2-evidence/360-dark-evolution.png) · [Pokémon filters](dev5-rc2-evidence/360-dark-pokemon-filter.png) · [Move filters](dev5-rc2-evidence/360-dark-move-filter.png)
+- Offline Data shows only Downloaded, Partial download and Not downloaded. The selected game is checked against usable records and dependencies, compatible machine catalogs, encounter data and artwork. Shared cache entries contribute where applicable. Pack metadata and provider provenance remain available separately. Download and Remove use equal-height neutral controls. Removal still checks for locally owned entries and requires confirmation. [Offline Data](dev5-rc2-evidence/360-light-offline.png)
+- Fulfilled acquisitions display the actual level and remaining evolution requirements. The owned Psyduck fixture shows Golduck at Lv. 33. Unowned Patrat retains its acquisition picker. Stored history and evolution links remain available to the existing planning logic.
+
+### Focused verification and acceptance
+
+The Chromium fixture checks both themes at 360 and 412 CSS px, including divider styling, Clear filters geometry, owned and unowned rows, and offline controls. A separate synthetic CacheStorage fixture checks absent, corrupt and stale data, shared complete availability, missing dependencies and retention of valid entries. Production stays on `7046e53`. Database Coverage still needs owner acceptance, and native offline retention remains deferred.
+
+1. Open an evolution selector and compare the two Clear filters buttons.
+2. Inspect an owned Pokémon with a pending evolution and an unowned acquisition.
+3. Select a downloaded or partial offline pack, check the three status labels, and verify the remove confirmation.

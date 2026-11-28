@@ -2085,3 +2085,11 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
 [data-td79-keep-during]{width:100%;margin:4px 0}
 
 #td41MoveSlots .td77-edit-move>.td77-planner-move-info{position:relative}
+
+.td78-evolution-options>div+div{box-shadow:0 -1px var(--edge)}
+#td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td78-filter-header button{
+ width:auto;height:32px;min-height:32px;margin:0;padding:4px 8px;font-size:.77rem;text-align:center
+}
+#td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td78-filter-header button{
+ font-family:inherit;font-weight:700;letter-spacing:normal;line-height:1.2;justify-self:end;white-space:nowrap
+}

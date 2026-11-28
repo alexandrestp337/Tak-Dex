@@ -8,7 +8,7 @@ const baseline=process.argv[2];
 assert.ok(baseline,'Pass a checkout of DEV4 RC2');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json',
  '.webmanifest':'application/manifest+json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp'};
-const name='takdex-v78.0.0-dev5-rc1';
+const name='takdex-v78.0.0-dev5-rc2';
 let state='baseline',rejected=0,optionalRequests=0;
 const appServer=http.createServer(async(req,res)=>{
  let file=new URL(req.url,'http://localhost').pathname.slice(1)||'index.html';
@@ -54,7 +54,7 @@ const appServer=http.createServer(async(req,res)=>{
    await Promise.race([activated,new Promise(resolve=>setTimeout(resolve,18000))]);
   });
   await p.reload();
-  assert.equal(await p.locator('meta[name=takdex-version]').getAttribute('content'),'V78 DEV5 RC1');
+  assert.equal(await p.locator('meta[name=takdex-version]').getAttribute('content'),'V78 DEV5 RC2');
   assert.equal(optionalRequests,0);
   const patched=await p.evaluate(async()=>{
    const cache=await caches.open('takdex-bundled-runtime-v78');
@@ -68,7 +68,7 @@ const appServer=http.createServer(async(req,res)=>{
   assert.equal(await p.evaluate(async()=> (await fetch('unova-black-2-v74.jpg?missing-optional=1')).status),404);
   assert.equal(optionalRequests,1);
   await ctx.setOffline(true);await p.reload();
-  assert.equal(await p.locator('meta[name=takdex-version]').getAttribute('content'),'V78 DEV5 RC1');
+  assert.equal(await p.locator('meta[name=takdex-version]').getAttribute('content'),'V78 DEV5 RC2');
   assert.equal(await p.evaluate(()=>localStorage.getItem('dev5-worker-team-fixture')),'preserved');
   assert.ok(await p.evaluate(()=>caches.has('takdex-v78.0.0-dev4-rc2')));
   assert.match(await p.locator('footer').innerText(),/Developed by WHOASP/);

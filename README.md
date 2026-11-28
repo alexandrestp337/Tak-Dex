@@ -8,7 +8,7 @@ Tak-Dex is a free, unofficial Pokémon team builder, battle calculator and playt
 
 > **Production · V77.2.1-STABLE.** Save synchronization recognizes acquired Pokémon while preserving the selected team plan. [Release notes](.github/v77/REPORT.md#v7721-stable-release)
 
-The V78 DEV5 RC1 development candidate is available through the owner-only preview. [Development report](.github/v78/DEV5.md)
+The V78 DEV5 RC2 development candidate is available through the owner-only preview. [Development report](.github/v78/DEV5.md)
 
 ## Tools
 

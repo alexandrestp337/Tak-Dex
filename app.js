@@ -3342,16 +3342,16 @@ function td772BindFilter(button,panel,clear){
 
  <p id="td59State" class="note" aria-live="polite">Checking downloaded data…</p>
  <p id="td59Progress" class="note" aria-live="polite"></p>
- <div class="td59-actions"><button type="button" id="td59Download">Download game pack</button><button type="button" class="td59-delete" id="td59Delete">Remove pack</button></div></div>
- <div class="card td59-card"><h3>Saved game packs</h3><div id="td59Saved" class="note">Checking storage…</div>
+ <div class="td59-actions"><button type="button" class="td774-secondary" id="td59Download">Download pack</button><button type="button" class="td774-secondary" id="td59Delete">Remove pack</button></div></div>
+ <div class="card td59-card">
  <button type="button" class="td59-delete td59-clear" id="td59Clear">Clear all downloaded packs and old offline data</button></div>
- <p class="note">Pack status tracks offline files. Encounter and acquisition records may be incomplete. Artwork downloads can use significant storage.</p>`;
+ <p class="note">Artwork downloads can use significant storage.</p>`;
  document.querySelector('main').appendChild(page);
  const css=document.createElement('style');css.textContent=`
  #td59OfflinePage .td59-card{margin:13px 0;padding:16px}
  #td59OfflinePage .td59-card h3{margin:0 0 9px;font-size:1.05rem}
  #td59OfflinePage .td59-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-items:stretch}
- #td59OfflinePage .td59-actions button{width:100%;min-width:0;min-height:44px;padding:8px;font-size:.9rem;border:1px solid transparent}
+ #td59OfflinePage .td59-actions button{width:100%;min-width:0;height:44px;padding:8px;font-size:.9rem}
  #td59OfflinePage .td59-delete{background:transparent!important;color:var(--text,#eee)!important;border:1px solid var(--edge,#555)!important;box-shadow:none!important}
  #td59OfflinePage .td59-delete:disabled{opacity:.35}
  #td59OfflinePage .td59-card .note{overflow-wrap:anywhere}
@@ -3576,14 +3576,10 @@ function td772BindFilter(button,panel,clear){
  }
  async function removeReference(g){if('caches' in window)await caches.delete(refCacheName(g));window.dispatchEvent(new Event('td58-pack-update'))}
 
- function statusFor(ref,enc,art,trainerReady){
-  return ref?.complete&&enc?.hasSource&&enc.schema>=64&&art?.complete&&trainerReady?(ref.verified?'ready':'recorded'):
-   ref||enc||art?'partial':'missing';
- }
- const iconFor={ready:'🟢',partial:'🔵',recorded:'🔵',shared:'🟣',missing:'⚪'};
+ const iconFor={ready:'🟢',partial:'🟠',missing:'⚪'};
  $('td59Legend').innerHTML=Object.entries(iconFor).map(([status,icon])=>
   `<li><span aria-hidden="true">${icon}</span><span>${word(status)}</span></li>`).join('');
- let packStates=new Map(),statusRefresh;
+ const packStates=new Map();
  const gameSelectIds=['game','editTeamGame','dexGame','planGame','tmGame','typeCheckGame','typeExplorerGame','td56Game','td59Game'];
  // Explicit option.value is critical: Team dialog options used to derive their value from text.
  function decorateGameSelects(){
@@ -3592,32 +3588,88 @@ function td772BindFilter(button,panel,clear){
     if(!games.includes(name))continue;
     if(!option.dataset.td59Game){option.value=name;option.dataset.td59Game=name}
     const model=packStates.get(name);
-    const label=id==='td59Game'?iconFor[model?.displayStatus||'missing']+' '+name+(model?' · '+word(model.displayStatus):''):name;
+    const label=id==='td59Game'&&model?iconFor[model.status]+' '+name+' · '+word(model.status):name;
     if(option.textContent!==label)option.textContent=label;
    }
   }
  }
- async function getState(g,verify=false){
-  const [ref,enc,art,trainers]=await Promise.all([
-   cachedReference(g,{verify}),window.takDexEncounterV55.cached(g,{storedOnly:true}),cachedArtwork(g),
-   g==='Platinum'?td70PlatinumTrainerCached():Promise.resolve(true)
+ async function packStores(names,accept){
+  return Promise.all(names.filter(accept).map(name=>caches.open(name)));
+ }
+ async function inspectPack(g,names){
+  const cap=maxFor(g),refs=await packStores(names,name=>name.startsWith(REF_PREFIX)||name===OFFLINE_CACHE);
+  const artwork=await packStores(names,name=>name.startsWith(ART_PREFIX)||name==='takdex-artwork-v26');
+  const refKeys=new Set((await Promise.all(refs.map(store=>store.keys()))).flat().map(key=>key.url));
+  const artKeys=new Set((await Promise.all(artwork.map(store=>store.keys()))).flat().map(key=>key.url));
+  const read=async url=>{
+   for(const store of refs){
+    const record=await referenceRecord(store,url);
+    if(record)return record;
+   }
+   return null;
+  };
+  const required=referenceLists.map(path=>BASE+path),images=[];
+  for(let id=1;id<=cap;id++){
+   required.push(referencePath('pokemon',id),referencePath('pokemon-species',id));
+   images.push(SPRITES_ROOT+id+'.png',SPRITES_ROOT+'other/official-artwork/'+id+'.png');
+  }
+  let usableRef=false;
+  const deps=new Set();
+  const hasCore=required.every(url=>refKeys.has(url));
+  async function validReferences(urls,discover){
+   let next=0,complete=true;
+   await Promise.all(Array.from({length:5},async()=>{
+    while(next<urls.length){
+     const url=urls[next++],data=await read(url);
+     if(!data){complete=false;continue;}
+     usableRef=true;
+     if(!discover)continue;
+     if(url.startsWith(BASE+'pokemon/'))for(const move of data.moves){
+      if(move.version_group_details.some(v=>v.version_group.name===vg[g]))deps.add(move.move.url);
+     }
+     if(url.startsWith(BASE+'pokemon-species/'))deps.add(data.evolution_chain.url);
+    }
+   }));
+   return complete;
+  }
+  let core=false;
+  if(hasCore)core=await validReferences(required,true);
+  if(!core&&!usableRef)for(const url of required){
+   if(refKeys.has(url)&&await read(url)){usableRef=true;break;}
+  }
+  const artValid=async url=>{
+   if(!artKeys.has(url))return false;
+   for(const store of artwork){
+    const hit=await store.match(url);
+    if(hit?.ok&&/^image\//i.test(hit.headers.get('content-type')||'')&&(await hit.blob()).size)return true;
+   }
+   return false;
+  };
+  let usableArt=false,completeArt=images.every(url=>artKeys.has(url));
+  for(const url of images){
+   if(await artValid(url))usableArt=true;
+   else completeArt=false;
+   if(usableArt&&!completeArt)break;
+  }
+  const [enc,trainers,machines]=await Promise.all([
+   window.takDexEncounterV55.cached(g,{storedOnly:true}),
+   g==='Platinum'?td70PlatinumTrainerCached():true,
+   Promise.all(games.filter(other=>vg[other]===vg[g]).map(other=>cachedReference(other)))
   ]);
-  return {ref,enc,art,trainers,status:statusFor(ref,enc,art,trainers)};
+  const hasMachines=machines.some(meta=>meta?.machines?.length);
+  const completeRef=core&&hasMachines&&await validReferences([...deps],false);
+  const completeEncounter=!!enc?.hasSource&&enc.schema>=64;
+  const status=completeRef&&completeEncounter&&completeArt&&trainers?'ready':
+   usableRef||hasMachines||usableArt||enc?.hasSource||g==='Platinum'&&trainers?'partial':'missing';
+  return {status,ref:{complete:completeRef},enc,art:{complete:completeArt},trainers,
+   local:names.includes(refCacheName(g))||names.includes(artCacheName(g))||!!enc||g==='Platinum'&&!!trainers};
  }
- function refreshStatusMap(){
-  if(!statusRefresh)statusRefresh=Promise.all(games.map(async name=>[name,await getState(name)]))
-   .then(records=>{
-    const sources=records.filter(([,p])=>p.ref?.complete||p.ref?.saved>0||p.art?.complete||p.art?.saved>0);
-    packStates=new Map(records.map(([name,p])=>[name,{...p,displayStatus:p.status==='missing'&&
-     sources.some(([source])=>name!==source&&vg[name]===vg[source])?'shared':p.status}]));
-    decorateGameSelects();
-   }).finally(()=>{statusRefresh=null});
-  return statusRefresh;
- }
+ async function getState(g){return inspectPack(g,'caches'in window?await caches.keys():[]);}
+ function refreshStatusMap(){decorateGameSelects();return Promise.resolve();}
  document.addEventListener('focusin',e=>{if(e.target?.tagName==='SELECT')decorateGameSelects()},true);
  document.addEventListener('pointerdown',e=>{if(e.target?.closest?.('select'))decorateGameSelects()},true);
  window.takDexOfflineV59={refreshIndicators:refreshStatusMap};
- function word(status){return {ready:'Downloaded',partial:'Partial download',shared:'Shared reference',recorded:'Recorded pack',missing:'No pack'}[status]}
+ function word(status){return {ready:'Downloaded',partial:'Partial download',missing:'Not downloaded'}[status]}
  async function hasLegacyCache(){
   try{const keys=await caches.keys();if(keys.some(k=>['takdex-pokeapi-records-v1','takdex-artwork-v26'].includes(k)))return true}catch{}
   try{if(localStorage.getItem('takdex-offline-full-v26'))return true;for(let i=0;i<localStorage.length;i++)if(localStorage.key(i)?.startsWith('pt-v2:'))return true}catch{}
@@ -3630,8 +3682,7 @@ function td772BindFilter(button,panel,clear){
    if(games.includes(g)){
     const selected=await getState(g,true);
     if(token!==taskState.token)return;
-    const displayStatus=selected.status==='missing'?packStates.get(g)?.displayStatus:selected.status;
-    packStates.set(g,{...selected,displayStatus});decorateGameSelects();
+    packStates.set(g,selected);decorateGameSelects();
    }
   }catch(e){
    if(token===taskState.token)state.textContent='Pack status unavailable.';
@@ -3641,23 +3692,17 @@ function td772BindFilter(button,panel,clear){
   const model=packStates.get(g);
   $('td59Name').textContent='Game pack';
   if(model){
-   const {ref,enc,art,trainers,status,displayStatus}=model;
-   state.textContent=iconFor[displayStatus]+' '+word(displayStatus)
-    +' · Reference: '+(ref?.complete?'saved':ref?'partial':'missing')
-    +' · Encounters: '+(enc?.hasSource?enc.schema>=64?'indexed':'update needed':enc?'unavailable':'missing')
-    +' · Artwork: '+(art?.complete?'saved':art?(art.saved||0)+'/'+(art.expected||'?'):'missing')
-    +(g==='Platinum'?' · Trainer attacks: '+(trainers?'saved':'missing'):'');
+   const {status}=model;
+   state.textContent=iconFor[status]+' '+word(status);
    downloadBtn.textContent=taskState.download?'Cancel download':status==='ready'?'✓ Downloaded':status==='partial'?'Resume download':'Download pack';
    downloadBtn.disabled=!taskState.download&&(taskState.busy||status==='ready');
-   deleteBtn.disabled=taskState.busy||status==='missing';
+   deleteBtn.disabled=taskState.busy||!model.local;
   }else{
    state.textContent='Choose a game to manage its pack.';
    downloadBtn.textContent='Download pack';
    downloadBtn.disabled=true;deleteBtn.disabled=true;
   }
-  const saved=[...packStates].filter(([,p])=>p.status!=='missing');
-  $('td59Saved').innerHTML=saved.length?saved.map(([name,p])=>'<div>'+iconFor[p.displayStatus]+' <b>'+safe(name)+'</b> · '+word(p.displayStatus)+'</div>').join(''):'No game-specific packs stored.';
-  const hasData=saved.length||await hasLegacyCache();
+  const hasData=('caches'in window&&(await caches.keys()).some(name=>name.startsWith(REF_PREFIX)||name.startsWith(ART_PREFIX)||name==='takdex-encounter-catalog-v55'||name===TD70_PLATINUM_TRAINER_CACHE))||await hasLegacyCache();
   if(token===taskState.token)clearBtn.disabled=taskState.busy||!hasData;
  }
  function setBusy(busy){taskState.busy=busy;game.disabled=busy;downloadBtn.disabled=busy;deleteBtn.disabled=busy;clearBtn.disabled=busy;}
@@ -3692,7 +3737,7 @@ function td772BindFilter(button,panel,clear){
  async function removeGame(){
   if(taskState.busy)return;
   const g=game.value;if(!games.includes(g))return;const existing=await getState(g);
-  if(existing.status==='missing')return;
+  if(!existing.local)return;
   if(!await td78Confirmation('Remove the '+g+' offline pack?','This removes its reference and encounter records.','Remove'))return;
   setBusy(true);
   try{await removeReference(g);await window.takDexEncounterV55.remove(g);await removeArtwork(g);if(g==='Platinum'){await caches.delete(TD70_PLATINUM_TRAINER_CACHE);td70TrainerCatalogPromise=null}setProgress(g,'Pack removed.',true)}
@@ -3732,7 +3777,6 @@ function td772BindFilter(button,panel,clear){
  window.addEventListener('td58-pack-update',async()=>{
   if(taskState.busy)return;
   try{
-   await statusRefresh;
    if(visible)await update();else await refreshStatusMap();
   }catch(e){console.warn('Game pack status:',e)}
  });
@@ -4799,9 +4843,13 @@ document.addEventListener('keydown',event=>{
   if(fulfilled){
    const member=ownedFor(slot,chosenSlot),stage=member?.id??slot.fulfilledStage;
    const pending=r?.steps.filter(step=>!stage||!lineage(stage).has(step.id))||[];
-   return '<small class="td41-good">'+(member?'Capture fulfilled · On team':'Previously matched · Not in party')+'</small>'+
-    (r?`<details class="td773-disclosure td774-route-details"><summary>Selected route history</summary>${routeDescription(r,r.steps.length>0,true)}</details>`:'')+
-    (pending.length?`<small>Evolution remaining · ${pending.map(step=>td77AcquisitionLinks(step.requirement,state.game)).join(' · ')}</small>`:'');
+   const requirement=step=>{
+    const level=step.requirement.match(/^Level (\d+)$/i);
+    const target=safe(td41PokemonLabel(step.name));
+    return level?target+' at Lv. '+level[1]:target+' · '+td77AcquisitionLinks(step.requirement,state.game);
+   };
+   return (member?'<small class="td41-good">On team'+(Number.isInteger(member.level)?' · Lv. '+member.level:'')+'</small>':'')+
+    (pending.length?`<small>Evolution remaining · ${pending.map(requirement).join(' · ')}</small>`:'');
   }
   const [method,location]=r?routeChoice(r).split(' · '):['Saved route needs review',''];
   const requirement=r?.steps.map(step=>step.requirement).join(' · ').replace(/^Level (\d+)$/i,'Evolve at Lv. $1');
