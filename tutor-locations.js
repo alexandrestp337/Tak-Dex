@@ -130,6 +130,33 @@ add(xy,'Snowbelle City','House north of the Pokémon Center',[
 add(xy,'Route 21','Tutor house reached using Strength',[
  ['draco-meteor','Free','Eligible Dragon-type Pokémon with maximum friendship']
 ],xyTutorSource);
+// ORAS tutors shared by both editions. The Battle Resort opens after the Delta Episode.
+const oras=['Omega Ruby','Alpha Sapphire'],orasTutorSource='https://www.serebii.net/omegarubyalphasapphire/movetutor.shtml';
+add(oras,'Mauville City','Pledge tutor',pledge.map(move=>[move,'Free','Eligible starter']),orasTutorSource);
+add(oras,'Mauville City','Advanced starter tutor',ultimate.map(move=>[move,'Free','Eligible fully evolved starter with maximum friendship']),orasTutorSource);
+add(oras,'Mauville City','Southwest café',[
+ ['secret-sword','Free','Bring Keldeo'],['relic-song','Free','Bring Meloetta']
+],orasTutorSource);
+add(oras,'Sootopolis City','Northeast house',[
+ ['draco-meteor','Free','Eligible Dragon-type Pokémon with maximum friendship']
+],orasTutorSource);
+add(oras,'Meteor Falls','Zinnia’s grandmother',[
+ ['dragon-ascent','Free','Complete the Delta Episode and bring Rayquaza']
+],orasTutorSource);
+add(oras,'Battle Resort','Tutors west of the Pokémon Center',[
+ ["bind","4 BP"],["snore","4 BP"],["water-pulse","4 BP"],["shock-wave","4 BP"],["bug-bite","4 BP"],
+ ["covet","4 BP"],["low-kick","8 BP"],["signal-beam","8 BP"],["giga-drain","8 BP"],["thunder-punch","8 BP"],
+ ["fire-punch","8 BP"],["ice-punch","8 BP"],["drain-punch","8 BP"],["knock-off","12 BP"],["super-fang","12 BP"],
+ ["dual-chop","12 BP"],["endeavor","16 BP"],["uproar","8 BP"],["iron-tail","8 BP"],["bounce","8 BP"],
+ ["drill-run","8 BP"],["iron-head","8 BP"],["zen-headbutt","8 BP"],["aqua-tail","12 BP"],["dragon-pulse","12 BP"],
+ ["seed-bomb","12 BP"],["heat-wave","12 BP"],["last-resort","12 BP"],["hyper-voice","12 BP"],["foul-play","12 BP"],
+ ["earth-power","12 BP"],["outrage","16 BP"],["superpower","16 BP"],["gunk-shot","16 BP"],["sky-attack","16 BP"],
+ ["focus-punch","16 BP"],["block","8 BP"],["skill-swap","8 BP"],["synthesis","8 BP"],["role-play","8 BP"],
+ ["pain-split","8 BP"],["gastro-acid","8 BP"],["worry-seed","8 BP"],["spite","8 BP"],["after-you","8 BP"],
+ ["helping-hand","8 BP"],["trick","8 BP"],["recycle","8 BP"],["snatch","8 BP"],["magic-coat","8 BP"],
+ ["magnet-rise","8 BP"],["iron-defense","8 BP"],["heal-bell","8 BP"],["tailwind","8 BP"],["magic-room","8 BP"],
+ ["wonder-room","8 BP"],["stealth-rock","8 BP"],["gravity","8 BP"],["electroweb","8 BP"],["icy-wind","12 BP"]
+].map(([move,cost])=>[move,cost,'Complete the Delta Episode']),orasTutorSource);
 function find(game,move){const key=String(move||'').toLowerCase().trim().replace(/\s+/g,'-');return (data[game]?.[key]||[]).map(e=>({...e}));}
 function at(game,place){const normalized=String(place||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-');
   return Object.entries(data[game]||{}).flatMap(([move,records])=>records.filter(e=>e.place.toLowerCase().replace(/[^a-z0-9]+/g,'-')===normalized).map(e=>({...e,move}))).sort((a,b)=>a.move.localeCompare(b.move));

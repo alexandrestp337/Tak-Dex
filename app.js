@@ -4391,7 +4391,8 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
          </div>`;
     if(td73Tutors.length){
       if(!known.length)body.innerHTML='';
-      body.insertAdjacentHTML('beforeend',td73Tutors.map(tutor=>`<div class="td73-move-tutor"><p><b>${safe(tutor.game)} · Move Tutor</b></p><p><button type="button" class="td74-dex-map-link" data-td73-map-link="${safe(tutor.place)}" data-td73-map-game="${safe(tutor.game)}">${safe(tutor.place)} <span aria-hidden="true">⌖</span></button> · ${safe(tutor.detail)}</p><p class="note">Cost: ${safe(tutor.cost)}${tutor.condition?' · '+safe(tutor.condition):''}</p></div>`).join(''));
+      body.insertAdjacentHTML('beforeend',td73Tutors.map(tutor=>`<div class="td73-move-tutor"><p><b>${safe(tutor.game)} · Move Tutor</b></p><p>${gameGeneration(tutor.game)===6?safe(tutor.place):
+       `<button type="button" class="td74-dex-map-link" data-td73-map-link="${safe(tutor.place)}" data-td73-map-game="${safe(tutor.game)}">${safe(tutor.place)} <span aria-hidden="true">⌖</span></button>`} · ${safe(tutor.detail)}</p><p class="note">Cost: ${safe(tutor.cost)}${tutor.condition?' · '+safe(tutor.condition):''}</p></div>`).join(''));
     }
 
     if(moveAcquisitionContext&&!body.textContent.includes(moveAcquisitionContext))

@@ -46,6 +46,17 @@ async function openDex(page,game,name){
      return list.filter(row=>takDexAcquisitionV77.machineLocation(game,row.item)).length;
     },oras);
     assert.equal(locations,107);
+    const tutors=await page.evaluate(game=>({
+     count:takDexTutorV73.inventory(game),
+     ironHead:takDexTutorV73.find(game,'iron-head')[0],
+     dragonAscent:takDexTutorV73.find(game,'dragon-ascent')[0],
+     xyAscent:takDexTutorV73.find('X','dragon-ascent')
+    }),oras);
+    assert.equal(tutors.count,70);
+    assert.equal(tutors.ironHead.cost,'8 BP');
+    assert.equal(tutors.ironHead.place,'Battle Resort');
+    assert.match(tutors.dragonAscent.condition,/Delta Episode/);
+    assert.deepEqual(tutors.xyAscent,[]);
     console.log(width,light?'light':'dark',game,name,oras,machine,'passed');
    }finally{await page.close();}
   }
