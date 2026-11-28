@@ -70,7 +70,23 @@ async function openDex(page,game,name){
     assert.equal(tutors.ironHead.place,'Battle Resort');
     assert.match(tutors.dragonAscent.condition,/Delta Episode/);
     assert.deepEqual(tutors.xyAscent,[]);
-    console.log(width,light?'light':'dark',game,name,oras,machine,'passed');
+    await page.locator('#moreTab').click();
+    await page.locator('#openPlanner').click();
+    await page.locator('#planGame').selectOption(oras);
+    await page.locator('#planMode').selectOption('gym');
+    assert.equal(await page.locator('#planTrainer option').count(),8);
+    await page.locator('#planMode').selectOption('elite');
+    assert.equal(await page.locator('#planTrainer option').count(),5);
+    await page.locator('#planTrainer').selectOption('Steven');
+    await page.locator('#planVersion').selectOption('v2');
+    await page.locator('#td74EditorOpp > summary').click();
+    const slot=page.locator('#planOpp > details').nth(5);
+    await slot.locator('summary').click();
+    assert.match(await slot.locator('summary').textContent(),/Metagross/);
+    assert.equal(await slot.locator('[data-td2-level]').inputValue(),'79');
+    assert.equal(await slot.locator('[data-field="item"]').inputValue(),'metagrossite');
+    assert.ok((await slot.locator('[data-field="move"]').evaluateAll(inputs=>inputs.map(input=>input.value))).every(Boolean));
+    console.log(width,light?'light':'dark',game,name,oras,machine,'and League rematch passed');
    }finally{await page.close();}
   }
  }finally{await browser.close();}
