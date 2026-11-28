@@ -1597,6 +1597,7 @@ $('dexInput').addEventListener('takdex:pokedex-search',async()=>{
     for(const route of routes){
      if(matching.includes(route)||path&&route.method==='evolution')continue;
      entries.push({place:route.place,method:route.method,
+      levels:route.source==='xy-fixed-in-game-trade'&&route.minLevel===route.maxLevel?'Lv '+route.minLevel:'',
       detail:[engine.milestone(route.rank),route.note].filter(Boolean).join(' · ')});
     }
     if(!entries.length&&['trade','event','tradePossible'].includes(timing?.kind)){
@@ -1605,7 +1606,7 @@ $('dexInput').addEventListener('takdex:pokedex-search',async()=>{
      entries.push(...window.takDexAcquisitionV64.details(pack,pokemon.id).notes.filter(n=>n.text)
       .map(n=>({method:n.kind,detail:n.text})));
     }
-    const formatted=cat.format(records,game,matching);
+    const formatted=cat.format(records,game,matching,pokemon.name);
     renderEncounter(entries.map(r=>td77AcquisitionEntry(r,game)).join('')+(formatted||(!entries.length?noRecords:''))+sourceFoot);
    }else{
     // An ordinary Pokédex search must not trigger the massive 34-game bulk download.
@@ -1648,6 +1649,56 @@ const trainerSourceV57={Emerald:'https://pokemondb.net/emerald/gymleaders-elitef
 // Moves are intentionally unknown unless individually verified.
 const TAK63_VERIFIED_ROSTERS={"HeartGold":{"gym":{"Falkner":{"v1":[["pidgey",9],["pidgeotto",13]]},"Bugsy":{"v1":[["metapod",15],["kakuna",15],["scyther",17]]},"Whitney":{"v1":[["clefairy",17],["miltank",19]]},"Morty":{"v1":[["gastly",21],["haunter",21],["haunter",23],["gengar",25]]},"Chuck":{"v1":[["primeape",29],["poliwrath",31]]},"Jasmine":{"v1":[["magnemite",30],["magnemite",30],["steelix",35]]},"Pryce":{"v1":[["seel",30],["dewgong",32],["piloswine",34]]},"Clair":{"v1":[["dragonair",38],["dragonair",38],["gyarados",38],["kingdra",41]]}},"elite":{"Will":{"v1":[["xatu",40],["jynx",41],["exeggutor",41],["slowbro",41],["xatu",42]]},"Koga":{"v1":[["ariados",40],["venomoth",41],["muk",42],["forretress",43],["crobat",44]]},"Bruno":{"v1":[["hitmontop",42],["hitmonlee",42],["hitmonchan",42],["onix",43],["machamp",46]]},"Karen":{"v1":[["umbreon",42],["vileplume",42],["murkrow",44],["gengar",45],["houndoom",47]]},"Lance":{"v1":[["gyarados",44],["dragonite",49],["dragonite",49],["aerodactyl",48],["charizard",48],["dragonite",50]]}},"story":{"Red (Mt. Silver)":{"v1":[["pikachu",88],["venusaur",84],["charizard",84],["blastoise",84],["lapras",80],["snorlax",82]]}}},"SoulSilver":{"gym":{"Falkner":{"v1":[["pidgey",9],["pidgeotto",13]]},"Bugsy":{"v1":[["metapod",15],["kakuna",15],["scyther",17]]},"Whitney":{"v1":[["clefairy",17],["miltank",19]]},"Morty":{"v1":[["gastly",21],["haunter",21],["haunter",23],["gengar",25]]},"Chuck":{"v1":[["primeape",29],["poliwrath",31]]},"Jasmine":{"v1":[["magnemite",30],["magnemite",30],["steelix",35]]},"Pryce":{"v1":[["seel",30],["dewgong",32],["piloswine",34]]},"Clair":{"v1":[["dragonair",38],["dragonair",38],["gyarados",38],["kingdra",41]]}},"elite":{"Will":{"v1":[["xatu",40],["jynx",41],["exeggutor",41],["slowbro",41],["xatu",42]]},"Koga":{"v1":[["ariados",40],["venomoth",41],["muk",42],["forretress",43],["crobat",44]]},"Bruno":{"v1":[["hitmontop",42],["hitmonlee",42],["hitmonchan",42],["onix",43],["machamp",46]]},"Karen":{"v1":[["umbreon",42],["vileplume",42],["murkrow",44],["gengar",45],["houndoom",47]]},"Lance":{"v1":[["gyarados",44],["dragonite",49],["dragonite",49],["aerodactyl",48],["charizard",48],["dragonite",50]]}},"story":{"Red (Mt. Silver)":{"v1":[["pikachu",88],["venusaur",84],["charizard",84],["blastoise",84],["lapras",80],["snorlax",82]]}}},"Diamond":{"gym":{"Roark":{"v1":[["geodude",12],["onix",12],["cranidos",14]]},"Gardenia":{"v1":[["cherubi",19],["turtwig",19],["roserade",22]]},"Maylene":{"v1":[["meditite",27],["machoke",27],["lucario",30]]},"Crasher Wake":{"v1":[["gyarados",27],["quagsire",27],["floatzel",30]]},"Fantina":{"v1":[["drifblim",32],["gengar",34],["mismagius",36]]},"Byron":{"v1":[["bronzor",36],["steelix",36],["bastiodon",39]]},"Candice":{"v1":[["snover",38],["sneasel",38],["medicham",40],["abomasnow",42]]},"Volkner":{"v1":[["raichu",46],["ambipom",47],["octillery",48],["luxray",49]]}},"elite":{"Aaron":{"v1":[["dustox",53],["beautifly",53],["heracross",54],["vespiquen",54],["drapion",57]]},"Bertha":{"v1":[["quagsire",55],["whiscash",55],["golem",56],["sudowoodo",57],["hippowdon",59]]},"Flint":{"v1":[["rapidash",58],["steelix",57],["lopunny",57],["drifblim",58],["infernape",61]]},"Lucian":{"v1":[["mr-mime",59],["girafarig",59],["medicham",60],["alakazam",60],["bronzong",63]]},"Cynthia":{"v1":[["spiritomb",61],["gastrodon",60],["roserade",60],["milotic",63],["lucario",63],["garchomp",66]]}}},"Pearl":{"gym":{"Roark":{"v1":[["geodude",12],["onix",12],["cranidos",14]]},"Gardenia":{"v1":[["cherubi",19],["turtwig",19],["roserade",22]]},"Maylene":{"v1":[["meditite",27],["machoke",27],["lucario",30]]},"Crasher Wake":{"v1":[["gyarados",27],["quagsire",27],["floatzel",30]]},"Fantina":{"v1":[["drifblim",32],["gengar",34],["mismagius",36]]},"Byron":{"v1":[["bronzor",36],["steelix",36],["bastiodon",39]]},"Candice":{"v1":[["snover",38],["sneasel",38],["medicham",40],["abomasnow",42]]},"Volkner":{"v1":[["raichu",46],["ambipom",47],["octillery",48],["luxray",49]]}},"elite":{"Aaron":{"v1":[["dustox",53],["beautifly",53],["heracross",54],["vespiquen",54],["drapion",57]]},"Bertha":{"v1":[["quagsire",55],["whiscash",55],["golem",56],["sudowoodo",57],["hippowdon",59]]},"Flint":{"v1":[["rapidash",58],["steelix",57],["lopunny",57],["drifblim",58],["infernape",61]]},"Lucian":{"v1":[["mr-mime",59],["girafarig",59],["medicham",60],["alakazam",60],["bronzong",63]]},"Cynthia":{"v1":[["spiritomb",61],["gastrodon",60],["roserade",60],["milotic",63],["lucario",63],["garchomp",66]]}}},"Black":{"gym":{"Cilan (starter: Oshawott)":{"v1":[["lillipup",12],["pansage",14]]},"Chili (starter: Snivy)":{"v1":[["lillipup",12],["pansear",14]]},"Cress (starter: Tepig)":{"v1":[["lillipup",12],["panpour",14]]},"Lenora":{"v1":[["herdier",18],["watchog",20]]},"Burgh":{"v1":[["whirlipede",21],["dwebble",21],["leavanny",23]]},"Elesa":{"v1":[["emolga",25],["emolga",25],["zebstrika",27]]},"Clay":{"v1":[["krokorok",29],["palpitoad",29],["excadrill",31]]},"Skyla":{"v1":[["swoobat",33],["unfezant",33],["swanna",35]]},"Brycen":{"v1":[["vanillish",37],["cryogonal",37],["beartic",39]]},"Drayden (Black)":{"v1":[["fraxure",41],["druddigon",41],["haxorus",43]]}},"elite":{"Shauntal":{"v1":[["cofagrigus",48],["jellicent",48],["golurk",48],["chandelure",50]]},"Grimsley":{"v1":[["scrafty",48],["liepard",48],["krookodile",48],["bisharp",50]]},"Caitlin":{"v1":[["reuniclus",48],["musharna",48],["sigilyph",48],["gothitelle",50]]},"Marshal":{"v1":[["throh",48],["sawk",48],["conkeldurr",48],["mienshao",50]]},"Alder (postgame)":{"v1":[["accelgor",75],["bouffalant",75],["druddigon",75],["vanilluxe",75],["escavalier",75],["volcarona",77]]}},"story":{"N (N’s Castle — Black)":{"v1":[["zekrom",52],["carracosta",50],["vanilluxe",50],["archeops",50],["zoroark",50],["klinklang",50]]},"Ghetsis (N’s Castle)":{"v1":[["cofagrigus",52],["bouffalant",52],["seismitoad",52],["bisharp",52],["eelektross",52],["hydreigon",54]]}}},"White":{"gym":{"Cilan (starter: Oshawott)":{"v1":[["lillipup",12],["pansage",14]]},"Chili (starter: Snivy)":{"v1":[["lillipup",12],["pansear",14]]},"Cress (starter: Tepig)":{"v1":[["lillipup",12],["panpour",14]]},"Lenora":{"v1":[["herdier",18],["watchog",20]]},"Burgh":{"v1":[["whirlipede",21],["dwebble",21],["leavanny",23]]},"Elesa":{"v1":[["emolga",25],["emolga",25],["zebstrika",27]]},"Clay":{"v1":[["krokorok",29],["palpitoad",29],["excadrill",31]]},"Skyla":{"v1":[["swoobat",33],["unfezant",33],["swanna",35]]},"Brycen":{"v1":[["vanillish",37],["cryogonal",37],["beartic",39]]},"Iris (White)":{"v1":[["fraxure",41],["druddigon",41],["haxorus",43]]}},"elite":{"Shauntal":{"v1":[["cofagrigus",48],["jellicent",48],["golurk",48],["chandelure",50]]},"Grimsley":{"v1":[["scrafty",48],["liepard",48],["krookodile",48],["bisharp",50]]},"Caitlin":{"v1":[["reuniclus",48],["musharna",48],["sigilyph",48],["gothitelle",50]]},"Marshal":{"v1":[["throh",48],["sawk",48],["conkeldurr",48],["mienshao",50]]},"Alder (postgame)":{"v1":[["accelgor",75],["bouffalant",75],["druddigon",75],["vanilluxe",75],["escavalier",75],["volcarona",77]]}},"story":{"N (N’s Castle — White)":{"v1":[["reshiram",52],["carracosta",50],["vanilluxe",50],["archeops",50],["zoroark",50],["klinklang",50]]},"Ghetsis (N’s Castle)":{"v1":[["cofagrigus",52],["bouffalant",52],["seismitoad",52],["bisharp",52],["eelektross",52],["hydreigon",54]]}}}};
 Object.assign(trainerRostersV57,TAK63_VERIFIED_ROSTERS);
+// First Kalos Gym challenges. See DEV6.1 for source disagreements.
+const td61KalosGyms={
+ Viola:[["surskit",10,"swift-swim","",["quick-attack","bubble","water-sport"]],["vivillon",12,"shield-dust","",["harden","infestation","tackle"]]],
+ Grant:[["amaura",25,"refrigerate","",["aurora-beam","rock-tomb","thunder-wave","take-down"]],["tyrunt",25,"strong-jaw","",["rock-tomb","bite","stomp"]]],
+ Korrina:[["mienfoo",29,"","",["power-up-punch","fake-out","double-slap"]],["machoke",28,"guts","",["power-up-punch","rock-tomb","leer"]],["hawlucha",32,"unburden","",["flying-press","hone-claws","power-up-punch"]]],
+ Ramos:[["jumpluff",30,"chlorophyll","",["acrobatics","leech-seed"]],["weepinbell",31,"chlorophyll","",["grass-knot","acid","poison-powder","gastro-acid"]],["gogoat",34,"sap-sipper","",["grass-knot","bulldoze","take-down"]]],
+ Clemont:[["emolga",35,"static","",["volt-switch","quick-attack","aerial-ace"]],["magneton",35,"sturdy","",["thunderbolt","electric-terrain","mirror-shot"]],["heliolisk",37,"dry-skin","",["thunderbolt","quick-attack","grass-knot"]]],
+ Valerie:[["mawile",38,"hyper-cutter","",["feint-attack","crunch","iron-defense"]],["mr-mime",39,"soundproof","",["light-screen","reflect","psychic","dazzling-gleam"]],["sylveon",42,"cute-charm","",["dazzling-gleam","quick-attack","swift","charm"]]],
+ Olympia:[["sigilyph",44,"magic-guard","",["psychic","air-slash","light-screen","reflect"]],["slowking",45,"oblivious","",["psychic","calm-mind","power-gem","yawn"]],["meowstic-female",48,"infiltrator","",["psychic","calm-mind","fake-out","shadow-ball"]]],
+ Wulfric:[["abomasnow",56,"snow-warning","",["ice-beam","ice-shard","energy-ball"]],["cryogonal",55,"levitate","",["ice-beam","confuse-ray","flash-cannon","hail"]],["avalugg",59,"ice-body","",["avalanche","crunch","curse","gyro-ball"]]]
+};
+const td61KalosGymPresets=Object.fromEntries(Object.entries(td61KalosGyms).map(([trainer,rows])=>[
+ trainer,{v1:rows.map(([species,level,,,moves])=>[species,level,...moves])}
+]));
+for(const game of ['X','Y']){
+ trainerRostersV57[game]={gym:td61KalosGymPresets};
+ trainerSourceV57[game]='https://pokemondb.net/x-y/gymleaders-elitefour';
+}
+
+// ORAS Gym, League and rematch parties. Mega Stones remain held-item data.
+const td62OrasTrainers={
+ gym:{
+  "Roxanne":{v1:[["geodude",12,"sturdy","",["tackle","defense-curl","rock-tomb"]],["nosepass",14,"magnet-pull","",["tackle","harden","rock-tomb"]]]},
+  "Brawly":{v1:[["machop",14,"guts","",["leer","karate-chop","seismic-toss","bulk-up"]],["makuhita",16,"guts","",["arm-thrust","knock-off","sand-attack","bulk-up"]]]},
+  "Wattson":{v1:[["magnemite",19,"sturdy","",["thunder-wave","tackle","volt-switch"]],["voltorb",19,"soundproof","",["rollout","charge","volt-switch"]],["magneton",21,"magnet-pull","",["supersonic","magnet-bomb","volt-switch"]]]},
+  "Flannery":{v1:[["slugma",26,"flame-body","",["overheat","rock-throw","light-screen","sunny-day"]],["numel",26,"simple","",["earth-power","lava-plume","amnesia","sunny-day"]],["torkoal",28,"white-smoke","",["overheat","body-slam","curse","sunny-day"]]]},
+  "Norman":{v1:[["slaking",28,"truant","",["retaliate","yawn","feint-attack","encore"]],["vigoroth",28,"vital-spirit","",["encore","feint-attack","retaliate","fury-swipes"]],["slaking",30,"truant","",["retaliate","feint-attack","swagger","chip-away"]]]},
+  "Winona":{v1:[["swellow",33,"guts","",["quick-attack","aerial-ace","double-team","endeavor"]],["pelipper",33,"keen-eye","",["water-pulse","roost","protect","aerial-ace"]],["skarmory",33,"keen-eye","",["sand-attack","air-cutter","steel-wing","aerial-ace"]],["altaria",35,"natural-cure","",["earthquake","dragon-breath","cotton-guard","roost"]]]},
+  "Wallace":{v1:[["luvdisc",44,"swift-swim","",["draining-kiss","attract","sweet-kiss","water-pulse"]],["whiscash",44,"oblivious","",["earthquake","zen-headbutt","waterfall","mud-sport"]],["sealeo",44,"thick-fat","",["encore","waterfall","aurora-beam","body-slam"]],["seaking",44,"swift-swim","",["waterfall","rain-dance","aqua-ring","horn-drill"]],["milotic",46,"marvel-scale","",["hydro-pump","recover","ice-beam","disarming-voice"]]]},
+  "Tate & Liza":{v1:[["lunatone",45,"levitate","",["light-screen","psychic","hypnosis","calm-mind"]],["solrock",45,"levitate","",["sunny-day","rock-slide","psychic","solar-beam"]]]},
+ },
+ elite:{
+  "Sidney":{v1:[["mightyena",50,"intimidate","",["swagger","take-down","sucker-punch","crunch"]],["shiftry",50,"chlorophyll","",["fake-out","feint-attack","extrasensory","leaf-blade"]],["cacturne",50,"sand-veil","",["leech-seed","payback","needle-arm","spiky-shield"]],["sharpedo",50,"rough-skin","",["crunch","poison-fang","aqua-jet","slash"]],["absol",52,"super-luck","",["aerial-ace","night-slash","psycho-cut","slash"]]],v2:[["scrafty",70,"intimidate","",["crunch","brick-break","poison-jab","dragon-claw"]],["shiftry",70,"chlorophyll","",["fake-out","feint-attack","extrasensory","leaf-blade"]],["zoroark",70,"illusion","",["night-slash","shadow-claw","dark-pulse","flamethrower"]],["sharpedo",70,"rough-skin","",["crunch","poison-fang","aqua-jet","slash"]],["mandibuzz",70,"overcoat","",["brave-bird","bone-rush","feint-attack","tailwind"]],["absol",72,"super-luck","absolite",["aerial-ace","night-slash","psycho-cut","slash"]]]},
+  "Phoebe":{v1:[["dusclops",51,"pressure","",["shadow-punch","confuse-ray","curse","future-sight"]],["banette",51,"insomnia","",["shadow-ball","spite","will-o-wisp","feint-attack"]],["sableye",51,"prankster","",["shadow-claw","foul-play","power-gem","fake-out"]],["banette",51,"insomnia","",["shadow-ball","grudge","toxic","psychic"]],["dusknoir",53,"pressure","",["hex","fire-punch","ice-punch","thunder-punch"]]],v2:[["banette",71,"insomnia","",["shadow-ball","grudge","toxic","psychic"]],["mismagius",71,"levitate","",["shadow-ball","power-gem","thunderbolt","pain-split"]],["drifblim",71,"aftermath","",["phantom-force","psychic","icy-wind","acrobatics"]],["chandelure",71,"flame-body","",["hex","flamethrower","energy-ball","dark-pulse"]],["dusknoir",71,"pressure","",["hex","fire-punch","ice-punch","thunder-punch"]],["sableye",73,"prankster","sablenite",["shadow-claw","foul-play","power-gem","fake-out"]]]},
+  "Glacia":{v1:[["glalie",52,"inner-focus","",["light-screen","ice-shard","hail","crunch"]],["froslass",52,"snow-cloak","",["confuse-ray","blizzard","hail","ominous-wind"]],["glalie",52,"inner-focus","",["protect","ice-shard","hail","freeze-dry"]],["froslass",52,"snow-cloak","",["draining-kiss","blizzard","hail","shadow-ball"]],["walrein",54,"thick-fat","",["surf","body-slam","blizzard","sheer-cold"]]],v2:[["abomasnow",72,"snow-warning","",["blizzard","wood-hammer","ice-shard","earthquake"]],["beartic",72,"snow-cloak","",["icicle-crash","slash","shadow-claw","brick-break"]],["froslass",72,"snow-cloak","",["draining-kiss","blizzard","hail","shadow-ball"]],["vanilluxe",72,"ice-body","",["ice-beam","mirror-coat","freeze-dry","signal-beam"]],["walrein",72,"thick-fat","",["surf","body-slam","blizzard","sheer-cold"]],["glalie",74,"inner-focus","glalitite",["protect","ice-shard","hail","freeze-dry"]]]},
+  "Drake":{v1:[["kingdra",53,"swift-swim","",["smokescreen","dragon-dance","surf","body-slam"]],["flygon",53,"levitate","",["flamethrower","crunch","dragon-breath","earthquake"]],["salamence",55,"intimidate","sitrus-berry",["flamethrower","dragon-claw","rock-slide","crunch"]],["altaria",53,"natural-cure","",["aerial-ace","cotton-guard","dragon-pulse","moonblast"]],["flygon",53,"levitate","",["earthquake","dragon-claw","rock-slide","supersonic"]]],v2:[["altaria",73,"natural-cure","",["aerial-ace","cotton-guard","dragon-pulse","moonblast"]],["dragalge",73,"poison-point","",["dragon-pulse","hydro-pump","sludge-wave","thunderbolt"]],["kingdra",73,"sniper","",["dragon-pulse","surf","yawn","ice-beam"]],["flygon",73,"levitate","",["flamethrower","boomburst","dragon-pulse","screech"]],["haxorus",73,"mold-breaker","",["dragon-claw","earthquake","x-scissor","shadow-claw"]],["salamence",75,"intimidate","salamencite",["dragon-rush","zen-headbutt","crunch","thunder-fang"]]]},
+  "Steven":{v1:[["skarmory",57,"sturdy","",["toxic","aerial-ace","spikes","steel-wing"]],["claydol",57,"levitate","",["reflect","light-screen","extrasensory","earth-power"]],["aggron",57,"sturdy","",["stone-edge","earthquake","iron-tail","dragon-claw"]],["cradily",57,"suction-cups","",["giga-drain","ancient-power","sludge-bomb","confuse-ray"]],["armaldo",57,"battle-armor","",["x-scissor","rock-blast","metal-claw","crush-claw"]],["metagross",59,"clear-body","metagrossite",["bullet-punch","zen-headbutt","meteor-mash","giga-impact"]]],v2:[["skarmory",77,"sturdy","",["toxic","aerial-ace","spikes","steel-wing"]],["claydol",77,"levitate","",["reflect","light-screen","extrasensory","earth-power"]],["aggron",77,"sturdy","",["stone-edge","earthquake","iron-tail","dragon-claw"]],["carbink",77,"clear-body","",["moonblast","power-gem","psychic","earth-power"]],["aerodactyl",77,"pressure","",["rock-slide","ice-fang","thunder-fang","fire-fang"]],["metagross",79,"clear-body","metagrossite",["bullet-punch","zen-headbutt","meteor-mash","giga-impact"]]]},
+ },
+};
+const td62OrasPresets=Object.fromEntries(Object.entries(td62OrasTrainers).map(([category,trainers])=>[
+ category,Object.fromEntries(Object.entries(trainers).map(([name,variants])=>[
+  name,Object.fromEntries(Object.entries(variants).map(([version,rows])=>[
+   version,rows.map(([species,level,,,attacks])=>[species,level,...attacks])
+  ]))
+ ]))
+]));
+for(const game of ['Omega Ruby','Alpha Sapphire']){
+ trainerRostersV57[game]=td62OrasPresets;
+ trainerSourceV57[game]='https://pokemondb.net/omega-ruby-alpha-sapphire/gymleaders-elitefour';
+}
 // DEV6.1: independent B2/W2 opponent data. v1 normal, v2 normal rematch, v3 first Challenge Mode, v4 Challenge Mode rematch.
 for(const g of ['Black 2','White 2']){
  const source=window.takDexB2W2?.rosters;if(!source)continue;
@@ -1928,12 +1979,15 @@ function td61SyncVersionOptions(sel){const control=$('planVersion');const option
 let td70TrainerRosterToken=0,td77OpponentContext="";
 function td79TrainerRecord(game,mode,trainer,version,[name,level,...moves],i){
   const sequel=['Black 2','White 2'].includes(game);
-  const exact=sequel?window.takDexB2W2?.rosters?.[mode]?.[trainer]?.[version]?.[i]:(game==='Platinum'&&mode==='elite')?window.takDexPlatinumLeagueV77?.get(trainer,version,name):null;
+  const kalos=(game==='X'||game==='Y')&&mode==='gym'&&version==='v1'?td61KalosGyms[trainer]?.[i]:null;
+  const oras=['Omega Ruby','Alpha Sapphire'].includes(game)?td62OrasTrainers[mode]?.[trainer]?.[version]?.[i]:null;
+  const gen6=kalos||oras;
+  const exact=sequel?window.takDexB2W2?.rosters?.[mode]?.[trainer]?.[version]?.[i]:(game==='Platinum'&&mode==='elite')?window.takDexPlatinumLeagueV77?.get(trainer,version,name):gen6?{name:gen6[0],ability:gen6[2],item:gen6[3],moves:gen6[4]}:null;
   const verified=window.takDexUnovaTrainerReference?.(game,trainer,version,td51NameKey(name),level);
   const canonical=td51NameKey(name);
   const ability=window.takDexVerifiedTrainerAbility?.(game,trainer,version,canonical,level)||
    (exact&&(!exact.name||td51NameKey(exact.name)===canonical)?exact.ability:'')||'';
-  const challenge=exact?td74ChallengeProfile(game,version,window.takDexB2W2?.rosters?.[mode]?.[trainer]):{};
+  const challenge=exact&&!gen6?td74ChallengeProfile(game,version,window.takDexB2W2?.rosters?.[mode]?.[trainer]):{};
   if(challenge.challengeOffset&&verified&&level>verified.statLevel&&level-verified.statLevel<=5)challenge.challengeOffset=level-verified.statLevel;
   const [movesSource,attacks]=[
    ['Verified Unova table',verified?.moves],['Bundled trainer variant',exact?.moves],
@@ -2743,6 +2797,7 @@ for(const id of ['foeInput','foeInput2']){
  const frlg={tm03:'Cerulean Gym · defeat Misty',tm04:'Saffron Gym · defeat Sabrina',tm06:'Fuchsia Gym · defeat Koga',tm13:'Celadon Game Corner · 4,000 coins',tm24:'Celadon Game Corner · 4,000 coins',tm26:'Viridian Gym · defeat Giovanni',tm28:'Cerulean City · robbed house; or Celadon Department Store',tm29:'Saffron City · Mr. Psychic',tm30:'Celadon Game Corner · 4,500 coins',tm31:'S.S. Anne; or Celadon Department Store',tm35:'Celadon Game Corner · 4,000 coins',tm39:'Pewter Gym · defeat Brock',tm19:'Celadon Gym · defeat Erika',tm34:'Vermilion Gym · defeat Lt. Surge',tm44:'Route 9'};
  const reference={Emerald:'https://www.smogon.com/ingame/guides/emerald_itemlocations',Platinum:'https://www.smogon.com/ingame/guides/plat-tms',FireRed:'https://pokemondb.net/firered-leafgreen/tms',LeafGreen:'https://pokemondb.net/firered-leafgreen/tms',Black:'https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_V',White:'https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_V'};
  reference['Black 2']=reference['White 2']='https://pokemondb.net/black-white-2/tms';
+ reference.X=reference.Y=reference['Omega Ruby']=reference['Alpha Sapphire']='https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_VI';
  reference.Red=reference.Blue=reference.Yellow='https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_I';
  reference.Gold=reference.Silver=reference.Crystal='https://bulbapedia.bulbagarden.net/wiki/List_of_TM_and_HM_locations_in_Generation_II';
  function label(game,item){const key=String(item||'').toLowerCase();if(['Black 2','White 2'].includes(game))return window.takDexB2W2?.machines?.find(m=>m.item===key)?.location||null;if(['Black','White'].includes(game))return window.takDexUnovaV74?.machines?.find(m=>m.item===key)?.location||null;if(game==='Emerald'){const n=+key.slice(2);return key.startsWith('tm')?emeraldTM[n-1]||null:key.startsWith('hm')?emeraldHM[n-1]||null:null}if(game==='Platinum')return platinum[key]||null;if(game==='FireRed'||game==='LeafGreen')return frlg[key]||null;return window.takDexAcquisitionV77?.machineLocation(game,key)||null}
@@ -2909,12 +2964,13 @@ update();
  async function remove(game){MEM.delete(game);if('caches' in window){const cache=await caches.open(CACHE);await cache.delete(key(game))}window.dispatchEvent(new Event('td58-pack-update'))}
  async function clearAll(){MEM.clear();if('caches' in window)await caches.delete(CACHE);window.dispatchEvent(new Event('td58-pack-update'))}
  async function count(){let total=0;for(const g of games)if(await cached(g))total++;return total}
- function format(records,game,routes=[]){
-  return (records||[]).map(r=>{
+ function format(records,game,routes=[],species){
+  return (records||[]).map(raw=>{
+   const r=window.takDexAcquisitionV77?.encounterDisplay(game,raw)||raw;
    const progress=window.td62Progress;
    const audited=routes.find(route=>td77SameAcquisition(r,route,game));
    const detail=audited?[progress.milestone(audited.rank),audited.note].filter(Boolean).join(' · '):
-    game&&progress?.encounterAccess(game,r)||'Encounter timing unverified';
+    game&&progress?.encounterAccess(game,r,species)||'Encounter timing unverified';
    return td77AcquisitionEntry({
     location:r[0],place:window.takDexAcquisitionV77?.placeName(r[0],game)||pretty(r[0]),
     method:audited?audited.method:r[1],levels:r[2]>0?'Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:''):'',
@@ -4368,7 +4424,8 @@ async function td5LearnRecords(mon,game,evolve=true,machineOnly=false){const key
          </div>`;
     if(td73Tutors.length){
       if(!known.length)body.innerHTML='';
-      body.insertAdjacentHTML('beforeend',td73Tutors.map(tutor=>`<div class="td73-move-tutor"><p><b>${safe(tutor.game)} · Move Tutor</b></p><p><button type="button" class="td74-dex-map-link" data-td73-map-link="${safe(tutor.place)}" data-td73-map-game="${safe(tutor.game)}">${safe(tutor.place)} <span aria-hidden="true">⌖</span></button> · ${safe(tutor.detail)}</p><p class="note">Cost: ${safe(tutor.cost)}${tutor.condition?' · '+safe(tutor.condition):''}</p></div>`).join(''));
+      body.insertAdjacentHTML('beforeend',td73Tutors.map(tutor=>`<div class="td73-move-tutor"><p><b>${safe(tutor.game)} · Move Tutor</b></p><p>${gameGeneration(tutor.game)===6?safe(tutor.place):
+       `<button type="button" class="td74-dex-map-link" data-td73-map-link="${safe(tutor.place)}" data-td73-map-game="${safe(tutor.game)}">${safe(tutor.place)} <span aria-hidden="true">⌖</span></button>`} · ${safe(tutor.detail)}</p><p class="note">Cost: ${safe(tutor.cost)}${tutor.condition?' · '+safe(tutor.condition):''}</p></div>`).join(''));
     }
 
     if(moveAcquisitionContext&&!body.textContent.includes(moveAcquisitionContext))
@@ -4552,7 +4609,9 @@ document.addEventListener('keydown',event=>{
  }
  function detected(progress){return progress?.postgame?'postgame':Number.isInteger(progress?.badgeCount)?(progress.badgeCount?'badge-'+progress.badgeCount:'start'):'';}
  function actualProgress(game){return current?.game===game?current.saveLink?.progression:null;}
- function encounterAccess(game,row){
+ function encounterAccess(game,row,species){
+  const conditional=window.takDexAcquisitionV77?.conditionalEncounterNote(game,row,species);
+  if(conditional)return conditional;
   const gate=encounter(game,row),verified=window.takDexAcquisitionV77?.encounterRoute(game,row);
   if(verified)return [milestone(verified.rank),verified.note].filter(Boolean).join(' · ');
   if(!gate)return '';

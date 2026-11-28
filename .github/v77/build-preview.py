@@ -31,7 +31,7 @@ def main():
     parser.add_argument('commit')
     parser.add_argument('site', type=Path)
     parser.add_argument('origin', help='Dedicated preview URL')
-    parser.add_argument('--branch', choices=[BRANCH, 'v77.1-maintenance', 'v77.2-development', 'v77.2.1-maintenance', 'v78-development'], default=BRANCH)
+    parser.add_argument('--branch', choices=[BRANCH, 'v77.1-maintenance', 'v77.2-development', 'v77.2.1-maintenance', 'v78-development', 'v78-database-development'], default=BRANCH)
     args = parser.parse_args()
     commit = git('rev-parse', '--verify', args.commit + '^{commit}').decode().strip()
     subprocess.run(['git', '-C', ROOT, 'merge-base', '--is-ancestor', commit, args.branch], check=True)

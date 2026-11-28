@@ -74,6 +74,8 @@
   'unova-route-8':10,'icirrus-city':10,'moor-of-icirrus':10};
  const isKanto=game=>['Red','Blue','Yellow'].includes(game);
  const isJohto=game=>['Gold','Silver','Crystal'].includes(game);
+ const isKalos=game=>game==='X'||game==='Y';
+ const isOras=game=>game==='Omega Ruby'||game==='Alpha Sapphire';
  const canonicalAliases={
   'kanto-victory-road-2':'Victory Road','kanto-safari-zone':'Safari Zone','kanto-power-plant':'Power Plant',
   'digletts-cave':'Diglett’s Cave',
@@ -81,11 +83,13 @@
   'relic-castle':'Relic Castle','marvelous-bridge':'Marvelous Bridge'
  };
  function placeName(value,game){
-  const [raw,room]=String(value||'').split(' · ');
-  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|(?:kanto|johto)-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
+  const [rawValue,room]=String(value||'').split(' · ');
+  const raw=isOras(game)?rawValue.replace(/^hoenn-/,''):rawValue;
+  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|kalos-|(?:kanto|johto)-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
   if(raw==='unova-victory-road-2'&&['unknown-area-71','unknown-area-78'].includes(room))return 'Victory Road · Cave';
   if(raw==='relic-castle'&&room==='d'&&game?.endsWith(' 2'))return 'Relic Castle · Volcarona’s chamber';
   if(!room||/^unknown-area/i.test(room))return base;
+  if(isOras(game)&&/^(north|south)-oras$/.test(room))return base+' · '+(room.startsWith('north')?'North':'South');
   return base+' · '+room.replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
  }
  const reviewedGrottos={'unova-route-5 · hidden-grotto':4,'unova-route-7 · hidden-grotto':5,
@@ -258,7 +262,125 @@
   return {...early(milestone,placeName(place,game),method,[requirement,time.length?'Time: '+time.join(', '):''].filter(Boolean).join(' ')),
    source:'gsc-location-story-and-method'};
  }
+ const kalosOpeningAreas=new Set(['kalos-route-2','santalune-forest','kalos-route-3']);
+ const kalosWaterMethods={
+  surf:[3,'Obtain Surf in Shalour City and earn the Rumble Badge for field use.'],
+  'old-rod':[1,'Obtain the Old Rod at Ambrette Aquarium.'],
+  'good-rod':[3,'Obtain the Good Rod at Coumarine City’s marina.'],
+  'super-rod':[6,'Clear the Poké Ball Factory and obtain the Super Rod at the Route 16 Fishing Shack.']
+ };
+ // Area access and encounter-method access are separate gates.
+ const kalosEarlyRoutes={
+  'kalos-route-4':[1,'Earn the Bug Badge to leave Santalune City northward.','red-flowers yellow-flowers'],
+  'kalos-route-5':[1,'Continue from Lumiose City toward Camphrier Town.','walk purple-flowers horde'],
+  'kalos-route-6':[1,'Take the side paths of Palais Lane from Parfum Palace.','rough-terrain rustling-bush-ambush'],
+  'kalos-route-7':[1,'Use the Poké Flute and clear the Snorlax bridge.','walk purple-flowers yellow-flowers horde'],
+  'kalos-route-8':[1,'Reach Muraille Coast through Connecting Cave; enter the beach through Ambrette Aquarium.','walk yellow-flowers horde'],
+  'kalos-route-9':[1,'Reach Ambrette Town and ride Rhyhorn toward Glittering Cave.','rough-terrain'],
+  'kalos-route-10':[2,'Earn the Cliff Badge.','walk yellow-flowers horde'],
+  'kalos-route-11':[2,'Travel east from Geosenge Town toward Reflection Cave.','walk horde'],
+  'kalos-route-12':[3,'Earn the Rumble Badge and cross from Shalour City using Surf.','walk yellow-flowers horde']
+ };
+ const kalosStoryEncounters={
+  'kalos-route-12':{gift:[3,'Receive Lapras west of the water after leaving Shalour City.']},
+  'tower-of-mastery':{gift:[3,'Earn the Rumble Badge and complete Korrina’s Mega Evolution battle.']},
+  'kalos-route-7':{static:[1,'Retrieve the Poké Flute from Parfum Palace to wake Snorlax.']},
+  'team-flare-secret-hq':{static:[7,'After the Psychic Badge, progress through Team Flare’s Secret HQ.']}
+ };
+ function kalosEncounterRoute(row){
+  const [place,method,,,conditions=[]]=row;
+  if(conditions.length)return null;
+  const story=kalosStoryEncounters[place]?.[method];
+  if(story)return {...early(story[0],placeName(place),method,story[1]),source:'xy-story-gift-and-static'};
+  const opening=kalosOpeningAreas.has(place),area=kalosEarlyRoutes[place];
+  if(!opening&&!area)return null;
+  const water=['kalos-route-3','kalos-route-8','kalos-route-12'].includes(place)?kalosWaterMethods[method]:null;
+  const rock=['kalos-route-8','kalos-route-12'].includes(place)&&method==='rock-smash'?[1,'Obtain TM94 in Ambrette Town and use Rock Smash.']:null;
+  if(!water&&!rock&&!(opening&&method==='walk')&&!area?.[2].split(' ').includes(method))return null;
+  const gate=water||rock||[0,''];
+  const note=[area?.[1],gate[1]].filter(Boolean).join(' ');
+  return {...early(Math.max(area?.[0]??0,gate[0]),placeName(place),method,note),source:'xy-opening-area-and-method'};
+ }
+ // The bundled X/Y fossil rows describe the fossil pickup rather than Pokémon revival.
+ function encounterDisplay(game,row){
+  if(isKalos(game)&&row[0]==='glittering-cave · unknown-area-303'&&row[1]==='gift'&&row[2]===20&&row[3]===20){
+   return ['ambrette-town','fossil',...row.slice(2)];
+  }
+  return row;
+ }
+ // A Safari depends on the player's friend list, so it is never an unconditional planner route.
+ const orasStarterGifts=[
+  [new Set(['treecko','torchic','mudkip']),'Start of game · Choose one Hoenn starter.'],
+  [new Set(['chikorita','cyndaquil','totodile']),'Postgame · Speak to Zinnia after the first Hall of Fame, then choose one Johto starter.'],
+  [new Set(['snivy','tepig','oshawott']),'Postgame · Complete the Delta Episode, then choose one Unova starter.'],
+  [new Set(['turtwig','chimchar','piplup']),'Postgame · Enter the Hall of Fame again, then choose one Sinnoh starter.']
+ ];
+ function conditionalEncounterNote(game,row,species){
+  const [place,method,min,max,conditions=[]]=row;
+  if(isOras(game)&&place==='hoenn-route-101'&&method==='gift'&&min===5&&max===5){
+   return orasStarterGifts.find(([names])=>names.has(species))?.[1]||'';
+  }
+  if(isOras(game)&&place==='sky-pillar · apex'&&method==='static'&&min===80&&max===80){
+   return 'Postgame · First battle in space during the Delta Episode. If missed, enter the Hall of Fame again to retry at Sky Pillar.';
+  }
+  if(!isKalos(game))return '';
+  if(method==='fossil'&&place==='ambrette-town')return 'After badge 1 · Choose the matching Jaw or Sail Fossil in Glittering Cave and revive it at the Ambrette Fossil Lab.';
+  if(method==='gift'&&place==='aquacorde-town')return 'Start of game · Choose one Kalos starter.';
+  if(method==='gift'&&place==='lumiose-city')return 'After badge 1 · Battle Professor Sycamore and choose one Kanto starter.';
+  if(method==='static'&&conditions.includes('story-progress-hall-of-fame'))return 'Postgame · Enter the Hall of Fame.';
+  if(method==='static'&&place==='sea-spirits-den'&&conditions.includes('other-found-11-times-roaming')){
+   return 'Postgame · Follow the roaming bird 11 times. The bird depends on your Kalos starter.';
+  }
+  if(method==='static'&&place==='roaming-kalos')return 'Postgame · Roaming sighting. Catch the bird later in Sea Spirit’s Den.';
+  if(!place.startsWith('friend-safari · ')||method!=='walk'||min!==30||max!==30)return '';
+  const slot=conditions.length===1&&/^friend-safari-slot-([123])$/.exec(conditions[0]);
+  if(!slot)return '';
+  const access='Postgame · Kiloude City · Requires a registered friend with the matching Safari.';
+  return slot[1]==='3'?access+' Slot 3 must already be unlocked or unlocked by meeting a Hall of Fame friend in local play.':access;
+ }
+ const orasOpeningRoutes={
+  'hoenn-route-101':[0,''],
+  'hoenn-route-102':[0,'Advance from Oldale Town after Brendan or May’s Route 103 battle.'],
+  'hoenn-route-103':[0,'Access the west bank from Oldale Town.'],
+  'hoenn-route-104 · south-oras':[0,'Reach Route 104 from Petalburg City.'],
+  'hoenn-route-104 · north-oras':[0,'Cross Petalburg Woods from the south.'],
+  'hoenn-route-110':[1,'Take Mr. Briney’s boat to Slateport, then head north.']
+ };
+ const orasOpeningMethods={
+  walk:[0,''],horde:[0,''],surf:[5,'Defeat Norman and obtain Surf in Petalburg City.'],
+  'old-rod':[1,'Obtain the Old Rod in Dewford Town.'],
+  'good-rod':[5,'Reach the east bank of Route 118 using Surf and obtain the Good Rod.']
+ };
+ const orasHordeAreas={
+  'petalburg-woods':[0,'Reach the woods from Route 104.'],
+  'rusturf-tunnel':[1,'Use the Route 116 entrance after earning the Stone Badge.'],
+  'granite-cave · 1f':[1,'Take Mr. Briney’s boat to Dewford and enter from Route 106.'],
+  'fiery-path':[3,'Use Rock Smash on Route 111 after earning the Dynamo Badge.'],
+  'meteor-falls':[3,'Approach the main cavern from Route 114.'],
+  'jagged-pass':[3,'Descend from Mt. Chimney after the Team Magma or Team Aqua battle.']
+ };
+ const orasStoryEncounters={
+  'hoenn-route-119 · weather-institute':{gift:[5,'Defeat Team Magma or Team Aqua at the Weather Institute and leave an empty party slot.']},
+  'mossdeep-city · stevens-house':{gift:[10,'Enter the Hall of Fame, then visit Steven’s house.']},
+  'cave-of-origin · b4f':{static:[7,'After the Mind Badge, stop Team Magma or Team Aqua at Seafloor Cavern.']}
+ };
+ function orasEncounterRoute(row){
+  const [place,method,min,max,conditions=[]]=row;
+  if(conditions.length)return null;
+  if(place==='sky-pillar · apex'&&method==='static'&&min===max&&min===70){
+   return {...early(10,placeName(place),method,'Reach Sky Pillar during the Delta Episode.'),source:'oras-story-encounter'};
+  }
+  const story=orasStoryEncounters[place]?.[method];
+  if(story)return {...early(story[0],placeName(place),method,story[1]),source:'oras-story-encounter'};
+  const horde=method==='horde'?orasHordeAreas[place]:null;
+  if(horde)return {...early(horde[0],placeName(place),method,horde[1]),source:'oras-reviewed-horde-areas'};
+  const area=orasOpeningRoutes[place],field=orasOpeningMethods[method];
+  if(!area||!field)return null;
+  return {...early(Math.max(area[0],field[0]),placeName(place),method,[area[1],field[1]].filter(Boolean).join(' ')),source:'oras-opening-area-and-method'};
+ }
  function encounterRoute(game,row){
+  if(isOras(game))return orasEncounterRoute(row);
+  if(isKalos(game))return kalosEncounterRoute(row);
   if(isKanto(game))return kantoRoute(game,row);
   if(isJohto(game))return johtoRoute(game,row);
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
@@ -802,7 +924,22 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return null;
  }
+ const kalosTrades={
+  farfetchd:[0,'Santalune City',10,'Trade a Route 2 Bunnelby for Farfetch’d.'],
+  steelix:[1,'Cyllage City Pokémon Center',20,'Trade a Luvdisc. The Old Rod from Ambrette Aquarium can catch one.'],
+  bisharp:[7,'Snowbelle City',50,'Trade a Jigglypuff, which can be caught on Route 20.'],
+  ralts:[10,'Café Soleil, Lumiose City',5,'After the League, trade any Pokémon to Diantha for Ralts holding Gardevoirite.']
+ };
+ function kalosAcquisition(game,name,encounters){
+  const direct=land(game,encounters),entry=kalosTrades[name];
+  if(!entry)return direct;
+  const [rank,place,level,note]=entry;
+  const trade={...early(rank,place,'in-game trade',note),minLevel:level,maxLevel:level,source:'xy-fixed-in-game-trade'};
+  return direct&&direct.rank<=rank?{...direct,alternatives:[trade]}:trade;
+ }
  function lookup(game,name,encounters){
+  if(isKalos(game))return kalosAcquisition(game,name,encounters);
+  if(isOras(game))return land(game,encounters);
   if(isKanto(game)){
    const yellow=game==='Yellow';
    const gifts={
@@ -1237,7 +1374,228 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   const ranks=known.map(row=>row[0]).filter(rank=>rank!=null);
   return known.length?{rank:ranks.length?Math.min(...ranks):null,requirements:known.map(row=>row[1]),text:known.map(row=>row[1]).join(' / ')}:null;
  }
+ // X/Y share these machine sources. Field-use badges are separate from item acquisition.
+ const kalosMachineLocations={
+  hm01:'Parfum Palace · palace garden · Bug Badge for field use',
+  hm02:'Coumarine City · Professor Sycamore at the monorail station · Plant Badge for field use',
+  hm03:'Shalour City · Serena or Calem after leaving the Tower of Mastery · Rumble Badge for field use',
+  hm04:'Cyllage City · Grant near the cycling track · Cliff Badge for field use',
+  hm05:'Route 19 · Shauna after the rival battles · Iceberg Badge for field use',
+  tm01:'Route 5 · skate rail',
+  tm02:'Victory Road · Waterfall',
+  tm03:'Victory Road',
+  tm04:'Anistar Gym · defeat Olympia',
+  tm05:'Battle Maison · 24 BP · postgame',
+  tm06:'Route 14 · gift east of the haunted house',
+  tm07:'Shalour City Poké Mart · ₽50,000',
+  tm08:'Snowbelle City · northeast house',
+  tm09:'Route 6 · eastern grass path',
+  tm10:'Anistar City · southeast house',
+  tm11:'Lumiose City · South Boulevard Poké Mart · ₽50,000',
+  tm12:'Lysandre Labs · Team Flare grunt',
+  tm13:'Snowbelle Gym · defeat Wulfric',
+  tm14:'Anistar City Poké Mart · ₽70,000',
+  tm15:'Anistar City Poké Mart · ₽90,000',
+  tm16:'Kiloude City Poké Mart · ₽30,000 · postgame',
+  tm17:'Parfum Palace · balcony butler',
+  tm18:'Lumiose City · South Boulevard Poké Mart · ₽50,000',
+  tm19:'Route 8 · Surf',
+  tm20:'Shalour City Poké Mart · ₽30,000',
+  tm21:'Connecting Cave · Cyllage City side',
+  tm22:'Route 21 · Strength puzzle',
+  tm23:'Battle Maison · 32 BP · postgame',
+  tm24:'Lumiose Gym · defeat Clemont',
+  tm25:'Anistar City Poké Mart · ₽70,000',
+  tm26:'Route 22',
+  tm27:'Lumiose City gate · Dexio',
+  tm28:'Shalour City Poké Mart · ₽10,000',
+  tm29:'Pokémon Village · Waterfall',
+  tm30:'Terminus Cave',
+  tm31:'Terminus Cave',
+  tm32:'Anistar City Pokémon Center · 4 a.m.–11 a.m.',
+  tm33:'Kiloude City Poké Mart · ₽30,000 · postgame',
+  tm34:'Battle Maison · 32 BP · postgame',
+  tm35:'Anistar City Pokémon Center · 11 a.m.–6 p.m.',
+  tm36:'Route 19',
+  tm37:'Shalour City Poké Mart · ₽50,000',
+  tm38:'Anistar City Poké Mart · ₽70,000',
+  tm39:'Cyllage Gym · defeat Grant',
+  tm40:'Connecting Cave · Cyllage City side',
+  tm41:'Laverre City',
+  tm42:'Dendemille Town · house near the windmill',
+  tm43:'Kalos Power Plant · worker gift',
+  tm44:'Hotel Cyllage · first floor',
+  tm45:'Route 12 · Baa de Mer Ranch',
+  tm46:'Camphrier Town · eastern house',
+  tm47:'Tower of Mastery · fourth floor',
+  tm48:'Battle Maison · 16 BP · postgame',
+  tm49:'Hotel Richissime · fifth floor',
+  tm50:'Kiloude City Poké Mart · ₽80,000 · postgame',
+  tm51:'Battle Maison · 32 BP · postgame',
+  tm52:'Anistar City Poké Mart · ₽70,000',
+  tm53:'Route 20 · near Pokémon Village',
+  tm54:'Lumiose City · Sycamore Pokémon Lab',
+  tm55:'Couriway Town · hotel quiz',
+  tm56:'Lost Hotel',
+  tm57:'Route 13',
+  tm58:'Kiloude City · western house · postgame',
+  tm59:'Battle Maison · 16 BP · postgame',
+  tm60:'Battle Maison · 24 BP · postgame',
+  tm61:'Route 14',
+  tm62:'Coumarine City · TM quiz',
+  tm63:'Coumarine City · TM quiz',
+  tm64:'Battle Maison · 48 BP · postgame',
+  tm65:'Glittering Cave',
+  tm66:'Geosenge Town Pokémon Center',
+  tm67:'Battle Maison · 48 BP · postgame',
+  tm68:'Kiloude City Poké Mart · ₽90,000 · postgame',
+  tm69:'Route 11 · Cut',
+  tm70:'Reflection Cave · Tierno',
+  tm71:'Frost Cavern',
+  tm72:'Battle Maison · 48 BP · postgame',
+  tm73:'Route 10 · Strength puzzle',
+  tm74:'Reflection Cave · B2F',
+  tm75:'Lumiose City · South Boulevard Poké Mart · ₽10,000',
+  tm76:'Lumiose City · South Boulevard Poké Mart · ₽10,000',
+  tm77:'Anistar City Pokémon Center · 6 p.m.–8 p.m.',
+  tm78:'Lumiose City · South Boulevard Poké Mart · ₽10,000',
+  tm79:'Frost Cavern · ice puzzle',
+  tm80:'Couriway Town',
+  tm81:'Azure Bay',
+  tm82:'Lumiose Museum · first floor',
+  tm83:'Santalune Gym · defeat Viola',
+  tm84:'Shalour City Poké Mart · ₽10,000',
+  tm85:'Battle Maison · 48 BP · postgame',
+  tm86:'Coumarine Gym · defeat Ramos',
+  tm87:'Battle Maison · 24 BP · postgame',
+  tm88:'Hotel Cyllage · first floor',
+  tm89:'Couriway Town · train tracks',
+  tm90:'Anistar City Pokémon Center · 8 p.m.–4 a.m.',
+  tm91:'Kiloude City · eastern house · postgame',
+  tm92:'Coumarine City · TM quiz',
+  tm93:'Kiloude City Poké Mart · ₽50,000 · postgame',
+  tm94:'Ambrette Town · no badge required for field use',
+  tm95:'Lost Hotel',
+  tm96:'Hotel Ambrette',
+  tm97:'Route 15',
+  tm98:'Shalour Gym · defeat Korrina',
+  tm99:'Laverre Gym · defeat Valerie',
+  tm100:'Coumarine City · TM quiz'
+ };
+ const orasMachineLocations={
+  hm01:"Rustboro City · Cutter’s house · Stone Badge for field use",
+  hm02:"Route 119 · win the rival battle · Feather Badge for field use",
+  hm03:"Petalburg City · Wally’s father after defeating Norman · Balance Badge for field use",
+  hm04:"Route 112 · Brendan or May · Heat Badge for field use",
+  hm05:"Sootopolis Gym · defeat Wallace · Rain Badge for field use",
+  hm06:"Mauville City · receive from Wally’s uncle · Dynamo Badge for field use",
+  hm07:"Mossdeep City · Steven after the Gym · Mind Badge for field use",
+  tm01:"Slateport City",
+  tm02:"Meteor Falls",
+  tm03:"Pacifidlog Town",
+  tm04:"Mossdeep Gym · defeat Tate and Liza",
+  tm05:"Route 114",
+  tm06:"Fiery Path",
+  tm07:"Shoal Cave",
+  tm08:"Dewford Gym · defeat Brawly",
+  tm09:"Mauville City Poké Mart",
+  tm10:"Fortree City",
+  tm100:"Slateport City",
+  tm11:"Scorched Slab",
+  tm12:"Trick House",
+  tm13:"Sea Mauville",
+  tm14:"Lilycove Department Store",
+  tm15:"Lilycove Department Store",
+  tm16:"Lilycove Department Store",
+  tm17:"Lilycove Department Store",
+  tm18:"Sea Mauville",
+  tm19:"Fortree Gym · defeat Winona",
+  tm20:"Lilycove Department Store",
+  tm21:"Pacifidlog Town",
+  tm22:"Safari Zone",
+  tm23:"Fallarbor Town",
+  tm24:"New Mauville sidequest · Wattson",
+  tm25:"Lilycove Department Store",
+  tm26:"Seafloor Cavern",
+  tm27:"Pacifidlog Town",
+  tm28:"Route 114",
+  tm29:"Ever Grande City",
+  tm30:"Mt. Pyre",
+  tm31:"Sootopolis City",
+  tm32:"Route 113",
+  tm33:"Lilycove Department Store",
+  tm34:"Route 132",
+  tm35:"Victory Road",
+  tm36:"Dewford Town",
+  tm37:"Route 111",
+  tm38:"Lilycove Department Store",
+  tm39:"Rustboro Gym · defeat Roxanne",
+  tm40:"Mauville City Poké Mart",
+  tm41:"Slateport City",
+  tm42:"Mauville City Poké Mart",
+  tm43:"Jagged Pass",
+  tm44:"Lilycove City",
+  tm45:"Verdanturf Town",
+  tm46:"Slateport City",
+  tm47:"Mauville City Poké Mart",
+  tm48:"Mauville City",
+  tm49:"Route 104",
+  tm50:"Lavaridge Gym · defeat Flannery",
+  tm51:"Granite Cave",
+  tm52:"Lilycove Department Store",
+  tm53:"Safari Zone",
+  tm54:"Rustboro City Poké Mart",
+  tm55:"Seafloor Cavern",
+  tm56:"Pacifidlog Town",
+  tm57:"Mauville City Poké Mart",
+  tm58:"Mauville City Poké Mart",
+  tm59:"Mt. Chimney",
+  tm60:"Mossdeep City",
+  tm61:"Mt. Pyre",
+  tm62:"Route 119",
+  tm63:"S.S. Tidal",
+  tm64:"Sky Pillar",
+  tm65:"Granite Cave",
+  tm66:"Mirage Island · south of Route 134",
+  tm67:"Petalburg Gym · defeat Norman",
+  tm68:"Lilycove Department Store",
+  tm69:"Jagged Pass",
+  tm70:"Granite Cave",
+  tm71:"Lilycove Department Store",
+  tm72:"Mauville Gym · defeat Wattson",
+  tm73:"Slateport City",
+  tm74:"Mirage Forest · north of Route 111",
+  tm75:"Lavaridge Town",
+  tm76:"Slateport City",
+  tm77:"Route 133",
+  tm78:"Mauville City Poké Mart",
+  tm79:"Shoal Cave",
+  tm80:"Route 134",
+  tm81:"Victory Road",
+  tm82:"Mauville City Poké Mart",
+  tm83:"Sootopolis City",
+  tm84:"Mirage Mountain · north of Lilycove City",
+  tm85:"Safari Zone",
+  tm86:"Fortree City",
+  tm87:"Battle Resort · complete the Delta Episode",
+  tm88:"Lilycove City",
+  tm89:"Mauville City",
+  tm90:"Mirage Island · south of Pacifidlog Town",
+  tm91:"Mirage Island · north of Route 125",
+  tm92:"Trick House",
+  tm93:"Safari Zone",
+  tm94:"Route 111",
+  tm95:"Mirage Cave · north of Fallarbor Town",
+  tm96:"Fiery Path",
+  tm98:"Mauville City Poké Mart",
+  tm99:"Route 123"
+ };
  function machineLocation(game,item){
+  if(isOras(game)){
+   if(item==='tm97')return game==='Omega Ruby'?'Team Magma Hideout':'Team Aqua Hideout';
+   return orasMachineLocations[item]||null;
+  }
+  if(isKalos(game))return kalosMachineLocations[item]||null;
   return isKanto(game)?kantoMachineLocations[item]:isJohto(game)?johtoMachineLocations[item]:null;
  }
  // Kanto's repeatable shop and Game Corner machines are excluded.
@@ -1338,6 +1696,10 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    a.steps.length-b.steps.length||(a.initial.minLevel||0)-(b.initial.minLevel||0)||a.id.localeCompare(b.id));
  }
  function moveReminder(game){
+  if(isOras(game))return {rank:3,place:'Fallarbor Town',
+   text:'Move Reminder · Fallarbor Town · One Heart Scale · Use Rock Smash after earning the Dynamo Badge to reach Route 113'};
+  if(isKalos(game))return {rank:6,place:'Dendemille Town',
+   text:'Move Reminder · Dendemille Town · One Heart Scale · Clear the Poké Ball Factory and cross Route 15'};
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
   const sequel=game.endsWith(' 2'),place=sequel?'Pokémon World Tournament':'Mistralton City';
   const gate=sequel?'After Clay, visit the kiosks south of Driftveil City':'After Clay, reach Mistralton through Chargestone Cave';
@@ -1470,5 +1832,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  }
  root.takDexAcquisitionV77={coverage:game=>['Black','White','Black 2','White 2'].includes(game)?'Curated Unova locations, requirements and evolution paths · Partial':
   ['Platinum','HeartGold','SoulSilver','Emerald'].includes(game)?'Selected routes and progression rules · Partial':'Encounter and evolution records where indexed',
-  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
+  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,encounterDisplay,conditionalEncounterNote,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
 })(globalThis);
