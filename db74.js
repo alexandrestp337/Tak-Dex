@@ -2,7 +2,22 @@
 (function(){
  const base='https://pokeapi.co/api/v2/', pending=new Map(), records=new Map();
  const ref=(name,kind,id)=>({name,...(kind&&id?{url:base+kind+'/'+id+'/'}:{})});
- const read=file=>{if(!pending.has(file))pending.set(file,fetch(new URL('db74/'+file,document.baseURI)).then(r=>{if(!r.ok)throw Error('Bundled reference '+file+' unavailable');return r.json()}).catch(e=>{pending.delete(file);throw e}));return pending.get(file)};
+ const read=file=>{
+  if(!pending.has(file))pending.set(file,(async()=>{
+   const url=new URL('db74/'+file,document.baseURI);
+   for(const cache of ['default','reload']){
+    try{
+     return await window.takDexOfflineData.request(url,{cache},async response=>{
+      const value=await window.takDexOfflineData.read(response,data=>window.takDexOfflineData.bundleShape(file,data));
+      if(!value)throw Error('Invalid bundled reference '+file);
+      return value;
+     });
+    }catch(error){if(cache==='reload')throw error;}
+   }
+  })().catch(error=>{pending.delete(file);throw error;}));
+  return pending.get(file);
+ };
+ const inventory=async game=>(await read('index.json')).coverage[game.toLowerCase().replace(/ /g,'-')]??null;
  const gen=n=>'generation-'+['','i','ii','iii','iv','v','vi','vii','viii','ix'][n];
  const types=arr=>arr.map(([slot,name])=>({slot,type:ref(name)}));
  const abilities=arr=>arr.map(([slot,name,is_hidden])=>({slot,ability:name?ref(name):null,is_hidden}));
@@ -30,5 +45,5 @@
  }
  async function encounter(game){const name=game.toLowerCase().replace(/ /g,'-');const ix=await read('index.json');if(!Object.hasOwn(ix.coverage,name))return null;const pack=await read('e-'+name+'.json');if(pack.schema!==65||pack.version!==name)throw Error('Invalid bundled encounter index');return {...pack,game};}
  async function machines(group){const rows=(await read('machines.json'))[group];return rows?rows.slice().sort((a,b)=>a.item.localeCompare(b.item,undefined,{numeric:true})):null;}
- window.takDexDB74={api,encounter,machines};
+ window.takDexDB74={api,encounter,machines,inventory};
 })();

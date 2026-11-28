@@ -6,7 +6,9 @@
 
 Tak-Dex is a free, unofficial Pokémon team builder, battle calculator and playthrough companion. It combines team planning, generation-specific matchup analysis, move and evolution reference information, and interactive region maps in one mobile-friendly web app. Saved teams and plans stay on the device.
 
-> **V77.2.1-STABLE.** Save synchronization recognizes acquired Pokémon while preserving the selected team plan. [Release notes](.github/v77/REPORT.md#v7721-stable-release)
+> **Production · V77.2.1-STABLE.** Save synchronization recognizes acquired Pokémon while preserving the selected team plan. [Release notes](.github/v77/REPORT.md#v7721-stable-release)
+
+The V78 DEV5 RC1 development candidate is available through the owner-only preview. [Development report](.github/v78/DEV5.md)
 
 ## Tools
 
@@ -20,8 +22,8 @@ Tak-Dex is a free, unofficial Pokémon team builder, battle calculator and playt
 | Comparison | Compare two Pokémon and their evolution branches side by side. |
 | Move Checker | Move details, historical stats, game-specific learning methods, By Type filters and evolution compatibility. |
 | TM/HM Compatibility | Team compatibility indicators for current species and eligible evolutions, machine locations where indexed. |
-| Interactive Maps | Platinum, Black, White, Black 2 and White 2. Search indexed locations, Pokémon, items, TM/HMs, tutors, NPCs, services and story events. Zoom, fullscreen and linked reference tools. |
-| Offline Data | Download and manage game reference and artwork packs. Initial downloads need connectivity; incomplete packs and missing reference records are reported. |
+| Interactive Maps | Emerald, Platinum, Black, White, Black 2 and White 2. Search indexed locations, Pokémon, items, TM/HMs, tutors, NPCs, services and story events. Zoom, fullscreen and linked reference tools. |
+| Offline Data | Download and manage game reference and artwork packs. The essential app shell installs first. Regional assets load separately, and incomplete packs can be resumed. |
 
 ## Bundled database
 
@@ -31,7 +33,7 @@ Version-pinned PokéAPI CSV data supplies core Pokémon, move, learnset, machine
 
 34 game selections: Red, Blue, Yellow; Gold, Silver, Crystal; Ruby, Sapphire, Emerald, FireRed, LeafGreen; Diamond, Pearl, Platinum, HeartGold, SoulSilver; Black, White, Black 2, White 2; X, Y, Omega Ruby, Alpha Sapphire; Sun, Moon, Ultra Sun, Ultra Moon; Sword, Shield, Brilliant Diamond, Shining Pearl; Scarlet, Violet.
 
-Maps are currently available for Platinum and the four Unova versions. Normal and Challenge Mode first-challenge and League rematch presets for Black 2 / White 2 are included. Challenge presets estimate stats using the underlying Normal Mode level and 30 IVs; nature and EVs remain estimates. Other trainer rematches, progression prerequisites and encounter/search coverage are not exhaustive. Battle scores and damage are estimates, not a complete battle simulator. Pokémon form availability is generation-filtered; game-specific exceptions remain subject to verification.
+Maps are available for Emerald, Platinum and the four Unova versions. Normal and Challenge Mode first-challenge and League rematch presets for Black 2 / White 2 are included. Challenge presets estimate stats using the underlying Normal Mode level and 30 IVs; nature and EVs remain estimates. Other trainer rematches, progression prerequisites and encounter/search coverage are not exhaustive. Battle scores and damage are estimates, not a complete battle simulator. Pokémon form availability is generation-filtered; game-specific exceptions remain subject to verification.
 
 ## Getting started
 
@@ -45,7 +47,7 @@ Maps are currently available for Platinum and the four Unova versions. Normal an
 
 Vanilla HTML, CSS and JavaScript, served from GitHub Pages. Keep all existing assets when applying replacement archives. Test the Development branch via Live Server or `python -m http.server 8000`; do not run the app directly as a `file://` page if testing service workers. Use a secure origin (HTTPS or localhost) for offline functionality.
 
-Android builds use Capacitor and Android Studio. Preserve the existing package ID `io.github.alexandrestp337.takdex` and original signing key when updating. The Android V7 source includes a floating shortcut and return-to-emulator workflow; V74 native customization and APK validation are still pending. After replacing web assets in the configured web directory, use `npx cap sync android` and build/sign in Android Studio. A web replacement ZIP is not an APK.
+Android lives in a separate Capacitor project. Its released native baseline is V9. The V10.2 source audit informs the later native integration stage, including save permissions and a physical-device check. Preserve package ID `io.github.alexandrestp337.takdex` and the original signing key.
 
 ## Feedback and privacy
 

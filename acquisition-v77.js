@@ -1468,5 +1468,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return rules;
  }
- root.takDexAcquisitionV77={lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
+ root.takDexAcquisitionV77={coverage:game=>['Black','White','Black 2','White 2'].includes(game)?'Curated Unova locations, requirements and evolution paths · Partial':
+  ['Platinum','HeartGold','SoulSilver','Emerald'].includes(game)?'Selected routes and progression rules · Partial':'Encounter and evolution records where indexed',
+  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
 })(globalThis);

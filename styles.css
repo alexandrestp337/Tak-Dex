@@ -561,7 +561,6 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 
 /* V73 DEV3: fan map dimensions and selection-only route highlights. */
 .td73-map-canvas{aspect-ratio:1100/947}
-.td73-map-toolbar .td73-map-zoom-value{font-size:.72rem;color:var(--muted);min-width:38px;text-align:right;align-self:center}
 .td73-map-canvas .td73-map-route{cursor:pointer;outline:none}
 .td73-map-canvas .td73-map-route polyline{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .td73-map-canvas .td73-map-route .td73-route-hit{stroke:rgba(0,0,0,0.005);stroke-width:25;pointer-events:stroke}
@@ -1561,14 +1560,12 @@ label>input[type="checkbox"]{margin:0;flex:0 0 auto;width:auto;min-width:0}
 #td56ComparePage .td56-cards{scroll-margin-top:12px}
 @media(max-width:600px){
  #mapsPage .td73-map-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px}
- #mapsPage #mapsZoomValue{grid-row:1;grid-column:2}
  #mapsPage #mapsSelectionLabel{grid-column:1/-1;font-size:.72rem;min-width:0}
- #mapsPage .td73-map-toolbar>span:not(#mapsZoomValue){grid-column:1/-1;display:flex;flex-wrap:nowrap;width:100%;gap:4px}
+ #mapsPage .td73-map-toolbar>span{grid-column:1/-1;display:flex;flex-wrap:nowrap;width:100%;gap:4px}
  #mapsPage .td73-map-toolbar>span>button{flex:0 0 36px;min-width:36px;height:38px}
  #mapsPage .td73-map-toolbar button[data-compact-icon]{font-size:0}
  #mapsPage .td73-map-toolbar button[data-compact-icon]::before{content:attr(data-compact-icon);font-size:1.05rem}
  #mapsPage .td73-map-toolbar #backMaps{flex:0 0 auto;padding-inline:8px}
- #mapsPage.td63-map-full #mapsZoomValue{justify-self:end}
  #mapsPage .td73-map-toolbar :is(#mapsZoomIn,#mapsZoomOut){height:38px}
 }
 
@@ -1659,7 +1656,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .td77-resource-summary dl>div{display:flex;justify-content:space-between;gap:5px}
 .td77-resource-summary dd{margin:0;font-weight:700}
 
-.td78-open-move{position:absolute;inset:0 0 0 auto;width:45%;opacity:0;margin:0}
+.td78-open-move{position:absolute;inset:0;width:100%;opacity:0;margin:0}
 .td78-open-move:focus-visible{opacity:1;background:transparent;color:transparent;outline:2px solid var(--accent)}
 #td4TeamPlannerPage #td41MoveSlots .td78-editor-shell .suggestions{
  position:static;width:100%;min-width:0;max-height:none;overflow:visible;border:0;background:transparent;box-shadow:none
@@ -1762,13 +1759,15 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 }
 #td4TeamPlannerPage #td4Slots .td42-mon-pair:has(>.td42-arrow){grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 #td4TeamPlannerPage #td4Slots .td42-mon-pair>.td772-stage{display:grid;grid-template-rows:subgrid}
-#td4TeamPlannerPage #td4Slots .td42-mon-pair .td78-stage-label{
- grid-row:1;color:var(--muted);font-size:.62rem;line-height:1.1;text-align:center
-}
 #td4TeamPlannerPage #td4Slots .td42-mon-pair img{grid-row:2}
 #td4TeamPlannerPage #td4Slots .td42-mon-pair strong{grid-row:3}
 #td4TeamPlannerPage #td4Slots .td42-mon-pair .pills{grid-row:4}
 #td4TeamPlannerPage #td4Slots .td42-mon-pair>.td42-arrow{grid-row:2}
+#td4TeamPlannerPage #td4Slots .td774-evolution-arrow{min-width:0;position:relative}
+#td4TeamPlannerPage #td4Slots .td774-evolution-arrow>small{
+ position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);width:max-content;max-width:92px;
+ white-space:normal;text-align:center;pointer-events:none
+}
 #td4TeamPlannerPage #td4Slots .td42-tile-moves{grid-template-rows:subgrid;grid-row:span 4;row-gap:2px;margin:0}
 #td4TeamPlannerPage #td4Slots .td42-tile-moves>*{min-height:0;align-content:center}
 #td4TeamPlannerPage #td4Slots .td42-tile-moves .movechip{margin:0;padding-block:3px}
@@ -2000,8 +1999,7 @@ body.light #td4TeamPlannerPage .td78-route-picker button.td5-evo-text{color:var(
 body.light :is(button,input,select,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .td772-filter-line :is(input,select,.td772-filter-button){height:44px;margin:0;border-radius:9px}
 .td772-filter-line .td772-filter-button{width:44px;padding:0}
-.td78-filter-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0}
-.td78-filter-header>span{font-size:.8rem;color:var(--muted);min-width:2ch}
+.td78-filter-header{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:3px 0}
 .td78-filter-header button{width:auto;min-height:32px;margin:0;padding:4px 8px;font-size:.77rem}
 #td41MoveSlots .td78-editor-search input:focus{border-color:var(--accent)!important}
 #td41MoveSlots .td78-move-actions button{border-color:var(--td-control-edge,var(--edge))}
@@ -2047,7 +2045,7 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
 #td4TeamPlannerPage #td77TypeOptions,#td4TeamPlannerPage #td4SearchResults{position:static;grid-column:1/-1;margin:0}
 #td4TeamPlannerPage #td77TypeOptions .td72-move-types{margin:3px 0}
 #td4TeamPlannerPage #td77FinalForm .td78-evolution-control{text-align:left;width:100%}
-.td78-evolution-dialog{width:min(94vw,420px);max-height:85dvh}
+.td78-evolution-dialog{width:min(calc(100vw - 24px),390px);max-height:calc(100dvh - 24px);overflow:auto}
 .td78-evolution-options{display:grid;gap:5px;margin-bottom:8px}
 .td78-evolution-options button{width:100%;text-align:left}
 .td78-evolution-options small{display:block;padding-inline:6px}
@@ -2056,7 +2054,34 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
 #mapsPage.td63-map-full :is(.td73-map-toolbar,#td76FullMapDetails){
  left:var(--td78-map-inset);right:var(--td78-map-inset);width:min(calc(100% - 2 * var(--td78-map-inset)),440px);margin-inline:auto
 }
-#mapsPage.td63-map-full .td73-map-toolbar>span:not(#mapsZoomValue){width:100%;justify-content:space-between}
+#mapsPage.td63-map-full .td73-map-toolbar>span{width:100%;justify-content:space-between}
 @media(max-width:720px){
  #mapsPage:not(.td63-map-full) #mapsDetails{margin-inline:13px}
 }
+
+
+/* DEV5 planner controls share an action surface while retaining historical type colors. */
+#td4TeamPlannerPage .td42-mon-pair:has(.td774-evolution-arrow>small)::before{
+ content:'';display:block;grid-row:1;grid-column:1/-1;min-height:.8rem
+}
+#td4TeamPlannerPage #td4Slots .td774-evolution-arrow>small{top:calc(50% - 35px);bottom:auto}
+#td4TeamPlannerPage #td4Slots .td774-evolution-arrow>span:not(.td773-sr-only){grid-area:1/1}
+#td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel){padding:5px 6px}
+#td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td72-move-types{
+ gap:4px;margin:2px 0 3px
+}
+#td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button{
+ height:30px;min-height:30px;padding:3px 2px;margin:0;font-size:.73rem;border-radius:7px
+}
+.td78-evolution-options>div{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center
+}
+.td78-evolution-options button{min-height:36px;white-space:normal;overflow-wrap:anywhere;margin:0}
+.td78-evolution-options small{padding:0;font-size:.71rem;line-height:1.28;color:var(--muted);overflow-wrap:anywhere}
+.td78-evolution-options .td41-good{color:var(--good,#66d59d)}
+.td78-evolution-options .td63-danger{color:var(--td-danger,#ff6978)}
+#td79SearchReturn{position:fixed;z-index:46;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));
+ width:34px;height:34px;padding:0;margin:0;font-size:1rem}
+[data-td79-keep-during]{width:100%;margin:4px 0}
+
+#td41MoveSlots .td77-edit-move>.td77-planner-move-info{position:relative}
