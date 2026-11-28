@@ -27,6 +27,19 @@ async function openDex(page,game,name){
     assert.doesNotMatch(await panel.textContent(),/Glittering Cave · Gift/);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
     const oras=width===360?'Omega Ruby':'Alpha Sapphire';
+    const routeCheck=await page.evaluate(async game=>{
+     const pack=await takDexDB74.encounter(game),provider=takDexAcquisitionV77;
+     const count=Object.values(pack.entries).flat().filter(row=>provider.encounterRoute(game,row)).length;
+     const cover=game==='Omega Ruby'?383:382,other=game==='Omega Ruby'?382:383;
+     const legendary=pack.entries[cover].find(row=>row[0]==='cave-of-origin · b4f');
+     return {count,legendary:provider.encounterRoute(game,legendary),other:(pack.entries[other]||[]).some(row=>row[0]==='cave-of-origin · b4f'),
+      early:provider.encounterRoute(game,['hoenn-route-102','walk',2,3,[]]).rank,
+      surf:provider.encounterRoute(game,['hoenn-route-102','surf',20,30,[]]).rank};
+    },oras);
+    assert.equal(routeCheck.count,79);
+    assert.equal(routeCheck.legendary.rank,7);
+    assert.equal(routeCheck.other,false);
+    assert.deepEqual([routeCheck.early,routeCheck.surf],[0,5]);
     const machine=light?'hm06':'tm97';
     await page.locator('#moreTab').click();
     await page.locator('#td68OpenMove').click();

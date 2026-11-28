@@ -123,7 +123,7 @@ const url=process.argv[2]||'http://localhost:8919/';
     await page.waitForFunction(async()=>navigator.serviceWorker.controller&&(await caches.keys()).some(key=>/^takdex-v78\.0\.0-dev6\.[12]\.\d+$/.test(key)));
     await page.context().setOffline(true);
     await page.reload();
-    assert.equal(await page.locator('meta[name="takdex-version"]').getAttribute('content'),'V78 DEV6.1');
+    assert.match(await page.locator('meta[name="takdex-version"]').getAttribute('content'),/^V78 DEV6\.[12]$/);
     assert.match(await page.evaluate(()=>window.takDexAcquisitionV77.machineLocation('Y','tm99')),/Valerie/);
    }
    await page.close();

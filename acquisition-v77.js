@@ -83,11 +83,13 @@
   'relic-castle':'Relic Castle','marvelous-bridge':'Marvelous Bridge'
  };
  function placeName(value,game){
-  const [raw,room]=String(value||'').split(' · ');
+  const [rawValue,room]=String(value||'').split(' · ');
+  const raw=isOras(game)?rawValue.replace(/^hoenn-/,''):rawValue;
   const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|kalos-|(?:kanto|johto)-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
   if(raw==='unova-victory-road-2'&&['unknown-area-71','unknown-area-78'].includes(room))return 'Victory Road · Cave';
   if(raw==='relic-castle'&&room==='d'&&game?.endsWith(' 2'))return 'Relic Castle · Volcarona’s chamber';
   if(!room||/^unknown-area/i.test(room))return base;
+  if(isOras(game)&&/^(north|south)-oras$/.test(room))return base+' · '+(room.startsWith('north')?'North':'South');
   return base+' · '+room.replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
  }
  const reviewedGrottos={'unova-route-5 · hidden-grotto':4,'unova-route-7 · hidden-grotto':5,
@@ -309,6 +311,9 @@
  // A Safari depends on the player's friend list, so it is never an unconditional planner route.
  function conditionalEncounterNote(game,row){
   const [place,method,min,max,conditions=[]]=row;
+  if(isOras(game)&&place==='sky-pillar · apex'&&method==='static'&&min===80&&max===80){
+   return 'Postgame · First battle in space during the Delta Episode. If missed, enter the Hall of Fame again to retry at Sky Pillar.';
+  }
   if(!isKalos(game))return '';
   if(method==='fossil'&&place==='ambrette-town')return 'After badge 1 · Choose the matching Jaw or Sail Fossil in Glittering Cave and revive it at the Ambrette Fossil Lab.';
   if(method==='gift'&&place==='aquacorde-town')return 'Start of game · Choose one Kalos starter.';
@@ -324,7 +329,38 @@
   const access='Postgame · Kiloude City · Requires a registered friend with the matching Safari.';
   return slot[1]==='3'?access+' Slot 3 must already be unlocked or unlocked by meeting a Hall of Fame friend in local play.':access;
  }
+ const orasOpeningRoutes={
+  'hoenn-route-101':[0,''],
+  'hoenn-route-102':[0,'Advance from Oldale Town after Brendan or May’s Route 103 battle.'],
+  'hoenn-route-103':[0,'Access the west bank from Oldale Town.'],
+  'hoenn-route-104 · south-oras':[0,'Reach Route 104 from Petalburg City.'],
+  'hoenn-route-104 · north-oras':[0,'Cross Petalburg Woods from the south.'],
+  'hoenn-route-110':[1,'Take Mr. Briney’s boat to Slateport, then head north.']
+ };
+ const orasOpeningMethods={
+  walk:[0,''],horde:[0,''],surf:[5,'Defeat Norman and obtain Surf in Petalburg City.'],
+  'old-rod':[1,'Obtain the Old Rod in Dewford Town.'],
+  'good-rod':[5,'Reach the east bank of Route 118 using Surf and obtain the Good Rod.']
+ };
+ const orasStoryEncounters={
+  'hoenn-route-119 · weather-institute':{gift:[5,'Defeat Team Magma or Team Aqua at the Weather Institute and leave an empty party slot.']},
+  'mossdeep-city · stevens-house':{gift:[10,'Enter the Hall of Fame, then visit Steven’s house.']},
+  'cave-of-origin · b4f':{static:[7,'After the Mind Badge, stop Team Magma or Team Aqua at Seafloor Cavern.']}
+ };
+ function orasEncounterRoute(row){
+  const [place,method,min,max,conditions=[]]=row;
+  if(conditions.length)return null;
+  if(place==='sky-pillar · apex'&&method==='static'&&min===max&&min===70){
+   return {...early(10,placeName(place),method,'Reach Sky Pillar during the Delta Episode.'),source:'oras-story-encounter'};
+  }
+  const story=orasStoryEncounters[place]?.[method];
+  if(story)return {...early(story[0],placeName(place),method,story[1]),source:'oras-story-encounter'};
+  const area=orasOpeningRoutes[place],field=orasOpeningMethods[method];
+  if(!area||!field)return null;
+  return {...early(Math.max(area[0],field[0]),placeName(place),method,[area[1],field[1]].filter(Boolean).join(' ')),source:'oras-opening-area-and-method'};
+ }
  function encounterRoute(game,row){
+  if(isOras(game))return orasEncounterRoute(row);
   if(isKalos(game))return kalosEncounterRoute(row);
   if(isKanto(game))return kantoRoute(game,row);
   if(isJohto(game))return johtoRoute(game,row);
@@ -884,6 +920,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  }
  function lookup(game,name,encounters){
   if(isKalos(game))return kalosAcquisition(game,name,encounters);
+  if(isOras(game))return land(game,encounters);
   if(isKanto(game)){
    const yellow=game==='Yellow';
    const gifts={
