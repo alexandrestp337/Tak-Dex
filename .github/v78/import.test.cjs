@@ -38,3 +38,15 @@ test('Malformed nested move, stats, names, resource URLs, role values and unsupp
   assert.throws(()=>validate(source,games),/Invalid team file field/);
  }
 });
+test('Independent During and Final selections survive version 2 import separately',()=>{
+ const source=file(),final=source.plan.slots[0];
+ const during={id:54,name:'psyduck',types:['water'],locked:true,originPid:18,explicitOwned:true,
+  duringMoves:[{move:'water-gun',purpose:'keep'}]};
+ source.plan.independentSlots={0:{during}};
+ assert.deepEqual(validate(source,games).plan,source.plan);
+ source.plan.slots[0]=null;
+ assert.deepEqual(validate(source,games).plan,source.plan);
+ source.plan.slots[0]=final;
+ source.plan.independentSlots[0].during.duringMoves[0].purpose='invalid';
+ assert.throws(()=>validate(source,games),/Invalid team file field/);
+});

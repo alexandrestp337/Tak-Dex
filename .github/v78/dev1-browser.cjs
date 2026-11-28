@@ -245,9 +245,9 @@ async function recoveryAndNative(browser){
   assert.equal(await p.locator('#td77Availability').inputValue(),'badge-3');
   await p.locator('#td4Back').click();
   const rejectFile=async payload=>{
-   const dialog=p.waitForEvent('dialog').then(async event=>{const message=event.message();await event.dismiss();return message;});
    await upload(payload);
-   assert.match(await dialog,/Could not import team/);
+   const dialog=p.getByRole('dialog',{name:'Could not import team'});
+   await dialog.getByRole('button',{name:'OK'}).click();
    await p.locator('#cancelNew').click();
   };
   await upload(JSON.stringify({format:'takdex-team',version:1,team:{name:'Legacy v1',game,pokemon:[]}}));

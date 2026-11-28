@@ -112,7 +112,7 @@ const page=$('mapsPage'),layout=$('mapsContent'),list=$('mapsList'),canvas=$('ma
 if(!page||!canvas||!game)return;
 let activeMapGame='',activeMapRevision=0,fitEncounterGroup=false;
 const fullDetails=$('td76FullMapDetails'),regularDetails=details.parentElement;
-let selected='',available=[],zoom=1,panX=0,panY=0,returnFrom=null,detailRequest=0,activeSearch=null,encounterPack=null,encounterLoading=null,encounterSet=[],mapMachines=[],mapMachineLoading=null;
+let selected='',available=[],zoom=1,panX=0,panY=0,returnFrom=null,detailRequest=0,activeSearch=null,activeOption=-1,encounterPack=null,encounterLoading=null,encounterSet=[],mapMachines=[],mapMachineLoading=null;
 const mapServices=[{name:'Move Deleter',place:'Canalave City',detail:'House south of the Pokémon Center',kind:'service',aliases:'forget moves remove hm deleter'}];
 // Black/White 1 service NPCs, sourced from Serebii and Smogon BW1 references.
 const unovaServices=[
@@ -261,7 +261,22 @@ function showSelection(){
  fullDetails.querySelector('summary').textContent=getRow(selected)?.name||'Location details';
  listScrollToSelected();
 }
-function hideSuggestions(){if(suggestions)suggestions.hidden=true;search.setAttribute('aria-expanded','false');}
+function hideSuggestions(){
+ if(suggestions)suggestions.hidden=true;
+ activeOption=-1;
+ search.removeAttribute('aria-activedescendant');
+ search.setAttribute('aria-expanded','false');
+}
+function activateMapOption(index){
+ const options=suggestions.querySelectorAll('[role="option"]');
+ options[activeOption]?.setAttribute('aria-selected','false');
+ activeOption=index;
+ const option=options[index];
+ if(!option){search.removeAttribute('aria-activedescendant');return;}
+ option.setAttribute('aria-selected','true');
+ search.setAttribute('aria-activedescendant',option.id);
+ option.scrollIntoView({block:'nearest'});
+}
 // Verified supplementary encounters: Bulbapedia Unova Route 8, Serebii Sigilyph locations.
 // Local records are used when the downloaded catalog is missing a matching location.
 function localEncounters(g){if(!isUnovaGame(g))return [];const seq=isSequel(g),black=g.startsWith('Black'),r='Route 8',out=[];const add=(name,method,min,max,conditions=[],place=r)=>out.push({name,place,records:[[place,method,min,max,conditions]]});const warm=['Spring','Summer','Autumn'];if(seq){add('croagunk','puddle',55,56,warm);add('palpitoad','puddle',54,57,warm);add('karrablast','puddle',black?57:54,black?57:54,warm);add('shelmet','puddle',black?54:57,black?54:57,warm);add('stunfisk','puddle',55,56,warm);add('palpitoad','surf',45,60);add('stunfisk','surf',45,60);add('palpitoad','surf-spots',45,60);add('seismitoad','surf-spots',60,60);add('stunfisk','surf-spots',45,60);add('barboach','super-rod',45,60);add('stunfisk','super-rod',45,60);add('barboach','super-rod-spots',45,60);add('whiscash','super-rod-spots',60,60);add('stunfisk','super-rod-spots',45,60);add('quagsire','puddle',40,55,[...warm,'Swarm']);}else{add('palpitoad','puddle',30,33,warm);add('shelmet','puddle',30,33,warm);add('stunfisk','puddle',31,32,warm);add('stunfisk','surf',15,35);add('seismitoad','surf-spots',15,40);add('stunfisk','surf-spots',15,40);add('barboach','super-rod',35,55);add('stunfisk','super-rod',35,55);add('barboach','super-rod-spots',35,60);add('whiscash','super-rod-spots',35,70);add('stunfisk','super-rod-spots',35,60);add('croagunk','puddle',15,55,[...warm,'Swarm']);}add('sigilyph','walk',seq?19:20,seq?19:20,[],'Desert Resort');
@@ -277,7 +292,7 @@ function mergeLocal(found,place,g){const m=new Map(found.map(x=>[x.name,x]));con
 function loadEncounters(){
  if(encounterPack||encounterLoading||encounterAttempted)return encounterLoading;
  const requested=activeMapGame,revision=activeMapRevision;encounterAttempted=true;
- encounterLoading=(async()=>{let p=await window.takDexEncounterV55?.get?.(requested);if(revision!==activeMapRevision||requested!==activeMapGame)return;encounterPack=p?.hasSource?p:null;const row=selected&&getRow(selected),host=$('td73-location-record');if(row&&host&&encounterPack&&row.kind!=='gym'){const records=encounterRowsFor(row.name);if(records.length)host.innerHTML=encounterHTML(mergeLocal(records,row.name,requested));}if(search.value&&page.hidden===false)showSuggestions();return encounterPack;})().catch(()=>null).finally(()=>{if(requested===activeMapGame&&revision===activeMapRevision)encounterLoading=null;});return encounterLoading;
+ encounterLoading=(async()=>{let p=await window.takDexEncounterV55?.get?.(requested);if(revision!==activeMapRevision||requested!==activeMapGame)return;encounterPack=p?.hasSource?p:null;const row=selected&&getRow(selected),host=$('td73-location-record');if(row&&host&&encounterPack&&row.kind!=='gym'){const records=encounterRowsFor(row.name);if(records.length)host.innerHTML=encounterHTML(mergeLocal(records,row.name,requested));}if(!page.hidden&&!suggestions.hidden)showSuggestions(true);return encounterPack;})().catch(()=>null).finally(()=>{if(requested===activeMapGame&&revision===activeMapRevision)encounterLoading=null;});return encounterLoading;
 }
 function encounteredPlaces(mon){const records=encounterPack?.entries?.[mon[0]]||[],out=new Map();for(const row of records){const loc=available.filter(r=>r.kind!=='gym').slice().sort((a,b)=>b.name.length-a.name.length).find(r=>placeMatches(row[0],r.name));if(!loc)continue;const detail=recordDescription(row);if(!out.has(loc.name))out.set(loc.name,{name:loc.name,detail});}for(const local of localEncounters(activeMapGame).filter(x=>x.name===mon[1]))if(!out.has(local.place)&&getRow(local.place))out.set(local.place,{name:local.place,detail:recordDescription(local.records[0])});return [...out.values()];}
 function recordDescription(r){const sub=String(r[0]||'').split(' · ')[1],lvl=Number(r[2]);return (sub?pretty(sub)+' · ':'')+pretty(r[1]||'Encounter')+(Number.isFinite(lvl)&&lvl>0?' · Lv '+lvl+(r[3]!==r[2]?'–'+r[3]:''):'')+(r[4]?.length?' · '+r[4].map(pretty).join(', '):'')+(window.td62Progress?.encounterAccess(activeMapGame,r)?' · '+window.td62Progress.encounterAccess(activeMapGame,r):'');}
@@ -342,7 +357,7 @@ function loadMapMachines(){
   const cached=await window.takDexReferenceV58?.machinesFor?.('Platinum');
   const items=cached?.length?cached:await (typeof td70LoadMachineIndex==='function'?td70LoadMachineIndex('Platinum'):Promise.resolve([]));
   mapMachines=items||[];
-  if(search.value.trim()&&!page.hidden)showSuggestions();
+  if(!page.hidden&&!suggestions.hidden)showSuggestions(true);
  })().catch(()=>{}).finally(()=>{mapMachineLoading=null;});
  return mapMachineLoading;
 }
@@ -360,14 +375,19 @@ function searchIndex(){
  }}
  return entries;
 }
-function showSuggestions(){
+function showSuggestions(preserve=false){
  if(!suggestions)return;loadEncounters();
+ const previous=preserve===true?activeSearch?.[activeOption]:null;
  const q=normalize(search.value),all=searchIndex(),tokens=q.split('-').filter(Boolean),hits=(q?all.filter(r=>{const hay=normalize(r.name+' '+r.place+' '+r.aliases+' '+r.kind);return hay.includes(q)||tokens.every(t=>hay.includes(t))}).sort((a,b)=>Number(normalize(b.name).startsWith(q))-Number(normalize(a.name).startsWith(q))):all.filter(r=>r.kind==='route'||r.kind==='town')).slice(0,q?40:12);
- suggestions.innerHTML=hits.length?hits.map((r,i)=>`<button type="button" role="option" data-map-result="${i}" aria-selected="false"><span>${escape(r.name)}</span><small>${escape(r.place!==r.name&&!r.encounters&&!r.name.includes(r.place)?r.place+' · '+r.detail:r.detail)}</small></button>`).join(''):'<p class="note">No verified locations match. Try a route, city, item, or move.</p>';
+ suggestions.innerHTML=hits.length?hits.map((r,i)=>`<button type="button" id="td78MapOption-${i}" role="option" tabindex="-1" data-map-result="${i}" aria-selected="false"><span>${escape(r.name)}</span><small>${escape(r.place!==r.name&&!r.encounters&&!r.name.includes(r.place)?r.place+' · '+r.detail:r.detail)}</small></button>`).join(''):'<p class="note">No verified locations match. Try a route, city, item, or move.</p>';
  activeSearch=hits;suggestions.hidden=false;search.setAttribute('aria-expanded','true');
+ const selected=previous?hits.findIndex(row=>row.name===previous.name&&row.place===previous.place&&row.kind===previous.kind):-1;
+ activeOption=-1;activateMapOption(selected);
+ $('td78MapSearchStatus').textContent=hits.length?hits.length+' locations available.':'No matching locations.';
 }
-async function selectSearch(index){const r=activeSearch?.[index];if(!r)return;
- search.value=r.name;hideSuggestions();search.blur();encounterSet=r.encounters||[];fitEncounterGroup=encounterSet.length>1;openLocation(r.place,'search');
+async function selectSearch(index,keepFocus=false){const r=activeSearch?.[index];if(!r)return;
+ search.value=r.name;hideSuggestions();if(!keepFocus)search.blur();encounterSet=r.encounters||[];fitEncounterGroup=encounterSet.length>1;openLocation(r.place,'search');
+ $('td78MapSearchStatus').textContent=r.name+' selected.';
  if(r.place!==r.name){details.insertAdjacentHTML('afterbegin',`<p class="td74-map-target"><strong>${escape(r.name)}</strong> · ${escape(r.detail)}</p>`);}
  if(r.encounters?.length>1)details.insertAdjacentHTML('beforeend','<div class="td74-encounter-places"><strong>Encounter locations</strong>'+r.encounters.map(p=>`<button type="button" data-td74-encounter-place="${escape(p.name)}">${escape(p.name)} · ${escape(p.detail)}</button>`).join('')+'</div>');
  const b=$('mapsCanvas');if(!mapFull&&window.innerWidth<=720)b.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -545,13 +565,17 @@ mapFilterLine.innerHTML=td772FilterButton('td772MapFilter','Map filters','td772M
 game.setAttribute('aria-label','Game');
 game.closest('label').replaceWith(mapFilterLine);
 mapFilterLine.prepend(game);
-const mapFilterPanel=filter.closest('label');
+const mapFilterPanel=document.createElement('div');
+mapFilterPanel.className='td772-filter-panel';
+filter.closest('label').replaceWith(mapFilterPanel);
+const categoryLabel=document.createElement('label');
+categoryLabel.textContent='Show';categoryLabel.append(filter);mapFilterPanel.append(categoryLabel);
 mapFilterPanel.id='td772MapFilterPanel';
 mapFilterPanel.hidden=true;
 mapFilterLine.after(mapFilterPanel);
 const mapFilterButton=$('td772MapFilter');
-td772BindFilter(mapFilterButton,mapFilterPanel);
-filter.addEventListener('change',()=>mapFilterButton.classList.toggle('selected',filter.value!=='all'));
+td772BindFilter(mapFilterButton,mapFilterPanel,()=>{filter.value='all';filter.dispatchEvent(new Event('change'));});
+filter.addEventListener('change',()=>td78FilterState(mapFilterButton,mapFilterPanel,Number(filter.value!=='all')));
 $('backMaps').addEventListener('click',()=>{
  stopAnimation();const previous=returnFrom;returnFrom=null;page.hidden=true;
  if(previous?.id&&$(previous.id)){
@@ -567,7 +591,18 @@ game.addEventListener('change',()=>loadDirectory());
 window.addEventListener('td58-pack-update',()=>{encounterPack=null;encounterLoading=null;loadEncounters();});
 search.addEventListener('input',()=>{showSuggestions();const clear=$('mapsClearSelection');if(clear)clear.disabled=!(selected||search.value.trim()||encounterSet.length);});
 search.addEventListener('focus',showSuggestions);
-search.addEventListener('keydown',e=>{if(e.key==='Escape')hideSuggestions();if(e.key==='Enter'&&activeSearch?.length){e.preventDefault();selectSearch(0);}});
+search.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&!suggestions.hidden){e.preventDefault();e.stopPropagation();hideSuggestions();return;}
+ if(['ArrowDown','ArrowUp'].includes(e.key)){
+  e.preventDefault();
+  if(suggestions.hidden)showSuggestions();
+  if(!activeSearch.length)return;
+  const down=e.key==='ArrowDown',last=activeSearch.length-1;
+  activateMapOption(activeOption<0?(down?0:last):Math.max(0,Math.min(last,activeOption+(down?1:-1))));
+ }else if(e.key==='Enter'&&!suggestions.hidden&&activeSearch?.length){
+  e.preventDefault();selectSearch(Math.max(0,activeOption),true);
+ }else if(e.key==='Tab')hideSuggestions();
+});
 suggestions?.addEventListener('click',e=>{const b=e.target.closest('[data-map-result]');if(b)selectSearch(Number(b.dataset.mapResult));});
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#mapsSearch,#mapsSuggestions'))hideSuggestions();});
 filter.addEventListener('change',display);
@@ -600,7 +635,7 @@ $('mapsClearSelection').onclick=()=>{
  details.innerHTML='<h3>Select a location</h3><p class="note">Search above or tap a route, city, or landmark.</p>';
  display();showSelection();
 };
-$('mapsZoomReset').onclick=()=>{++detailRequest;selected='';encounterSet=[];search.value='';hideSuggestions();filter.value='all';details.innerHTML='<h3>Select a location</h3><p class="note">Search above or tap a route, city, or landmark.</p>';display();showSelection();moveViewport(1,0,0);};
+$('mapsZoomReset').onclick=()=>{++detailRequest;selected='';encounterSet=[];search.value='';hideSuggestions();filter.value='all';td78FilterState(mapFilterButton,mapFilterPanel,0);details.innerHTML='<h3>Select a location</h3><p class="note">Search above or tap a route, city, or landmark.</p>';display();showSelection();moveViewport(1,0,0);};
 canvas.addEventListener('wheel',e=>{if(!supported())return;e.preventDefault();const p=clientToMap(e);zoomTo(zoom*(e.deltaY<0?1.14:1/1.14),p.x,p.y);},{passive:false});
 canvas.addEventListener('pointerdown',e=>{
  if(!supported()||(e.pointerType==='mouse'&&e.button!==0))return;

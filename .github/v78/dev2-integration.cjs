@@ -82,8 +82,8 @@ async function storage(browser){
   assert.ok(sourceBox.x+sourceBox.width<=resetBox.x);
   await reset.tap();
   assert.equal(await attack.inputValue(),initialAttack);
-  a.once('dialog',dialog=>dialog.accept());
   await a.locator('[data-td74-builder-team="trade"][data-td74-builder-slot="0"]').click();
+  await a.locator('#td78Confirmation').getByRole('button',{name:'Discard'}).click();
   await a.locator('#teamsTab').click();
   await openPlanner(a);
   const importedParty=async (sequence,species,other=false)=>{

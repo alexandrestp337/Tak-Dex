@@ -127,12 +127,13 @@
   if(!object(plan)||plan.game!==game||!Array.isArray(plan.slots)||plan.slots.length>6)fail('plan');
   if(plan.mode!=null)enumValue(plan.mode,'plan.mode',['during','final']);
   if(plan.progress!=null)string(plan.progress,'plan.progress',200);
-  if(plan.deadline!=null&&!/^(?:|actual|start|badge-[1-8]|pre-league|post-league|postgame)$/.test(plan.deadline))fail('plan.deadline');
+  const validDeadline=value=>typeof value==='string'&&/^(?:|actual|start|badge-[1-8]|pre-league|post-league|postgame)$/.test(value);
+  if(plan.deadline!=null&&!validDeadline(plan.deadline))fail('plan.deadline');
+  if(plan.stageDeadlines!=null&&(!object(plan.stageDeadlines)||!validDeadline(plan.stageDeadlines.during)||!validDeadline(plan.stageDeadlines.final)))fail('plan.stageDeadlines');
   optionalInteger(plan,'editorSlot','plan',0,5);
   const fulfilled=new Set();
-  plan.slots.forEach((slot,i)=>{
+  const validate=(slot,path,fulfilled)=>{
    if(slot===null)return;
-   const path='plan.slots['+i+']';
    mon(slot,path,true);learnset(slot,path);
    if(slot.finalLearnset!=null){if(!object(slot.finalLearnset))fail(path+'.finalLearnset');learnset(slot.finalLearnset,path+'.finalLearnset');}
    if(slot.finalTarget!=null){mon(slot.finalTarget,path+'.finalTarget',true);learnset(slot.finalTarget,path+'.finalTarget');}
@@ -140,7 +141,7 @@
    optionalInteger(slot,'originSlot',path,0,5);
    for(const key of ['duringTargetId','fulfilledStage'])optionalInteger(slot,key,path,1,100000);
    for(const key of ['originName','duringSpecies'])if(slot[key]!=null)string(slot[key],path+'.'+key,100,true);
-   for(const key of ['locked','confirmedCandidate'])if(slot[key]!=null&&typeof slot[key]!=='boolean')fail(path+'.'+key);
+   for(const key of ['locked','confirmedCandidate','explicitOwned'])if(slot[key]!=null&&typeof slot[key]!=='boolean')fail(path+'.'+key);
    for(const key of ['plannedMoves','duringMoves'])if(slot[key]!=null)moveset(slot[key],path+'.'+key);
    for(const key of ['finalManualSlots','duringManualSlots'])if(slot[key]!=null&&
     (!Array.isArray(slot[key])||slot[key].length>4||slot[key].some(v=>v!==null&&typeof v!=='boolean')))fail(path+'.'+key);
@@ -157,7 +158,17 @@
     fulfilled.add(slot.fulfilledPid);
     if(!caught.has(slot.fulfilledPid))warnings.add('A saved acquisition refers to a Pokémon outside the exported party.');
    }
-  });
+  };
+  plan.slots.forEach((slot,i)=>validate(slot,'plan.slots['+i+']',fulfilled));
+  if(plan.independentSlots!=null){
+   if(!object(plan.independentSlots))fail('plan.independentSlots');
+   const during=new Set();
+   for(const [key,stages] of Object.entries(plan.independentSlots)){
+    const path='plan.independentSlots.'+key;
+    if(!/^[0-5]$/.test(key)||!object(stages)||!Object.hasOwn(stages,'during')||Object.keys(stages).some(field=>field!=='during'))fail(path);
+    validate(stages.during,path+'.during',during);
+   }
+  }
   return plan;
  }
  function validate(data,games){

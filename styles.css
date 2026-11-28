@@ -679,7 +679,7 @@ footer::after { content: "Developed by WHOASP"; display: block; margin-top: 6px;
 #mapsSearch{margin:0;width:100%}
 .td74-map-suggestions:not([hidden]){display:block;position:absolute;left:0;right:0;top:calc(100% + 3px);z-index:50;max-height:min(52vh,340px);overflow:auto;background:var(--card);border:1px solid var(--edge);box-shadow:0 12px 26px rgba(0,0,0,.32);border-radius:12px;padding:5px}
 .td74-map-suggestions button{width:100%;text-align:left;padding:10px 11px!important;margin:0!important;background:transparent!important;border:0!important;border-bottom:1px solid var(--edge)!important;box-shadow:none!important;display:flex;flex-direction:column;align-items:flex-start;gap:3px;border-radius:5px!important}
-.td74-map-suggestions button:focus-visible,.td74-map-suggestions button:hover{background:color-mix(in srgb,var(--accent,#de3853) 12%,var(--card))!important}
+.td74-map-suggestions button:is(:focus-visible,:hover,[aria-selected="true"]){background:color-mix(in srgb,var(--accent,#de3853) 12%,var(--card))!important}
 .td74-map-suggestions button span{font-weight:700}
 .td74-map-suggestions button small{font-weight:400;color:var(--muted);font-size:.75rem;text-align:left}
 .td73-map-filters{grid-template-columns:1.3fr .7fr}
@@ -1594,8 +1594,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4PlanProgress strong,#td4PlanProgress small{display:block}
 #td4PlanProgress small{font-size:.7rem;color:var(--muted)}
 #td77CoverageSummary{color:var(--muted)}
-#td77TypeFilter{min-height:48px;width:42px;padding:3px;background:var(--card);border:1px solid var(--edge);color:var(--muted)}
-#td77TypeFilter.selected,#td77TypeOptions [aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+#td77TypeOptions [aria-pressed="true"]{border-color:var(--accent);color:var(--td-selected-ink)}
 #td77ActiveTypes{grid-column:1/-1;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 #td77ActiveTypes:empty{display:none}
 #td4Search{width:100%;margin:0}
@@ -1625,7 +1624,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td41MoveSlots .td42-move-flow .td77-planner-move-info>small:last-child{grid-column:1/-1;text-align:left}
 #td41MoveSlots .td42-move-flow .td77-planner-move-info>strong{grid-column:1/-1}
 #td41MoveSlots .td42-move-flow .td77-planner-move-info>small:first-of-type{grid-area:2/1/3/2}
-.td77-candidate-search{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:start;gap:4px}
+.td77-candidate-search{position:relative;align-items:start}
 #td4SearchResults{position:absolute;inset:100% 0 auto;z-index:29}
 #td77TypeOptions{position:absolute;z-index:30;top:100%;left:0;right:0;padding:8px;background:var(--card);border:1px solid var(--edge);border-radius:9px;box-shadow:0 9px 22px #0006}
 
@@ -1720,7 +1719,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .td772-filter-line :is(select,button){height:44px;min-width:0;margin:0}
 .td772-filter-line select{padding-block:6px}
 .td772-filter-button{display:grid;place-content:center;padding:0;background:var(--card);color:var(--text);border:1px solid var(--edge)}
-.td772-filter-button.selected{color:var(--accent);border-color:var(--accent)}
+.td772-filter-button:is(.selected,[aria-expanded="true"]){border-color:var(--accent)}
+.td772-filter-button.selected{color:var(--accent)}
 .td772-filter-panel{background:var(--card);border:1px solid var(--edge);border-radius:12px;margin:0 0 12px;padding:4px 10px}
 #td65ProgressFilter label{display:flex;gap:8px;align-items:center;margin:3px 0;min-height:38px}
 #td65ProgressFilter input{flex:none;width:auto;margin:0}
@@ -1797,7 +1797,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 #td4TeamPlannerPage #td4Slots .td772-plan-status{align-self:start}
 
 /* RC3 · Shared control hierarchy and compact review layouts. */
-:root{--td-secondary-bg:color-mix(in srgb,var(--text) 6%,var(--card));--td-badge-ink:#fff}
+:root{--td-badge-ink:#fff}
+body{--td-secondary-bg:color-mix(in srgb,var(--text) 6%,var(--card))}
 body.light{--td-badge-ink:#18243a}
 .pill{color:var(--td-badge-ink)!important}
 button:is(.td774-secondary,.td64-move-back,#td73DexReturn,#typeExplorerBack,#td4Back,#td4BackTop,#td68MoveBack,
@@ -1806,7 +1807,7 @@ button:is(.td774-secondary,.td64-move-back,#td73DexReturn,#typeExplorerBack,#td4
  #cancelPoke,#td74BuilderDex,#td77Lock,[data-compare-cancel],[data-compare-confirm],[data-td77-action-dex]){
  background:var(--td-secondary-bg)!important;color:var(--text)!important;border:1px solid var(--edge)!important;box-shadow:none
 }
-button:is(#td4Clear,#td4Seed,#td59Delete,#td59Clear,.td7-danger-button,[data-delete]){
+button:is(#td4Clear,#td78RemovePlan,#td4Seed,#td59Delete,#td59Clear,.td7-danger-button,[data-delete]){
  background:transparent!important;color:var(--danger,#ff6975)!important;border:1px solid var(--danger,#df465c)!important;box-shadow:none
 }
 button:is(.td774-secondary,#td77Lock,#mapsFullscreen):is([aria-pressed="true"],.selected){
@@ -1898,7 +1899,7 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 }
 
 /* RC4: targeted planner and navigation refinements. */
-#td4Edit #td72MoveHeading .td7-reset-top :is(#td77Lock,#td4Clear){
+#td4Edit #td72MoveHeading .td7-reset-top :is(#td77Lock,#td4Clear,#td78RemovePlan){
  min-height:32px!important;margin:0;padding:4px 8px!important;border-radius:7px!important;
  border-width:1px!important;font-size:.75rem;font-weight:700;line-height:1.2;align-self:center
 }
@@ -1943,7 +1944,7 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 }
 #td41MoveSlots .td78-editor-shell:has(>.suggestions:not([hidden])){display:block}
 #td41MoveSlots .td78-editor-search{margin:0 0 6px}
-#td41MoveSlots .td78-editor-search input{height:44px;margin:0;border-color:var(--accent)}
+#td41MoveSlots .td78-editor-search input{height:44px;margin:0;border-color:var(--td-control-edge,var(--edge))}
 #td41MoveSlots .td79-move-choice{position:relative;cursor:pointer}
 #td41MoveSlots .td79-move-choice .td78-suggestion-name{
  position:absolute;top:4px;left:5px;width:auto;max-width:74%;margin:0;
@@ -1979,3 +1980,47 @@ button:is(.td774-secondary,#td4Clear,#td59Delete,#td59Clear):disabled{opacity:.4
 @media(max-width:720px){
  #mapsPage .td73-map-toolbar>span>button{height:38px}
 }
+
+
+/* DEV4 shared interaction states. */
+.td78-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+body.light{--td-control-edge:#8f7e83;--good:#236c46;--warn:#805300;--td-danger:#a82435;--danger:#a82435;--td-link:#254f99}
+body.light :is(.td772-filter-line input,.td772-filter-line select,.td772-filter-button,.td774-secondary,#openTypeExplorer):not(.selected):not([aria-expanded="true"]){
+ border-color:var(--td-control-edge)!important
+}
+body.light #td4TeamPlannerPage .td63-danger{color:var(--td-danger)!important}
+body.light #td4TeamPlannerPage .td78-route-picker button.td5-evo-text{color:var(--td-link)!important}
+body.light :is(button,input,select,summary):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.td772-filter-line :is(input,select,.td772-filter-button){height:44px;margin:0;border-radius:9px}
+.td772-filter-line .td772-filter-button{width:44px;padding:0}
+.td78-filter-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0}
+.td78-filter-header>span{font-size:.8rem;color:var(--muted);min-width:2ch}
+.td78-filter-header button{width:auto;min-height:32px;margin:0;padding:4px 8px;font-size:.77rem}
+#td41MoveSlots .td78-editor-search input:focus{border-color:var(--accent)!important}
+#td41MoveSlots .td78-move-actions button{border-color:var(--td-control-edge,var(--edge))}
+#td78Confirmation p{white-space:pre-line}
+#td4TeamPlannerPage :is(.td78-route-group,.td78-route-location,.td80-candidate-acquisition,.td78-route-area) {text-align:left}
+#td4TeamPlannerPage .td74-dex-map-link{text-align:left;display:inline;white-space:normal;overflow-wrap:break-word}
+#td4TeamPlannerPage .td774-route-choice{padding-inline:12px;font-size:.8rem;min-height:36px}
+#td4TeamPlannerPage :is(.td78-route-picker>summary,.td78-evolution-control)::after{
+ content:'';display:block;width:7px;height:7px;border:solid currentColor;border-width:0 1.5px 1.5px 0;
+ transform:rotate(-45deg);margin-inline:2px;color:var(--muted);pointer-events:none
+}
+#td4TeamPlannerPage .td78-evolution-control::after{transform:rotate(45deg)}
+.td78-evolution-label{margin:4px 0}
+#td78AddOwned:not(:empty){grid-column:1/-1;display:grid;gap:4px;margin:6px 0}
+#td78AddOwned button{margin:0;text-align:left}
+#td78RemovePlan{width:auto;margin:0}
+body.light [data-readiness-status="good"]{--readiness-text:var(--good)}
+body.light [data-readiness-status="nonstab"]{--readiness-text:var(--warn)}
+body.light [data-readiness-status="bad"]{--readiness-text:var(--td-danger)}
+body{--td-selected-ink:#ff6978}
+body.light{--td-selected-ink:#a82435}
+.td772-filter-button.selected{color:var(--td-selected-ink)}
+button:is(.td774-secondary,#td77Lock,#mapsFullscreen):is([aria-pressed="true"],.selected),
+button.td74-dex-map-link{color:var(--td-selected-ink)!important}
+#td4TeamPlannerPage #td41MoveSlots .td77-edit-move:has(.suggestions:not([hidden])) .td77-planner-move-info{
+ border-color:var(--accent)
+}
+#td4Edit #td72MoveHeading .td7-reset-top #td78RemovePlan{position:static;white-space:nowrap}
+#td4Edit #td72MoveHeading .td7-reset-top{flex-wrap:wrap}

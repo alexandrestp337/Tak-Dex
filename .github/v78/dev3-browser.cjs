@@ -68,7 +68,7 @@ async function ui(browser,width,light){
  assert.equal(await picker.locator('button[data-td77-route]').filter({hasText:/^(Walk|Dark Grass|Hidden Grotto)$/}).count(),0);
  assert.equal(await inset.evaluate(el=>getComputedStyle(el).backgroundColor),
   await page.locator('#td77SlotRoute .td774-route-choice').evaluate(el=>getComputedStyle(el).backgroundColor));
- const paddings=await page.evaluate(()=>['#td77SlotRoute summary','#td77FinalForm select'].map(sel=>getComputedStyle(document.querySelector(sel)).paddingInlineStart));
+ const paddings=await page.evaluate(()=>['#td77SlotRoute summary','#td77FinalForm .td78-evolution-control'].map(sel=>getComputedStyle(document.querySelector(sel)).paddingInlineStart));
  assert.equal(paddings[0],paddings[1]);
  await snapshot(page,sample+'-acquisition',picker);
  await widthCheck();
@@ -154,6 +154,8 @@ async function ui(browser,width,light){
  assert.equal(await panel.getByRole('button',{name:'Dark',exact:true}).getAttribute('aria-pressed'),'true');
  assert.equal(await panel.getByRole('button',{name:'Physical',exact:true}).getAttribute('aria-pressed'),'true');
  if(mobile)await replace.tap();else await replace.press('Enter');
+ const downgrade=page.locator('#td78Confirmation');
+ await downgrade.getByRole('button',{name:'Replace',exact:true}).click();
  await page.locator('#td41MoveSlots [data-td77-planned-move="assurance"]').waitFor();
  assert.equal(await page.locator('#td68MovePage').isVisible(),false);
  assert.deepEqual((await state()).slots[1].duringMoves,stored.duringMoves);
@@ -277,7 +279,8 @@ async function battle(browser){
  const colors=await focus.locator('.td76-damage-track').evaluateAll(bars=>bars.map(bar=>[bar.classList.contains('incoming'),getComputedStyle(bar).backgroundImage]));
  assert.ok(colors.some(([incoming,color])=>incoming&&color.includes('rgb(189, 49, 77)')));
  assert.ok(colors.some(([incoming,color])=>!incoming&&color.includes('rgb(33, 145, 103)')),JSON.stringify(colors));
- assert.match(await focus.locator('.td76-outcome-model').innerText(),/Two-turn estimates/);
+ if(fixtureOnly)assert.match(await focus.locator('.td76-outcome-model').innerText(),/Two-turn estimates/);
+ else assert.equal(await focus.locator('.td76-outcome-model').count(),0);
  await snapshot(page,'6v6-context-412',focus);
  const {a,d}=require('./gen5-damage-golden.json').fixtures[0];
  await page.evaluate(({a,d})=>{

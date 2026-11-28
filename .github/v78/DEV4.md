@@ -1,0 +1,40 @@
+# V78 DEV4 RC1 implementation and acceptance
+
+The consolidated DEV4 assignment starts at DEV3 RC1, `c939201fe4590a329dc9a226688c617cb8331e95`, on `v78-development`. Review is in [draft PR #6](https://github.com/alexandrestp337/Tak-Dex/pull/6). The [private preview build stamp](https://tak-dex-v77-development.freeclout8.chatgpt.site/preview-build.json) holds the delivered GitHub SHA. The Web cache namespace is `takdex-v78.0.0-dev4-rc1`.
+
+## Implementation and audit ledger
+
+| Scope | Status | Evidence and behavior |
+| --- | --- | --- |
+| WEB-003 · Themes | Implemented | The secondary fill was calculated against the dark root palette. It now resolves on the active body theme. Selected foreground, light semantic text, control outlines and keyboard focus have theme-scoped values. Shared geometry stays compact. |
+| WEB-012 · Maps | Implemented | The listbox formerly ignored arrows and Enter always opened the first result. Arrows now move the active option, Enter uses that option, Escape dismisses the list, Tab moves on, and the input retains keyboard focus. A live region reports result counts and selection. Late-loaded results preserve the active option if still present. |
+| 6v6 prose | Implemented | Removed the standalone two-turn paragraph. The existing chance, uncertainty, damage rolls and immediate KO output remain available on the cards. |
+| Filters and selectors | Implemented | A shared funnel and clear header use neutral, open and active states. The Change Pokémon diamond was still in Web. It now uses the existing funnel and keeps selected chips and match-all. The move editor colors the opened planned card and shell, with a neutral unfocused search and neutral actions. Evolution and acquisition share a sized control frame and chevron artwork. |
+| Acquisition | Implemented · grouped evidence preserved | DEV3 already grouped the same area and used independent location links and exact selection where encounter methods differ materially. DEV4 aligns recommendation and preview details left and keeps deadline tone separate from actual availability. The verified Black 2 Baltoy source remains Relic Castle’s Volcarona chamber after Clay, via Relic Passage. Claydol can evolve at level 36. Before the fifth badge, a later planning deadline can include this route while actual progress still shows it as upcoming. |
+| Explicit plan membership | Implemented | Initial slot creation no longer copies the actual roster. The user can add an owned Pokémon from an empty slot or choose a target. Intentional independent During and Final selections persist together, with active-stage moves, locks, acquisition, deadlines and team analysis. A distinct Remove action uses a confirmation, preserves the other stage and leaves the actual roster intact. Legacy Patrat records are retained. Earlier seeding used `autoOwnedPending` as a suggestion-generation marker, so it cannot distinguish deliberate ownership from a migrated plan or an earlier Reset. |
+| Type-based replacement evaluation | Implemented · terminal family rule retained | Species-stage comparisons use historical typing for defensive coverage and potential STAB, with stats and route feasibility scored separately. Assumed learnset coverage and offensive ability bonuses have been removed here. Move analysis still uses the move engine. The family index already derives terminals from parent links and retains manual earlier-stage choices. |
+| Move eligibility and warnings | Implemented | Selection and commit validation exclude moves already assigned in that stage, including the highlighted move. The existing Keep route separately validates retention. A downgrade considers the actual outgoing planned move, known reliable team answers, the individual’s remaining STAB, HM assignment, and combat merit. It appears once in the app dialog and is no longer rendered from stored comparison metadata. HM scoring separates practical strength from utility and gates weaker Final replacements. |
+| Search and Move Checker | Implemented | Pokédex, Team Builder, Battle, 6v6, custom opponent, Planner and move text lookups reuse normalized exact/prefix/substring ranking where applicable. Suggestions already opened Move Checker and retain that behavior. The old View move button, duplicated heading history line and outdated source presentation were still in Web. The details use location text links with game, method, cost and conditions. Provenance stays in the underlying data. |
+
+Independent stage selections are an additive field in version 2 team exports. The canonical `slots` retain Final entries and the supplemental `independentSlots` contains the independent During entry where applicable. Existing imports retain their moves and paths, and their prior deadline initializes both stages. The DEV1 transaction and read-only save parser are unchanged. Android V10 and physical handset behavior remain deferred to DEV8.
+
+## Verification
+
+- Syntax checks for modified JavaScript and `git diff --check` passed.
+- `node --test .github/v76/battle.test.cjs .github/v78/dev3-battle.test.cjs .github/v78/import.test.cjs` passed 33 cases, including independent-stage validation and the existing Gen V roll fixtures.
+- DEV2 integration Chromium checks passed for trade-route import/export, same-PID evolution after party reorder, lock and moveset preservation, and contextual map navigation from Pokédex, tutor, TM and HM.
+- DEV3 browser checks at 360 CSS px in light and dark passed after updating the test to confirm inside the app dialog. The browser measured acquisition and move-editor geometry and exercised exact Move Checker return state.
+
+- DEV4 Chromium passed at 360 and 412 CSS px in both themes. It measured funnel and input geometry, active borders, and secondary text contrast. It exercised same-stage duplicate exclusion, Clear cancellation, independent During and Final deadlines, empty-slot sync, manual add, reload, removal, v2 import validation, Move Checker query ordering and map keyboard selection.
+- A focused Black 2 check confirmed equal type coverage for Purrloin and Umbreon. The Baltoy preview remained before the Final deadline with three actual badges and showed the Relic Castle route and the Clay requirement.
+- The targeted 6v6 check kept the 12.5% green OHKO notice and live Gyro Ball results with the explanatory paragraph removed. The DEV1 Chromium recovery check passed malformed JSON rejection and the Defense Curl export/import case. An offline Chromium reload passed with the new worker, versioned assets and WHOASP footer.
+- Manual acceptance remains for the exact weaker-HM examples, indistinguishable duplicate party entries, and the user's Claydol plan. Capture-to-evolution reconciliation and same-stage duplicate moves were exercised with equivalent synthetic teams. If multiple actual Pokémon cannot be distinguished by a durable identity, an explicit choice preserves the plan and avoids automatic rebinding.
+
+## Private acceptance checklist
+
+1. In Black 2, open an empty plan slot, choose an actual party Pokémon for During game, then plan an unrelated Final target. Change the actual party, reload, and verify each planning stage keeps its own moves and acquisition. Cancel a removal, then remove only the selected stage.
+2. Open Change Pokémon and the move editor in both themes. Check all three funnel states, Clear filters, outline alignment and search. Try a move already in the current stage. Cancel and confirm a downgrade, then return from Move Checker.
+3. Compare Purrloin with Umbreon for type coverage and inspect Black 2 Baltoy and Claydol with actual progression before Clay and a later planning deadline. Check the acquisition location link and level requirement. Check that weaker Cut substitutions are absent from Final recommendations.
+4. Type “Dra” in Move Checker and open a result. Follow an acquisition location link and return. In Maps, try two Down arrows, Enter and Escape. In 6v6 confirm the chance still appears on the card.
+
+Production release and Android application work are outside this checkpoint.
