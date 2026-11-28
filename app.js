@@ -1606,7 +1606,7 @@ $('dexInput').addEventListener('takdex:pokedex-search',async()=>{
      entries.push(...window.takDexAcquisitionV64.details(pack,pokemon.id).notes.filter(n=>n.text)
       .map(n=>({method:n.kind,detail:n.text})));
     }
-    const formatted=cat.format(records,game,matching);
+    const formatted=cat.format(records,game,matching,pokemon.name);
     renderEncounter(entries.map(r=>td77AcquisitionEntry(r,game)).join('')+(formatted||(!entries.length?noRecords:''))+sourceFoot);
    }else{
     // An ordinary Pokédex search must not trigger the massive 34-game bulk download.
@@ -2964,13 +2964,13 @@ update();
  async function remove(game){MEM.delete(game);if('caches' in window){const cache=await caches.open(CACHE);await cache.delete(key(game))}window.dispatchEvent(new Event('td58-pack-update'))}
  async function clearAll(){MEM.clear();if('caches' in window)await caches.delete(CACHE);window.dispatchEvent(new Event('td58-pack-update'))}
  async function count(){let total=0;for(const g of games)if(await cached(g))total++;return total}
- function format(records,game,routes=[]){
+ function format(records,game,routes=[],species){
   return (records||[]).map(raw=>{
    const r=window.takDexAcquisitionV77?.encounterDisplay(game,raw)||raw;
    const progress=window.td62Progress;
    const audited=routes.find(route=>td77SameAcquisition(r,route,game));
    const detail=audited?[progress.milestone(audited.rank),audited.note].filter(Boolean).join(' · '):
-    game&&progress?.encounterAccess(game,r)||'Encounter timing unverified';
+    game&&progress?.encounterAccess(game,r,species)||'Encounter timing unverified';
    return td77AcquisitionEntry({
     location:r[0],place:window.takDexAcquisitionV77?.placeName(r[0],game)||pretty(r[0]),
     method:audited?audited.method:r[1],levels:r[2]>0?'Lv '+r[2]+(r[3]!==r[2]?'–'+r[3]:''):'',
@@ -4609,8 +4609,8 @@ document.addEventListener('keydown',event=>{
  }
  function detected(progress){return progress?.postgame?'postgame':Number.isInteger(progress?.badgeCount)?(progress.badgeCount?'badge-'+progress.badgeCount:'start'):'';}
  function actualProgress(game){return current?.game===game?current.saveLink?.progression:null;}
- function encounterAccess(game,row){
-  const conditional=window.takDexAcquisitionV77?.conditionalEncounterNote(game,row);
+ function encounterAccess(game,row,species){
+  const conditional=window.takDexAcquisitionV77?.conditionalEncounterNote(game,row,species);
   if(conditional)return conditional;
   const gate=encounter(game,row),verified=window.takDexAcquisitionV77?.encounterRoute(game,row);
   if(verified)return [milestone(verified.rank),verified.note].filter(Boolean).join(' · ');

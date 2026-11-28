@@ -309,8 +309,17 @@
   return row;
  }
  // A Safari depends on the player's friend list, so it is never an unconditional planner route.
- function conditionalEncounterNote(game,row){
+ const orasStarterGifts=[
+  [new Set(['treecko','torchic','mudkip']),'Start of game · Choose one Hoenn starter.'],
+  [new Set(['chikorita','cyndaquil','totodile']),'Postgame · Speak to Zinnia after the first Hall of Fame, then choose one Johto starter.'],
+  [new Set(['snivy','tepig','oshawott']),'Postgame · Complete the Delta Episode, then choose one Unova starter.'],
+  [new Set(['turtwig','chimchar','piplup']),'Postgame · Enter the Hall of Fame again, then choose one Sinnoh starter.']
+ ];
+ function conditionalEncounterNote(game,row,species){
   const [place,method,min,max,conditions=[]]=row;
+  if(isOras(game)&&place==='hoenn-route-101'&&method==='gift'&&min===5&&max===5){
+   return orasStarterGifts.find(([names])=>names.has(species))?.[1]||'';
+  }
   if(isOras(game)&&place==='sky-pillar · apex'&&method==='static'&&min===80&&max===80){
    return 'Postgame · First battle in space during the Delta Episode. If missed, enter the Hall of Fame again to retry at Sky Pillar.';
   }
@@ -342,6 +351,14 @@
   'old-rod':[1,'Obtain the Old Rod in Dewford Town.'],
   'good-rod':[5,'Reach the east bank of Route 118 using Surf and obtain the Good Rod.']
  };
+ const orasHordeAreas={
+  'petalburg-woods':[0,'Reach the woods from Route 104.'],
+  'rusturf-tunnel':[1,'Use the Route 116 entrance after earning the Stone Badge.'],
+  'granite-cave · 1f':[1,'Take Mr. Briney’s boat to Dewford and enter from Route 106.'],
+  'fiery-path':[3,'Use Rock Smash on Route 111 after earning the Dynamo Badge.'],
+  'meteor-falls':[3,'Approach the main cavern from Route 114.'],
+  'jagged-pass':[3,'Descend from Mt. Chimney after the Team Magma or Team Aqua battle.']
+ };
  const orasStoryEncounters={
   'hoenn-route-119 · weather-institute':{gift:[5,'Defeat Team Magma or Team Aqua at the Weather Institute and leave an empty party slot.']},
   'mossdeep-city · stevens-house':{gift:[10,'Enter the Hall of Fame, then visit Steven’s house.']},
@@ -355,6 +372,8 @@
   }
   const story=orasStoryEncounters[place]?.[method];
   if(story)return {...early(story[0],placeName(place),method,story[1]),source:'oras-story-encounter'};
+  const horde=method==='horde'?orasHordeAreas[place]:null;
+  if(horde)return {...early(horde[0],placeName(place),method,horde[1]),source:'oras-reviewed-horde-areas'};
   const area=orasOpeningRoutes[place],field=orasOpeningMethods[method];
   if(!area||!field)return null;
   return {...early(Math.max(area[0],field[0]),placeName(place),method,[area[1],field[1]].filter(Boolean).join(' ')),source:'oras-opening-area-and-method'};

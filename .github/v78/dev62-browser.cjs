@@ -36,10 +36,21 @@ async function openDex(page,game,name){
       early:provider.encounterRoute(game,['hoenn-route-102','walk',2,3,[]]).rank,
       surf:provider.encounterRoute(game,['hoenn-route-102','surf',20,30,[]]).rank};
     },oras);
-    assert.equal(routeCheck.count,79);
+    assert.equal(routeCheck.count,92);
     assert.equal(routeCheck.legendary.rank,7);
     assert.equal(routeCheck.other,false);
     assert.deepEqual([routeCheck.early,routeCheck.surf],[0,5]);
+    await openDex(page,oras,'Snivy');
+    const starter=page.locator('#td56DexEncounters .td77-acquisition-entry').filter({hasText:/Route 101/});
+    await starter.waitFor({state:'attached'});
+    assert.match(await starter.textContent(),/Postgame.*Delta Episode.*choose one Unova starter/i);
+    assert.equal(await starter.count(),1);
+    assert.equal(await starter.locator('button').count(),0);
+    const historical=await page.evaluate(async game=>{
+     const [groudon,kyogre,rayquaza]=await Promise.all(['groudon-primal','kyogre-primal','rayquaza-mega'].map(name=>takDexDB74.api('pokemon/'+name)));
+     return [groudon,kyogre,rayquaza].map(form=>[historicalTypes(form,game),historicalAbilities(form,game)[0].ability.name]);
+    },oras);
+    assert.deepEqual(historical,[[['ground','fire'],'desolate-land'],[['water'],'primordial-sea'],[['dragon','flying'],'delta-stream']]);
     const machine=light?'hm06':'tm97';
     await page.locator('#moreTab').click();
     await page.locator('#td68OpenMove').click();
