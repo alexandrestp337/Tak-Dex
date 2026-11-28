@@ -51,7 +51,7 @@ test('Release metadata and versioned assets agree with the explicit shell manife
  const worker=fs.readFileSync(new URL('../../sw.js',`file://${__filename}`),'utf8');
  const version=html.match(/name="takdex-version" content="([^"]+)"/)[1];
  assert.equal(JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)[1]).softwareVersion,version);
- assert.match(worker,/const NAME='takdex-v78\.0\.0-dev6\.2\.1'/);
+ assert.match(worker,/const NAME='takdex-v78\.0\.0-dev6\.2\.2'/);
  assert.ok(worker.includes(`name="takdex-version" content="${version}"`));
  const shell=JSON.parse(worker.match(/const SHELL=(.*);/)[1]);
  const dependencies=[...html.matchAll(/<(?:script\s+src|link[^>]+href)="([^"]+\.(?:js|css|webmanifest)(?:\?[^"]+)?)"/g)]

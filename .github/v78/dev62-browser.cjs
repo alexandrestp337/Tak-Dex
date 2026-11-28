@@ -26,7 +26,27 @@ async function openDex(page,game,name){
     assert.equal(await fossil.locator('button').count(),0);
     assert.doesNotMatch(await panel.textContent(),/Glittering Cave · Gift/);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
-    console.log(width,light?'light':'dark',game,name,'fossil passed');
+    const oras=width===360?'Omega Ruby':'Alpha Sapphire';
+    const machine=light?'hm06':'tm97';
+    await page.locator('#moreTab').click();
+    await page.locator('#td68OpenMove').click();
+    await page.getByRole('tab',{name:'TM / HM'}).click();
+    await page.locator('#tmGame').selectOption(oras);
+    await page.locator('#tmMove option').first().waitFor({state:'attached'});
+    await page.locator('#tmMoveSearch').fill(machine);
+    await page.locator('#tmMoveResults button').first().click();
+    const guide=page.locator('#td65MachineGuide');
+    await guide.locator('summary').click();
+    const expected=light?/Mauville City.*Wally.*Dynamo Badge/:width===360?/Team Magma Hideout/:/Team Aqua Hideout/;
+    assert.match(await guide.locator('p b').innerText(),expected);
+    assert.equal(await guide.locator('[data-td74-tm-map]').count(),0);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
+    const locations=await page.evaluate(async game=>{
+     const list=await takDexDB74.machines('omega-ruby-alpha-sapphire');
+     return list.filter(row=>takDexAcquisitionV77.machineLocation(game,row.item)).length;
+    },oras);
+    assert.equal(locations,107);
+    console.log(width,light?'light':'dark',game,name,oras,machine,'passed');
    }finally{await page.close();}
   }
  }finally{await browser.close();}
