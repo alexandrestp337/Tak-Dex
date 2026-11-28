@@ -457,7 +457,7 @@ body.light .app-header .brand h1 {text-shadow:0 0 5px #fff,0 0 12px #fff}
 #td68MovePage .td72-move-header-actions{display:flex;align-items:center;gap:6px}
 #td68MovePage .td72-move-header-actions button{font-size:.8rem;padding:8px 10px;white-space:nowrap}
 #td72MoveTypePanel{padding:0 0 12px}
-:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+:is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types,#td4TeamPlannerPage #td77TypeOptions .td78-filter-header{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
 :is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button{background:var(--type-fill);border:1px solid var(--td72-color);color:var(--text);font-size:.83rem;padding:9px 4px;min-width:0}
 :is(#td72MoveTypePanel,#typeExplorerPage,#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button.selected{outline:2px solid var(--accent);outline-offset:2px}
 #td72MoveTypeResults{display:grid;gap:7px}
@@ -2046,7 +2046,7 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
 #td4TeamPlannerPage #td77TypeOptions .td72-move-types{margin:3px 0}
 #td4TeamPlannerPage #td77FinalForm .td78-evolution-control{text-align:left;width:100%}
 .td78-evolution-dialog{width:min(calc(100vw - 24px),390px);max-height:calc(100dvh - 24px);overflow:auto}
-.td78-evolution-options{display:grid;gap:5px;margin-bottom:8px}
+.td78-evolution-options{display:grid;margin-bottom:8px}
 .td78-evolution-options button{width:100%;text-align:left}
 .td78-evolution-options small{display:block;padding-inline:6px}
 .td78-evolution-dialog [data-td78-evolution-cancel]{width:100%}
@@ -2070,6 +2070,9 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
 #td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td72-move-types{
  gap:4px;margin:2px 0 3px
 }
+#td4TeamPlannerPage :is(#td77TypeOptions .td78-filter-header,#td77TypeOptions .td72-move-types){
+ column-gap:4px;margin:0
+}
 #td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td72-move-types button{
  height:30px;min-height:30px;padding:3px 2px;margin:0;font-size:.73rem;border-radius:7px
 }
@@ -2086,10 +2089,16 @@ button.td74-dex-map-link{color:var(--td-selected-ink)!important}
 
 #td41MoveSlots .td77-edit-move>.td77-planner-move-info{position:relative}
 
-.td78-evolution-options>div+div{box-shadow:0 -1px var(--edge)}
+.td78-evolution-options>div:not(:last-child){padding-bottom:7px}
+.td78-evolution-options>div+div{border-top:1px solid var(--edge);padding-top:7px}
+.td78-owned-route{display:grid;gap:4px;overflow-wrap:anywhere}
 #td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td78-filter-header button{
  width:auto;height:32px;min-height:32px;margin:0;padding:4px 8px;font-size:.77rem;text-align:center
 }
 #td4TeamPlannerPage :is(#td77TypeOptions,.td78-move-filter-panel) .td78-filter-header button{
  font-family:inherit;font-weight:700;letter-spacing:normal;line-height:1.2;justify-self:end;white-space:nowrap
+}
+
+#td4TeamPlannerPage #td77TypeOptions .td78-filter-header button{
+ grid-column:3;width:100%;height:30px;min-height:30px;padding:3px 2px;font-size:.73rem;border-radius:7px
 }

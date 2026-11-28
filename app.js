@@ -4848,8 +4848,9 @@ document.addEventListener('keydown',event=>{
     const target=safe(td41PokemonLabel(step.name));
     return level?target+' at Lv. '+level[1]:target+' · '+td77AcquisitionLinks(step.requirement,state.game);
    };
-   return (member?'<small class="td41-good">On team'+(Number.isInteger(member.level)?' · Lv. '+member.level:'')+'</small>':'')+
-    (pending.length?`<small>Evolution remaining · ${pending.map(requirement).join(' · ')}</small>`:'');
+   if(!member&&!pending.length)return '';
+   return '<div class="td78-owned-route">'+(member?'<small class="td41-good">On team'+(Number.isInteger(member.level)?' · Lv. '+member.level:'')+'</small>':'')+
+    (pending.length?`<small>Evolution remaining · ${pending.map(requirement).join(' · ')}</small>`:'')+'</div>';
   }
   const [method,location]=r?routeChoice(r).split(' · '):['Saved route needs review',''];
   const requirement=r?.steps.map(step=>step.requirement).join(' · ').replace(/^Level (\d+)$/i,'Evolve at Lv. $1');

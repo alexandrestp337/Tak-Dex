@@ -55,3 +55,22 @@ The Chromium fixture checks both themes at 360 and 412 CSS px, including divider
 1. Open an evolution selector and compare the two Clear filters buttons.
 2. Inspect an owned Pokémon with a pending evolution and an unowned acquisition.
 3. Select a downloaded or partial offline pack, check the three status labels, and verify the remove confirmation.
+
+## DEV5 RC3 visual acceptance candidate
+
+Baseline `786c0eb1073e96112bb6ea6c3b738a7688256350`, [draft PR #6](https://github.com/alexandrestp337/Tak-Dex/pull/6), and cache namespace `takdex-v78.0.0-dev5-rc3`. The [private build stamp](https://tak-dex-v77-development.freeclout8.chatgpt.site/preview-build.json) identifies the packaged commit.
+
+| Fixture | Prior behavior | RC3 Chromium measurements in both themes |
+| --- | --- | --- |
+| Black 2 Eevee evolution selector | The divider sat in the 5 px inter-row gap next to the lower row. | All seven dividers have 7 px clear above and 7 px below, measured from the taller adjacent content. Button and requirements share a vertical center. The selector opens at the top and scrolls internally at 440 px viewport height. Cancel closes it. |
+| Pokémon type filter | Clear filters sized to its own text and used a 32 px height. | Clear filters and Water are both 89.34 × 30 px at 360 px and 104.66 × 30 px at 412 px. Right edges differ by at most 0.02 px. Both controls use the same font size and radius. Selecting Water enables Clear filters, and clearing disables it. |
+| Owned Black 2 Psyduck with Golduck planned | Adjacent inline text could concatenate. | “On team · Lv. 5” and “Evolution remaining · Golduck at Lv. 33” occupy separate, left-aligned 18 px blocks with a 4 px gap. Constraining the fixture to 140 px causes the evolution text to wrap and preserves the gap. The unowned Patrat picker still renders. |
+
+| CSS viewport and theme | Rendered evidence |
+| --- | --- |
+| 360 px dark | [Evolution](dev5-rc3-evidence/360-dark-evolution.png) · [Pokémon filter](dev5-rc3-evidence/360-dark-pokemon-filter.png) · [Owned Psyduck](dev5-rc3-evidence/360-dark-owned.png) |
+| 360 px light | [Evolution](dev5-rc3-evidence/360-light-evolution.png) · [Pokémon filter](dev5-rc3-evidence/360-light-pokemon-filter.png) · [Owned Psyduck](dev5-rc3-evidence/360-light-owned.png) |
+| 412 px dark | [Evolution](dev5-rc3-evidence/412-dark-evolution.png) · [Pokémon filter](dev5-rc3-evidence/412-dark-pokemon-filter.png) · [Owned Psyduck](dev5-rc3-evidence/412-dark-owned.png) |
+| 412 px light | [Evolution](dev5-rc3-evidence/412-light-evolution.png) · [Pokémon filter](dev5-rc3-evidence/412-light-pokemon-filter.png) · [Owned Psyduck](dev5-rc3-evidence/412-light-owned.png) |
+
+The screenshots were visually inspected. The [focused Chromium test](dev5-rc3-browser.cjs) uses local browser fixtures with existing game data. Move-filter markup, logic and applicable CSS rules were checked against the baseline by diff. Physical Samsung, native Android and broad regression tests were outside this round’s verification.

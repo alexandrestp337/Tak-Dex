@@ -1,9 +1,9 @@
 // Install the exact static shell before replacing the current worker. Regional assets load on demand.
 importScripts('./offline-data.js?v=78.0.0-dev5-rc1');
-const NAME='takdex-v78.0.0-dev5-rc2';
+const NAME='takdex-v78.0.0-dev5-rc3';
 const ART='takdex-artwork-runtime-v74-dev71';
 const OPTIONAL='takdex-bundled-runtime-v78';
-const SHELL=["./","./index.html","./styles.css?v=78.0.0-dev5-rc2","./manifest.webmanifest","./bw-core-dev5.js?v=74.0.0","./sprite-ids-v77.js?v=74.5.2.20261124","./unova-b2w2-v74.js?v=74.0.0","./offline-data.js?v=78.0.0-dev5-rc1","./db74.js?v=78.0.0-dev5-rc1","./gen5-save.js?v=77.0.0","./acquisition-v77.js?v=78.0.0-dev5-rc1","./dev1-storage.js?v=78.0.0-dev2-rc1","./dev1-import.js?v=78.0.0-dev4-rc1","./app.js?v=78.0.0-dev5-rc2","./save-sync.js?v=78.0.0-dev2-rc1","./unova-v74.js?v=74.5.2.20261124","./bw-trainer-moves-v76.js?v=74.5.2.20261124","./unova-trainer-reference.js?v=76.0.0","./trainer-abilities-v76.js?v=76.0.3","./platinum-league-v77.js?v=74.5.2.20261124","./tutor-locations.js?v=78.0.0-dev5-rc1","./v73-ui.js?v=78.0.0-dev2-rc1","./hoenn-map.js?v=76.0.0","./maps.js?v=78.0.0-dev5-rc1","./feedback-config.js?v=74.0.0","./battle-outcomes.js?v=78.0.0-dev4-rc1","./v74-ux.js?v=78.0.0-dev5-rc1","./db74/gen5-save-names.json","./icon-192.png","./takdex-header-logo.png","./takdex-radar-logo.png","./takdex-team-nav.png","./takdex-battle-nav.png","./takdex-pokedex-nav.png"];
+const SHELL=["./","./index.html","./styles.css?v=78.0.0-dev5-rc3","./manifest.webmanifest","./bw-core-dev5.js?v=74.0.0","./sprite-ids-v77.js?v=74.5.2.20261124","./unova-b2w2-v74.js?v=74.0.0","./offline-data.js?v=78.0.0-dev5-rc1","./db74.js?v=78.0.0-dev5-rc1","./gen5-save.js?v=77.0.0","./acquisition-v77.js?v=78.0.0-dev5-rc1","./dev1-storage.js?v=78.0.0-dev2-rc1","./dev1-import.js?v=78.0.0-dev4-rc1","./app.js?v=78.0.0-dev5-rc3","./save-sync.js?v=78.0.0-dev2-rc1","./unova-v74.js?v=74.5.2.20261124","./bw-trainer-moves-v76.js?v=74.5.2.20261124","./unova-trainer-reference.js?v=76.0.0","./trainer-abilities-v76.js?v=76.0.3","./platinum-league-v77.js?v=74.5.2.20261124","./tutor-locations.js?v=78.0.0-dev5-rc1","./v73-ui.js?v=78.0.0-dev2-rc1","./hoenn-map.js?v=76.0.0","./maps.js?v=78.0.0-dev5-rc1","./feedback-config.js?v=74.0.0","./battle-outcomes.js?v=78.0.0-dev4-rc1","./v74-ux.js?v=78.0.0-dev5-rc1","./db74/gen5-save-names.json","./icon-192.png","./takdex-header-logo.png","./takdex-radar-logo.png","./takdex-team-nav.png","./takdex-battle-nav.png","./takdex-pokedex-nav.png"];
 const scoped=file=>new URL(file,self.registration.scope);
 const shellUrls=new Set(SHELL.map(file=>scoped(file).href));
 const optional=path=>/^db74\/.*\.json$/.test(path)||/^[a-z0-9.-]+\.(jpg|png|webp)$/i.test(path);
@@ -29,7 +29,7 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
    if(!await validAsset(response,relative(new URL(request.url))))throw Error('Invalid shell asset: '+file);
    const body=await response.arrayBuffer();
    if(!body.byteLength)throw Error('Empty shell asset: '+file);
-   if((file==='./'||file==='./index.html')&&!new TextDecoder().decode(body).includes('name="takdex-version" content="V78 DEV5 RC2"')){
+   if((file==='./'||file==='./index.html')&&!new TextDecoder().decode(body).includes('name="takdex-version" content="V78 DEV5 RC3"')){
     throw Error('Mismatched shell version: '+file);
    }
    const headers=new Headers(response.headers);
