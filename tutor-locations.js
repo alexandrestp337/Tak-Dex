@@ -120,6 +120,16 @@ add(bw,'Opelucid City','Tutor in Drayden’s house',[['draco-meteor','Free','Eli
 add(gen5,'Café Sonata','Musician in Castelia City',[['relic-song','Free','Bring an event Meloetta']],gen5TutorSource);
 add(bw,'Moor of Icirrus','Swords of Justice event',[['secret-sword','Free','Bring Keldeo, Cobalion, Terrakion and Virizion in the party']],gen5TutorSource);
 add(b2w2,'Pledge Grove','Stone behind Floccesy Town',[['secret-sword','Free','Bring an event Keldeo']],gen5TutorSource);
+// X/Y special tutors. The reminder is tracked separately from tutor learnsets.
+const xy=['X','Y'],xyTutorSource='https://www.serebii.net/xy/movetutor.shtml';
+add(xy,'Laverre City','House east of the Gym',pledge.map(move=>[move,'Free','Eligible starter']),xyTutorSource);
+add(xy,'Snowbelle City','Southwest house',ultimate.map(move=>[move,'Free','Eligible fully evolved starter with maximum friendship']),xyTutorSource);
+add(xy,'Snowbelle City','House north of the Pokémon Center',[
+ ['secret-sword','Free','Bring Keldeo'],['relic-song','Free','Bring Meloetta']
+],xyTutorSource);
+add(xy,'Route 21','Tutor house reached using Strength',[
+ ['draco-meteor','Free','Eligible Dragon-type Pokémon with maximum friendship']
+],xyTutorSource);
 function find(game,move){const key=String(move||'').toLowerCase().trim().replace(/\s+/g,'-');return (data[game]?.[key]||[]).map(e=>({...e}));}
 function at(game,place){const normalized=String(place||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-');
   return Object.entries(data[game]||{}).flatMap(([move,records])=>records.filter(e=>e.place.toLowerCase().replace(/[^a-z0-9]+/g,'-')===normalized).map(e=>({...e,move}))).sort((a,b)=>a.move.localeCompare(b.move));

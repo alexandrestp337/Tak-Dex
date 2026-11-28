@@ -4554,6 +4554,8 @@ document.addEventListener('keydown',event=>{
  function detected(progress){return progress?.postgame?'postgame':Number.isInteger(progress?.badgeCount)?(progress.badgeCount?'badge-'+progress.badgeCount:'start'):'';}
  function actualProgress(game){return current?.game===game?current.saveLink?.progression:null;}
  function encounterAccess(game,row){
+  const conditional=window.takDexAcquisitionV77?.conditionalEncounterNote(game,row);
+  if(conditional)return conditional;
   const gate=encounter(game,row),verified=window.takDexAcquisitionV77?.encounterRoute(game,row);
   if(verified)return [milestone(verified.rank),verified.note].filter(Boolean).join(' · ');
   if(!gate)return '';

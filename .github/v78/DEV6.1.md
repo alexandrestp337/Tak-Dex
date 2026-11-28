@@ -40,3 +40,13 @@ The existing acquisition engine now times all 31 bundled encounter groups per ve
 Evidence retrieved November 28, 2026. [PokémonDB Route 2](https://pokemondb.net/location/kalos-route-2), [Santalune Forest](https://bulbapedia.bulbagarden.net/wiki/Santalune_Forest) and [Route 3](https://bulbapedia.bulbagarden.net/wiki/Kalos_Route_3) establish the cohort. [Old Rod](https://bulbapedia.bulbagarden.net/wiki/Old_Rod), [Good Rod](https://bulbapedia.bulbagarden.net/wiki/Good_Rod), [Super Rod](https://bulbapedia.bulbagarden.net/wiki/Super_Rod), [Route 16 factory gate](https://bulbapedia.bulbagarden.net/wiki/Kalos_Route_16#Trivia) and [Dendemille Move Reminder](https://bulbapedia.bulbagarden.net/wiki/Dendemille_Town#Move_Reminder_and_Move_Deleter's_house) establish method and service timing.
 
 Chromium checked the grouped counts, X/Y exclusives, the reminder lookup, and the actual Masquerain Pokédex encounter row with the Rumble Badge requirement and no false map action. Machine flows and an offline shell reload also passed. Full pack download, later routes, source corrections to raw levels, special encounters, tutor locations, legal forms and trainer rosters remain open. The cache namespace is `takdex-v78.0.0-dev6.1.3`.
+
+## Checkpoint 5 · X/Y tutor locations and conditional Safari access
+
+Both versions now have 9/9 local tutor location references for the distinct tutor moves in the pinned X/Y learnset cohort (previously 0/9). The new data covers the pledge tutors in Laverre, advanced starters and the two Mythical tutors in Snowbelle, and Draco Meteor on Route 21. Legal learnset tuples remain unchanged. The reminder remains its own acquisition method.
+
+Both versions now display verified postgame and registered-friend prerequisites on all 194 bundled Friend Safari groups, covering 189 distinct Pokémon IDs. Slot 3 also identifies the additional unlocking condition. The Planner does not count this conditional access as a confirmed ordinary catch route. The comparison establishes coverage of existing groups, not a completeness claim for the retail Safari table.
+
+Sources retrieved November 28, 2026. [Serebii X/Y tutor locations](https://www.serebii.net/xy/movetutor.shtml) and [Bulbapedia Gen VI tutors](https://bulbapedia.bulbagarden.net/wiki/Move_Tutor#Pok%C3%A9mon_X_and_Y) corroborate the nine records. [Bulbapedia Friend Safari](https://bulbapedia.bulbagarden.net/wiki/Friend_Safari) documents postgame access, registered friends, and local Slot 3 unlocking after the online service shutdown.
+
+Syntax and release asset parity passed. Chromium confirmed the counts, ORAS isolation, the actual Masquerain Friend Safari row, machine flows and an offline reload with cache `takdex-v78.0.0-dev6.1.4`. No encounter packs or map assets changed.

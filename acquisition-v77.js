@@ -273,6 +273,15 @@
   if(!gate)return null;
   return {...early(gate[0],placeName(place),method,gate[1]),source:'xy-opening-area-and-method'};
  }
+ // A Safari depends on the player's friend list, so it is never an unconditional planner route.
+ function conditionalEncounterNote(game,row){
+  const [place,method,min,max,conditions=[]]=row;
+  if(!isKalos(game)||!place.startsWith('friend-safari · ')||method!=='walk'||min!==30||max!==30)return '';
+  const slot=conditions.length===1&&/^friend-safari-slot-([123])$/.exec(conditions[0]);
+  if(!slot)return '';
+  const access='Postgame · Kiloude City · Requires a registered friend with the matching Safari.';
+  return slot[1]==='3'?access+' Slot 3 must already be unlocked or unlocked by meeting a Hall of Fame friend in local play.':access;
+ }
  function encounterRoute(game,row){
   if(isKalos(game))return kalosOpeningRoute(row);
   if(isKanto(game))return kantoRoute(game,row);
@@ -1598,5 +1607,5 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
  }
  root.takDexAcquisitionV77={coverage:game=>['Black','White','Black 2','White 2'].includes(game)?'Curated Unova locations, requirements and evolution paths · Partial':
   ['Platinum','HeartGold','SoulSilver','Emerald'].includes(game)?'Selected routes and progression rules · Partial':'Encounter and evolution records where indexed',
-  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
+  lookup,levelPath,verifiedAreaRank,hidden,encounterRoute,conditionalEncounterNote,placeName,machineGate,machineLocation,johtoMoveTiming,limitedSpecies,limitedMachine,evolutionItem,resourceBudget,evolutionTrainingLevel,scheduleEvolutionMoves,plannerRoutes,moveReminder,transferOnly,documentedUnovaAlternative};
 })(globalThis);
