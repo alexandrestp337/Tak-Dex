@@ -58,6 +58,24 @@ const url=process.argv[2]||'http://localhost:8919/';
     assert.match(await safari.textContent(),/Postgame · Kiloude City · Requires a registered friend/);
     assert.equal(await safari.locator('button').count(),0);
    }
+   if(width===412){
+    await page.locator('#moreTab').click();
+    await page.locator('#openPlanner').click();
+    await page.locator('#planGame').selectOption(game);
+    await page.locator('#planMode').selectOption('gym');
+    assert.equal(await page.locator('#planTrainer option').count(),8);
+    await page.locator('#planTrainer').selectOption('Olympia');
+    await page.locator('#td74EditorOpp > summary').click();
+    const slot=page.locator('#planOpp > details').nth(2);
+    await slot.locator('summary').waitFor();
+    assert.match(await slot.locator('summary').textContent(),/Meowstic Female/);
+    assert.equal(await slot.locator('[data-td2-level]').inputValue(),'48');
+    await slot.locator('summary').click();
+    assert.equal(await slot.locator('[data-move-index="0"][data-field="move"]').inputValue(),'Psychic');
+    assert.ok((await slot.locator('[data-field="move"]').all()).length===4);
+    const records=await page.evaluate(()=>Object.values(td61KalosGyms).flat().length);
+    assert.equal(records,22);
+   }
    await page.locator('#moreTab').click();
    await page.locator('#td68OpenMove').click();
    await page.getByRole('tab',{name:'TM / HM'}).click();
@@ -73,7 +91,7 @@ const url=process.argv[2]||'http://localhost:8919/';
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
    assert.equal(await page.evaluate(()=>window.takDexAcquisitionV77.machineLocation('Omega Ruby','hm03')),null);
    if(width===412&&light){
-    await page.waitForFunction(async()=>navigator.serviceWorker.controller&&await caches.has('takdex-v78.0.0-dev6.1.4'));
+    await page.waitForFunction(async()=>navigator.serviceWorker.controller&&await caches.has('takdex-v78.0.0-dev6.1.5'));
     await page.context().setOffline(true);
     await page.reload();
     assert.equal(await page.locator('meta[name="takdex-version"]').getAttribute('content'),'V78 DEV6.1');
