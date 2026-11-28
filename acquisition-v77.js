@@ -1237,7 +1237,25 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   const ranks=known.map(row=>row[0]).filter(rank=>rank!=null);
   return known.length?{rank:ranks.length?Math.min(...ranks):null,requirements:known.map(row=>row[1]),text:known.map(row=>row[1]).join(' / ')}:null;
  }
+ // X/Y share these machine sources. Field-use badges are separate from item acquisition.
+ const kalosMachineLocations={
+  hm01:'Parfum Palace · palace garden · Bug Badge for field use',
+  hm02:'Coumarine City · Professor Sycamore at the monorail station · Plant Badge for field use',
+  hm03:'Shalour City · Serena or Calem after leaving the Tower of Mastery · Rumble Badge for field use',
+  hm04:'Cyllage City · Grant near the cycling track · Cliff Badge for field use',
+  hm05:'Route 19 · Shauna after the rival battles · Iceberg Badge for field use',
+  tm83:'Santalune Gym · defeat Viola',
+  tm39:'Cyllage Gym · defeat Grant',
+  tm98:'Shalour Gym · defeat Korrina',
+  tm86:'Coumarine Gym · defeat Ramos',
+  tm24:'Lumiose Gym · defeat Clemont',
+  tm99:'Laverre Gym · defeat Valerie',
+  tm04:'Anistar Gym · defeat Olympia',
+  tm13:'Snowbelle Gym · defeat Wulfric',
+  tm94:'Ambrette Town · no badge required for field use'
+ };
  function machineLocation(game,item){
+  if(game==='X'||game==='Y')return kalosMachineLocations[item]||null;
   return isKanto(game)?kantoMachineLocations[item]:isJohto(game)?johtoMachineLocations[item]:null;
  }
  // Kanto's repeatable shop and Game Corner machines are excluded.
