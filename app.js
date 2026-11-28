@@ -1597,6 +1597,7 @@ $('dexInput').addEventListener('takdex:pokedex-search',async()=>{
     for(const route of routes){
      if(matching.includes(route)||path&&route.method==='evolution')continue;
      entries.push({place:route.place,method:route.method,
+      levels:route.source==='xy-fixed-in-game-trade'&&route.minLevel===route.maxLevel?'Lv '+route.minLevel:'',
       detail:[engine.milestone(route.rank),route.note].filter(Boolean).join(' · ')});
     }
     if(!entries.length&&['trade','event','tradePossible'].includes(timing?.kind)){

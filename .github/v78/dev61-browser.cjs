@@ -33,13 +33,19 @@ const url=process.argv[2]||'http://localhost:8919/';
      const counts=[x,y].map(pack=>Object.values(pack.entries).flat().filter(row=>opening.has(row[0])&&provider.encounterRoute(pack.game,row)).length);
      const safari=[x,y].map(pack=>Object.values(pack.entries).flat().filter(row=>row[0].startsWith('friend-safari · ')&&provider.conditionalEncounterNote(pack.game,row)).length);
      const tutors=['X','Y','Omega Ruby'].map(game=>window.takDexTutorV73.inventory(game));
+     const early=[x,y].map(pack=>Object.values(pack.entries).flat()
+      .filter(row=>/^kalos-route-(?:[4-9]|1[0-2])$/.test(row[0])&&provider.encounterRoute(pack.game,row)).length);
+     const flyFishing=provider.encounterRoute('Y',['kalos-route-8','super-rod',35,35,[]]);
      const story=[x,y].map(pack=>Object.entries(pack.entries).flatMap(([id,rows])=>rows.map(row=>[Number(id),provider.encounterRoute(pack.game,row)]))
       .filter(([,route])=>route?.source==='xy-story-gift-and-static').map(([id,route])=>[id,route.rank]).sort((a,b)=>a[0]-b[0]));
-     return {counts,safari,tutors,story,xWeedle:check(x,13),yWeedle:check(y,13),xCaterpie:check(x,10),yCaterpie:check(y,10),
+     return {counts,early,flyFishing,safari,tutors,story,xWeedle:check(x,13),yWeedle:check(y,13),xCaterpie:check(x,10),yCaterpie:check(y,10),
       surf:provider.encounterRoute('X',x.entries[284].find(row=>row[0]==='kalos-route-3')),
       reminder:provider.moveReminder('Y'),oras:provider.moveReminder('Omega Ruby')};
     });
     assert.deepEqual(records.counts,[31,31]);
+    assert.deepEqual(records.early,[158,158]);
+    assert.equal(records.flyFishing.rank,6);
+    assert.match(records.flyFishing.note,/Fishing Shack/);
     assert.deepEqual(records.safari,[194,194]);
     assert.deepEqual(records.story,[[[131,3],[143,1],[448,3],[716,7]],[[131,3],[143,1],[448,3],[717,7]]]);
     assert.deepEqual(records.tutors,[9,9,0]);
@@ -48,6 +54,20 @@ const url=process.argv[2]||'http://localhost:8919/';
     assert.match(records.surf.note,/Rumble Badge/);
     assert.equal(records.reminder.place,'Dendemille Town');
     assert.equal(records.oras,null);
+    const historical=await page.evaluate(async()=>{
+     const [clefairy,aegislash,gengar,mega]=await Promise.all(
+      ['clefairy','aegislash-shield','gengar','charizard-mega-x'].map(name=>window.takDexDB74.api('pokemon/'+name)));
+     return {fairy:historicalTypes(clefairy,'X'),beforeFairy:historicalTypes(clefairy,'Black 2'),
+      aegislash:td76HistoricalStats(aegislash,'X').find(stat=>stat.stat.name==='defense').base_stat,
+      gengar:historicalAbilities(gengar,'Y').map(row=>row.ability.name),
+      mega:historicalTypes(mega,'X'),steel:[matchup('dark',['steel'],5),matchup('dark',['steel'],6)]};
+    });
+    assert.deepEqual(historical.fairy,['fairy']);
+    assert.deepEqual(historical.beforeFairy,['normal']);
+    assert.equal(historical.aegislash,150);
+    assert.ok(historical.gengar.includes('levitate'));
+    assert.deepEqual(historical.mega,['fire','dragon']);
+    assert.deepEqual(historical.steel,[.5,1]);
     await page.locator('#dexTab').click();
     await page.locator('#dexGame').selectOption('X');
     await page.locator('#dexInput').fill('Masquerain');
@@ -60,6 +80,12 @@ const url=process.argv[2]||'http://localhost:8919/';
     await safari.waitFor({state:'attached'});
     assert.match(await safari.textContent(),/Postgame · Kiloude City · Requires a registered friend/);
     assert.equal(await safari.locator('button').count(),0);
+    const steelix=await page.evaluate(async()=>{
+     const pack=await window.takDexDB74.encounter('Y');
+     return window.takDexAcquisitionV77.lookup('Y','steelix',pack.entries[208]);
+    });
+    assert.equal(steelix.minLevel,20);
+    assert.match(steelix.note,/Trade a Luvdisc/);
    }
    if(width===412){
     await page.locator('#moreTab').click();
@@ -94,7 +120,7 @@ const url=process.argv[2]||'http://localhost:8919/';
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
    assert.equal(await page.evaluate(()=>window.takDexAcquisitionV77.machineLocation('Omega Ruby','hm03')),null);
    if(width===412&&light){
-    await page.waitForFunction(async()=>navigator.serviceWorker.controller&&await caches.has('takdex-v78.0.0-dev6.1.6'));
+    await page.waitForFunction(async()=>navigator.serviceWorker.controller&&await caches.has('takdex-v78.0.0-dev6.1.8'));
     await page.context().setOffline(true);
     await page.reload();
     assert.equal(await page.locator('meta[name="takdex-version"]').getAttribute('content'),'V78 DEV6.1');

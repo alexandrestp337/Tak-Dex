@@ -260,11 +260,23 @@
    source:'gsc-location-story-and-method'};
  }
  const kalosOpeningAreas=new Set(['kalos-route-2','santalune-forest','kalos-route-3']);
- const kalosRoute3Methods={
+ const kalosWaterMethods={
   surf:[3,'Obtain Surf in Shalour City and earn the Rumble Badge for field use.'],
   'old-rod':[1,'Obtain the Old Rod at Ambrette Aquarium.'],
   'good-rod':[3,'Obtain the Good Rod at Coumarine City’s marina.'],
   'super-rod':[6,'Clear the Poké Ball Factory and obtain the Super Rod at the Route 16 Fishing Shack.']
+ };
+ // Area access and encounter-method access are separate gates.
+ const kalosEarlyRoutes={
+  'kalos-route-4':[1,'Earn the Bug Badge to leave Santalune City northward.','red-flowers yellow-flowers'],
+  'kalos-route-5':[1,'Continue from Lumiose City toward Camphrier Town.','walk purple-flowers horde'],
+  'kalos-route-6':[1,'Take the side paths of Palais Lane from Parfum Palace.','rough-terrain rustling-bush-ambush'],
+  'kalos-route-7':[1,'Use the Poké Flute and clear the Snorlax bridge.','walk purple-flowers yellow-flowers horde'],
+  'kalos-route-8':[1,'Reach Muraille Coast through Connecting Cave; enter the beach through Ambrette Aquarium.','walk yellow-flowers horde'],
+  'kalos-route-9':[1,'Reach Ambrette Town and ride Rhyhorn toward Glittering Cave.','rough-terrain'],
+  'kalos-route-10':[2,'Earn the Cliff Badge.','walk yellow-flowers horde'],
+  'kalos-route-11':[2,'Travel east from Geosenge Town toward Reflection Cave.','walk horde'],
+  'kalos-route-12':[3,'Earn the Rumble Badge and cross from Shalour City using Surf.','walk yellow-flowers horde']
  };
  const kalosStoryEncounters={
   'kalos-route-12':{gift:[3,'Receive Lapras west of the water after leaving Shalour City.']},
@@ -277,10 +289,14 @@
   if(conditions.length)return null;
   const story=kalosStoryEncounters[place]?.[method];
   if(story)return {...early(story[0],placeName(place),method,story[1]),source:'xy-story-gift-and-static'};
-  if(!kalosOpeningAreas.has(place))return null;
-  const gate=method==='walk'?[0,'']:place==='kalos-route-3'?kalosRoute3Methods[method]:null;
-  if(!gate)return null;
-  return {...early(gate[0],placeName(place),method,gate[1]),source:'xy-opening-area-and-method'};
+  const opening=kalosOpeningAreas.has(place),area=kalosEarlyRoutes[place];
+  if(!opening&&!area)return null;
+  const water=['kalos-route-3','kalos-route-8','kalos-route-12'].includes(place)?kalosWaterMethods[method]:null;
+  const rock=['kalos-route-8','kalos-route-12'].includes(place)&&method==='rock-smash'?[1,'Obtain TM94 in Ambrette Town and use Rock Smash.']:null;
+  if(!water&&!rock&&!(opening&&method==='walk')&&!area?.[2].split(' ').includes(method))return null;
+  const gate=water||rock||[0,''];
+  const note=[area?.[1],gate[1]].filter(Boolean).join(' ');
+  return {...early(Math.max(area?.[0]??0,gate[0]),placeName(place),method,note),source:'xy-opening-area-and-method'};
  }
  // A Safari depends on the player's friend list, so it is never an unconditional planner route.
  function conditionalEncounterNote(game,row){
@@ -844,8 +860,21 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   }
   return null;
  }
+ const kalosTrades={
+  farfetchd:[0,'Santalune City',10,'Trade a Route 2 Bunnelby for Farfetch’d.'],
+  steelix:[1,'Cyllage City Pokémon Center',20,'Trade a Luvdisc. The Old Rod from Ambrette Aquarium can catch one.'],
+  bisharp:[7,'Snowbelle City',50,'Trade a Jigglypuff, which can be caught on Route 20.'],
+  ralts:[10,'Café Soleil, Lumiose City',5,'After the League, trade any Pokémon to Diantha for Ralts holding Gardevoirite.']
+ };
+ function kalosAcquisition(game,name,encounters){
+  const direct=land(game,encounters),entry=kalosTrades[name];
+  if(!entry)return direct;
+  const [rank,place,level,note]=entry;
+  const trade={...early(rank,place,'in-game trade',note),minLevel:level,maxLevel:level,source:'xy-fixed-in-game-trade'};
+  return direct&&direct.rank<=rank?{...direct,alternatives:[trade]}:trade;
+ }
  function lookup(game,name,encounters){
-  if(isKalos(game))return land(game,encounters);
+  if(isKalos(game))return kalosAcquisition(game,name,encounters);
   if(isKanto(game)){
    const yellow=game==='Yellow';
    const gifts={
