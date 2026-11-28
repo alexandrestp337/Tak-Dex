@@ -74,6 +74,7 @@
   'unova-route-8':10,'icirrus-city':10,'moor-of-icirrus':10};
  const isKanto=game=>['Red','Blue','Yellow'].includes(game);
  const isJohto=game=>['Gold','Silver','Crystal'].includes(game);
+ const isKalos=game=>game==='X'||game==='Y';
  const canonicalAliases={
   'kanto-victory-road-2':'Victory Road','kanto-safari-zone':'Safari Zone','kanto-power-plant':'Power Plant',
   'digletts-cave':'Diglett’s Cave',
@@ -82,7 +83,7 @@
  };
  function placeName(value,game){
   const [raw,room]=String(value||'').split(' · ');
-  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|(?:kanto|johto)-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
+  const base=canonicalAliases[raw]||raw.replace(/^(?:unova-|kalos-|(?:kanto|johto)-(?:sea-)?)/,'').replace(/-/g,' ').replace(/(^| )([a-z])/g,(_,space,c)=>space+c.toUpperCase());
   if(raw==='unova-victory-road-2'&&['unknown-area-71','unknown-area-78'].includes(room))return 'Victory Road · Cave';
   if(raw==='relic-castle'&&room==='d'&&game?.endsWith(' 2'))return 'Relic Castle · Volcarona’s chamber';
   if(!room||/^unknown-area/i.test(room))return base;
@@ -258,7 +259,22 @@
   return {...early(milestone,placeName(place,game),method,[requirement,time.length?'Time: '+time.join(', '):''].filter(Boolean).join(' ')),
    source:'gsc-location-story-and-method'};
  }
+ const kalosOpeningAreas=new Set(['kalos-route-2','santalune-forest','kalos-route-3']);
+ const kalosRoute3Methods={
+  surf:[3,'Obtain Surf in Shalour City and earn the Rumble Badge for field use.'],
+  'old-rod':[1,'Obtain the Old Rod at Ambrette Aquarium.'],
+  'good-rod':[3,'Obtain the Good Rod at Coumarine City’s marina.'],
+  'super-rod':[6,'Clear the Poké Ball Factory and obtain the Super Rod at the Route 16 Fishing Shack.']
+ };
+ function kalosOpeningRoute(row){
+  const [place,method,,,conditions=[]]=row;
+  if(!kalosOpeningAreas.has(place)||conditions.length)return null;
+  const gate=method==='walk'?[0,'']:place==='kalos-route-3'?kalosRoute3Methods[method]:null;
+  if(!gate)return null;
+  return {...early(gate[0],placeName(place),method,gate[1]),source:'xy-opening-area-and-method'};
+ }
  function encounterRoute(game,row){
+  if(isKalos(game))return kalosOpeningRoute(row);
   if(isKanto(game))return kantoRoute(game,row);
   if(isJohto(game))return johtoRoute(game,row);
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
@@ -803,6 +819,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   return null;
  }
  function lookup(game,name,encounters){
+  if(isKalos(game))return land(game,encounters);
   if(isKanto(game)){
    const yellow=game==='Yellow';
    const gifts={
@@ -1346,7 +1363,7 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
   tm100:'Coumarine City · TM quiz'
  };
  function machineLocation(game,item){
-  if(game==='X'||game==='Y')return kalosMachineLocations[item]||null;
+  if(isKalos(game))return kalosMachineLocations[item]||null;
   return isKanto(game)?kantoMachineLocations[item]:isJohto(game)?johtoMachineLocations[item]:null;
  }
  // Kanto's repeatable shop and Game Corner machines are excluded.
@@ -1447,6 +1464,8 @@ crustle:['dwebble',34],scrafty:['scraggy',39],sunflora:['sunkern','Sun Stone'],
    a.steps.length-b.steps.length||(a.initial.minLevel||0)-(b.initial.minLevel||0)||a.id.localeCompare(b.id));
  }
  function moveReminder(game){
+  if(isKalos(game))return {rank:6,place:'Dendemille Town',
+   text:'Move Reminder · Dendemille Town · One Heart Scale · Clear the Poké Ball Factory and cross Route 15'};
   if(!['Black','White','Black 2','White 2'].includes(game))return null;
   const sequel=game.endsWith(' 2'),place=sequel?'Pokémon World Tournament':'Mistralton City';
   const gate=sequel?'After Clay, visit the kiosks south of Driftveil City':'After Clay, reach Mistralton through Chargestone Cave';
